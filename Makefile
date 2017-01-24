@@ -18,8 +18,7 @@ cluster: aws-deps
 	EDITOR='./ed.sh manifests/kops/prometheus-ig.yaml' $(KOPS_CMD) create ig prometheus
 	$(KOPS_CMD) update cluster --yes
 
-cluster-deploy: cluster
-	kubectl create -f ./manifests/exporters
+cluster-deploy:
 	kubectl create -f ./manifests/prometheus
 
 cluster-undeploy:
