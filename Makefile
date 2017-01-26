@@ -13,7 +13,7 @@ aws-deps:
 cluster: aws-deps
 	$(KOPS_CMD) get cluster | grep -v $(CLUSTER_NAME).$(DOMAIN) || \
 	$(KOPS_CMD) create cluster --name $(CLUSTER_NAME).$(DOMAIN) \
-		--cloud aws --zones $(REGION)a
+		--cloud aws --zones $(REGION)a --kubernetes-version 1.5.1 --yes
 	EDITOR='./ed.sh manifests/kops/regular-ig.yaml' $(KOPS_CMD) edit ig nodes
 	EDITOR='./ed.sh manifests/kops/prometheus-ig.yaml' $(KOPS_CMD) create ig prometheus
 	$(KOPS_CMD) update cluster --yes
