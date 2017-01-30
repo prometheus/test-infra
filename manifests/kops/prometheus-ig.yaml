@@ -2,7 +2,6 @@ metadata:
   name: prometheus
 spec:
   associatePublicIp: true
-  image: kope.io/k8s-1.4-debian-jessie-amd64-hvm-ebs-2016-10-21
   machineType: c3.2xlarge
   maxSize: 1
   minSize: 1
