@@ -31,17 +31,24 @@ spec:
         resources: {}
         args: [
           "-config.file=/etc/prometheus/config/prometheus.yaml",
-          "--storage.local.path=/mnt"
+          "-storage.local.path=/data"
         ]
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus/config
+        - name: instance-ssd
+          mountPath: /data
       imagePullSecrets:
       - name: prometheus-test-pull-secret
       volumes:
       - name: config-volume
         configMap:
           name: special-prom
+      - name: instance-ssd
+        hostPath:
+          # /mnt is where the KOPS AMIs mount the instance-store SSDs available on C3 instances
+          # don't change this if you want Prometheus to take advantage of these local SSDs
+          path: /mnt
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       nodeSelector:
