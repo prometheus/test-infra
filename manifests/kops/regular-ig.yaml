@@ -2,11 +2,11 @@ metadata:
   name: nodes
 spec:
   associatePublicIp: true
-  machineType: t2.medium
-  maxSize: 2
-  minSize: 2
+  machineType: ${WORKER_MACHINE_TYPE}
+  maxSize: ${NUM_WORKERS}
+  minSize: ${NUM_WORKERS}
   nodeLabels:
     isolation: none
   role: Node
   zones:
-  - eu-west-1a
+  - ${AWS_REGION}a
