@@ -3,8 +3,8 @@ metadata:
 spec:
   associatePublicIp: true
   machineType: {{ prometheus.machineType }}
-  maxSize: 1
-  minSize: 1
+  maxSize: {{ prometheus.instances | length }}
+  minSize: {{ prometheus.instances | length }}
   nodeLabels:
     isolation: prometheus
   role: Node

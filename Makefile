@@ -21,7 +21,7 @@ manifests: $(MANIFESTS)
 
 $(spec):
 	@mkdir -p $(dir $@)
-	@cp $(SPEC_TEMPLATE) $@
+	@cp $(SPEC) $@
 
 $(path)/.build/manifests/%.yaml: $(spec)
 	@echo "creating manifest $*"
@@ -55,7 +55,7 @@ clean-cluster:
 
 clean-aws-deps:
 	AWS_REGION=$(aws_region) terraform destroy -force $(TERRAFORM_FLAGS) ./templates
-	rm -f "$(build_path)/terraform.tfstate*"
+	rm -f $(build_path)/terraform.tfstate*
 
 check-deps:
 	@which aws || echo "AWS cli is missing. Try to install it with 'brew install awscli'"

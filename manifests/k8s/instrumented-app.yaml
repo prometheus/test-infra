@@ -1,0 +1,43 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: instrumented-app
+spec:
+  replicas: {{ workers.appInstances }}
+  template:
+    metadata:
+      labels:
+        app: instrumented-app
+    spec:
+      containers:
+      - name: instrumented-app
+        image: fabxc/instrumented_app
+        ports:
+        - name: metrics
+          containerPort: 8080
+        resources:
+          requests:
+            memory: 30Mi
+            cpu: 100m
+          limits:
+            memory: 50Mi
+            cpu: 200m
+      nodeSelector:
+        isolation: none
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: instrumented-app
+    monitored: "true"
+  name: instrumented-app
+spec:
+  ports:
+  - name: metrics 
+    port: 8080
+    targetPort: metrics
+    protocol: TCP
+  selector:
+    app: instrumented-app
+
