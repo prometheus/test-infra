@@ -1,0 +1,6 @@
+awsRegion: eu-west-1
+prometheus:
+  machineType: c3.2xlarge
+workers:
+  count: 3
+  machineType: t2.medium

@@ -2,11 +2,11 @@ metadata:
   name: nodes
 spec:
   associatePublicIp: true
-  machineType: ${WORKER_MACHINE_TYPE}
-  maxSize: ${NUM_WORKERS}
-  minSize: ${NUM_WORKERS}
+  machineType: {{ workers.machineType }}
+  maxSize: {{ workers.count }}
+  minSize: {{ workers.count }}
   nodeLabels:
     isolation: none
   role: Node
   zones:
-  - ${AWS_REGION}a
+  - {{ awsRegion }}a
