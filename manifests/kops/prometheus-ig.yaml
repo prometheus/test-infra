@@ -2,12 +2,12 @@ metadata:
   name: prometheus
 spec:
   associatePublicIp: true
-  machineType: c3.2xlarge
-  maxSize: 1
-  minSize: 1
+  machineType: {{ prometheus.machineType }}
+  maxSize: {{ prometheus.instances | length }}
+  minSize: {{ prometheus.instances | length }}
   nodeLabels:
     isolation: prometheus
   role: Node
   rootVolumeType: gp2
   zones:
-  - eu-west-1a
+  - {{ awsRegion }}a

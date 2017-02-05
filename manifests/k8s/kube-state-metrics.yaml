@@ -24,3 +24,20 @@ spec:
             cpu: 200m
       nodeSelector:
         isolation: none
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kube-state-metrics
+    monitored: "true"
+  name: kube-state-metrics
+spec:
+  ports:
+  - name: metrics 
+    port: 8080
+    targetPort: metrics
+    protocol: TCP
+  selector:
+    app: kube-state-metrics
+

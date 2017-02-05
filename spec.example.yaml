@@ -1,0 +1,18 @@
+awsRegion: eu-west-1
+prometheus:
+  machineType: c3.2xlarge
+  instances:
+  - name: v1-4-0
+    image: quay.io/prometheus/prometheus:v1.4.0
+    resources:
+      requests:
+        memory: 4Gi
+  - name: dev-2-0
+    image: quay.io/fabxc/prometheus:dev-2.0
+    resources:
+      requests:
+        memory: 4Gi
+workers:
+  count: 3
+  machineType: t2.medium
+  appInstances: 15
