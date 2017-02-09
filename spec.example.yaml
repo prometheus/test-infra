@@ -1,18 +1,26 @@
 awsRegion: eu-west-1
 prometheus:
-  machineType: c3.2xlarge
+  machineType: m3.2xlarge
+  scrapeInterval: 4s
   instances:
-  - name: v1-4-0
-    image: quay.io/prometheus/prometheus:v1.4.0
+  - name: v1-5-1
+    image: quay.io/prometheus/prometheus:v1.5.1
     resources:
       requests:
-        memory: 4Gi
+        memory: 6Gi
+    flags:
+    - '-storage.local.retention=8h'
+    - '-storage.local.memory-chunks=1800000'
+    - '-storage.local.max-chunks-to-persist=900000'
   - name: dev-2-0
     image: quay.io/fabxc/prometheus:dev-2.0
     resources:
       requests:
-        memory: 4Gi
+        memory: 6Gi
+    flags:
+    - '-storage.tsdb.min-block-duration=15m'
+    - '-storage.tsdb.max-block-duration=4h'
 workers:
-  count: 3
-  machineType: t2.medium
-  appInstances: 15
+  count: 6
+  machineType: c4.large
+  appInstances: 180
