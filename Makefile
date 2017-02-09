@@ -29,8 +29,6 @@ $(path)/.build/manifests/%.yaml: $(spec)
 	@j2 manifests/$*.yaml $(spec) > $@
 
 aws-deps:
-	echo $(SPEC)
-	echo $(aws_region)
 	AWS_REGION=$(aws_region) terraform apply $(TERRAFORM_FLAGS) ./templates
 
 cluster: manifests aws-deps
