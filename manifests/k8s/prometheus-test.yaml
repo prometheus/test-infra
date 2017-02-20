@@ -20,6 +20,13 @@ spec:
         image: {{ p.image }}
         imagePullPolicy: Always
         resources: {{ p.resources }}
+        {%- if p.env is defined %}
+        env:
+          {%- for e in p.env %}
+        - name: {{ e.name }}
+          value: "{{ e.value }}"
+          {%- endfor %}
+        {%- endif %}
         args: [
           "-config.file=/etc/prometheus/config/prometheus.yaml",
           "-storage.local.path=/data",
