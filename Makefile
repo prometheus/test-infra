@@ -13,7 +13,7 @@ TERRAFORM_FLAGS = -var "dns_domain=$(DOMAIN)" -var "cluster_name=$(CLUSTER_NAME)
 MANIFEST_TEMPLATES := $(wildcard manifests/**/*.yaml)
 MANIFESTS          := $(patsubst %,$(build_path)/%,$(MANIFEST_TEMPLATES))
 
-all: check-deps cluster
+all: check-deps cluster cluster-deploy
 
 clean: clean-cluster clean-aws-deps clean-manifests
 
@@ -23,7 +23,9 @@ $(spec):
 	@mkdir -p $(dir $@)
 	@cp $(SPEC) $@
 
-$(path)/.build/manifests/%.yaml: $(spec)
+init: $(spec)
+
+$(path)/.build/manifests/%.yaml: init
 	@echo "creating manifest $*"
 	@mkdir -p $(dir $@)
 	@j2 manifests/$*.yaml $(spec) > $@
@@ -42,6 +44,8 @@ cluster: manifests aws-deps
 	$(KOPS_CMD) update cluster --yes
 
 cluster-deploy:
+	@echo "waiting for cluster to be reachable"
+	@until kubectl get nodes; do sleep 15; done
 	kubectl create -f $(build_path)/manifests/k8s
 
 cluster-undeploy:
@@ -56,6 +60,7 @@ clean-cluster:
 clean-aws-deps:
 	AWS_REGION=$(aws_region) terraform destroy -force $(TERRAFORM_FLAGS) ./templates
 	rm -f $(build_path)/terraform.tfstate*
+
 
 check-deps:
 	@which aws || echo "AWS cli is missing. Try to install it with 'brew install awscli'"
