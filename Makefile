@@ -28,7 +28,7 @@ init: $(spec)
 $(path)/.build/manifests/%.yaml: init
 	@echo "creating manifest $*"
 	@mkdir -p $(dir $@)
-	@j2 manifests/$*.yaml $(spec) > $@
+	@jinja2 manifests/$*.yaml $(spec) > $@
 
 aws-deps:
 	AWS_REGION=$(aws_region) terraform apply $(TERRAFORM_FLAGS) ./templates
@@ -61,11 +61,11 @@ clean-aws-deps:
 	AWS_REGION=$(aws_region) terraform destroy -force $(TERRAFORM_FLAGS) ./templates
 	rm -f $(build_path)/terraform.tfstate*
 
-
 check-deps:
 	@which aws || echo "AWS cli is missing. Try to install it with 'brew install awscli'"
 	@which kops || echo "Kops is missing. Try to install it with 'brew install kops'"
 	@which kubectl || echo "Kubectl is missing. Try to install it with 'brew install kubernetes-cli'"
 	@which terraform || echo "Terraform is missing. Try to install it with 'brew install terraform'"
-	@which j2 || echo "Jinja2 CLI missing. Try to install with 'pip install j2cli'"
-	@which yq || echo "yq missing. Try to install with 'pip install yq'"
+	@which jinja2 || echo "Jinja2 CLI is missing. Try to install with 'pip install pyyaml jinja2-cli[yaml]'"
+	@which yq || echo "yq is missing. Try to install with 'pip install yq'"
+	@which jq || echo "jq is missing. Try to install with 'pip install jq'"
