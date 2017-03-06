@@ -1,6 +1,7 @@
 CLUSTER_NAME  ?= prom-test-$(shell whoami)
 DOMAIN        ?= dev.coreos.systems
 SPEC          ?= spec.example.yaml
+AMOUNT_NODES	= $$(($(shell cat $(spec) | yq '.prometheus.instances | length')+$(shell cat $(spec) | yq '.workers.count')+1))
 
 path          ?= clusters/${CLUSTER_NAME}
 build_path    := $(path)/.build
@@ -8,8 +9,7 @@ spec          := $(path)/spec.yaml
 aws_region     = $(shell cat $(spec) | yq .awsRegion)
 
 KOPS_CMD        = kops --state $(shell terraform output -state "$(build_path)/terraform.tfstate" kops_state_bucket)
-TERRAFORM_FLAGS = -var "dns_domain=$(DOMAIN)" -var "cluster_name=$(CLUSTER_NAME)" -state "$(build_path)/terraform.tfstate" 
-
+TERRAFORM_FLAGS = -var "dns_domain=$(DOMAIN)" -var "cluster_name=$(CLUSTER_NAME)" -state "$(build_path)/terraform.tfstate"
 MANIFEST_TEMPLATES := $(wildcard manifests/**/*.yaml)
 MANIFESTS          := $(patsubst %,$(build_path)/%,$(MANIFEST_TEMPLATES))
 
@@ -43,9 +43,11 @@ cluster: manifests aws-deps
 	EDITOR='./ed.sh $(build_path)/manifests/kops/prometheus-ig.yaml' $(KOPS_CMD) create ig prometheus
 	$(KOPS_CMD) update cluster --yes
 
-cluster-deploy:
-	@echo "waiting for cluster to be reachable"
-	@until kubectl get nodes; do sleep 15; done
+wait-for-cluster: init
+	echo "Going to wait for cluster to become available and nodes to become ready."
+	./wait-for-cluster.sh $(AMOUNT_NODES)
+
+cluster-deploy: wait-for-cluster
 	kubectl create -f $(build_path)/manifests/k8s
 
 cluster-undeploy:
