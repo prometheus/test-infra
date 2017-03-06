@@ -24,3 +24,9 @@ workers:
   count: 6
   machineType: c4.large
   appInstances: 180
+simulator: |
+  name: fake-webserver
+  high: 200
+  low: 100
+  interval: 10
+
