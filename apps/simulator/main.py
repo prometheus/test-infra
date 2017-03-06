@@ -1,27 +1,27 @@
 #!/usr/bin/env python
 
-import requests
 import json
-import yaml
+import os
+import requests
 import schedule
 import time
-import os
+import yaml
 
-config = None
 kubeToken = None
-prevScalingUp = True
+verify = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 kubernetesServiceHostUrl = os.environ['KUBERNETES_SERVICE_HOST']
 kubernetesPort443TCPPort = os.environ['KUBERNETES_PORT_443_TCP_PORT']
 url = 'https://' + kubernetesServiceHostUrl + ':' + kubernetesPort443TCPPort
 urlDeployments = url + '/apis/extensions/v1beta1/namespaces/default/deployments/'
 urlConfigMaps = url + '/api/v1/namespaces/default/configmaps/'
-verify = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+prevScalingUp = True
+config = None
 
 with open("/var/run/secrets/kubernetes.io/serviceaccount/token", 'r') as f:
     kubeToken = f.read()
 headers = {'Content-type': 'application/json', 'Authorization': 'Bearer ' + kubeToken}
 
-def getConfig():
+def loadConfig():
     print("Updating k8s-coach-config")
     global headers
     global verify
@@ -46,9 +46,8 @@ def alternateUpDownScaling():
         scaleDeployment(config["high"])
     prevScalingUp = not prevScalingUp
 
-getConfig()
-schedule.every(30).seconds.do(getConfig)
-schedule.every(config["interval"]).seconds.do(alternateUpDownScaling)
+loadConfig()
+schedule.every(config["interval"]).minutes.do(alternateUpDownScaling)
 
 while True:
     schedule.run_pending()
