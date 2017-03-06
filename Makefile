@@ -13,7 +13,7 @@ TERRAFORM_FLAGS = -var "dns_domain=$(DOMAIN)" -var "cluster_name=$(CLUSTER_NAME)
 MANIFEST_TEMPLATES := $(wildcard manifests/**/*.yaml)
 MANIFESTS          := $(patsubst %,$(build_path)/%,$(MANIFEST_TEMPLATES))
 
-all: check-deps cluster
+all: check-deps cluster cluster-deploy
 
 clean: clean-cluster clean-aws-deps clean-manifests
 
@@ -23,10 +23,12 @@ $(spec):
 	@mkdir -p $(dir $@)
 	@cp $(SPEC) $@
 
-$(path)/.build/manifests/%.yaml: $(spec)
+init: $(spec)
+
+$(path)/.build/manifests/%.yaml: init
 	@echo "creating manifest $*"
 	@mkdir -p $(dir $@)
-	@j2 manifests/$*.yaml $(spec) > $@
+	@jinja2 manifests/$*.yaml $(spec) > $@
 
 aws-deps:
 	AWS_REGION=$(aws_region) terraform apply $(TERRAFORM_FLAGS) ./templates
@@ -42,6 +44,8 @@ cluster: manifests aws-deps
 	$(KOPS_CMD) update cluster --yes
 
 cluster-deploy:
+	@echo "waiting for cluster to be reachable"
+	@until kubectl get nodes; do sleep 15; done
 	kubectl create -f $(build_path)/manifests/k8s
 
 cluster-undeploy:
@@ -62,5 +66,6 @@ check-deps:
 	@which kops || echo "Kops is missing. Try to install it with 'brew install kops'"
 	@which kubectl || echo "Kubectl is missing. Try to install it with 'brew install kubernetes-cli'"
 	@which terraform || echo "Terraform is missing. Try to install it with 'brew install terraform'"
-	@which j2 || echo "Jinja2 CLI missing. Try to install with 'pip install j2cli'"
-	@which yq || echo "yq missing. Try to install with 'pip install yq'"
+	@which jinja2 || echo "Jinja2 CLI is missing. Try to install with 'pip install pyyaml jinja2-cli[yaml]'"
+	@which yq || echo "yq is missing. Try to install with 'pip install yq'"
+	@which jq || echo "jq is missing. Try to install with 'pip install jq'"
