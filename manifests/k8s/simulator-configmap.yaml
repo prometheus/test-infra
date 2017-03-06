@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8s-simulator-config
-data:
-  k8s-simulator-config.yml: |
-    {{ simulator | indent }}

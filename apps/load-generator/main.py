@@ -22,13 +22,13 @@ with open("/var/run/secrets/kubernetes.io/serviceaccount/token", 'r') as f:
 headers = {'Content-type': 'application/json', 'Authorization': 'Bearer ' + kubeToken}
 
 def loadConfig():
-    print("Updating k8s-coach-config")
+    print("Updating k8s-simulator-config")
     global headers
     global verify
     global config
     configMap = requests.get((urlConfigMaps + 'k8s-simulator-config'), headers=headers, verify=verify).json()
     config = yaml.load(configMap["data"]["k8s-simulator-config.yml"])
-    print("Updated k8s-coach-config")
+    print("Updated k8s-simulator-config")
 
 def scaleDeployment(amountInstances):
     global headers
@@ -47,7 +47,7 @@ def alternateUpDownScaling():
     prevScalingUp = not prevScalingUp
 
 loadConfig()
-schedule.every(config["interval"]).minutes.do(alternateUpDownScaling)
+schedule.every(config["intervalMinutes"]).minutes.do(alternateUpDownScaling)
 
 while True:
     schedule.run_pending()
