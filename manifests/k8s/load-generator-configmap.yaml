@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prom-load-generator-config
+data:
+  prom-load-generator-config.yml: |
+    {{ load-generator | indent }}
