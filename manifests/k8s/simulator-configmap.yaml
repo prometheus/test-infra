@@ -4,7 +4,4 @@ metadata:
   name: k8s-simulator-config
 data:
   k8s-simulator-config.yml: |
-    name: fake-webserver
-    high: 20
-    low: 10
-    interval: 5
+    {{ simulator | indent }}
