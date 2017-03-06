@@ -1,0 +1,14 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: k8s-coach
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: k8s-coach
+    spec:
+      containers:
+      - name: k8s-coach
+        image: quay.io/mxinden/k8s-simulator:latest
