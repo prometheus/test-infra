@@ -3,10 +3,30 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
+  name: prometheus-test-{{ p.name }}
   labels:
     app: prometheus
     prometheus: test-{{ p.name }}
-  name: prometheus-test-{{ p.name }}
+  annotations:
+    scheduler.alpha.kubernetes.io/affinity: >
+        {
+          "podAntiAffinity": {
+            "requiredDuringSchedulingIgnoredDuringExecution": [
+              {
+                "labelSelector": {
+                  "matchExpressions": [
+                    {
+                      "key": "app",
+                      "operator": "In",
+                      "values": ["prometheus"]
+                    }
+                  ]
+                },
+                "topologyKey": "kubernetes.io/hostname"
+             }
+            ]
+           }
+         }
 spec:
   replicas: 1
   template:

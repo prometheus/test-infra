@@ -13,17 +13,15 @@ spec:
         prometheus: meta
     spec:
       containers:
-      - image: quay.io/fabxc/prometheus:v1.5.1
+      - image: quay.io/fabxc/prometheus-bench:v1.5.2
         args: [
           "-config.file=/etc/prometheus/config/prometheus.yaml",
-          "-storage.local.retention=360h",
-          "-storage.local.memory-chunks=50000",
-          "-storage.local.max-chunks-to-persist=25000",
         ]
         name: prometheus
         resources:
           requests:
-            memory: 600Mi
+            cpu: 200m
+            memory: 2Gi
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus/config
