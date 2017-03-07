@@ -23,6 +23,9 @@ spec:
           containerPort: 8083
         - name: metrics5
           containerPort: 8084
+        resources:
+          requests:
+            cpu: 25m
       nodeSelector:
         isolation: none
 ---
