@@ -6,4 +6,4 @@ COPY main.py /usr/src/app/
 
 WORKDIR /usr/src/app
 
-CMD ["python", "./main.py"]
+ENTRYPOINT ["python", "./main.py"]

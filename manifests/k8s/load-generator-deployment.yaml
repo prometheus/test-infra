@@ -11,4 +11,6 @@ spec:
     spec:
       containers:
       - name: prom-load-generator
-        image: quay.io/mxinden/prom-load-generator:latest
+        image: quay.io/fabxc/prometheus-bench-loadgen:latest
+        args:
+        - "scaler"
