@@ -8,6 +8,7 @@ import requests
 import yaml
 
 ca_cert_path = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+kube_token_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
 def deployment_path(url, depl):
     return '%s/apis/extensions/v1beta1/namespaces/default/deployments/%s' % (url, depl)
@@ -17,8 +18,8 @@ def configmap_path(url, cm):
 
 class Scaler(object):
     """
-    Scaler periodically scales a deployment down a minimum number of replicas
-    and back up again.
+    Scaler periodically scales a deployment down to a minimum number of
+    replicas and back up again.
     """
     def __init__(self, cfg, url, req_kwargs):
         self.interval = int(cfg["intervalMinutes"]) * 60
@@ -69,7 +70,7 @@ def main():
     port = os.environ.get('KUBERNETES_PORT_443_TCP_PORT')
     url = 'https://%s:%s' % (host, port)
 
-    kube_token = open("/var/run/secrets/kubernetes.io/serviceaccount/token", 'r').read()
+    kube_token = open(kube_token_path, 'r').read()
 
     req_kwargs = {
         'headers': {'Content-type': 'application/json', 'Authorization': 'Bearer ' + kube_token},
