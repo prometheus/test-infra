@@ -25,7 +25,7 @@ workers:
   count: 6
   machineType: c4.large
   appInstances: 180
-load-generator: |
+loadGenerator:
   scaler:
     name: fake-webserver
     high: 200

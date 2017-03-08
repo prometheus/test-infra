@@ -1,7 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: prom-load-generator-config
+  name: prometheus-load-generator
 data:
-  prom-load-generator-config.yml: |
-    {{ load-generator | indent }}
+  config.json: |
+  {%- if loadGenerator is defined %}
+    {{ loadGenerator  }}
+  {%- endif %}
