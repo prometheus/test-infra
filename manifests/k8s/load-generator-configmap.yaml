@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: prometheus-load-generator
-data:
-  config.json: |
-  {%- if loadGenerator is defined %}
-    {{ loadGenerator  }}
-  {%- endif %}
