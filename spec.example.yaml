@@ -24,12 +24,38 @@ prometheus:
 workers:
   count: 6
   machineType: c4.large
-  appInstances: 180
+  appInstances: 150
 loadGenerator:
   scaler:
     name: fake-webserver
-    high: 200
-    low: 100
-    intervalMinutes: 10
+    high: 150
+    low: 50 
+    intervalMinutes: 15
   querier:
-
+    # `name` fields of Prometheus server to actually run against
+    targets:
+    - name: dev-2-0
+    - name: v1-5-2
+    # Groups of queries that are launched independently.
+    queryGroups:
+    - intervalSeconds: 4
+      queries:
+      - go_goroutines
+      - container_memory_rss
+      - kube_pod_container_info
+      - codelab_api_http_requests_in_progress
+      - codelab_api_requests_total
+    - intervalSeconds: 10
+      queries:
+      - sum by(image) (container_memory_rss)
+      - sum by(instance) (rate(node_cpu{mode!="idle"}[2m]))
+      - sum by(instance) (rate(node_cpu[2m]))
+      - sum by(instance) (codelab_api_requests_total)
+    - intervalSeconds: 20
+      queries:
+      - rate(codelab_api_requests_total[1m])
+      - sum without(instance) (rate(codelab_api_requests_total[1m]))
+      - histogram_quantile(0.99, sum by(path, le) (rate(codelab_api_request_duration_seconds_bucket[1m])))
+      - histogram_quantile(0.99, sum by(path, method, le) (rate(codelab_api_request_duration_seconds_bucket[1m])))
+      - histogram_quantile(0.99, sum by(instance, le) (rate(codelab_api_request_duration_seconds_bucket[1m])))
+      
