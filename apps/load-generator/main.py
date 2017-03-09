@@ -6,6 +6,9 @@ import time
 import sys
 import requests
 import yaml
+import threading
+
+from prometheus_client import start_http_server, Histogram, Counter
 
 ca_cert_path = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 kube_token_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -50,18 +53,42 @@ class Scaler(object):
 
 class Querier(object):
     """
-    Querier launches groups of queries against a set of Prometheus services.
+    Querier launches groups of queries against a Prometheus service.
     """
-    def __init__(self, cfg, url, req_kwargs):
-        pass
+    def __init__(self, i, t, qg, hist):
+        self.url = "http://prometheus-test-%s.default:9090/api/v1/query?" % t
+        self.interval = qg["intervalSeconds"]
+        self.queries = qg["queries"]
+        self.i = i
+        self.t = t
+
+        self.query_time = hist
 
     def run(self):
-        pass
+        print("run querier %s %s" % (self.t, self.i))
 
+        while True:
+            start = time.time()
+
+            for q in self.queries:
+                self.query(q)
+
+            wait = self.interval - (time.time() - start)
+            if wait > 0:
+                time.sleep(wait)
+
+    def query(self, q):
+        start = time.time()
+        resp = requests.get(self.url, params={"query": q})
+        
+        dur = time.time() - start
+        print("query %s %s, status=%s, size=%d, dur=%d" %(self.t, q, resp.status_code, len(resp.text), dur))
+
+        self.query_time.labels(self.t, str(self.i), q).observe(dur)
 
 
 def main():
-    if len(sys.argv) != 2 or sys.argv[1] not in ["scaler", "querier"]:
+    if len(sys.argv) < 2 or sys.argv[1] not in ["scaler", "querier"]:
         print("unexpected arguments")
         print("usage: <load_generator> <scaler|querier>")
         exit(2)
@@ -77,16 +104,30 @@ def main():
         'verify': ca_cert_path,
     }
 
-    config_map = requests.get(configmap_path(url, 'prometheus-load-generator'), **req_kwargs).json()
-    config = yaml.load(config_map["data"]["config.json"])
+    config = yaml.load(open("/etc/loadgen/config.yaml", 'r').read())
 
     print("loaded configuration")
 
     if sys.argv[1] == "scaler":
         Scaler(config["scaler"], url, req_kwargs).run()
-    else:
-        Querier(config["querier"], url, req_kwargs).run()
+        return
 
+    hist = Histogram("loadgen_query_duration_seconds", "Query duration", 
+            ["prometheus", "group", "query"],
+            buckets=(0.01, 0.05, 0.1, 0.3, 0.7, 1.5, 3, 6, 12, 18, 28))
+
+    for t in config["querier"]["targets"]:
+        i = 0
+        for g in config["querier"]["queryGroups"]:
+            p = threading.Thread(target=Querier(i, t["name"], g, hist).run)
+            p.start()
+            i += 1
+
+    start_http_server(8080)
+    print("started HTTP server on 8080")
+
+    while True:
+        time.sleep(100)
 
 if __name__ == "__main__":
     main()
