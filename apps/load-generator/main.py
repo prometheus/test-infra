@@ -78,13 +78,16 @@ class Querier(object):
                 time.sleep(wait)
 
     def query(self, q):
-        start = time.time()
-        resp = requests.get(self.url, params={"query": q})
-        
-        dur = time.time() - start
-        print("query %s %s, status=%s, size=%d, dur=%d" %(self.t, q, resp.status_code, len(resp.text), dur))
+        try:
+            start = time.time()
+            resp = requests.get(self.url, params={"query": q})
 
-        self.query_time.labels(self.t, str(self.groupName), q).observe(dur)
+            dur = time.time() - start
+            print("query %s %s, status=%s, size=%d, dur=%d" %(self.t, q, resp.status_code, len(resp.text), dur))
+
+            self.query_time.labels(self.t, self.groupName, q).observe(dur)
+        except requests.exceptions.ConnectionError as e:
+            print("Could not query prometheus instance %s. \n %s" %(self.url, e))
 
 
 def main():
