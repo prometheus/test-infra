@@ -55,17 +55,17 @@ class Querier(object):
     """
     Querier launches groups of queries against a Prometheus service.
     """
-    def __init__(self, i, t, qg, hist):
+    def __init__(self, t, qg, hist):
         self.url = "http://prometheus-test-%s.default:9090/api/v1/query?" % t
         self.interval = qg["intervalSeconds"]
         self.queries = qg["queries"]
-        self.i = i
+        self.groupName = qg["name"]
         self.t = t
 
         self.query_time = hist
 
     def run(self):
-        print("run querier %s %s" % (self.t, self.i))
+        print("run querier %s %s" % (self.t, self.groupName))
 
         while True:
             start = time.time()
@@ -84,7 +84,7 @@ class Querier(object):
         dur = time.time() - start
         print("query %s %s, status=%s, size=%d, dur=%d" %(self.t, q, resp.status_code, len(resp.text), dur))
 
-        self.query_time.labels(self.t, str(self.i), q).observe(dur)
+        self.query_time.labels(self.t, str(self.groupName), q).observe(dur)
 
 
 def main():
@@ -119,7 +119,7 @@ def main():
     for t in config["querier"]["targets"]:
         i = 0
         for g in config["querier"]["queryGroups"]:
-            p = threading.Thread(target=Querier(i, t["name"], g, hist).run)
+            p = threading.Thread(target=Querier(t["name"], g, hist).run)
             p.start()
             i += 1
 
