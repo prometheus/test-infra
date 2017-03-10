@@ -79,11 +79,9 @@ kind: Service
 metadata:
   name: prometheus-test-{{ p.name }}
   labels:
-    prometheus: test-{{ p.name }}
     app: prometheus
+    prometheus: test-{{ p.name }}
 spec:
-  type: ClusterIP
-  clusterIP: None
   ports:
   - name: prometheus
     port: 9090
