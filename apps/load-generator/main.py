@@ -56,7 +56,7 @@ class Querier(object):
     Querier launches groups of queries against a Prometheus service.
     """
     def __init__(self, t, qg, hist):
-        self.url = "http://prometheus-test-%s.default:9090/api/v1/query?" % t
+        self.url = "http://prometheus-test-%s.default:9090/api/v1/" % t
         self.interval = qg["intervalSeconds"]
         self.queries = qg["queries"]
         self.groupName = qg["name"]
@@ -80,7 +80,13 @@ class Querier(object):
     def query(self, q):
         try:
             start = time.time()
-            resp = requests.get(self.url, params={"query": q})
+
+            params={"query": q["queryString"]}
+            if q["type"] == "query_range":
+                params["start"] = q["start"]
+                params["end"] = q["end"]
+                params["step"] = q["step"]
+            resp = requests.get(self.url + q["type"] + "?", params)
 
             dur = time.time() - start
             print("query %s %s, status=%s, size=%d, dur=%d" %(self.t, q, resp.status_code, len(resp.text), dur))
