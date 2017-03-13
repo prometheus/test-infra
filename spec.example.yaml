@@ -43,8 +43,8 @@ loadGenerator:
       queries:
       - type: query_range
         queryString: go_goroutines
-        start: 1489165548
-        end: 1489165569
+        start: 2h
+        end: 1h
         step: 15s
       - type: query
         queryString: container_memory_rss
