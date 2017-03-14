@@ -38,24 +38,44 @@ loadGenerator:
     - name: v1-5-2
     # Groups of queries that are launched independently.
     queryGroups:
-    - intervalSeconds: 4
+    - name: FirstGroup
+      intervalSeconds: 4
       queries:
-      - go_goroutines
-      - container_memory_rss
-      - kube_pod_container_info
-      - codelab_api_http_requests_in_progress
-      - codelab_api_requests_total
-    - intervalSeconds: 10
+      - type: query_range
+        queryString: go_goroutines
+        start: 2h
+        end: 1h
+        step: 15s
+      - type: query
+        queryString: container_memory_rss
+      - type: query
+        queryString: kube_pod_container_info
+      - type: query
+        queryString: codelab_api_http_requests_in_progress
+      - type: query
+        queryString: codelab_api_requests_total
+    - name: SecondGroup
+      intervalSeconds: 10
       queries:
-      - sum by(image) (container_memory_rss)
-      - sum by(instance) (rate(node_cpu{mode!="idle"}[2m]))
-      - sum by(instance) (rate(node_cpu[2m]))
-      - sum by(instance) (codelab_api_requests_total)
-    - intervalSeconds: 20
+      - type: query
+        queryString: sum by(image) (container_memory_rss)
+      - type: query
+        queryString: sum by(instance) (rate(node_cpu{mode!="idle"}[2m]))
+      - type: query
+        queryString: sum by(instance) (rate(node_cpu[2m]))
+      - type: query
+        queryString: sum by(instance) (codelab_api_requests_total)
+    - name: thirdGroup
+      intervalSeconds: 20
       queries:
-      - rate(codelab_api_requests_total[1m])
-      - sum without(instance) (rate(codelab_api_requests_total[1m]))
-      - histogram_quantile(0.99, sum by(path, le) (rate(codelab_api_request_duration_seconds_bucket[1m])))
-      - histogram_quantile(0.99, sum by(path, method, le) (rate(codelab_api_request_duration_seconds_bucket[1m])))
-      - histogram_quantile(0.99, sum by(instance, le) (rate(codelab_api_request_duration_seconds_bucket[1m])))
+      - type: query
+        queryString: rate(codelab_api_requests_total[1m])
+      - type: query
+        queryString: sum without(instance) (rate(codelab_api_requests_total[1m]))
+      - type: query
+        queryString: histogram_quantile(0.99, sum by(path, le) (rate(codelab_api_request_duration_seconds_bucket[1m])))
+      - type: query
+        queryString: histogram_quantile(0.99, sum by(path, method, le) (rate(codelab_api_request_duration_seconds_bucket[1m])))
+      - type: query
+        queryString: histogram_quantile(0.99, sum by(instance, le) (rate(codelab_api_request_duration_seconds_bucket[1m])))
       
