@@ -11,6 +11,8 @@ import (
 )
 
 var (
+	registry = prometheus.NewRegistry()
+
 	namespace = "codelab"
 	subsystem = "api"
 
@@ -52,7 +54,7 @@ var (
 )
 
 func init() {
-	prometheus.MustRegister(
+	registry.MustRegister(
 		requestsTotal,
 		requestErrorsTotal,
 		requestHistogram,

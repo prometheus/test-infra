@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -20,7 +20,10 @@ func main() {
 
 	for i := 0; i < *n; i++ {
 		mux := http.NewServeMux()
-		mux.Handle("/metrics", prometheus.Handler())
+		mux.Handle("/metrics", promhttp.HandlerFor(
+			registry,
+			promhttp.HandlerOpts{},
+		))
 		go http.ListenAndServe(fmt.Sprintf(":%d", 8080+i), mux)
 	}
 
