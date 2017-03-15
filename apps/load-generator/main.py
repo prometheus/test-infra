@@ -56,68 +56,79 @@ class Querier(object):
     """
     Querier launches groups of queries against a Prometheus service.
     """
-    def __init__(self, t, qg, queryTimeHist, totalQueriesCnt, failedQueriesCnt):
-        self.url = "http://prometheus-test-%s.default:9090/api/v1/" % t
-        self.interval = qg["intervalSeconds"]
+
+    query_duration = Histogram("loadgen_query_duration_seconds", "Query duration",
+        ["prometheus", "group", "expr", "type"],
+        buckets=(0.05, 0.1, 0.3, 0.7, 1.5, 2.5, 4, 6, 8, 10, 13, 16, 20, 24, 29, 36, 42, 50, 60))
+
+    query_count = Counter('loadgen_queries_total', 'Total amount of queries',
+        ["prometheus", "group", "expr", "type"],
+    )
+    query_fail_count = Counter('loadgen_failed_queries_total', 'Amount of failed queries',
+        ["prometheus", "group", "expr", "type"],
+    )
+
+    def __init__(self, target, qg):
+        self.target = target
+        self.name = qg["name"]
+
+        self.interval = duration_seconds(qg["interval"])
         self.queries = qg["queries"]
-        self.groupName = qg["name"]
-        self.t = t
+        self.type = qg.get("type", "instant")
+        self.start = duration_seconds(qg.get("start", "0h"))
+        self.end = duration_seconds(qg.get("end", "0h"))
+        self.step = qg.get("step", "15s")
 
-        self.query_time = queryTimeHist
-        self.total_queries = totalQueriesCnt
-        self.failed_queries = failedQueriesCnt
-
+        if self.type == "instant":
+            self.url = "http://prometheus-test-%s.default:9090/api/v1/query" % target
+        else:
+            self.url = "http://prometheus-test-%s.default:9090/api/v1/query_range" % target
 
     def run(self):
-        print("run querier %s %s" % (self.t, self.groupName))
+        print("run querier %s %s" % (self.target, self.name))
 
         while True:
             start = time.time()
 
             for q in self.queries:
-                self.query(q)
+                self.query(q["expr"])
 
             wait = self.interval - (time.time() - start)
-            if wait > 0:
-                time.sleep(wait)
+            time.sleep(max(wait, 0))
 
-    def query(self, q):
+    def query(self, expr):
         try:
-            self.total_queries \
-            .labels(self.t, self.groupName, q["queryString"], q["type"], q.get("start"), q.get("end"), q.get("step")) \
-            .inc()
+            Querier.query_count.labels(self.target, self.name, expr, self.type).inc()
             start = time.time()
 
-            params={"query": q["queryString"]}
-            if q["type"] == "query_range":
-                params["start"] = start - string2Seconds(q["start"])
-                params["end"] = start - string2Seconds(q["end"])
-                params["step"] = q["step"]
+            params = {"query": expr}
+            if self.type == "range":
+                params["start"] = start - self.start
+                params["end"] = start - self.end
+                params["step"] = self.step
 
-            resp = requests.get(self.url + q["type"] + "?", params)
-
+            resp = requests.get(self.url, params)
             dur = time.time() - start
-            print("query %s %s, status=%s, size=%d, dur=%d" %(self.t, q, resp.status_code, len(resp.text), dur))
 
-            self.query_time \
-            .labels(self.t, self.groupName, q["queryString"], q["type"], q.get("start"), q.get("end"), q.get("step")) \
-            .observe(dur)
+            print("query %s %s, status=%s, size=%d, dur=%.3f" % (self.target, expr, resp.status_code, len(resp.text), dur))
+
+            Querier.query_duration.labels(self.target, self.name, expr, self.type).observe(dur)
+
         except Exception as e:
-            self.failed_queries \
-            .labels(self.t, self.groupName, q["queryString"], q["type"], q.get("start"), q.get("end"), q.get("step")) \
-            .inc()
-            print("Could not query prometheus instance %s. \n %s" %(self.url, e))
+            Querier.query_fail_count.labels(self.target, self.name, expr, self.type).inc()
+            print("Could not query prometheus instance %s. \n %s" % (self.url, e))
 
-def string2Seconds(timeString):
-    num = int(timeString[:-1])
-    if timeString.endswith('s'):
+def duration_seconds(s):
+    num = int(s[:-1])
+
+    if s.endswith('s'):
         return timedelta(seconds=num).total_seconds()
-    elif timeString.endswith('m'):
+    elif s.endswith('m'):
         return timedelta(minutes=num).total_seconds()
-    elif timeString.endswith('h'):
+    elif s.endswith('h'):
         return timedelta(hours=num).total_seconds()
-    elif timeString.endswith('d'):
-        return timedelta(days=num).total_seconds()
+
+    raise "unknown duration %s" % s
 
 def main():
     if len(sys.argv) < 2 or sys.argv[1] not in ["scaler", "querier"]:
@@ -144,23 +155,10 @@ def main():
         Scaler(config["scaler"], url, req_kwargs).run()
         return
 
-    queryTimeHist = Histogram("loadgen_query_duration_seconds", "Query duration",
-        ["prometheus", "group", "queryString", "queryType", "start", "end", "step"],
-        buckets=(0.01, 0.05, 0.1, 0.3, 0.7, 1.5, 3, 6, 12, 18, 28))
-    totalQueriesCnt = Counter('loadgen_total_queries', 'Total amount of queries',
-        ["prometheus", "group", "queryString", "queryType", "start", "end", "step"],
-    )
-    failedQueriesCnt = Counter('loadgen_failed_queries', 'Amount of failed queries',
-        ["prometheus", "group", "queryString", "queryType", "start", "end", "step"],
-    )
-
-
     for t in config["querier"]["targets"]:
-        i = 0
-        for g in config["querier"]["queryGroups"]:
-            p = threading.Thread(target=Querier(t["name"], g, queryTimeHist, totalQueriesCnt, failedQueriesCnt).run)
+        for g in config["querier"]["groups"]:
+            p = threading.Thread(target=Querier(t["name"], g).run)
             p.start()
-            i += 1
 
     start_http_server(8080)
     print("started HTTP server on 8080")
