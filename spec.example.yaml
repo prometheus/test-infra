@@ -32,50 +32,48 @@ loadGenerator:
     low: 50 
     intervalMinutes: 15
   querier:
-    # `name` fields of Prometheus server to actually run against
     targets:
     - name: dev-2-0
     - name: v1-5-2
-    # Groups of queries that are launched independently.
-    queryGroups:
-    - name: FirstGroup
-      intervalSeconds: 4
+    groups:
+    - name: simple_range
+      interval: 4s
+      type: range
+      start: 2h
+      end: 1h
+      step: 15s
       queries:
-      - type: query_range
-        queryString: go_goroutines
-        start: 2h
-        end: 1h
-        step: 15s
-      - type: query
-        queryString: container_memory_rss
-      - type: query
-        queryString: kube_pod_container_info
-      - type: query
-        queryString: codelab_api_http_requests_in_progress
-      - type: query
-        queryString: codelab_api_requests_total
-    - name: SecondGroup
-      intervalSeconds: 10
+      - expr: go_goroutines
+      - expr: container_memory_rss
+      - expr: kube_pod_container_info
+      - expr: codelab_api_http_requests_in_progress
+      - expr: codelab_api_requests_total
+    - name: aggr_instant
+      interval: 10s
+      type: instant
       queries:
-      - type: query
-        queryString: sum by(image) (container_memory_rss)
-      - type: query
-        queryString: sum by(instance) (rate(node_cpu{mode!="idle"}[2m]))
-      - type: query
-        queryString: sum by(instance) (rate(node_cpu[2m]))
-      - type: query
-        queryString: sum by(instance) (codelab_api_requests_total)
-    - name: thirdGroup
-      intervalSeconds: 20
+      - expr: sum by(image) (container_memory_rss)
+      - expr: sum by(instance) (rate(node_cpu{mode!="idle"}[2m]))
+      - expr: sum by(instance) (rate(node_cpu[2m]))
+      - expr: sum by(instance) (rate(codelab_api_requests_total[2m]))
+      - expr: sum by(instance) (rate(codelab_api_requests_total{method=~"GET|POST"}[2m]))
+    - name: aggr_range
+      interval: 10s
+      type: range
+      start: 1h
+      end: 0h
+      step: 15s
       queries:
-      - type: query
-        queryString: rate(codelab_api_requests_total[1m])
-      - type: query
-        queryString: sum without(instance) (rate(codelab_api_requests_total[1m]))
-      - type: query
-        queryString: histogram_quantile(0.99, sum by(path, le) (rate(codelab_api_request_duration_seconds_bucket[1m])))
-      - type: query
-        queryString: histogram_quantile(0.99, sum by(path, method, le) (rate(codelab_api_request_duration_seconds_bucket[1m])))
-      - type: query
-        queryString: histogram_quantile(0.99, sum by(instance, le) (rate(codelab_api_request_duration_seconds_bucket[1m])))
-      
+      - expr: sum by(image) (container_memory_rss)
+      - expr: sum by(instance) (rate(node_cpu{mode!="idle"}[2m]))
+      - expr: sum by(instance) (rate(node_cpu[2m]))
+      - expr: sum by(instance) (rate(codelab_api_requests_total[2m]))
+      - expr: sum by(instance) (rate(codelab_api_requests_total{method=~"GET|POST"}[2m]))
+    - name: heavy_instant
+      interval: 20s
+      queries:
+      - expr: rate(codelab_api_requests_total{method=~"GET|POST"}[1m])
+      - expr: sum without(instance) (rate(codelab_api_requests_total{method=~"GET|POST"}[1m]))
+      - expr: histogram_quantile(0.99, sum by(path, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[1m])))
+      - expr: histogram_quantile(0.99, sum by(path, method, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[1m])))
+      - expr: histogram_quantile(0.99, sum by(instance, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[1m])))
