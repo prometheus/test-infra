@@ -1,2 +1,5 @@
 requests
-yaml
+pyyaml
+pyopenssl
+prometheus_client
+datetime
