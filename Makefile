@@ -40,7 +40,7 @@ cluster: manifests aws-deps
 		--cloud aws --zones $(aws_region)a --kubernetes-version 1.5.2 \
 		--master-size t2.large --yes
 	EDITOR='./ed.sh $(build_path)/manifests/kops/regular-ig.yaml' $(KOPS_CMD) edit ig nodes
-	EDITOR='./ed.sh $(build_path)/manifests/kops/prometheus-ig.yaml' $(KOPS_CMD) create ig prometheus
+	EDITOR='./ed.sh $(build_path)/manifests/kops/prometheus-ig.yaml' $(KOPS_CMD) --subnet=$(aws_region)a create ig prometheus
 	$(KOPS_CMD) update cluster --yes
 
 wait-for-cluster: init
