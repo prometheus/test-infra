@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prometheus-meta
@@ -6,17 +6,35 @@ metadata:
     app: prometheus-meta
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+      prometheus: meta
   template:
     metadata:
       labels:
         app: prometheus
         prometheus: meta
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - prometheus
+      securityContext:
+        runAsUser: 0
       containers:
-      - image: quay.io/fabxc/prometheus-bench:v1.5.2
-        args: [
-          "-config.file=/etc/prometheus/config/prometheus.yaml",
-        ]
+      - image: quay.io/prometheus/prometheus:v2.0.0
+        args:
+        - "--config.file=/etc/prometheus/config/prometheus.yaml"
+        - "--storage.tsdb.path=/data"
+        - "--storage.tsdb.min-block-duration=15m"
+        - "--storage.tsdb.max-block-duration=4h"
         name: prometheus
         resources:
           requests:
@@ -25,13 +43,21 @@ spec:
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus/config
+        - name: instance-ssd
+          mountPath: /data
       volumes:
       - name: config-volume
         configMap:
           name: prometheus-meta
+      - name: instance-ssd
+        hostPath:
+          # /mnt is where the KOPS AMIs mount the instance-store SSDs available on C3 instances
+          # don't change this if you want Prometheus to take advantage of these local SSDs
+          path: /mnt/meta
+          type: DirectoryOrCreate
       terminationGracePeriodSeconds: 300
       nodeSelector:
-        isolation: none
+        isolation: prometheus
 ---
 apiVersion: v1
 kind: Service
@@ -59,7 +85,17 @@ data:
     global:
       scrape_interval: 5s
     scrape_configs:
-    - job_name: kubelets
+    - job_name: kubelet
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecure_skip_verify: true
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+
+      kubernetes_sd_configs:
+      - role: node
+    - job_name: cadvisor
+      metrics_path: /metrics/cadvisor
       scheme: https
       tls_config:
         ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt

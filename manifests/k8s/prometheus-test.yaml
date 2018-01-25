@@ -1,40 +1,36 @@
 {%- for p in prometheus.instances %}
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prometheus-test-{{ p.name }}
   labels:
     app: prometheus
     prometheus: test-{{ p.name }}
-  annotations:
-    scheduler.alpha.kubernetes.io/affinity: >
-        {
-          "podAntiAffinity": {
-            "requiredDuringSchedulingIgnoredDuringExecution": [
-              {
-                "labelSelector": {
-                  "matchExpressions": [
-                    {
-                      "key": "app",
-                      "operator": "In",
-                      "values": ["prometheus"]
-                    }
-                  ]
-                },
-                "topologyKey": "kubernetes.io/hostname"
-             }
-            ]
-           }
-         }
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+      prometheus: test-{{ p.name }}
   template:
     metadata:
       labels:
         app: prometheus
         prometheus: test-{{ p.name }}
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - prometheus
+      securityContext:
+        runAsUser: 0
       containers:
       - name: prometheus
         image: {{ p.image }}
@@ -48,8 +44,8 @@ spec:
           {%- endfor %}
         {%- endif %}
         args: [
-          "-config.file=/etc/prometheus/config/prometheus.yaml",
-          "-storage.local.path=/data",
+          "--config.file=/etc/prometheus/config/prometheus.yaml",
+          "--storage.tsdb.path=/data",
           {%- if p.flags is defined %}
             {%- for f in p.flags %}
           "{{ f }}",
@@ -69,7 +65,8 @@ spec:
         hostPath:
           # /mnt is where the KOPS AMIs mount the instance-store SSDs available on C3 instances
           # don't change this if you want Prometheus to take advantage of these local SSDs
-          path: /mnt
+          path: /mnt/{{ p.name }}
+          type: DirectoryOrCreate
       terminationGracePeriodSeconds: 300
       nodeSelector:
         isolation: prometheus

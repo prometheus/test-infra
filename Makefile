@@ -1,17 +1,23 @@
 CLUSTER_NAME  ?= prom-test-$(shell whoami)
-DOMAIN        ?= dev.coreos.systems
+DOMAIN        ?= monitoring.team.coreos.systems
 SPEC          ?= spec.example.yaml
-AMOUNT_NODES	= $$(($(shell cat $(spec) | yq '.prometheus.instances | length')+$(shell cat $(spec) | yq '.workers.count')+1))
+
+# prometheus test servers + workers + 1x master + 1x prometheus meta server
+AMOUNT_NODES	= $$(($(shell cat $(spec) | yq '.prometheus.instances | length')+$(shell cat $(spec) | yq '.workers.count')+1+1))
 
 path          ?= clusters/${CLUSTER_NAME}
 build_path    := $(path)/.build
 spec          := $(path)/spec.yaml
-aws_region     = $(shell cat $(spec) | yq .awsRegion)
+aws_region     = $(shell cat $(spec) | yq -r .awsRegion)
 
 KOPS_CMD        = kops --state $(shell terraform output -state "$(build_path)/terraform.tfstate" kops_state_bucket)
 TERRAFORM_FLAGS = -var "dns_domain=$(DOMAIN)" -var "cluster_name=$(CLUSTER_NAME)" -state "$(build_path)/terraform.tfstate"
 MANIFEST_TEMPLATES := $(wildcard manifests/**/*.yaml)
 MANIFESTS          := $(patsubst %,$(build_path)/%,$(MANIFEST_TEMPLATES))
+
+master_size = t2.large
+node_size = $(shell cat $(spec) | yq -r .workers.machineType)
+node_count = $(shell cat $(spec) | yq -r .workers.count)
 
 all: check-deps cluster cluster-deploy
 
@@ -31,16 +37,17 @@ $(path)/.build/manifests/%.yaml: init
 	@jinja2 manifests/$*.yaml $(spec) > $@
 
 aws-deps:
+	AWS_REGION=$(aws_region) terraform init ./templates
 	AWS_REGION=$(aws_region) terraform apply $(TERRAFORM_FLAGS) ./templates
 
 cluster: manifests aws-deps
 	$(KOPS_CMD) get cluster | grep -v $(CLUSTER_NAME).$(DOMAIN) || \
 	$(KOPS_CMD) create cluster \
 		--name $(CLUSTER_NAME).$(DOMAIN) \
-		--cloud aws --zones $(aws_region)a --kubernetes-version 1.5.2 \
-		--master-size t2.large --yes
+		--cloud aws --zones $(aws_region)a --kubernetes-version 1.9.2 \
+		--master-size $(master_size) --node-size $(node_size) --node-count $(node_count) --yes
 	EDITOR='./ed.sh $(build_path)/manifests/kops/regular-ig.yaml' $(KOPS_CMD) edit ig nodes
-	EDITOR='./ed.sh $(build_path)/manifests/kops/prometheus-ig.yaml' $(KOPS_CMD) create ig prometheus
+	EDITOR='./ed.sh $(build_path)/manifests/kops/prometheus-ig.yaml' $(KOPS_CMD) create ig prometheus --subnet $(aws_region)a
 	$(KOPS_CMD) update cluster --yes
 
 wait-for-cluster: init
