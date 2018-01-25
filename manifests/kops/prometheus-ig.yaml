@@ -5,8 +5,8 @@ metadata:
 spec:
   associatePublicIp: true
   machineType: {{ prometheus.machineType }}
-  maxSize: {{ prometheus.instances | length }}
-  minSize: {{ prometheus.instances | length }}
+  maxSize: {{ ( prometheus.instances | length ) + 1 }}
+  minSize: {{ ( prometheus.instances | length ) + 1 }}
   nodeLabels:
     isolation: prometheus
   role: Node

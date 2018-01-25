@@ -34,7 +34,7 @@ metadata:
   name: kube-state-metrics
 spec:
   ports:
-  - name: metrics 
+  - name: metrics
     port: 8080
     targetPort: metrics
     protocol: TCP
