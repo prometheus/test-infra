@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"github.com/prometheus/prombench/providers/gke"
+	"github.com/prometheus/prombench/provider/gke"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
