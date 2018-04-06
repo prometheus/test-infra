@@ -12,13 +12,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
-const (
-	cloudScope        = "https://www.googleapis.com/auth/cloud-platform"
-	monitorWriteScope = "https://www.googleapis.com/auth/monitoring.write"
-	storageReadScope  = "https://www.googleapis.com/auth/devstorage.read_only"
-	statusRunning     = "RUNNING"
-)
-
 // Cluster holds the fields used to generate an API request.
 type Cluster struct {
 	// ProjectID is the ID of your project to use when creating a cluster.
