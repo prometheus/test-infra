@@ -3,13 +3,7 @@ kind: DaemonSet
 metadata:
   name: node-exporter
 spec:
-  selector:
-    matchLabels:
-      app: node-exporter
-  updateStrategy:
-    rollingUpdate:
-      maxUnavailable: 1
-    type: RollingUpdate
+  replicas: 2
   template:
     metadata:
       labels:
