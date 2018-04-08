@@ -3,6 +3,7 @@ kind: DaemonSet
 metadata:
   name: node-exporter
 spec:
+  replicas: 2
   template:
     metadata:
       labels:
