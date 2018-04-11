@@ -1,3 +1,9 @@
+#TO_DO 
+allow ovverrides from cli
+    - MachineType: {{ if .MachineType }} {{ .MachineType }} {{ else }} n1-standard-1 {{ end }}
+prombench cluster create --ovverides=MachineType=....,ram=....
+use vgo
+
 # prometheus-test-environment
 A Kubernetes cluster preconfigured for testing Prometheus
 
