@@ -2,7 +2,6 @@
 allow ovverrides from cli
     - MachineType: {{ if .MachineType }} {{ .MachineType }} {{ else }} n1-standard-1 {{ end }}
 prombench cluster create --ovverides=MachineType=....,ram=....
-use vgo
 
 # prometheus-test-environment
 A Kubernetes cluster preconfigured for testing Prometheus
@@ -12,7 +11,7 @@ A Kubernetes cluster preconfigured for testing Prometheus
 1. Create a GKE project: `prometheus`.
 2. Create a project service account and save the json file in `cmd/prombench`.
 3. Set the env variable to use the auth file: `export GOOGLE_APPLICATION_CREDENTIALS=key.json`
-
+4. Build prombench using `vgo build`
 
 ## Usage
 1. Create a cluster using the defaults: 
