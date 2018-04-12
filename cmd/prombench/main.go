@@ -23,11 +23,11 @@ func main() {
 	k8sGKECluster.Command("create", "create a new k8s cluster").Action(g.ClusterCreate)
 	k8sGKECluster.Command("delete", "delete a k8s cluster").Action(g.ClusterDelete)
 
-	k8sGKEDeployment := k8sGKE.Command("resource", "create or update different k8s resources").Action(g.NewResourceClient)
-	k8sGKEDeployment.Flag("file", "resources manifest file").Short('f').Required().ExistingFilesVar(&g.ResourceFiles)
-	k8sGKEDeployment.Flag("vars", "resources manifest file").Short('v').Required().StringMapVar(&g.ResourceVars)
-	k8sGKEDeployment.Command("apply", "create or update a k8s resources").Action(g.ResourceApply)
-	k8sGKEDeployment.Command("delete", "delete a k8s resources").Action(g.ResourceDelete)
+	k8sGKEResource := k8sGKE.Command("resource", "create or update different k8s resources").Action(g.NewResourceClient)
+	k8sGKEResource.Flag("file", "resources manifest file").Short('f').Required().ExistingFilesVar(&g.ResourceFiles)
+	k8sGKEResource.Flag("vars", "resources manifest file").Short('v').Required().StringMapVar(&g.ResourceVars)
+	k8sGKEResource.Command("delete", "delete a k8s resources").Action(g.ResourceDelete)
+	k8sGKEResource.Command("apply", "create or update a k8s resources").Action(g.ResourceApply)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error parsing commandline arguments"))
