@@ -1,10 +1,14 @@
 package gke
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
+	"strings"
+	"text/template"
 	"time"
 
 	gke "cloud.google.com/go/container/apiv1"
@@ -12,29 +16,39 @@ import (
 	containerpb "google.golang.org/genproto/googleapis/container/v1"
 	"gopkg.in/alecthomas/kingpin.v2"
 	yamlGo "gopkg.in/yaml.v2"
-	appsv1 "k8s.io/api/apps/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/client-go/kubernetes/typed/apps/v1beta1"
+	apiCoreV1 "k8s.io/api/core/v1"
+	apiExtensionsV1beta1 "k8s.io/api/extensions/v1beta1"
+	apiMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/util/retry"
 )
 
+// New is the GKE constructor.
+func New() *GKE {
+	return &GKE{
+		ResourceVars: make(map[string]string),
+	}
+}
+
 // GKE holds the fields used to generate an API request.
 type GKE struct {
-	// The location of the config file used to parse all other options.
-	ConfigFile string
-	// The authentication information for accessing the k8s master endpoint.
-	MasterAuth *containerpb.MasterAuth
+	// The config file location provided to the cli.
+	ClusterConfigFile string
+	// The config file for cluster operations.
+	clusterConfig *containerpb.CreateClusterRequest
 	// The gke client used when performing GKE requests.
 	clientGKE *gke.ClusterManagerClient
-
 	// The k8s client used when performing deployment requests.
-	clientK8SDeployments v1beta1.DeploymentInterface
+	clientset *kubernetes.Clientset
 	// Holds the deployments files to apply to the cluster.
-	DeploymentFiles []string
+	ResourceFiles []string
 	// Deployment vaiables to subtitude in the deployment files.
-	DeploymentVars map[string]string
+	ResourceVars map[string]string
 
 	ctx context.Context
 }
@@ -55,78 +69,43 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	return nil
 }
 
-// configParse populates and validates the cluster configuraiton options.
-func (c *GKE) configParse() *containerpb.CreateClusterRequest {
-	content, err := ioutil.ReadFile(c.ConfigFile)
+// ConfigParse populates and validates the cluster configuraiton options.
+func (c *GKE) ConfigParse(*kingpin.ParseContext) error {
+	content, err := ioutil.ReadFile(c.ClusterConfigFile)
 	if err != nil {
 		log.Fatalf("error reading the config file:%v", err)
 	}
 
-	req := &containerpb.CreateClusterRequest{}
-	if err = yamlGo.UnmarshalStrict(content, req); err != nil {
+	config := &containerpb.CreateClusterRequest{}
+	if err = yamlGo.UnmarshalStrict(content, config); err != nil {
 		log.Fatalf("error parsing the config file:%v", err)
 	}
-	return req
-}
-
-// ClusterList lists current k8s clusters.
-func (c *GKE) ClusterList(*kingpin.ParseContext) error {
-
-	// req := &containerpb.ListClustersRequest{
-	// 	ProjectId: c.ClusterConfig.ProjectID,
-	// 	Zone:      c.ClusterConfig.Zone,
-	// }
-	// list, err := c.clientGKE.ListClusters(c.ctx, req)
-	// if err != nil {
-	// 	log.Fatalf("failed to list clusters: %v", err)
-	// }
-	// for _, v := range list.Clusters {
-	// 	log.Printf("Cluster %q (%s) master_version: v%s", v.Name, v.Status, v.CurrentMasterVersion)
-	// }
-	return nil
-}
-
-// ClusterGet details for a k8s clusters.
-func (c *GKE) ClusterGet(*kingpin.ParseContext) error {
-
-	// req := &containerpb.GetClusterRequest{
-	// 	ProjectId: c.ProjectID,
-	// 	Zone:      c.Zone,
-	// 	ClusterId: c.Name,
-	// }
-	// rep, err := c.clientGKE.GetCluster(c.ctx, req)
-	// if err != nil {
-	// 	log.Fatalf("failed to get cluster details: %v", err)
-	// }
-
-	// fmt.Printf("%+v", rep)
+	c.clusterConfig = config
 	return nil
 }
 
 // ClusterCreate sreates a new k8s cluster
 func (c *GKE) ClusterCreate(*kingpin.ParseContext) error {
-	req := c.configParse()
-	log.Printf("Cluster create request: %+v", req)
+	log.Printf("Cluster create request: %+v", c.clusterConfig)
 
-	res, err := c.clientGKE.CreateCluster(c.ctx, req)
+	res, err := c.clientGKE.CreateCluster(c.ctx, c.clusterConfig)
 	if err != nil {
 		log.Fatalf("Couldn't create a cluster:%v", err)
 	}
 	log.Printf("Cluster request: %+v", res)
 
-	log.Printf("Cluster %s create is called for project %s and zone %s.", req.Cluster.Name, req.ProjectId, req.Zone)
+	log.Printf("Cluster %s create is called for project %s and zone %s.", c.clusterConfig.Cluster.Name, c.clusterConfig.ProjectId, c.clusterConfig.Zone)
 
-	return c.waitForCluster(req.ProjectId, req.Zone, req.Cluster.Name)
+	return c.waitForCluster()
 }
 
 // ClusterDelete deletes a k8s cluster.
 func (c *GKE) ClusterDelete(*kingpin.ParseContext) error {
-	config := c.configParse()
 
 	req := &containerpb.DeleteClusterRequest{
-		ProjectId: config.ProjectId,
-		Zone:      config.Zone,
-		ClusterId: config.Cluster.Name,
+		ProjectId: c.clusterConfig.ProjectId,
+		Zone:      c.clusterConfig.Zone,
+		ClusterId: c.clusterConfig.Cluster.Name,
 	}
 
 	log.Printf("Removing cluster %v from project %v, zone %v", req.ClusterId, req.ProjectId, req.Zone)
@@ -139,82 +118,131 @@ func (c *GKE) ClusterDelete(*kingpin.ParseContext) error {
 	return nil
 }
 
-// NewDeploymentClient sets the client used for deployment requests.
-func (c *GKE) NewDeploymentClient(*kingpin.ParseContext) error {
-	// req := &containerpb.GetClusterRequest{
-	// 	ProjectId: c.ProjectID,
-	// 	Zone:      c.Zone,
-	// 	ClusterId: c.Name,
-	// }
-	// rep, err := c.clientGKE.GetCluster(c.ctx, req)
-	// if err != nil {
-	// 	log.Fatalf("failed to get cluster details: %v", err)
-	// }
+// NewResourceClient sets the client used for deployment requests.
+func (c *GKE) NewResourceClient(*kingpin.ParseContext) error {
+	req := &containerpb.GetClusterRequest{
+		ProjectId: c.clusterConfig.ProjectId,
+		Zone:      c.clusterConfig.Zone,
+		ClusterId: c.clusterConfig.Cluster.Name,
+	}
+	rep, err := c.clientGKE.GetCluster(c.ctx, req)
+	if err != nil {
+		log.Fatalf("failed to get cluster details: %v", err)
+	}
 
-	// // The master auth retrieved from GCP it is base64 encoded so it must be decoded first.
-	// caCert, err := base64.StdEncoding.DecodeString(rep.MasterAuth.GetClusterCaCertificate())
-	// if err != nil {
-	// 	log.Fatalf("failed to decode certificate: %v", err.Error())
-	// }
+	// The master auth retrieved from GCP it is base64 encoded so it must be decoded first.
+	caCert, err := base64.StdEncoding.DecodeString(rep.MasterAuth.GetClusterCaCertificate())
+	if err != nil {
+		log.Fatalf("failed to decode certificate: %v", err.Error())
+	}
 
-	// cluster := clientcmdapi.NewCluster()
-	// cluster.CertificateAuthorityData = []byte(caCert)
-	// cluster.Server = fmt.Sprintf("https://%v", rep.Endpoint)
+	cluster := clientcmdapi.NewCluster()
+	cluster.CertificateAuthorityData = []byte(caCert)
+	cluster.Server = fmt.Sprintf("https://%v", rep.Endpoint)
 
-	// context := clientcmdapi.NewContext()
-	// context.Cluster = rep.Name
-	// context.AuthInfo = rep.Zone
+	context := clientcmdapi.NewContext()
+	context.Cluster = rep.Name
+	context.AuthInfo = rep.Zone
 
-	// authInfo := clientcmdapi.NewAuthInfo()
-	// authInfo.AuthProvider = &clientcmdapi.AuthProviderConfig{
-	// 	Name: "gcp",
-	// 	Config: map[string]string{
-	// 		"cmd-args":   "config config-helper --format=json",
-	// 		"expiry-key": "{.credential.token_expiry}",
-	// 		"token-key":  "{.credential.access_token}",
-	// 	},
-	// }
+	authInfo := clientcmdapi.NewAuthInfo()
+	authInfo.AuthProvider = &clientcmdapi.AuthProviderConfig{
+		Name: "gcp",
+		Config: map[string]string{
+			"cmd-args":   "config config-helper --format=json",
+			"expiry-key": "{.credential.token_expiry}",
+			"token-key":  "{.credential.access_token}",
+		},
+	}
 
-	// config := clientcmdapi.NewConfig()
-	// config.Clusters[rep.Name] = cluster
-	// config.Contexts[rep.Zone] = context
-	// config.AuthInfos[rep.Zone] = authInfo
-	// config.CurrentContext = rep.Zone
+	config := clientcmdapi.NewConfig()
+	config.Clusters[rep.Name] = cluster
+	config.Contexts[rep.Zone] = context
+	config.AuthInfos[rep.Zone] = authInfo
+	config.CurrentContext = rep.Zone
 
-	// restConfig, err := clientcmd.NewDefaultClientConfig(*config, &clientcmd.ConfigOverrides{}).ClientConfig()
-	// if err != nil {
-	// 	log.Fatalf("config error: %v", err)
-	// }
-	// clientset, err := kubernetes.NewForConfig(restConfig)
-	// if err != nil {
-	// 	log.Fatalf("clientset error: %v", err)
-	// }
+	restConfig, err := clientcmd.NewDefaultClientConfig(*config, &clientcmd.ConfigOverrides{}).ClientConfig()
+	if err != nil {
+		log.Fatalf("config error: %v", err)
+	}
+	clientset, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		log.Fatalf("clientset error: %v", err)
+	}
 
-	// c.clientK8SDeployments = clientset.AppsV1beta1().Deployments(apiv1.NamespaceDefault)
+	c.clientset = clientset
 	return nil
 }
 
-// DeploymentApply applies manifest files to the k8s cluster.
-func (c *GKE) DeploymentApply(*kingpin.ParseContext) error {
-	deployment := &appsv1.Deployment{}
+// ResourceApply iterates over all files passed as a cli argument
+// and creates or updates the resource definitions to the k8s cluster.
+//
+// Each file can container more than one resource definition where `apiVersion` is used as separator.
+//
+// Any deployment variables passed to the cli will be replaced in the manifests files following the golang text template format.
+func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
 
-	for _, f := range c.DeploymentFiles {
-		file, err := os.Open(f)
+	for _, file := range c.ResourceFiles {
+		fileContent, err := ioutil.ReadFile(file)
 		if err != nil {
-			log.Fatalf("error reading the manifest file:%v", err)
-		}
-		if err := yaml.NewYAMLOrJSONDecoder(file, 100).Decode(deployment); err != nil {
-			log.Fatalf("error reading the manifest file:%v", err)
+			log.Fatalf("error while reading the manifest file:%v", err)
 		}
 
-		list, err := c.clientK8SDeployments.List(metav1.ListOptions{})
+		fileContentParsed := bytes.NewBufferString("")
+
+		if err := template.Must(template.New("deployment").Parse(string(fileContent))).Execute(fileContentParsed, c.ResourceVars); err != nil {
+			log.Println("executing template:", err)
+		}
+
+		splitBy := "apiVersion"
+		decode := scheme.Codecs.UniversalDeserializer().Decode
+
+		for k, text := range strings.Split(fileContentParsed.String(), splitBy) {
+			if k%2 != 0 { // The even elements return the splitBy string so we don't need those.
+				deployment, _, err := decode([]byte(splitBy+text), nil, nil)
+				if err != nil {
+					log.Fatalf("error while decoding the manifest file: %v", err)
+				}
+				switch deployment.GetObjectKind().GroupVersionKind().Kind {
+				case "Deployment":
+					c.deploymentApply(deployment)
+				case "ConfigMap":
+					c.configMapApply(deployment)
+				}
+
+			}
+		}
+	}
+
+	return nil
+}
+
+func (c *GKE) deploymentApply(deployment runtime.Object) {
+
+	switch deployment.GetObjectKind().GroupVersionKind().Version {
+	case "v1beta1":
+		client := c.clientset.ExtensionsV1beta1().Deployments(apiCoreV1.NamespaceDefault)
+		res, err := client.Create(deployment.(*apiExtensionsV1beta1.Deployment))
+		fmt.Println(res)
+		fmt.Println(err)
+	}
+
+}
+
+func (c *GKE) configMapApply(deployment runtime.Object) {
+	switch deployment.GetObjectKind().GroupVersionKind().Version {
+	case "v1":
+		req := deployment.(*apiCoreV1.ConfigMap)
+		var res *apiCoreV1.ConfigMap
+		client := c.clientset.CoreV1().ConfigMaps(apiCoreV1.NamespaceDefault)
+
+		list, err := client.List(apiMetaV1.ListOptions{})
 		if err != nil {
-			log.Fatalf("error listing server deployments:%v", err)
+			log.Fatalf("error listing server config mapes:%v", err)
 		}
 
 		var exists bool
 		for _, l := range list.Items {
-			if l.Name == deployment.Name {
+			if l.Name == req.Name {
 				exists = true
 				break
 			}
@@ -235,60 +263,60 @@ func (c *GKE) DeploymentApply(*kingpin.ParseContext) error {
 			// More Info:
 			// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#concurrency-control-and-consistency
 
-			retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, updateErr := c.clientK8SDeployments.Update(deployment)
-				return updateErr
+			err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+				_, err := client.Update(req)
+				return err
 			})
-			if retryErr != nil {
-				log.Fatalf("deployment update failed: %v", retryErr)
+			if err != nil {
+				log.Fatalf("config map update failed: %v", err)
 			}
-			log.Printf("updated deployment:%v", deployment.Name)
+			log.Printf("updated config map:%v", req.Name)
 		} else {
 			// Create Deployment
-			result, err := c.clientK8SDeployments.Create(deployment)
+			res, err := client.Create(deployment.(*apiCoreV1.ConfigMap))
+
 			if err != nil {
 				log.Fatalf("deployment create error: %v", err)
 			}
-			log.Printf("created deployment %q.\n", result.GetObjectMeta().GetName())
+			log.Printf("created config map %q.\n", res.GetObjectMeta().GetName())
 		}
-
+		fmt.Println(res)
+		fmt.Println(err)
 	}
+}
 
+// ResourceDelete deletes a k8s resource.
+func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
+	// deletePolicy := metav1.DeletePropagationForeground
+
+	// deployment := &appsv1.Deployment{}
+
+	// for _, f := range c.DeploymentFiles {
+	// 	file, err := os.Open(f)
+	// 	if err != nil {
+	// 		log.Fatalf("error reading the manifest file:%v", err)
+	// 	}
+	// 	if err := yaml.NewYAMLOrJSONDecoder(file, 100).Decode(deployment); err != nil {
+	// 		log.Fatalf("error reading the manifest file:%v", err)
+	// 	}
+
+	// 	if err := c.clientK8SDeployments.Delete(deployment.Name, &metav1.DeleteOptions{
+	// 		PropagationPolicy: &deletePolicy,
+	// 	}); err != nil {
+	// 		log.Printf("deployment delete error: %v", err)
+
+	// 	} else {
+	// 		log.Printf("deleted deployment:%v", deployment.Name)
+	// 	}
+	// }
 	return nil
 }
 
-// DeploymentDelete deletes a k8s deployment.
-func (c *GKE) DeploymentDelete(*kingpin.ParseContext) error {
-	deletePolicy := metav1.DeletePropagationForeground
-
-	deployment := &appsv1.Deployment{}
-
-	for _, f := range c.DeploymentFiles {
-		file, err := os.Open(f)
-		if err != nil {
-			log.Fatalf("error reading the manifest file:%v", err)
-		}
-		if err := yaml.NewYAMLOrJSONDecoder(file, 100).Decode(deployment); err != nil {
-			log.Fatalf("error reading the manifest file:%v", err)
-		}
-
-		if err := c.clientK8SDeployments.Delete(deployment.Name, &metav1.DeleteOptions{
-			PropagationPolicy: &deletePolicy,
-		}); err != nil {
-			log.Printf("deployment delete error: %v", err)
-
-		} else {
-			log.Printf("deleted deployment:%v", deployment.Name)
-		}
-	}
-	return nil
-}
-
-func (c *GKE) waitForCluster(project, zone, cluster string) error {
+func (c *GKE) waitForCluster() error {
 	req := &containerpb.GetClusterRequest{
-		ProjectId: project,
-		Zone:      zone,
-		ClusterId: cluster,
+		ProjectId: c.clusterConfig.ProjectId,
+		Zone:      c.clusterConfig.Zone,
+		ClusterId: c.clusterConfig.Cluster.Name,
 	}
 	for {
 		cluster, err := c.clientGKE.GetCluster(c.ctx, req)
