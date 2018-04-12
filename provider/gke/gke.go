@@ -43,11 +43,11 @@ type GKE struct {
 	clusterConfig *containerpb.CreateClusterRequest
 	// The gke client used when performing GKE requests.
 	clientGKE *gke.ClusterManagerClient
-	// The k8s client used when performing deployment requests.
+	// The k8s client used when performing resource requests.
 	clientset *kubernetes.Clientset
-	// Holds the deployments files to apply to the cluster.
+	// Holds the resources files to apply to the cluster.
 	ResourceFiles []string
-	// Deployment vaiables to subtitude in the deployment files.
+	// Resource vaiables to subtitude in the resource files.
 	ResourceVars map[string]string
 
 	ctx context.Context
@@ -118,7 +118,7 @@ func (c *GKE) ClusterDelete(*kingpin.ParseContext) error {
 	return nil
 }
 
-// NewResourceClient sets the client used for deployment requests.
+// NewResourceClient sets the client used for resource operations.
 func (c *GKE) NewResourceClient(*kingpin.ParseContext) error {
 	req := &containerpb.GetClusterRequest{
 		ProjectId: c.clusterConfig.ProjectId,
@@ -173,71 +173,58 @@ func (c *GKE) NewResourceClient(*kingpin.ParseContext) error {
 	return nil
 }
 
-// ResourceApply iterates over all files passed as a cli argument
-// and creates or updates the resource definitions to the k8s cluster.
+// ResourceApply iterates over all files passed as cli arguments
+// and creates or updates the resource definitions on the k8s cluster.
 //
-// Each file can container more than one resource definition where `apiVersion` is used as separator.
+// Each file can contain more than one resource definition where `apiVersion` is used as separator.
 //
-// Any deployment variables passed to the cli will be replaced in the manifests files following the golang text template format.
+// Any variables passed to the cli will be replaced in the resources files following the golang text template format.
 func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
-
 	for _, file := range c.ResourceFiles {
 		fileContent, err := ioutil.ReadFile(file)
 		if err != nil {
-			log.Fatalf("error while reading the manifest file:%v", err)
+			log.Fatalf("error while reading the resource file:%v", err)
 		}
-
 		fileContentParsed := bytes.NewBufferString("")
 
-		if err := template.Must(template.New("deployment").Parse(string(fileContent))).Execute(fileContentParsed, c.ResourceVars); err != nil {
+		if err := template.Must(template.New("resource").Parse(string(fileContent))).Execute(fileContentParsed, c.ResourceVars); err != nil {
 			log.Println("executing template:", err)
 		}
 
 		splitBy := "apiVersion"
 		decode := scheme.Codecs.UniversalDeserializer().Decode
 
-		for k, text := range strings.Split(fileContentParsed.String(), splitBy) {
-			if k%2 != 0 { // The even elements return the splitBy string so we don't need those.
-				deployment, _, err := decode([]byte(splitBy+text), nil, nil)
-				if err != nil {
-					log.Fatalf("error while decoding the manifest file: %v", err)
-				}
-				switch deployment.GetObjectKind().GroupVersionKind().Kind {
-				case "Deployment":
-					c.deploymentApply(deployment)
-				case "ConfigMap":
-					c.configMapApply(deployment)
-				}
+		for _, text := range strings.Split(fileContentParsed.String(), splitBy)[1:] {
+			resource, _, err := decode([]byte(splitBy+text), nil, nil)
 
+			if err != nil {
+				log.Fatalf("error while decoding the resource file: %v", err)
+			}
+
+			switch resource.GetObjectKind().GroupVersionKind().Kind {
+			case "Deployment":
+				c.deploymentApply(resource)
+			case "ConfigMap":
+				c.configMapApply(resource)
+			case "Service":
+				c.serviceApply(resource)
 			}
 		}
 	}
-
 	return nil
 }
 
-func (c *GKE) deploymentApply(deployment runtime.Object) {
+func (c *GKE) deploymentApply(resource runtime.Object) {
 
-	switch deployment.GetObjectKind().GroupVersionKind().Version {
+	switch resource.GetObjectKind().GroupVersionKind().Version {
 	case "v1beta1":
+		req := resource.(*apiExtensionsV1beta1.Deployment)
 		client := c.clientset.ExtensionsV1beta1().Deployments(apiCoreV1.NamespaceDefault)
-		res, err := client.Create(deployment.(*apiExtensionsV1beta1.Deployment))
-		fmt.Println(res)
-		fmt.Println(err)
-	}
-
-}
-
-func (c *GKE) configMapApply(deployment runtime.Object) {
-	switch deployment.GetObjectKind().GroupVersionKind().Version {
-	case "v1":
-		req := deployment.(*apiCoreV1.ConfigMap)
-		var res *apiCoreV1.ConfigMap
-		client := c.clientset.CoreV1().ConfigMaps(apiCoreV1.NamespaceDefault)
+		kind := resource.GetObjectKind().GroupVersionKind().Kind
 
 		list, err := client.List(apiMetaV1.ListOptions{})
 		if err != nil {
-			log.Fatalf("error listing server config mapes:%v", err)
+			log.Fatalf("error listing resource : %v ; error: config maps:%v", kind, err)
 		}
 
 		var exists bool
@@ -249,66 +236,195 @@ func (c *GKE) configMapApply(deployment runtime.Object) {
 		}
 
 		if exists {
-			// Update Deployment
-			//    You have two options to Update() this Deployment:
-			//
-			//    1. Modify the "deployment" variable and call: Update(deployment).
-			//       This works like the "kubectl replace" command and it overwrites/loses changes
-			//       made by other clients between you Create() and Update() the object.
-			//    2. Modify the "result" returned by Get() and retry Update(result) until
-			//       you no longer get a conflict error. This way, you can preserve changes made
-			//       by other clients between Create() and Update(). This is implemented below
-			//			 using the retry utility package included with client-go. (RECOMMENDED)
-			//
-			// More Info:
-			// https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#concurrency-control-and-consistency
-
 			err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 				_, err := client.Update(req)
 				return err
 			})
 			if err != nil {
-				log.Fatalf("config map update failed: %v", err)
+				log.Fatalf("resource update failed - kind: %v , error: %v", kind, err)
 			}
-			log.Printf("updated config map:%v", req.Name)
+			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 		} else {
-			// Create Deployment
-			res, err := client.Create(deployment.(*apiCoreV1.ConfigMap))
+			_, err := client.Create(req)
 
 			if err != nil {
-				log.Fatalf("deployment create error: %v", err)
+				log.Fatalf("resource creation failed - kind: %v , error: %v", kind, err)
 			}
-			log.Printf("created config map %q.\n", res.GetObjectMeta().GetName())
+			log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 		}
-		fmt.Println(res)
-		fmt.Println(err)
+	}
+
+}
+
+func (c *GKE) configMapApply(resource runtime.Object) {
+	switch resource.GetObjectKind().GroupVersionKind().Version {
+	case "v1":
+		req := resource.(*apiCoreV1.ConfigMap)
+		client := c.clientset.CoreV1().ConfigMaps(apiCoreV1.NamespaceDefault)
+		kind := resource.GetObjectKind().GroupVersionKind().Kind
+
+		list, err := client.List(apiMetaV1.ListOptions{})
+		if err != nil {
+			log.Fatalf("error listing resource : %v ; error: config maps:%v", kind, err)
+		}
+
+		var exists bool
+		for _, l := range list.Items {
+			if l.Name == req.Name {
+				exists = true
+				break
+			}
+		}
+
+		if exists {
+			err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+				_, err := client.Update(req)
+				return err
+			})
+			if err != nil {
+				log.Fatalf("resource update failed - kind: %v , error: %v", kind, err)
+			}
+			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+		} else {
+			_, err := client.Create(req)
+
+			if err != nil {
+				log.Fatalf("resource creation failed - kind: %v , error: %v", kind, err)
+			}
+			log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
+		}
 	}
 }
 
-// ResourceDelete deletes a k8s resource.
+func (c *GKE) serviceApply(resource runtime.Object) {
+	switch resource.GetObjectKind().GroupVersionKind().Version {
+	case "v1":
+		req := resource.(*apiCoreV1.Service)
+		client := c.clientset.CoreV1().Services(apiCoreV1.NamespaceDefault)
+		kind := resource.GetObjectKind().GroupVersionKind().Kind
+
+		list, err := client.List(apiMetaV1.ListOptions{})
+		if err != nil {
+			log.Fatalf("error listing resource : %v ; error: config maps:%v", kind, err)
+		}
+
+		var exists bool
+		for _, l := range list.Items {
+			if l.Name == req.Name {
+				exists = true
+				break
+			}
+		}
+
+		if exists {
+			err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+				_, err := client.Update(req)
+				return err
+			})
+			if err != nil {
+				log.Fatalf("resource update failed - kind: %v , error: %v", kind, err)
+			}
+			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+		} else {
+			_, err := client.Create(req)
+
+			if err != nil {
+				log.Fatalf("resource creation failed - kind: %v , error: %v", kind, err)
+			}
+			log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
+		}
+	}
+}
+
+// ResourceDelete iterates over all files passed as a cli argument
+// and deletes all resources defined in the resource files.
+//
+// Each file can container more than one resource definition where `apiVersion` is used as separator.
 func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
-	// deletePolicy := metav1.DeletePropagationForeground
+	for _, file := range c.ResourceFiles {
+		fileContent, err := ioutil.ReadFile(file)
+		if err != nil {
+			log.Fatalf("error while reading the resource file:%v", err)
+		}
+		fileContentParsed := bytes.NewBufferString("")
 
-	// deployment := &appsv1.Deployment{}
+		if err := template.Must(template.New("resource").Parse(string(fileContent))).Execute(fileContentParsed, c.ResourceVars); err != nil {
+			log.Println("executing template:", err)
+		}
 
-	// for _, f := range c.DeploymentFiles {
-	// 	file, err := os.Open(f)
-	// 	if err != nil {
-	// 		log.Fatalf("error reading the manifest file:%v", err)
-	// 	}
-	// 	if err := yaml.NewYAMLOrJSONDecoder(file, 100).Decode(deployment); err != nil {
-	// 		log.Fatalf("error reading the manifest file:%v", err)
-	// 	}
+		splitBy := "apiVersion"
+		decode := scheme.Codecs.UniversalDeserializer().Decode
 
-	// 	if err := c.clientK8SDeployments.Delete(deployment.Name, &metav1.DeleteOptions{
-	// 		PropagationPolicy: &deletePolicy,
-	// 	}); err != nil {
-	// 		log.Printf("deployment delete error: %v", err)
+		for k, text := range strings.Split(fileContentParsed.String(), splitBy)[1:] {
+			if k%2 != 0 { // The odd elements return the splitBy string so we don't need those.
+				resource, _, err := decode([]byte(splitBy+text), nil, nil)
 
-	// 	} else {
-	// 		log.Printf("deleted deployment:%v", deployment.Name)
-	// 	}
-	// }
+				if err != nil {
+					log.Fatalf("error while decoding the resource file: %v", err)
+				}
+				switch resource.GetObjectKind().GroupVersionKind().Kind {
+				case "Deployment":
+					c.deploymentDelete(resource)
+				case "ConfigMap":
+					c.configMapDelete(resource)
+				case "Service":
+					c.serviceDelete(resource)
+				}
+			}
+
+		}
+	}
+	return nil
+}
+
+func (c *GKE) deploymentDelete(resource runtime.Object) error {
+	req := resource.(*apiExtensionsV1beta1.Deployment)
+	client := c.clientset.ExtensionsV1beta1().Deployments(apiCoreV1.NamespaceDefault)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
+	delPolicy := apiMetaV1.DeletePropagationForeground
+	if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{
+		PropagationPolicy: &delPolicy,
+	}); err != nil {
+		log.Printf("resource delete failed - kind: %v , error: %v", kind, err)
+
+	} else {
+		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
+	}
+	return nil
+}
+
+func (c *GKE) configMapDelete(resource runtime.Object) error {
+	req := resource.(*apiCoreV1.ConfigMap)
+	client := c.clientset.CoreV1().ConfigMaps(apiCoreV1.NamespaceDefault)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
+	delPolicy := apiMetaV1.DeletePropagationForeground
+	if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{
+		PropagationPolicy: &delPolicy,
+	}); err != nil {
+		log.Printf("resource delete failed - kind: %v , error: %v", kind, err)
+
+	} else {
+		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
+	}
+	return nil
+}
+
+func (c *GKE) serviceDelete(resource runtime.Object) error {
+	req := resource.(*apiCoreV1.Service)
+	client := c.clientset.CoreV1().Services(apiCoreV1.NamespaceDefault)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
+	delPolicy := apiMetaV1.DeletePropagationForeground
+	if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{
+		PropagationPolicy: &delPolicy,
+	}); err != nil {
+		log.Printf("resource delete failed - kind: %v , error: %v", kind, err)
+
+	} else {
+		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
+	}
 	return nil
 }
 
@@ -331,27 +447,4 @@ func (c *GKE) waitForCluster() error {
 		log.Printf("cluster not ready, current status:%v retrying in %v", cluster.Status, retry)
 		time.Sleep(retry)
 	}
-}
-
-func (c *GKE) waitForNodePool() error {
-	// req := &containerpb.GetNodePoolRequest{
-	// 	ProjectId: c.ProjectID,
-	// 	Zone:      c.Zone,
-	// 	ClusterId: c.Name,
-	// }
-	// for {
-	// 	nodepool, err := c.clientGKE.GetNodePool(c.ctx, req)
-	// 	if err != nil {
-	// 		log.Fatalf("Couldn't get node pool info:%v", err)
-	// 	}
-	// 	if nodepool.Status == containerpb.NodePool_RUNNING {
-	// 		log.Printf("Nodepool %v is running", c.Name)
-	// 		return nil
-	// 	}
-	// 	log.Printf("%v nodepool %v", nodepool.Status, c.Name)
-	// 	retry := time.Second * 10
-	// 	log.Printf("cluster not ready, retrying in %v", retry)
-	// 	time.Sleep(retry)
-	// }
-	return nil
 }
