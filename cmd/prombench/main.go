@@ -15,21 +15,19 @@ func main() {
 	app := kingpin.New(filepath.Base(os.Args[0]), "The Prometheus benchmarking tool")
 	app.HelpFlag.Short('h')
 
-	g := &gke.GKE{}
-	k8sGKE := app.Command("gke", "using the google container engine provider").Action(g.NewGKEClient)
-	k8sGKE.Flag("config", "the GKE config file for the cluster and nodes").Short('c').Required().ExistingFileVar(&g.ConfigFile)
+	g := gke.New()
+	k8sGKE := app.Command("gke", "using the google container engine provider").Action(g.NewGKEClient).Action(g.ConfigParse)
+	k8sGKE.Flag("config", "the GKE config file for the cluster and nodes").Short('c').Required().ExistingFileVar(&g.ClusterConfigFile)
 
 	k8sGKECluster := k8sGKE.Command("cluster", "cluster commands")
 	k8sGKECluster.Command("create", "create a new k8s cluster").Action(g.ClusterCreate)
 	k8sGKECluster.Command("delete", "delete a k8s cluster").Action(g.ClusterDelete)
-	k8sGKECluster.Command("list", "list k8s clusters").Action(g.ClusterList)
-	k8sGKECluster.Command("get", "get details for a k8s cluster").Action(g.ClusterGet)
 
-	// k8sGKEDeployment := k8sGKE.Command("deployment", "deployment commands").Action(g.NewDeploymentClient)
-	// k8sGKEDeployment.Flag("file", "deployment manifest file").Short('f').Required().ExistingFilesVar(&g.Deployments)
-	// k8sGKEDeployment.Flag("vars", "deployment manifest file").Short('v').Required().StringMapVar(&g.Deployments)
-	// k8sGKEDeployment.Command("apply", "apply a k8s deployment manifest").Action(g.DeploymentApply)
-	// k8sGKEDeployment.Command("delete", "delete a k8s deployment").Action(g.DeploymentDelete)
+	k8sGKEDeployment := k8sGKE.Command("resource", "create or update different k8s resources").Action(g.NewResourceClient)
+	k8sGKEDeployment.Flag("file", "resources manifest file").Short('f').Required().ExistingFilesVar(&g.ResourceFiles)
+	k8sGKEDeployment.Flag("vars", "resources manifest file").Short('v').Required().StringMapVar(&g.ResourceVars)
+	k8sGKEDeployment.Command("apply", "create or update a k8s resources").Action(g.ResourceApply)
+	k8sGKEDeployment.Command("delete", "delete a k8s resources").Action(g.ResourceDelete)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error parsing commandline arguments"))
