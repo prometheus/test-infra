@@ -383,23 +383,20 @@ func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 		splitBy := "apiVersion"
 		decode := scheme.Codecs.UniversalDeserializer().Decode
 
-		for k, text := range strings.Split(fileContentParsed.String(), splitBy)[1:] {
-			if k%2 != 0 { // The odd elements return the splitBy string so we don't need those.
-				resource, _, err := decode([]byte(splitBy+text), nil, nil)
+		for _, text := range strings.Split(fileContentParsed.String(), splitBy)[1:] {
+			resource, _, err := decode([]byte(splitBy+text), nil, nil)
 
-				if err != nil {
-					log.Fatalf("error while decoding the resource file: %v", err)
-				}
-				switch resource.GetObjectKind().GroupVersionKind().Kind {
-				case "Deployment":
-					c.deploymentDelete(resource)
-				case "ConfigMap":
-					c.configMapDelete(resource)
-				case "Service":
-					c.serviceDelete(resource)
-				}
+			if err != nil {
+				log.Fatalf("error while decoding the resource file: %v", err)
 			}
-
+			switch resource.GetObjectKind().GroupVersionKind().Kind {
+			case "Deployment":
+				c.deploymentDelete(resource)
+			case "ConfigMap":
+				c.configMapDelete(resource)
+			case "Service":
+				c.serviceDelete(resource)
+			}
 		}
 	}
 	return nil
