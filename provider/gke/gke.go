@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"text/template"
 	"time"
@@ -39,6 +41,8 @@ func New() *GKE {
 type GKE struct {
 	// The config file location provided to the cli.
 	ClusterConfigFile string
+	// The auth file used to authenticate the cli.
+	AuthFile string
 	// The config file for cluster operations.
 	clusterConfig *containerpb.CreateClusterRequest
 	// The gke client used when performing GKE requests.
@@ -55,10 +59,11 @@ type GKE struct {
 
 // NewGKEClient sets the GKE client used when performing GKE requests.
 func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
-	// See https://cloud.google.com/docs/authentication/.
-	// Use GOOGLE_APPLICATION_CREDENTIALS environment variable to specify
-	// a service account key file to authenticate to the API.
-
+	if c.AuthFile != "" {
+		os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", c.AuthFile)
+	} else if os.Getenv("GOOGLE_APPLICATION_CREDENTIALS") == "" {
+		log.Fatal("GOOGLE_APPLICATION_CREDENTIALS env is empty. Please run with -a key.json or run `export GOOGLE_APPLICATION_CREDENTIALS=key.json`")
+	}
 	client, err := gke.NewClusterManagerClient(context.Background())
 	if err != nil {
 		log.Fatalf("Could not create the client: %v", err)
@@ -81,6 +86,29 @@ func (c *GKE) ConfigParse(*kingpin.ParseContext) error {
 		log.Fatalf("error parsing the config file:%v", err)
 	}
 	c.clusterConfig = config
+
+	// Now set the project id from the auth file.
+	var authFile string
+	if c.AuthFile != "" {
+		authFile = c.AuthFile
+	} else {
+		authFile = os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
+	}
+	content, err = ioutil.ReadFile(authFile)
+	if err != nil {
+		log.Fatalf("couldn't read auth file: %v", err)
+	}
+	d := make(map[string]interface{})
+	if err := json.Unmarshal(content, &d); err != nil {
+		log.Fatalf("couldn't parse auth file: %v", err)
+	}
+	if projectID, ok := d["project_id"].(string); !ok {
+		log.Fatal("couldn't get project id from the  auth file")
+	} else {
+		c.clusterConfig.ProjectId = projectID
+	}
+
 	return nil
 }
 
