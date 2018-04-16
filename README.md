@@ -1,18 +1,11 @@
 #TO_DO 
 
-allow ovverrides from cli <br/>
-    - MachineType: {{ if .MachineType }} {{ .MachineType }} {{ else }} n1-standard-1 {{ end }}
-prombench cluster create --ovverides=MachineType=....,ram=....
-
-can we simplify update if exists , create if doesn't
-
-test what happens with template variabls - var exists in resorce file , but not passed to cli , var passed to cli but doesn't exist in the file.
-
-Service update doesn't work!
-use more sane logging that shows the line in the code of the log  and show info logs only when debug mode is enabled.
+- can we simplify update if exists , create if doesn't
+- Service update doesn't work!
+- use more sane logging that shows the line in the code of the log  and show info logs only when debug mode is enabled.
 
 # A Kubernetes cluster preconfigured for testing Prometheus
-
+currently supports creating and using a k8s cluster on [GKE - Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/)
 
 ## Build
 The project uses [vgo](https://github.com/golang/vgo) without any vendoring.
