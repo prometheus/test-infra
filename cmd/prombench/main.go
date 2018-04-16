@@ -16,19 +16,39 @@ func main() {
 	app.HelpFlag.Short('h')
 
 	g := gke.New()
-	k8sGKE := app.Command("gke", "using the google container engine provider").Action(g.NewGKEClient).Action(g.ConfigParse)
-	k8sGKE.Flag("config", "yaml GKE config file for the cluster and nodes").Short('c').Required().ExistingFileVar(&g.ClusterConfigFile)
-	k8sGKE.Flag("auth", "json authentication file for the project - https://cloud.google.com/iam/docs/creating-managing-service-account-keys. If not set it will use the GOOGLE_APPLICATION_CREDENTIALS env variable").Short('a').ExistingFileVar(&g.AuthFile)
+	k8sGKE := app.Command("gke", `Google container engine provider - https://cloud.google.com/kubernetes-engine/.Requires`).
+		Action(g.NewGKEClient).
+		Action(g.ConfigParse)
+	k8sGKE.Flag("config", "yaml GKE config file used to create or delete the k8s cluster and nodes").
+		Default("../../config/cluster.yaml").
+		PlaceHolder("cluster.yaml").
+		Short('c').
+		ExistingFileVar(&g.ClusterConfigFile)
+	k8sGKE.Flag("auth", "json authentication file for the project - https://cloud.google.com/iam/docs/creating-managing-service-account-keys. If not set the tool will use the GOOGLE_APPLICATION_CREDENTIALS env variable (export GOOGLE_APPLICATION_CREDENTIALS=key.json)").
+		PlaceHolder("key.json").
+		Short('a').
+		ExistingFileVar(&g.AuthFile)
 
-	k8sGKECluster := k8sGKE.Command("cluster", "cluster commands")
-	k8sGKECluster.Command("create", "create a new k8s cluster").Action(g.ClusterCreate)
-	k8sGKECluster.Command("delete", "delete a k8s cluster").Action(g.ClusterDelete)
+	k8sGKECluster := k8sGKE.Command("cluster", "Create or delete k8s clusters")
+	k8sGKECluster.Command("create", "gke cluster create -a key.json  -c ../../config/cluster.yaml").
+		Action(g.ClusterCreate)
+	k8sGKECluster.Command("delete", "gke cluster delete -a key.json  -c ../../config/cluster.yaml").
+		Action(g.ClusterDelete)
 
-	k8sGKEResource := k8sGKE.Command("resource", "create or update different k8s resources").Action(g.NewResourceClient)
-	k8sGKEResource.Flag("file", "resources file").Short('f').Required().ExistingFilesVar(&g.ResourceFiles)
-	k8sGKEResource.Flag("vars", "variables to substitute in the resources file").Short('v').Required().StringMapVar(&g.ResourceVars)
-	k8sGKEResource.Command("delete", "delete a k8s resources").Action(g.ResourceDelete)
-	k8sGKEResource.Command("apply", "create or update a k8s resources").Action(g.ResourceApply)
+	k8sGKEResource := k8sGKE.Command("resource", "Create,update and delete different k8s resources - deployments, services, config maps etc.").
+		Action(g.NewResourceClient)
+	k8sGKEResource.Flag("file", "yaml file used to apply or delete k8s resources. It uses the standard k8s formatting.").
+		Default("../../config/resources.yaml").
+		PlaceHolder("resources.yaml").
+		Short('f').
+		ExistingFilesVar(&g.ResourceFiles)
+	k8sGKEResource.Flag("vars", "Variables to substitute in the resources file. Follows the standard golang template formating - {{ hashStable }}.").
+		Short('v').
+		StringMapVar(&g.ResourceVars)
+	k8sGKEResource.Command("apply", "gke resource apply -a ../../config/key.json -c ../../config/cluster.yaml -f ../../config/resources.yaml --vars hashStable:12EFAWER").
+		Action(g.ResourceApply)
+	k8sGKEResource.Command("delete", "gke resource delete -a ../../config/key.json -c ../../config/cluster.yaml -f ../../config/resources.yaml --vars hashStable:12EFAWER").
+		Action(g.ResourceDelete)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error parsing commandline arguments"))
