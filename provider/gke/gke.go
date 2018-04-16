@@ -213,10 +213,12 @@ func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
 		if err != nil {
 			log.Fatalf("error while reading the resource file:%v", err)
 		}
-		fileContentParsed := bytes.NewBufferString("")
 
-		if err := template.Must(template.New("resource").Parse(string(fileContent))).Execute(fileContentParsed, c.ResourceVars); err != nil {
-			log.Println("executing template:", err)
+		fileContentParsed := bytes.NewBufferString("")
+		t := template.New("resource")
+		t.Option("missingkey=error")
+		if err := template.Must(t.Parse(string(fileContent))).Execute(fileContentParsed, c.ResourceVars); err != nil {
+			log.Fatalf("executing template:%v", err)
 		}
 
 		splitBy := "apiVersion"
