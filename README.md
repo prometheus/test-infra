@@ -1,9 +1,3 @@
-#TO_DO 
-
-- can we simplify update if exists , create if doesn't
-- Service update doesn't work!
-- use more sane logging that shows the line in the code of the log  and show info logs only when debug mode is enabled.
-
 # A benchmarking tool preconfigured for testing Prometheus
 1. Create the k8s cluster described by a configuration file.
 2. Apply a k8s resource file to create all required pods,services and config maps.
