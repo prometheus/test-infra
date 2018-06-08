@@ -1,6 +1,7 @@
 # prometheus-test-environment
-A Kubernetes cluster preconfigured for testing Prometheus
+A Kubernetes cluster preconfigured for E2E testing and benchmarking Prometheus
 
+The prow setup used to automate benchmarking can be found [here](https://github.com/sipian/test-infra/tree/prometheus-prow/prow/)
 
 ## Pre-requisites
 1. Create a GKE project: `prometheus`.

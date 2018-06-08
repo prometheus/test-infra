@@ -11,7 +11,6 @@ import (
 	gke "cloud.google.com/go/container/apiv1"
 
 	containerpb "google.golang.org/genproto/googleapis/container/v1"
-	"gopkg.in/alecthomas/kingpin.v2"
 	appsv1 "k8s.io/api/apps/v1beta1"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,8 +50,17 @@ type GKE struct {
 	ctx context.Context
 }
 
+func (c *GKE) start() error {
+	c.Dashboard = true
+
+	c.NewGKEClient()
+	c.ClusterCreate()
+
+	return nil
+}
+
 // NewGKEClient sets the GKE client used when performing GKE requests.
-func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
+func (c *GKE) NewGKEClient() error {
 	// See https://cloud.google.com/docs/authentication/.
 	// Use GOOGLE_APPLICATION_CREDENTIALS environment variable to specify
 	// a service account key file to authenticate to the API.
@@ -68,7 +76,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 }
 
 // ClusterList lists current k8s clusters.
-func (c *GKE) ClusterList(*kingpin.ParseContext) error {
+func (c *GKE) ClusterList() error {
 
 	req := &containerpb.ListClustersRequest{
 		ProjectId: c.ProjectID,
@@ -76,7 +84,7 @@ func (c *GKE) ClusterList(*kingpin.ParseContext) error {
 	}
 	list, err := c.clientGKE.ListClusters(c.ctx, req)
 	if err != nil {
-		log.Fatalf("failed to list clusters: %v", err)
+		log.Fatalf("Failed to list clusters: %v", err)
 	}
 	for _, v := range list.Clusters {
 		log.Printf("Cluster %q (%s) master_version: v%s", v.Name, v.Status, v.CurrentMasterVersion)
@@ -85,7 +93,7 @@ func (c *GKE) ClusterList(*kingpin.ParseContext) error {
 }
 
 // ClusterGet details for a k8s clusters.
-func (c *GKE) ClusterGet(*kingpin.ParseContext) error {
+func (c *GKE) ClusterGet() error {
 
 	req := &containerpb.GetClusterRequest{
 		ProjectId: c.ProjectID,
@@ -94,7 +102,7 @@ func (c *GKE) ClusterGet(*kingpin.ParseContext) error {
 	}
 	rep, err := c.clientGKE.GetCluster(c.ctx, req)
 	if err != nil {
-		log.Fatalf("failed to get cluster details: %v", err)
+		log.Fatalf("Failed to get cluster details: %v", err)
 	}
 
 	fmt.Printf("%+v", rep)
@@ -102,7 +110,7 @@ func (c *GKE) ClusterGet(*kingpin.ParseContext) error {
 }
 
 // ClusterCreate sreates a new k8s cluster
-func (c *GKE) ClusterCreate(*kingpin.ParseContext) error {
+func (c *GKE) ClusterCreate() error {
 	req := &containerpb.CreateClusterRequest{
 		ProjectId: c.ProjectID,
 		Zone:      c.Zone,
@@ -142,7 +150,7 @@ func (c *GKE) ClusterCreate(*kingpin.ParseContext) error {
 }
 
 // ClusterDelete deletes a k8s cluster.
-func (c *GKE) ClusterDelete(*kingpin.ParseContext) error {
+func (c *GKE) ClusterDelete() error {
 	log.Printf("Removing cluster %v from project %v, zone %v", c.Name, c.ProjectID, c.Zone)
 
 	req := &containerpb.DeleteClusterRequest{
@@ -160,7 +168,7 @@ func (c *GKE) ClusterDelete(*kingpin.ParseContext) error {
 }
 
 // NewDeploymentClient sets the client used for deployment requests.
-func (c *GKE) NewDeploymentClient(*kingpin.ParseContext) error {
+func (c *GKE) NewDeploymentClient() error {
 	req := &containerpb.GetClusterRequest{
 		ProjectId: c.ProjectID,
 		Zone:      c.Zone,
@@ -168,13 +176,13 @@ func (c *GKE) NewDeploymentClient(*kingpin.ParseContext) error {
 	}
 	rep, err := c.clientGKE.GetCluster(c.ctx, req)
 	if err != nil {
-		log.Fatalf("failed to get cluster details: %v", err)
+		log.Fatalf("Failed to get cluster details: %v", err)
 	}
 
 	// The master auth retrieved from GCP it is base64 encoded so it must be decoded first.
 	caCert, err := base64.StdEncoding.DecodeString(rep.MasterAuth.GetClusterCaCertificate())
 	if err != nil {
-		log.Fatalf("failed to decode certificate: %v", err.Error())
+		log.Fatalf("Failed to decode certificate: %v", err.Error())
 	}
 
 	cluster := clientcmdapi.NewCluster()
@@ -215,7 +223,7 @@ func (c *GKE) NewDeploymentClient(*kingpin.ParseContext) error {
 }
 
 // DeploymentApply applies manifest files to the k8s cluster.
-func (c *GKE) DeploymentApply(*kingpin.ParseContext) error {
+func (c *GKE) DeploymentApply() error {
 	deployment := &appsv1.Deployment{}
 
 	for _, f := range c.Deployments {
@@ -260,7 +268,7 @@ func (c *GKE) DeploymentApply(*kingpin.ParseContext) error {
 				return updateErr
 			})
 			if retryErr != nil {
-				log.Fatalf("deployment update failed: %v", retryErr)
+				log.Fatalf("deployment update Failed: %v", retryErr)
 			}
 			log.Printf("updated deployment:%v", deployment.Name)
 		} else {
@@ -278,7 +286,7 @@ func (c *GKE) DeploymentApply(*kingpin.ParseContext) error {
 }
 
 // DeploymentDelete deletes a k8s deployment.
-func (c *GKE) DeploymentDelete(*kingpin.ParseContext) error {
+func (c *GKE) DeploymentDelete() error {
 	deletePolicy := metav1.DeletePropagationForeground
 
 	deployment := &appsv1.Deployment{}
@@ -289,6 +297,7 @@ func (c *GKE) DeploymentDelete(*kingpin.ParseContext) error {
 			log.Fatalf("error reading the manifest file:%v", err)
 		}
 		if err := yaml.NewYAMLOrJSONDecoder(file, 100).Decode(deployment); err != nil {
+			awsRegion
 			log.Fatalf("error reading the manifest file:%v", err)
 		}
 
