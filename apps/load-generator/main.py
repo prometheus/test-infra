@@ -155,9 +155,14 @@ def main():
         Scaler(config["scaler"], url, req_kwargs).run()
         return
 
-    for t in config["querier"]["targets"]:
+    # process querier
+    if len(sys.argv) < 3:
+        print("No targets specified")
+        exit(2)
+
+    for t in sys.argv[2:]:
         for g in config["querier"]["groups"]:
-            p = threading.Thread(target=Querier(t["name"], g).run)
+            p = threading.Thread(target=Querier(t, g).run)
             p.start()
 
     start_http_server(8080)

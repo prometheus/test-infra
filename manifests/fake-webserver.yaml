@@ -59,4 +59,3 @@ spec:
     targetPort: metrics5
   selector:
     app: fake-webserver
-

@@ -1,49 +1,32 @@
-# Copyright 2016 The Kubernetes Authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+SPEC          ?= spec.example.yaml
 
-all: build test
+path          ?= clusters/${CLUSTER_NAME}
+build_path    := $(path)/.build
+spec          := $(path)/spec.yaml
 
-BENCHMARK_VERSION := 1.0
-GO           ?= go
-GOFMT        ?= $(GO)fmt
-FIRST_GOPATH := $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
-STATICCHECK  := $(FIRST_GOPATH)/bin/staticcheck
+MANIFEST_TEMPLATES := $(wildcard manifests/*.yaml)
+MANIFESTS          := $(patsubst %,$(build_path)/%,$(MANIFEST_TEMPLATES))
 
-# Build and push specific variables.
-REGISTRY ?= gcr.io
-PROJECT  ?= prometheus-test-204522
+deploy: check-deps cluster
 
-prometheus_style:
-	@echo ">> checking code style"
-	! $(GOFMT) -d $$(find . -path ./vendor -prune -o -name '*.go' -print) | grep '^'
+clean: clean-manifests 
+manifests: $(MANIFESTS)
 
-staticcheck: $(STATICCHECK)
-	@echo ">> running staticcheck"
-	$(STATICCHECK) -ignore "$(STATICCHECK_IGNORE)" $(pkgs)
+$(spec):
+	@mkdir -p $(dir $@)
+	@cp $(SPEC) $@
 
-unused: $(GOVENDOR)
-	@echo ">> running check for unused packages"
-	@$(GOVENDOR) list +unused | grep . && exit 1 || echo 'No unused packages'
+init: $(spec)
 
-build:
-	@echo ">> building binaries"
-	go install ./... -o benchmark
+$(path)/.build/manifests/%.yaml: init
+	@echo "creating manifest $*"
+	@mkdir -p $(dir $@)
+	@jinja2 manifests/$*.yaml $(spec) > $@
 
-test: prometheus_style staticcheck unused build
+cluster: manifests
 
-push:
-	docker build -t "$(REGISTRY)/$(PROJECT)/prombench:$(BENCHMARK_VERSION)" .
-	docker push "$(REGISTRY)/$(PROJECT)/prombench:$(BENCHMARK_VERSION)"
+clean-manifests:
+	rm -rf $(path) #/manifests
 
-.PHONY: build push test prometheus_style staticcheck unused
+check-deps:
+	@which jinja2 || echo "Jinja2 CLI is missing. Try to install with 'pip install pyyaml jinja2-cli[yaml]'"

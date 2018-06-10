@@ -104,7 +104,7 @@ func (c *GKE) ConfigParse(*kingpin.ParseContext) error {
 		log.Fatalf("couldn't parse auth file: %v", err)
 	}
 	if projectID, ok := d["project_id"].(string); !ok {
-		log.Fatal("couldn't get project id from the  auth file")
+		log.Fatal("couldn't get project id from the auth file")
 	} else {
 		c.clusterConfig.ProjectId = projectID
 	}
@@ -234,6 +234,8 @@ func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
 			switch resource.GetObjectKind().GroupVersionKind().Kind {
 			case "Deployment":
 				c.deploymentApply(resource)
+			case "DaemonSet":
+				c.daemonSetApply(resource)
 			case "ConfigMap":
 				c.configMapApply(resource)
 			case "Service":
@@ -283,7 +285,47 @@ func (c *GKE) deploymentApply(resource runtime.Object) {
 			log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 		}
 	}
+}
 
+func (c *GKE) daemonSetApply(resource runtime.Object) {
+
+	switch resource.GetObjectKind().GroupVersionKind().Version {
+	case "v1beta1":
+		req := resource.(*apiExtensionsV1beta1.DaemonSet)
+		client := c.clientset.ExtensionsV1beta1().DaemonSets(apiCoreV1.NamespaceDefault)
+		kind := resource.GetObjectKind().GroupVersionKind().Kind
+
+		list, err := client.List(apiMetaV1.ListOptions{})
+		if err != nil {
+			log.Fatalf("error listing resource : %v ; error: config maps:%v", kind, err)
+		}
+
+		var exists bool
+		for _, l := range list.Items {
+			if l.Name == req.Name {
+				exists = true
+				break
+			}
+		}
+
+		if exists {
+			err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+				_, err := client.Update(req)
+				return err
+			})
+			if err != nil {
+				log.Fatalf("resource update failed - kind: %v , error: %v", kind, err)
+			}
+			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+		} else {
+			_, err := client.Create(req)
+
+			if err != nil {
+				log.Fatalf("resource creation failed - kind: %v , error: %v", kind, err)
+			}
+			log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
+		}
+	}
 }
 
 func (c *GKE) configMapApply(resource runtime.Object) {
@@ -394,6 +436,8 @@ func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 			switch resource.GetObjectKind().GroupVersionKind().Kind {
 			case "Deployment":
 				c.deploymentDelete(resource)
+			case "DaemonSet":
+				c.daemonSetDelete(resource)
 			case "ConfigMap":
 				c.configMapDelete(resource)
 			case "Service":
@@ -407,6 +451,23 @@ func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 func (c *GKE) deploymentDelete(resource runtime.Object) error {
 	req := resource.(*apiExtensionsV1beta1.Deployment)
 	client := c.clientset.ExtensionsV1beta1().Deployments(apiCoreV1.NamespaceDefault)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
+	delPolicy := apiMetaV1.DeletePropagationForeground
+	if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{
+		PropagationPolicy: &delPolicy,
+	}); err != nil {
+		log.Printf("resource delete failed - kind: %v , error: %v", kind, err)
+
+	} else {
+		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
+	}
+	return nil
+}
+
+func (c *GKE) daemonSetDelete(resource runtime.Object) error {
+	req := resource.(*apiExtensionsV1beta1.DaemonSet)
+	client := c.clientset.ExtensionsV1beta1().DaemonSets(apiCoreV1.NamespaceDefault)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 
 	delPolicy := apiMetaV1.DeletePropagationForeground

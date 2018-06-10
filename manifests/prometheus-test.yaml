@@ -3,43 +3,39 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: prometheus-test-{{ p.name }}
+  name: prometheus-test-{{ environ(p.name) }}
   labels:
     app: prometheus
-    prometheus: test-{{ p.name }}
-  annotations:
-    scheduler.alpha.kubernetes.io/affinity: >
-        {
-          "podAntiAffinity": {
-            "requiredDuringSchedulingIgnoredDuringExecution": [
-              {
-                "labelSelector": {
-                  "matchExpressions": [
-                    {
-                      "key": "app",
-                      "operator": "In",
-                      "values": ["prometheus"]
-                    }
-                  ]
-                },
-                "topologyKey": "kubernetes.io/hostname"
-             }
-            ]
-           }
-         }
+    prometheus: test-{{ environ(p.name) }}
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+      prometheus: test-{{ environ(p.name) }}
   template:
     metadata:
       labels:
         app: prometheus
-        prometheus: test-{{ p.name }}
+        prometheus: test-{{ environ(p.name) }}
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - prometheus
+      securityContext:
+        runAsUser: 0
       containers:
       - name: prometheus
-        image: {{ p.image }}
+        image: {{ environ(p.image) }}
         imagePullPolicy: Always
-        resources: {{ p.resources }}
+        # resources: {{ p.resources }}
         {%- if p.env is defined %}
         env:
           {%- for e in p.env %}
@@ -48,8 +44,8 @@ spec:
           {%- endfor %}
         {%- endif %}
         args: [
-          "-config.file=/etc/prometheus/config/prometheus.yaml",
-          "-storage.local.path=/data",
+          "--config.file=/etc/prometheus/config/prometheus.yaml",
+          "--storage.tsdb.path=/data",
           {%- if p.flags is defined %}
             {%- for f in p.flags %}
           "{{ f }}",
@@ -67,27 +63,28 @@ spec:
           name: prometheus-test
       - name: instance-ssd
         hostPath:
-          # /mnt is where the KOPS AMIs mount the instance-store SSDs available on C3 instances
+          # /mnt is where GKE keeps it's SSD
           # don't change this if you want Prometheus to take advantage of these local SSDs
-          path: /mnt
+          path: /mnt/disks/ssd0
       terminationGracePeriodSeconds: 300
       nodeSelector:
+        cloud.google.com/gke-local-ssd: "true"
         isolation: prometheus
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: prometheus-test-{{ p.name }}
+  name: prometheus-test-{{ environ(p.name) }}
   labels:
     app: prometheus
-    prometheus: test-{{ p.name }}
+    prometheus: test-{{ environ(p.name) }}
 spec:
   ports:
   - name: prometheus
     port: 9090
   selector:
     app: prometheus
-    prometheus: test-{{ p.name }}
+    prometheus: test-{{ environ(p.name) }}
 {%- endfor %}
 ---
 apiVersion: v1

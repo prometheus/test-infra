@@ -1,4 +1,4 @@
-zone: europe-west1-b
+zone: us-east1-b
 cluster:
   name: prombench
   addonsconfig:

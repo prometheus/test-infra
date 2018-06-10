@@ -1,40 +1,61 @@
-awsRegion: eu-west-1
+# Environment Variables from Prow
+# CLUSTER_NAME
+# PROMETHEUS_1_NAME
+# PROMETHEUS_1_IMAGE
+# PROMETHEUS_2_NAME
+# PROMETHEUS_2_IMAGE
+
 prometheus:
-  machineType: m3.xlarge
+  # n1-standard-4 has 15Gi memory and 4 vCPUs
+  machineType: n1-standard-1
+  disksizegb: 100
+  localssdcount: 1
   scrapeInterval: 4s
   instances:
-  - name: v1-5-1
-    image: quay.io/prometheus/prometheus:v1.5.1
-    resources:
-      requests:
-        memory: 6Gi
+  - name: PROMETHEUS_1_NAME
+    image: PROMETHEUS_1_IMAGE
     flags:
-    - '-storage.local.retention=8h'
-    - '-storage.local.memory-chunks=1800000'
-    - '-storage.local.max-chunks-to-persist=900000'
-    - '-storage.local.chunk-encoding-version=2'
-  - name: dev-2-0
-    image: quay.io/fabxc/prometheus:dev-2.0
-    resources:
-      requests:
-        memory: 6Gi
+    - '--storage.tsdb.min-block-duration=15m'
+    - '--storage.tsdb.max-block-duration=4h'
+    # resources:
+    #   requests:
+    #     memory: 6Gi
+    #     cpu: 3.9
+    #   limits:
+    #     # n1-standard-4 has 15Gi memory and 4 vCPUs, so we're leaving some space for system components so the node doesn't crash
+    #     memory: 14Gi
+    #     cpu: 3.9
+  - name: PROMETHEUS_2_NAME
+    image: PROMETHEUS_2_IMAGE
     flags:
-    - '-storage.tsdb.min-block-duration=15m'
-    - '-storage.tsdb.max-block-duration=4h'
+    - '--storage.tsdb.min-block-duration=15m'
+    - '--storage.tsdb.max-block-duration=4h'
+    # resources:
+    #   requests:
+    #     memory: 6Gi
+    #     cpu: 3.9
+    #   limits:
+    #     # n1-standard-4 has 15Gi memory and 4 vCPUs, so we're leaving some space for system components so the node doesn't crash
+    #     memory: 14Gi
+    #     cpu: 3.9
+
 workers:
-  count: 6
-  machineType: c4.large
-  appInstances: 150
+  nodecount: 1
+  # n1-standard-1 has 3.75Gi memory and 1 vCPU
+  machineType: n1-standard-1
+  disksizegb: 100
+  localssdcount: 0
+  appInstances: 10
 loadGenerator:
   scaler:
     name: fake-webserver
     high: 150
-    low: 50 
+    low: 50
     intervalMinutes: 15
   querier:
     targets:
-    - name: dev-2-0
-    - name: v1-5-2
+    - name: PROMETHEUS_1_NAME
+    - name: PROMETHEUS_2_NAME
     groups:
     - name: simple_range
       interval: 4s

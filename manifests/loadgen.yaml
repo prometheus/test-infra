@@ -51,6 +51,9 @@ spec:
         imagePullPolicy: Always
         args:
         - "querier"
+        {%- for p in loadGenerator.querier.targets %}
+        - "{{ environ(p.name) }}"
+        {%- endfor %}
         volumeMounts:
         - name: config-volume
           mountPath: /etc/loadgen
