@@ -17,27 +17,51 @@ prometheus:
     flags:
     - '--storage.tsdb.min-block-duration=15m'
     - '--storage.tsdb.max-block-duration=4h'
-    # resources:
-    #   requests:
-    #     memory: 6Gi
-    #     cpu: 3.9
-    #   limits:
-    #     # n1-standard-4 has 15Gi memory and 4 vCPUs, so we're leaving some space for system components so the node doesn't crash
-    #     memory: 14Gi
-    #     cpu: 3.9
+    resources:
+      requests:
+        memory: 2.75Gi
+        cpu: 0.9
+      limits:
+        # n1-standard-4 has 15Gi memory and 4 vCPUs, so we're leaving some space for system components so the node doesn't crash
+        memory: 3Gi
+        cpu: 0.9
   - name: PROMETHEUS_2_NAME
     image: PROMETHEUS_2_IMAGE
     flags:
     - '--storage.tsdb.min-block-duration=15m'
     - '--storage.tsdb.max-block-duration=4h'
-    # resources:
-    #   requests:
-    #     memory: 6Gi
-    #     cpu: 3.9
-    #   limits:
-    #     # n1-standard-4 has 15Gi memory and 4 vCPUs, so we're leaving some space for system components so the node doesn't crash
-    #     memory: 14Gi
-    #     cpu: 3.9
+    resources:
+      requests:
+        memory: 2.75Gi
+        cpu: 0.9
+      limits:
+        # n1-standard-4 has 15Gi memory and 4 vCPUs, so we're leaving some space for system components so the node doesn't crash
+        memory: 3Gi
+        cpu: 0.9
+
+kubeStateMetrics:
+  resources:
+    requests:
+      memory: 30Mi
+      cpu: 100m
+    limits:
+      memory: 50Mi
+      cpu: 200m
+
+nodeExporter:
+  resources:
+    requests:
+      memory: 30Mi
+      cpu: 100m
+    limits:
+      memory: 50Mi
+      cpu: 200m
+
+prometheusMeta:
+  resources:
+    requests:
+      cpu: 200m
+      memory: 2Gi
 
 workers:
   nodecount: 1
@@ -46,11 +70,14 @@ workers:
   disksizegb: 100
   localssdcount: 0
   appInstances: 10
+  resources:
+    requests:
+      cpu: 25m
 loadGenerator:
   scaler:
     name: fake-webserver
-    high: 150
-    low: 50
+    high: 10
+    low: 5
     intervalMinutes: 15
   querier:
     targets:

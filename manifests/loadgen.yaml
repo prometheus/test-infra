@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: prom-load-generator
-        image: quay.io/fabxc/prometheus-bench-loadgen:v0.1.0
+        image: gcr.io/prometheus-test-204522/prometheus-bench-loadgen:v0.1.0
         imagePullPolicy: Always
         args:
         - "scaler"
@@ -47,7 +47,7 @@ spec:
     spec:
       containers:
       - name: prom-load-generator
-        image: quay.io/fabxc/prometheus-bench-loadgen:v0.1.0
+        image: gcr.io/prometheus-test-204522/prometheus-bench-loadgen:v0.1.0
         imagePullPolicy: Always
         args:
         - "querier"

@@ -20,9 +20,9 @@ func main() {
 		Action(g.NewGKEClient).
 		Action(g.ConfigParse)
 	k8sGKE.Flag("config", "yaml GKE config file used to create or delete the k8s cluster and nodes").
-		Default("../../config/cluster.yaml").
 		PlaceHolder("cluster.yaml").
 		Short('c').
+		// Default("../../config/cluster.yaml").
 		ExistingFileVar(&g.ClusterConfigFile)
 	k8sGKE.Flag("auth", "json authentication file for the project - https://cloud.google.com/iam/docs/creating-managing-service-account-keys. If not set the tool will use the GOOGLE_APPLICATION_CREDENTIALS env variable (export GOOGLE_APPLICATION_CREDENTIALS=key.json)").
 		PlaceHolder("key.json").
@@ -38,9 +38,9 @@ func main() {
 	k8sGKEResource := k8sGKE.Command("resource", "Create,update and delete different k8s resources - deployments, services, config maps etc.").
 		Action(g.NewResourceClient)
 	k8sGKEResource.Flag("file", "yaml file used to apply or delete k8s resources. If directory is given, all the yaml files from are read recursively from it. It uses the standard k8s formatting. It also supports the default golang templates.").
-		Default("../../config/resources.yaml").
 		PlaceHolder("resources.yaml").
 		Short('f').
+		// Default("../../config/resources.yaml").
 		ExistingFilesOrDirsVar(&g.ResourceFiles)
 	k8sGKEResource.Flag("vars", "When provided it will substitute the token holders in the resources file. Follows the standard golang template formating - {{ hashStable }}.").
 		Short('v').

@@ -36,10 +36,7 @@ spec:
         - "--storage.tsdb.min-block-duration=15m"
         - "--storage.tsdb.max-block-duration=4h"
         name: prometheus
-        resources:
-          requests:
-            cpu: 200m
-            memory: 2Gi
+        resources: {{ prometheusMeta.resources }}
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus/config
@@ -56,7 +53,6 @@ spec:
           path: /mnt/disks/ssd0
       terminationGracePeriodSeconds: 300
       nodeSelector:
-        cloud.google.com/gke-local-ssd: "true"
         isolation: prometheus
 ---
 apiVersion: v1

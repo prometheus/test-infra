@@ -35,7 +35,7 @@ spec:
       - name: prometheus
         image: {{ environ(p.image) }}
         imagePullPolicy: Always
-        # resources: {{ p.resources }}
+        resources: {{ p.resources }}
         {%- if p.env is defined %}
         env:
           {%- for e in p.env %}
@@ -68,7 +68,6 @@ spec:
           path: /mnt/disks/ssd0
       terminationGracePeriodSeconds: 300
       nodeSelector:
-        cloud.google.com/gke-local-ssd: "true"
         isolation: prometheus
 ---
 apiVersion: v1
