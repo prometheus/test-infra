@@ -41,19 +41,15 @@ spec:
   - name: metrics1
     port: 8080
     targetPort: metrics1
-  ports:
   - name: metrics2
     port: 8081
     targetPort: metrics2
-  ports:
   - name: metrics3
     port: 8082
     targetPort: metrics3
-  ports:
   - name: metrics4
     port: 8083
     targetPort: metrics4
-  ports:
   - name: metrics5
     port: 8084
     targetPort: metrics5

@@ -230,6 +230,9 @@ func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
 			if err != nil {
 				log.Fatalf("error while decoding the resource file: %v", err)
 			}
+			if resource == nil {
+				continue
+			}
 
 			switch resource.GetObjectKind().GroupVersionKind().Kind {
 			case "Deployment":
@@ -432,6 +435,9 @@ func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 
 			if err != nil {
 				log.Fatalf("error while decoding the resource file: %v", err)
+			}
+			if resource == nil {
+				continue
 			}
 			switch resource.GetObjectKind().GroupVersionKind().Kind {
 			case "Deployment":
