@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/template"
 	"time"
@@ -208,7 +209,26 @@ func (c *GKE) NewResourceClient(*kingpin.ParseContext) error {
 //
 // Any variables passed to the cli will be replaced in the resources files following the golang text template format.
 func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
+	fileList := []string{}
+
 	for _, file := range c.ResourceFiles {
+		// handle directory
+		if info, err := os.Stat(file); err == nil && info.IsDir() {
+			err := filepath.Walk(file, func(path string, f os.FileInfo, err error) error {
+				if filepath.Ext(path) == ".yaml" {
+					fileList = append(fileList, path)
+				}
+				return nil
+			})
+			if err != nil {
+				log.Fatalf("error while reading directory%v", err)
+			}
+		} else {
+			fileList = append(fileList, file)
+		}
+	}
+
+	for _, file := range fileList {
 		fileContent, err := ioutil.ReadFile(file)
 		if err != nil {
 			log.Fatalf("error while reading the resource file:%v", err)
@@ -416,7 +436,26 @@ func (c *GKE) serviceApply(resource runtime.Object) {
 //
 // Each file can container more than one resource definition where `apiVersion` is used as separator.
 func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
+	fileList := []string{}
+
 	for _, file := range c.ResourceFiles {
+		// handle directory
+		if info, err := os.Stat(file); err == nil && info.IsDir() {
+			err := filepath.Walk(file, func(path string, f os.FileInfo, err error) error {
+				if filepath.Ext(path) == ".yaml" {
+					fileList = append(fileList, path)
+				}
+				return nil
+			})
+			if err != nil {
+				log.Fatalf("error while reading directory%v", err)
+			}
+		} else {
+			fileList = append(fileList, file)
+		}
+	}
+
+	for _, file := range fileList {
 		fileContent, err := ioutil.ReadFile(file)
 		if err != nil {
 			log.Fatalf("error while reading the resource file:%v", err)

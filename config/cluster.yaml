@@ -1,38 +1,26 @@
 zone: us-east1-b
 cluster:
-  name: prombench
+  name: {{ environ('CLUSTER_NAME') }}
   addonsconfig:
     kubernetesdashboard: 
       disabled: false
-  initialclusterversion: 1.9.6-gke.0
+#  initialclusterversion: 1.9.6-gke.0
   nodepools:
-  - initialnodecount: 1
-    <<: &label
-      name: prometheus-stable
+  - name: prometheus
+    initialnodecount: {{ ( prometheus.instances | length ) + 1 }}
     config:
-      machinetype: n1-standard-1
+      machinetype: {{ prometheus.machineType }}
       imagetype: COS
-      disksizegb: 100
-      localssdcount: 1
+      disksizegb: {{ prometheus.disksizegb }}
+      localssdcount: {{ prometheus.localssdcount }}
       labels:
-        <<: *label
-  - initialnodecount: 1
-    <<: &label
-      name: prometheus-test
+        isolation: prometheus
+  - name: nodes
+    initialnodecount: {{ workers.nodecount }}
     config:
-      machinetype: n1-standard-1
+      machinetype: {{ workers.machineType }}
       imagetype: COS
-      disksizegb: 100
-      localssdcount: 1
+      disksizegb: {{ workers.disksizegb }}
+      localssdcount: {{ workers.localssdcount }}
       labels:
-        <<: *label
-  - initialnodecount: 1
-    <<: &label
-      name: load-collector
-    config:
-      machinetype: n1-standard-1
-      imagetype: COS
-      disksizegb: 100
-      localssdcount: 1
-      labels:
-        <<: *label
+        isolation: none
