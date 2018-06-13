@@ -19,6 +19,7 @@ spec:
         app: prometheus
         prometheus: test-{{ environ(p.name) }}
     spec:
+      serviceAccountName: prometheus
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -35,7 +36,7 @@ spec:
       - name: prometheus
         image: {{ environ(p.image) }}
         imagePullPolicy: Always
-        resources: {{ p.resources }}
+        #resources: {{ p.resources }}
         {%- if p.env is defined %}
         env:
           {%- for e in p.env %}
@@ -68,7 +69,7 @@ spec:
           path: /mnt/disks/ssd0
       terminationGracePeriodSeconds: 300
       nodeSelector:
-        isolation: prometheus
+        isolation: prometheus-test-{{ environ(p.name) }}
 ---
 apiVersion: v1
 kind: Service
@@ -78,6 +79,7 @@ metadata:
     app: prometheus
     prometheus: test-{{ environ(p.name) }}
 spec:
+  type: LoadBalancer
   ports:
   - name: prometheus
     port: 9090
@@ -96,6 +98,10 @@ data:
       scrape_interval: {{ prometheus.scrapeInterval }}
 
     scrape_configs:
+    - job_name: 'prometheus'
+      static_configs:
+      - targets: ['localhost:9090']
+
     - job_name: kubelets
       scheme: https
       tls_config:

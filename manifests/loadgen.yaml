@@ -33,6 +33,8 @@ spec:
       - name: config-volume
         configMap:
           name: prometheus-loadgen
+      nodeSelector:
+        isolation: none
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -61,6 +63,8 @@ spec:
       - name: config-volume
         configMap:
           name: prometheus-loadgen
+      nodeSelector:
+        isolation: none
 ---
 apiVersion: v1
 kind: Service

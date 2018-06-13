@@ -23,7 +23,7 @@ spec:
           containerPort: 8083
         - name: metrics5
           containerPort: 8084
-        resources: {{ workers.resources }}
+        #resources: {{ workers.resources }}
       nodeSelector:
         isolation: none
 ---

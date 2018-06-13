@@ -6,15 +6,26 @@ cluster:
       disabled: false
 #  initialclusterversion: 1.9.6-gke.0
   nodepools:
-  - name: prometheus
-    initialnodecount: {{ ( prometheus.instances | length ) + 1 }}
+  {%- for p in prometheus.instances %}
+  - name: prometheus-test-{{ environ(p.name) }}
+    initialnodecount: 1
     config:
       machinetype: {{ prometheus.machineType }}
       imagetype: COS
       disksizegb: {{ prometheus.disksizegb }}
       localssdcount: {{ prometheus.localssdcount }}
       labels:
-        isolation: prometheus
+        isolation: prometheus-test-{{ environ(p.name) }}
+  {%- endfor %}
+  - name: prometheus-meta
+    initialnodecount: 1
+    config:
+      machinetype: {{ prometheus.machineType }}
+      imagetype: COS
+      disksizegb: {{ prometheus.disksizegb }}
+      localssdcount: {{ prometheus.localssdcount }}
+      labels:
+        isolation: prometheus-meta
   - name: nodes
     initialnodecount: {{ workers.nodecount }}
     config:

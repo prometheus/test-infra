@@ -16,6 +16,7 @@ spec:
         app: prometheus
         prometheus: meta
     spec:
+      serviceAccountName: prometheus
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -36,7 +37,7 @@ spec:
         - "--storage.tsdb.min-block-duration=15m"
         - "--storage.tsdb.max-block-duration=4h"
         name: prometheus
-        resources: {{ prometheusMeta.resources }}
+        #resources: {{ prometheusMeta.resources }}
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus/config
@@ -53,7 +54,7 @@ spec:
           path: /mnt/disks/ssd0
       terminationGracePeriodSeconds: 300
       nodeSelector:
-        isolation: prometheus
+        isolation: prometheus-meta
 ---
 apiVersion: v1
 kind: Service
@@ -63,8 +64,8 @@ metadata:
     prometheus: meta
     app: prometheus
 spec:
-  type: ClusterIP
-  clusterIP: None
+  type: LoadBalancer
+  # clusterIP: None
   ports:
   - name: prometheus
     port: 9090
@@ -81,6 +82,10 @@ data:
     global:
       scrape_interval: 5s
     scrape_configs:
+    - job_name: 'prometheus'
+      static_configs:
+      - targets: ['localhost:9090']
+    
     - job_name: kubelet
       scheme: https
       tls_config:

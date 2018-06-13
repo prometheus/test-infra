@@ -69,15 +69,15 @@ workers:
   machineType: n1-standard-1
   disksizegb: 100
   localssdcount: 0
-  appInstances: 10
+  appInstances: 1
   resources:
     requests:
       cpu: 25m
 loadGenerator:
   scaler:
     name: fake-webserver
-    high: 10
-    low: 5
+    high: 1
+    low: 1
     intervalMinutes: 15
   querier:
     targets:
