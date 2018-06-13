@@ -6,6 +6,9 @@ The prow setup used to automate benchmarking can be found [here](https://github.
 # A benchmarking tool preconfigured for testing Prometheus
 1. Create the k8s cluster described by a configuration file.
 2. Apply a k8s resource file to create all required pods,services and config maps.
+3. Create a service account with Kubernetes Admin access 
+4. Follow [this](https://github.com/coreos/prometheus-operator/issues/357#issuecomment-363498455) to get primaryemail of the serviceaccount user and add this to \_rbac.yaml
+
 
 Current supports k8s cluster on [GKE - Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/).
 

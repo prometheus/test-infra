@@ -16,6 +16,7 @@ spec:
         app: prometheus
         prometheus: meta
     spec:
+      serviceAccountName: prometheus
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

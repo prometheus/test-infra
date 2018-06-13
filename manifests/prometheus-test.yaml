@@ -19,6 +19,7 @@ spec:
         app: prometheus
         prometheus: test-{{ environ(p.name) }}
     spec:
+      serviceAccountName: prometheus
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -97,10 +98,6 @@ data:
       scrape_interval: {{ prometheus.scrapeInterval }}
 
     scrape_configs:
-    - job_name: 'prometheus'
-      static_configs:
-      - targets: ['localhost:9090']
-
     - job_name: kubelets
       scheme: https
       tls_config:
