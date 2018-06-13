@@ -19,7 +19,6 @@ spec:
         app: prometheus
         prometheus: test-{{ environ(p.name) }}
     spec:
-      serviceAccountName: prometheus
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
