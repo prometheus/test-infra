@@ -1,6 +1,8 @@
 zone: us-east1-b
 cluster:
   name: {{ environ('CLUSTER_NAME') }}
+  legacyabac:
+    enabled: true
   addonsconfig:
     kubernetesdashboard: 
       disabled: false
