@@ -20,6 +20,7 @@ spec:
       labels:
         app: loadgen-scaler
     spec:
+      serviceAccountName: loadgen-scaler
       containers:
       - name: prom-load-generator
         image: gcr.io/prometheus-test-204522/prometheus-bench-loadgen:v0.1.0

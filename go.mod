@@ -26,4 +26,3 @@ require (
 	k8s.io/kube-openapi v0.0.0-20180410221256-abc8da71b985
 	k8s.io/kubernetes v1.12.0-alpha.0
 )
-

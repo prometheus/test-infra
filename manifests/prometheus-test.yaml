@@ -138,6 +138,9 @@ data:
       - action: replace
         source_labels: [__meta_kubernetes_service_name]
         target_label: job
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: node_name
 
     # Scrapes the endpoint lists for the kube-dns server. Which we consider
     # part of a default setup.
@@ -160,6 +163,11 @@ data:
       - action: keep
         source_labels: [__meta_kubernetes_endpoint_port_name]
         regex: "http-metrics.*|https-metrics.*"
+      - action: replace
+        source_labels: [__meta_kubernetes_endpoint_port_name]
+        regex: "https-metrics.*"
+        target_label: __scheme__
+        replacement: https
       - action: replace
         source_labels: [__meta_kubernetes_endpoint_port_name]
         regex: "https-metrics.*"

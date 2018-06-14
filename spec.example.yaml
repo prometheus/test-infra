@@ -66,19 +66,19 @@ prometheusMeta:
 workers:
   nodecount: 1
   # n1-standard-1 has 3.75Gi memory and 1 vCPU
-  machineType: n1-standard-1
+  machineType: n1-standard-2
   disksizegb: 100
   localssdcount: 0
-  appInstances: 1
+  appInstances: 5
   resources:
     requests:
       cpu: 25m
 loadGenerator:
   scaler:
     name: fake-webserver
-    high: 1
-    low: 1
-    intervalMinutes: 15
+    high: 5
+    low: 2
+    intervalMinutes: 5
   querier:
     targets:
     - name: PROMETHEUS_1_NAME

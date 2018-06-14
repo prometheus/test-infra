@@ -30,7 +30,7 @@ spec:
       securityContext:
         runAsUser: 0
       containers:
-      - image: quay.io/prometheus/prometheus:v2.0.0
+      - image: quay.io/prometheus/prometheus:v2.3.0
         args:
         - "--config.file=/etc/prometheus/config/prometheus.yaml"
         - "--storage.tsdb.path=/data"
@@ -140,4 +140,6 @@ data:
       - action: replace
         target_label: prometheus
         source_labels: [__meta_kubernetes_service_label_prometheus]
-
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: node_name

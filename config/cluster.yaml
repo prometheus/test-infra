@@ -1,10 +1,7 @@
 zone: us-east1-b
 cluster:
   name: {{ environ('CLUSTER_NAME') }}
-  addonsconfig:
-    kubernetesdashboard: 
-      disabled: false
-#  initialclusterversion: 1.9.6-gke.0
+  initialclusterversion: 1.10.2-gke.3
   nodepools:
   {%- for p in prometheus.instances %}
   - name: prometheus-test-{{ environ(p.name) }}
