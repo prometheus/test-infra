@@ -108,6 +108,16 @@ data:
       kubernetes_sd_configs:
       - role: node
 
+      relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - target_label: __address__
+        replacement: kubernetes.default.svc:443
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/${1}/proxy/metrics
+
     # Scrapes the endpoint lists for the Kubernetes API server, kube-state-metrics,
     # and node-exporter, which we all consider part of a default setup.
     - job_name: standard-endpoints
@@ -155,3 +165,4 @@ data:
         regex: "https-metrics.*"
         target_label: __scheme__
         replacement: https
+
