@@ -35,14 +35,14 @@ init: $(spec)
 $(path)/.build/config/%.yaml: init
 	@echo "creating config $*"
 	@mkdir -p $(dir $@)
-	@jinja2 config/$*.yaml $(spec) > $@
+	@jinja2 config/$*.yaml > $@
 
 cluster-config: $(CONFIGS)
 
 $(path)/.build/manifests/%.yaml: init
 	@echo "creating manifest $*"
 	@mkdir -p $(dir $@)
-	@jinja2 manifests/$*.yaml $(spec) > $@
+	@jinja2 manifests/$*.yaml > $@
 
 manifests: $(MANIFESTS)
 

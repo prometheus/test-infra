@@ -31,7 +31,7 @@ cluster:
       labels:
         isolation: prometheus-meta
   - name: nodes
-    initialnodecount: {{ workers.nodecount }}
+    initialnodecount: 1
     config:
       machinetype: n1-standard-2
       imagetype: COS

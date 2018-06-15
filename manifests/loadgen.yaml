@@ -5,9 +5,57 @@ metadata:
   name: prometheus-loadgen
 data:
   config.yaml: |
-  {%- if loadGenerator is defined %}
-    {{ loadGenerator  }}
-  {%- endif %}
+    scaler:
+      name: fake-webserver
+      high: 5
+      low: 2
+      intervalMinutes: 5
+    querier:
+      targets:
+      - name: PROMETHEUS_1_NAME
+      - name: PROMETHEUS_2_NAME
+      groups:
+      - name: simple_range
+        interval: 4s
+        type: range
+        start: 2h
+        end: 1h
+        step: 15s
+        queries:
+        - expr: go_goroutines
+        - expr: container_memory_rss
+        - expr: kube_pod_container_info
+        - expr: codelab_api_http_requests_in_progress
+        - expr: codelab_api_requests_total
+      - name: aggr_instant
+        interval: 10s
+        type: instant
+        queries:
+        - expr: sum by(image) (container_memory_rss)
+        - expr: sum by(instance) (rate(node_cpu{mode!="idle"}[2m]))
+        - expr: sum by(instance) (rate(node_cpu[2m]))
+        - expr: sum by(instance) (rate(codelab_api_requests_total[2m]))
+        - expr: sum by(instance) (rate(codelab_api_requests_total{method=~"GET|POST"}[2m]))
+      - name: aggr_range
+        interval: 10s
+        type: range
+        start: 1h
+        end: 0h
+        step: 15s
+        queries:
+        - expr: sum by(image) (container_memory_rss)
+        - expr: sum by(instance) (rate(node_cpu{mode!="idle"}[2m]))
+        - expr: sum by(instance) (rate(node_cpu[2m]))
+        - expr: sum by(instance) (rate(codelab_api_requests_total[2m]))
+        - expr: sum by(instance) (rate(codelab_api_requests_total{method=~"GET|POST"}[2m]))
+      - name: heavy_instant
+        interval: 20s
+        queries:
+        - expr: rate(codelab_api_requests_total{method=~"GET|POST"}[1m])
+        - expr: sum without(instance) (rate(codelab_api_requests_total{method=~"GET|POST"}[1m]))
+        - expr: histogram_quantile(0.99, sum by(path, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[1m])))
+        - expr: histogram_quantile(0.99, sum by(path, method, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[1m])))
+        - expr: histogram_quantile(0.99, sum by(instance, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[1m])))
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -54,9 +102,8 @@ spec:
         imagePullPolicy: Always
         args:
         - "querier"
-        {%- for p in loadGenerator.querier.targets %}
-        - "{{ environ(p.name) }}"
-        {%- endfor %}
+        - "{{ environ('PROMETHEUS_1_NAME') }}"
+        - "{{ environ('PROMETHEUS_2_NAME') }}"
         volumeMounts:
         - name: config-volume
           mountPath: /etc/loadgen
