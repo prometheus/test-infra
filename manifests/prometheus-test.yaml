@@ -1,23 +1,21 @@
-{%- for p in prometheus.instances %}
----
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: prometheus-test-{{ environ(p.name) }}
+  - name: prometheus-test-{{ environ('PROMETHEUS_1_NAME') }}
   labels:
     app: prometheus
-    prometheus: test-{{ environ(p.name) }}
+    prometheus: test-{{ environ('PROMETHEUS_1_NAME') }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: prometheus
-      prometheus: test-{{ environ(p.name) }}
+      prometheus: test-{{ environ('PROMETHEUS_1_NAME') }}
   template:
     metadata:
       labels:
         app: prometheus
-        prometheus: test-{{ environ(p.name) }}
+        prometheus: test-{{ environ('PROMETHEUS_1_NAME') }}
     spec:
       serviceAccountName: prometheus
       affinity:
@@ -34,24 +32,13 @@ spec:
         runAsUser: 0
       containers:
       - name: prometheus
-        image: {{ environ(p.image) }}
+        image: {{ environ('PROMETHEUS_1_IMAGE') }}
         imagePullPolicy: Always
-        #resources: {{ p.resources }}
-        {%- if p.env is defined %}
-        env:
-          {%- for e in p.env %}
-        - name: {{ e.name }}
-          value: "{{ e.value }}"
-          {%- endfor %}
-        {%- endif %}
         args: [
           "--config.file=/etc/prometheus/config/prometheus.yaml",
           "--storage.tsdb.path=/data",
-          {%- if p.flags is defined %}
-            {%- for f in p.flags %}
-          "{{ f }}",
-            {%- endfor %}
-          {%- endif %}
+          "--storage.tsdb.min-block-duration=15m",
+          "--storage.tsdb.max-block-duration=4h"
         ]
         volumeMounts:
         - name: config-volume
@@ -69,15 +56,15 @@ spec:
           path: /mnt/disks/ssd0
       terminationGracePeriodSeconds: 300
       nodeSelector:
-        isolation: prometheus-test-{{ environ(p.name) }}
+        isolation: prometheus-test-{{ environ('PROMETHEUS_1_NAME') }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: prometheus-test-{{ environ(p.name) }}
+  name: prometheus-test-{{ environ('PROMETHEUS_1_NAME') }}
   labels:
     app: prometheus
-    prometheus: test-{{ environ(p.name) }}
+    prometheus: test-{{ environ('PROMETHEUS_1_NAME') }}
 spec:
   type: LoadBalancer
   ports:
@@ -86,8 +73,84 @@ spec:
     port: 9090
   selector:
     app: prometheus
-    prometheus: test-{{ environ(p.name) }}
-{%- endfor %}
+    prometheus: test-{{ environ('PROMETHEUS_2_NAME') }}
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  - name: prometheus-test-{{ environ('PROMETHEUS_2_NAME') }}
+  labels:
+    app: prometheus
+    prometheus: test-{{ environ('PROMETHEUS_2_NAME') }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+      prometheus: test-{{ environ('PROMETHEUS_2_NAME') }}
+  template:
+    metadata:
+      labels:
+        app: prometheus
+        prometheus: test-{{ environ('PROMETHEUS_2_NAME') }}
+    spec:
+      serviceAccountName: prometheus
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - prometheus
+      securityContext:
+        runAsUser: 0
+      containers:
+      - name: prometheus
+        image: {{ environ('PROMETHEUS_2_IMAGE') }}
+        imagePullPolicy: Always
+        args: [
+          "--config.file=/etc/prometheus/config/prometheus.yaml",
+          "--storage.tsdb.path=/data",
+          "--storage.tsdb.min-block-duration=15m",
+          "--storage.tsdb.max-block-duration=4h"
+        ]
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/prometheus/config
+        - name: instance-ssd
+          mountPath: /data
+      volumes:
+      - name: config-volume
+        configMap:
+          name: prometheus-test
+      - name: instance-ssd
+        hostPath:
+          # /mnt is where GKE keeps it's SSD
+          # don't change this if you want Prometheus to take advantage of these local SSDs
+          path: /mnt/disks/ssd0
+      terminationGracePeriodSeconds: 300
+      nodeSelector:
+        isolation: prometheus-test-{{ environ('PROMETHEUS_2_NAME') }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-test-{{ environ('PROMETHEUS_2_NAME') }}
+  labels:
+    app: prometheus
+    prometheus: test-{{ environ('PROMETHEUS_2_NAME') }}
+spec:
+  type: LoadBalancer
+  ports:
+  #should be 1 port
+  - name: prometheus
+    port: 9090
+  selector:
+    app: prometheus
+    prometheus: test-{{ environ('PROMETHEUS_2_NAME') }}
 ---
 apiVersion: v1
 kind: ConfigMap

@@ -31,7 +31,6 @@ spec:
         - containerPort: 9100
           hostPort: 9100
           name: scrape
-        #resources: {{ nodeExporter.resources }}
         volumeMounts:
         - name: proc
           readOnly:  true
