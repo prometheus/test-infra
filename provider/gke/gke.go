@@ -112,6 +112,7 @@ func (c *GKE) ConfigParse(*kingpin.ParseContext) error {
 func (c *GKE) ClusterCreate(*kingpin.ParseContext) error {
 	log.Printf("Cluster create request: %+v", c.clusterConfig)
 
+	c.checkClusterExists()
 	res, err := c.clientGKE.CreateCluster(c.ctx, c.clusterConfig)
 	if err != nil {
 		log.Fatalf("Couldn't create a cluster:%v", err)
@@ -121,6 +122,35 @@ func (c *GKE) ClusterCreate(*kingpin.ParseContext) error {
 	log.Printf("Cluster %s create is called for project %s and zone %s.", c.clusterConfig.Cluster.Name, c.clusterConfig.ProjectId, c.clusterConfig.Zone)
 
 	return c.waitForCluster()
+}
+
+func (c *GKE) checkClusterExists() error {
+	req := &containerpb.GetClusterRequest{
+		ProjectId: c.clusterConfig.ProjectId,
+		Zone:      c.clusterConfig.Zone,
+		ClusterId: c.clusterConfig.Cluster.Name,
+	}
+	for {
+		cluster, err := c.clientGKE.GetCluster(c.ctx, req)
+		if err != nil {
+			if strings.Contains(err.Error(), "code = NotFound") {
+				return nil
+			}
+			log.Fatalf("Couldn't check cluster existence:%v", err)
+		}
+
+		if cluster.Status == containerpb.Cluster_RUNNING || cluster.Status == containerpb.Cluster_PROVISIONING {
+			log.Fatalf("Cluster %v is already running", cluster.Name)
+		}
+
+		if cluster.Status == containerpb.Cluster_ERROR || cluster.Status == containerpb.Cluster_RECONCILING {
+			log.Fatalf("Cluster %v is unusable: %v. Delete cluster using /benchmark delete.", cluster.Name, cluster.StatusMessage)
+		}
+
+		retry := time.Second * 10
+		log.Printf("Cluster %v is being deleted. Waiting for it to be deleted before making new one.", cluster.Name)
+		time.Sleep(retry)
+	}
 }
 
 func (c *GKE) waitForCluster() error {
@@ -134,12 +164,16 @@ func (c *GKE) waitForCluster() error {
 		if err != nil {
 			log.Fatalf("Couldn't get cluster info:%v", err)
 		}
+
+		if cluster.Status == containerpb.Cluster_ERROR || cluster.Status == containerpb.Cluster_RECONCILING || cluster.Status == containerpb.Cluster_STOPPING {
+			log.Fatalf("Cluster Creation failed: %s", cluster.StatusMessage)
+		}
 		if cluster.Status == containerpb.Cluster_RUNNING {
 			log.Printf("Cluster %v is running", cluster.Name)
 			return nil
 		}
 		retry := time.Second * 10
-		log.Printf("cluster not ready, current status:%v retrying in %v", cluster.Status, retry)
+		log.Printf("Cluster not ready, current status:%v retrying in %v", cluster.Status, retry)
 		time.Sleep(retry)
 	}
 }
