@@ -1,4 +1,4 @@
-zone: us-east1-b
+zone: {{ environ('ZONE') }}
 cluster:
   name: {{ environ('CLUSTER_NAME') }}
   initialclusterversion: 1.10.2-gke.3
@@ -7,28 +7,28 @@ cluster:
   - name: prometheus-test-{{ environ(p.name) }}
     initialnodecount: 1
     config:
-      machinetype: {{ prometheus.machineType }}
+      machinetype: n1-standard-1
       imagetype: COS
-      disksizegb: {{ prometheus.disksizegb }}
-      localssdcount: {{ prometheus.localssdcount }}
+      disksizegb: 100
+      localssdcount: 1
       labels:
         isolation: prometheus-test-{{ environ(p.name) }}
   {%- endfor %}
   - name: prometheus-meta
     initialnodecount: 1
     config:
-      machinetype: {{ prometheus.machineType }}
+      machinetype: n1-standard-1
       imagetype: COS
-      disksizegb: {{ prometheus.disksizegb }}
-      localssdcount: {{ prometheus.localssdcount }}
+      disksizegb: 100
+      localssdcount: 1
       labels:
         isolation: prometheus-meta
   - name: nodes
     initialnodecount: {{ workers.nodecount }}
     config:
-      machinetype: {{ workers.machineType }}
+      machinetype: n1-standard-2
       imagetype: COS
-      disksizegb: {{ workers.disksizegb }}
-      localssdcount: {{ workers.localssdcount }}
+      disksizegb: 100
+      localssdcount: 0
       labels:
         isolation: none
