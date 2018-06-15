@@ -20,6 +20,7 @@ func (c *GKE) waitForService(resource runtime.Object) error {
 			log.Fatalf("Checking resource status failed  %v", err)
 		}
 		if res.Spec.Type == "LoadBalancer" {
+			// k8s API currently just supports LoadBalancerStatus
 			if len(res.Status.LoadBalancer.Ingress) > 0 {
 				log.Printf("\tService %s Details", req.Name)
 				for _, x := range res.Status.LoadBalancer.Ingress {

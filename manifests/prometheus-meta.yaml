@@ -143,4 +143,4 @@ data:
         source_labels: [__meta_kubernetes_service_label_prometheus]
       - action: replace
         source_labels: [__meta_kubernetes_pod_node_name]
-        target_label: node_name
+        target_label: nodeName

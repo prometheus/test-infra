@@ -1,11 +1,26 @@
-FROM golang:1.10.2
+FROM debian:sid
 MAINTAINER  The Prometheus Authors <prometheus-developers@googlegroups.com>
 
-COPY benchmark /bin/benchmark
-RUN mkdir -p /prometheus
+RUN \
+    apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        make \
+	    python-dev \
+        python-pip \
+        python-setuptools \
+	&& rm -rf /var/lib/apt/lists/*
 
-COPY spec.example.yaml /prometheus/spec.example.yaml
-COPY manifests /prometheus/manifests
+RUN \
+	python -m pip install --upgrade pip \
+	&& pip install wheel setuptools pyyaml jinja2-cli[yaml]
 
-WORKDIR    /prometheus
-ENTRYPOINT ["/bin/benchmark"]
+COPY prombench /bin/prombench
+RUN mkdir -p /prombench
+
+COPY Makefile /prombench/Makefile
+COPY spec.example.yaml /prombench/spec.example.yaml
+COPY config /prombench/config
+COPY manifests /prombench/manifests
+
+WORKDIR    /prombench
