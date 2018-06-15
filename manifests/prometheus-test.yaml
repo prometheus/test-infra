@@ -81,6 +81,7 @@ metadata:
 spec:
   type: LoadBalancer
   ports:
+  #should be 1 port
   - name: prometheus
     port: 9090
   selector:

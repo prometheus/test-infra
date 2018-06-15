@@ -164,12 +164,12 @@ func (c *GKE) serviceApply(resource runtime.Object) {
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 		} else {
 			_, err := client.Create(req)
-
 			if err != nil {
 				log.Fatalf("resource creation failed - kind: %v , error: %v", kind, err)
 			}
 			log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 		}
+		c.waitForService(resource)
 	}
 }
 
