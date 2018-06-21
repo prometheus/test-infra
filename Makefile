@@ -49,12 +49,12 @@ manifests: clean-manifests $(MANIFESTS)
 .PHONY: init cluster-config manifests
 
 cluster-deploy: clean-manifests cluster-config manifests 
-	$(PROMBENCH_CMD) gke cluster scale_up -a /etc/serviceaccount/service-account.json -c $(build_path)/config/node-pool.yaml
+	$(PROMBENCH_CMD) gke cluster scaleUp -a /etc/serviceaccount/service-account.json -c $(build_path)/config/node-pool.yaml
 	#$(PROMBENCH_CMD) gke resource apply -a /etc/serviceaccount/service-account.json -c $(build_path)/config/cluster.yaml  -f $(build_path)/manifests
 
 clean-cluster: clean-manifests cluster-config manifests
 	#$(PROMBENCH_CMD) gke resource delete -a /etc/serviceaccount/service-account.json -c $(build_path)/config/cluster.yaml  -f $(build_path)/manifests
-	$(PROMBENCH_CMD) gke cluster scale_down -a /etc/serviceaccount/service-account.json -c $(build_path)/config/node-pool.yaml
+	$(PROMBENCH_CMD) gke cluster scaleDown -a /etc/serviceaccount/service-account.json -c $(build_path)/config/node-pool.yaml
 
 clean-manifests:
 	rm -rf $(path)

@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"github.com/prometheus/benchmark/provider/gke"
+	"github.com/prometheus/prombench/provider/gke"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -30,9 +30,9 @@ func main() {
 		ExistingFileVar(&g.AuthFile)
 
 	k8sGKECluster := k8sGKE.Command("cluster", "Scale up or down a k8s clusters by creating node-pools")
-	k8sGKECluster.Command("scale_up", "gke cluster scale_up -a key.json  -c ../../config/node-pool.yaml").
+	k8sGKECluster.Command("scaleUp", "gke cluster scaleUp -a key.json  -c ../../config/node-pool.yaml").
 		Action(g.NodePoolCreate)
-	k8sGKECluster.Command("scale_down", "gke cluster scale_down -a key.json  -c ../../config/node-pool.yaml").
+	k8sGKECluster.Command("scaleDown", "gke cluster scaleDown -a key.json  -c ../../config/node-pool.yaml").
 		Action(g.NodePoolDelete)
 
 	k8sGKEResource := k8sGKE.Command("resource", "Create,update and delete different k8s resources - deployments, services, config maps etc.").

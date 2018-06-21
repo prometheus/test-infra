@@ -1,7 +1,8 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  - name: prometheus-test-{{ environ('PROMETHEUS_1_NAME') }}
+  name: prometheus-test-{{ environ('PROMETHEUS_1_NAME') }}
+  namespace: prombench-{{ environ('PR_NUMBER') }}
   labels:
     app: prometheus
     prometheus: test-{{ environ('PROMETHEUS_1_NAME') }}
@@ -13,6 +14,7 @@ spec:
       prometheus: test-{{ environ('PROMETHEUS_1_NAME') }}
   template:
     metadata:
+      namespace: prombench-{{ environ('PR_NUMBER') }}
       labels:
         app: prometheus
         prometheus: test-{{ environ('PROMETHEUS_1_NAME') }}
@@ -56,12 +58,14 @@ spec:
           path: /mnt/disks/ssd0
       terminationGracePeriodSeconds: 300
       nodeSelector:
-        isolation: prometheus-test-{{ environ('PROMETHEUS_1_NAME') }}
+        cloud.google.com/gke-nodepool: prometheus-{{ environ('PR_NUMBER') }}
+        isolation: prometheus
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: prometheus-test-{{ environ('PROMETHEUS_1_NAME') }}
+  namespace: prombench-{{ environ('PR_NUMBER') }}
   labels:
     app: prometheus
     prometheus: test-{{ environ('PROMETHEUS_1_NAME') }}
@@ -78,7 +82,8 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  - name: prometheus-test-{{ environ('PROMETHEUS_2_NAME') }}
+  name: prometheus-test-{{ environ('PROMETHEUS_2_NAME') }}
+  namespace: prombench-{{ environ('PR_NUMBER') }}
   labels:
     app: prometheus
     prometheus: test-{{ environ('PROMETHEUS_2_NAME') }}
@@ -90,6 +95,7 @@ spec:
       prometheus: test-{{ environ('PROMETHEUS_2_NAME') }}
   template:
     metadata:
+      namespace: prombench-{{ environ('PR_NUMBER') }}
       labels:
         app: prometheus
         prometheus: test-{{ environ('PROMETHEUS_2_NAME') }}
@@ -133,12 +139,14 @@ spec:
           path: /mnt/disks/ssd0
       terminationGracePeriodSeconds: 300
       nodeSelector:
-        isolation: prometheus-test-{{ environ('PROMETHEUS_2_NAME') }}
+        cloud.google.com/gke-nodepool: prometheus-{{ environ('PR_NUMBER') }}
+        isolation: prometheus
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: prometheus-test-{{ environ('PROMETHEUS_2_NAME') }}
+  namespace: prombench-{{ environ('PR_NUMBER') }}
   labels:
     app: prometheus
     prometheus: test-{{ environ('PROMETHEUS_2_NAME') }}
@@ -156,6 +164,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-test
+  namespace: prombench-{{ environ('PR_NUMBER') }}
 data:
   prometheus.yaml: |
     global:

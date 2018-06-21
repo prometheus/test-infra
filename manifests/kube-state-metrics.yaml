@@ -2,10 +2,12 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: kube-state-metrics
+  namespace: prombench-{{ environ('PR_NUMBER') }}
 spec:
   replicas: 1
   template:
     metadata:
+      namespace: prombench-{{ environ('PR_NUMBER') }}
       labels:
         app: kube-state-metrics
     spec:
@@ -16,15 +18,17 @@ spec:
         - name: metrics
           containerPort: 8080
       nodeSelector:
+        cloud.google.com/gke-nodepool: nodes-{{ environ('PR_NUMBER') }}
         isolation: none
 ---
 apiVersion: v1
 kind: Service
 metadata:
+  name: kube-state-metrics
+  namespace: prombench-{{ environ('PR_NUMBER') }}
   labels:
     app: kube-state-metrics
     monitored: "true"
-  name: kube-state-metrics
 spec:
   ports:
   - name: metrics

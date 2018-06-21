@@ -2,6 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: prometheus-meta
+  namespace: prombench-{{ environ('PR_NUMBER') }}
   labels:
     app: prometheus-meta
 spec:
@@ -12,6 +13,7 @@ spec:
       prometheus: meta
   template:
     metadata:
+      namespace: prombench-{{ environ('PR_NUMBER') }}
       labels:
         app: prometheus
         prometheus: meta
@@ -53,12 +55,14 @@ spec:
           path: /mnt/disks/ssd0
       terminationGracePeriodSeconds: 300
       nodeSelector:
-        isolation: prometheus-meta
+        cloud.google.com/gke-nodepool: prometheus-{{ environ('PR_NUMBER') }}
+        isolation: prometheus
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: prometheus-meta
+  namespace: prombench-{{ environ('PR_NUMBER') }}
   labels:
     prometheus: meta
     app: prometheus
@@ -77,6 +81,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-meta
+  namespace: prombench-{{ environ('PR_NUMBER') }}
 data:
   prometheus.yaml: |
     global:

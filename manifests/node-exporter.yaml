@@ -2,6 +2,7 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: node-exporter
+  namespace: prombench-{{ environ('PR_NUMBER') }}
 spec:
   selector:
     matchLabels:
@@ -12,6 +13,7 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      namespace: prombench-{{ environ('PR_NUMBER') }}
       labels:
         app: node-exporter
       name: node-exporter
@@ -21,6 +23,13 @@ spec:
         runAsUser: 65534
       hostNetwork: true
       hostPID: true
+      nodeSelector:
+        matchExpressions:
+        - key: cloud.google.com/gke-nodepool
+          operator: In
+          values:
+          - prometheus-{{ environ('PR_NUMBER') }}
+          - nodes-{{ environ('PR_NUMBER') }}
       containers:
       - image: quay.io/prometheus/node-exporter:v0.15.2
         args:
@@ -53,6 +62,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: node-exporter
+  namespace: prombench-{{ environ('PR_NUMBER') }}
   labels:
     app: node-exporter
     monitored: "true"
