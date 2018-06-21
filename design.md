@@ -9,7 +9,7 @@
 	- PROMETHEUS_2_NAME
 	- PROMETHEUS_2_IMAGE
 
-- A new [nodepool](config/cluster.yaml) is created in the prow cluster with the label `prombench-<PR_NUMBER>`
-- [Prombench](manifests) is deployed on this nodepool in a new namespace `prombench-<PR_NUMBER>` (Only one Prombench instance can run on a PR)
+- 2 new [nodepools](config/cluster.yaml) are created in the prow cluster :: `prometheus-<PR_NUMBER>` and `nodes-<PR_NUMBER>`
+- [Prombench](manifests) is deployed on these nodepools in a new namespace `prombench-<PR_NUMBER>` (Only one Prombench instance can run on a PR)
 
-- When `/benchmark delete` is triggered, this nodepool and namespace is deleted
+- When `/benchmark delete` is triggered, the nodepool and namespace is deleted
