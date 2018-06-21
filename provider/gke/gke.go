@@ -201,8 +201,6 @@ func (c *GKE) waitForNodePoolCreation(n *containerpb.CreateNodePoolRequest) erro
 func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 
 	for _, pool := range c.nodePoolConfig {
-		log.Printf("Removing nodepool %v from cluster %v in project %v, zone %v", pool.NodePool.Name, pool.ClusterId, pool.ProjectId, pool.Zone)
-
 		req := &containerpb.DeleteNodePoolRequest{
 			ProjectId:  pool.ProjectId,
 			Zone:       pool.Zone,
@@ -215,6 +213,7 @@ func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 		}
 		log.Printf("Node Pool %s set for deletion", pool.NodePool.Name)
 		c.waitForNodePoolDeletion(pool)
+		log.Printf("Removed nodepool %v from cluster %v in project %v, zone %v", pool.NodePool.Name, pool.ClusterId, pool.ProjectId, pool.Zone)
 	}
 	return nil
 }
@@ -245,6 +244,11 @@ func (c *GKE) waitForNodePoolDeletion(n *containerpb.CreateNodePoolRequest) erro
 
 // NewResourceClient sets the client used for resource operations.
 func (c *GKE) NewResourceClient(*kingpin.ParseContext) error {
+
+	if len(c.nodePoolConfig) == 0 {
+		log.Fatalf("NodePool config not availible in config files")
+	}
+
 	req := &containerpb.GetClusterRequest{
 		ProjectId: c.nodePoolConfig[0].ProjectId,
 		Zone:      c.nodePoolConfig[0].Zone,
@@ -349,21 +353,24 @@ func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
 			if resource == nil {
 				continue
 			}
+
 			switch resource.GetObjectKind().GroupVersionKind().Kind {
-			case "Deployment":
-				c.deploymentApply(resource)
-			case "DaemonSet":
-				c.daemonSetApply(resource)
-			case "ConfigMap":
-				c.configMapApply(resource)
-			case "Service":
-				c.serviceApply(resource)
-			case "ServiceAccount":
-				c.serviceAccountApply(resource)
 			case "ClusterRole":
 				c.clusterRoleApply(resource)
 			case "ClusterRoleBinding":
 				c.clusterRoleBindingApply(resource)
+			case "ConfigMap":
+				c.configMapApply(resource)
+			case "DaemonSet":
+				c.daemonSetApply(resource)
+			case "Deployment":
+				c.deploymentApply(resource)
+			case "Namespace":
+				c.nameSpaceApply(resource)
+			case "Service":
+				c.serviceApply(resource)
+			case "ServiceAccount":
+				c.serviceAccountApply(resource)
 			}
 		}
 	}
@@ -418,20 +425,22 @@ func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 				continue
 			}
 			switch resource.GetObjectKind().GroupVersionKind().Kind {
-			case "Deployment":
-				c.deploymentDelete(resource)
-			case "DaemonSet":
-				c.daemonSetDelete(resource)
-			case "ConfigMap":
-				c.configMapDelete(resource)
-			case "Service":
-				c.serviceDelete(resource)
-			case "ServiceAccount":
-				c.serviceAccountDelete(resource)
 			case "ClusterRole":
 				c.clusterRoleDelete(resource)
 			case "ClusterRoleBinding":
 				c.clusterRoleBindingDelete(resource)
+			case "ConfigMap":
+				c.configMapDelete(resource)
+			case "DaemonSet":
+				c.daemonSetDelete(resource)
+			case "Deployment":
+				c.deploymentDelete(resource)
+			case "Namespace":
+				c.nameSpaceDelete(resource)
+			case "Service":
+				c.serviceDelete(resource)
+			case "ServiceAccount":
+				c.serviceAccountDelete(resource)
 			}
 		}
 	}

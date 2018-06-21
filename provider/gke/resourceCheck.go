@@ -12,7 +12,7 @@ import (
 
 func (c *GKE) waitForService(resource runtime.Object) error {
 	req := resource.(*apiCoreV1.Service)
-	client := c.clientset.CoreV1().Services(apiCoreV1.NamespaceDefault)
+	client := c.clientset.CoreV1().Services(req.Namespace)
 
 	for {
 		res, err := client.Get(req.Name, apiMetaV1.GetOptions{})
