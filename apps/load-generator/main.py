@@ -15,10 +15,10 @@ ca_cert_path = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 kube_token_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
 def deployment_path(url, depl):
-    return '%s/apis/extensions/v1beta1/namespaces/default/deployments/%s' % (url, depl)
+    return '%s/apis/extensions/v1beta1/namespaces/%s/deployments/%s' % (url, os.environ['PROMBENCH_NAMESPACE'], depl)
 
 def configmap_path(url, cm):
-    return '%s/api/v1/namespaces/default/configmaps/%s' % (url, cm)
+    return '%s/api/v1/namespaces/%s/configmaps/%s' % (url, os.environ['PROMBENCH_NAMESPACE'], cm)
 
 class Scaler(object):
     """
@@ -80,9 +80,9 @@ class Querier(object):
         self.step = qg.get("step", "15s")
 
         if self.type == "instant":
-            self.url = "http://prometheus-test-%s.default:9090/api/v1/query" % target
+            self.url = "http://prometheus-test-%s.%s:9090/api/v1/query" % (target, os.environ['PROMBENCH_NAMESPACE'])
         else:
-            self.url = "http://prometheus-test-%s.default:9090/api/v1/query_range" % target
+            self.url = "http://prometheus-test-%s.%s:9090/api/v1/query_range" % (target, os.environ['PROMBENCH_NAMESPACE'])
 
     def run(self):
         print("run querier %s %s" % (self.target, self.name))
