@@ -26,6 +26,8 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
+const maxTries = 25
+
 // New is the GKE constructor.
 func New() *GKE {
 	return &GKE{
@@ -39,8 +41,8 @@ type GKE struct {
 	ClusterConfigFile string
 	// The auth file used to authenticate the cli.
 	AuthFile string
-	// The config file for cluster operations.
-	clusterConfig *containerpb.CreateClusterRequest
+	// The config for nodepools operations.
+	nodePoolConfig []*containerpb.CreateNodePoolRequest
 	// The gke client used when performing GKE requests.
 	clientGKE *gke.ClusterManagerClient
 	// The k8s client used when performing resource requests.
@@ -72,26 +74,16 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 
 // ConfigParse populates and validates the cluster configuraiton options.
 func (c *GKE) ConfigParse(*kingpin.ParseContext) error {
-	content, err := ioutil.ReadFile(c.ClusterConfigFile)
-	if err != nil {
-		log.Fatalf("error reading the config file:%v", err)
-	}
 
-	config := &containerpb.CreateClusterRequest{}
-	if err = yamlGo.UnmarshalStrict(content, config); err != nil {
-		log.Fatalf("error parsing the config file:%v", err)
-	}
-	c.clusterConfig = config
-
-	// Now set the project id from the auth file.
+	// Read auth file and get the project id
 	var authFile string
 	if c.AuthFile != "" {
 		authFile = c.AuthFile
 	} else {
 		authFile = os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
-
 	}
-	content, err = ioutil.ReadFile(authFile)
+
+	content, err := ioutil.ReadFile(authFile)
 	if err != nil {
 		log.Fatalf("couldn't read auth file: %v", err)
 	}
@@ -99,110 +91,164 @@ func (c *GKE) ConfigParse(*kingpin.ParseContext) error {
 	if err := json.Unmarshal(content, &d); err != nil {
 		log.Fatalf("couldn't parse auth file: %v", err)
 	}
-	if projectID, ok := d["project_id"].(string); !ok {
+	projectID, ok := d["project_id"].(string)
+	if !ok {
 		log.Fatal("couldn't get project id from the auth file")
-	} else {
-		c.clusterConfig.ProjectId = projectID
 	}
 
+	// creating node-pool requests from config file
+	content, err = ioutil.ReadFile(c.ClusterConfigFile)
+	if err != nil {
+		log.Fatalf("error reading the config file:%v", err)
+	}
+
+	splitBy := "zone"
+
+	for _, text := range strings.Split(string(content), splitBy)[1:] {
+		config := &containerpb.CreateNodePoolRequest{}
+		if err = yamlGo.UnmarshalStrict([]byte(splitBy+text), config); err != nil {
+			log.Fatalf("error parsing the config file:%v", err)
+		}
+		config.ProjectId = projectID
+		c.nodePoolConfig = append(c.nodePoolConfig, config)
+	}
 	return nil
 }
 
-// ClusterCreate sreates a new k8s cluster
-func (c *GKE) ClusterCreate(*kingpin.ParseContext) error {
-	log.Printf("Cluster create request: %+v", c.clusterConfig)
-
-	c.checkClusterExists()
-	res, err := c.clientGKE.CreateCluster(c.ctx, c.clusterConfig)
-	if err != nil {
-		log.Fatalf("Couldn't create a cluster:%v", err)
+func (c *GKE) checkNodePoolExists(n *containerpb.CreateNodePoolRequest) error {
+	req := &containerpb.GetNodePoolRequest{
+		ProjectId:  n.ProjectId,
+		Zone:       n.Zone,
+		ClusterId:  n.ClusterId,
+		NodePoolId: n.NodePool.Name,
 	}
-	log.Printf("Cluster request: %+v", res)
-
-	log.Printf("Cluster %s create is called for project %s and zone %s.", c.clusterConfig.Cluster.Name, c.clusterConfig.ProjectId, c.clusterConfig.Zone)
-
-	return c.waitForCluster()
-}
-
-func (c *GKE) checkClusterExists() error {
-	req := &containerpb.GetClusterRequest{
-		ProjectId: c.clusterConfig.ProjectId,
-		Zone:      c.clusterConfig.Zone,
-		ClusterId: c.clusterConfig.Cluster.Name,
-	}
-	for {
-		cluster, err := c.clientGKE.GetCluster(c.ctx, req)
+	for i := 1; i <= maxTries; i++ {
+		nodePool, err := c.clientGKE.GetNodePool(c.ctx, req)
 		if err != nil {
 			if strings.Contains(err.Error(), "code = NotFound") {
 				return nil
 			}
-			log.Fatalf("Couldn't check cluster existence:%v", err)
+			log.Fatalf("Couldn't check node-pool's existence:%v", err)
 		}
 
-		if cluster.Status == containerpb.Cluster_RUNNING || cluster.Status == containerpb.Cluster_PROVISIONING {
-			log.Fatalf("Cluster %v is already running", cluster.Name)
+		if nodePool.Status == containerpb.NodePool_RUNNING || nodePool.Status == containerpb.NodePool_PROVISIONING {
+			log.Fatalf("NodePool %v is already running", nodePool.Name)
 		}
 
-		if cluster.Status == containerpb.Cluster_ERROR || cluster.Status == containerpb.Cluster_RECONCILING {
-			log.Fatalf("Cluster %v is unusable: %v. Delete cluster using /benchmark delete.", cluster.Name, cluster.StatusMessage)
+		if nodePool.Status == containerpb.NodePool_ERROR || nodePool.Status == containerpb.NodePool_RECONCILING || nodePool.Status == containerpb.NodePool_RUNNING_WITH_ERROR {
+			log.Fatalf("NodePool %v is unusable: %v. Retry after deleting Prombench instance using /benchmark delete.", nodePool.Name, nodePool.StatusMessage)
 		}
 
 		retry := time.Second * 10
-		log.Printf("Cluster %v is being deleted. Waiting for it to be deleted before making new one.", cluster.Name)
+		log.Printf("NodePool %v is being deleted. Waiting for it to be deleted before making new one.", nodePool.Name)
 		time.Sleep(retry)
 	}
+	log.Fatalf("NodePool %v was not deleted after trying %d times", n.NodePool.Name, maxTries)
+	return nil
 }
 
-func (c *GKE) waitForCluster() error {
-	req := &containerpb.GetClusterRequest{
-		ProjectId: c.clusterConfig.ProjectId,
-		Zone:      c.clusterConfig.Zone,
-		ClusterId: c.clusterConfig.Cluster.Name,
-	}
-	for {
-		cluster, err := c.clientGKE.GetCluster(c.ctx, req)
+// NodePoolCreate creates a new k8s node-pool in an existing cluster
+func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
+
+	for _, pool := range c.nodePoolConfig {
+		log.Printf("Received a NodePool create request: %+v", pool)
+
+		c.checkNodePoolExists(pool)
+		_, err := c.clientGKE.CreateNodePool(c.ctx, pool)
 		if err != nil {
-			log.Fatalf("Couldn't get cluster info:%v", err)
+			log.Fatalf("Couldn't create a node-pool:%v", err)
+		}
+		c.waitForNodePoolCreation(pool)
+	}
+	return nil
+}
+
+func (c *GKE) waitForNodePoolCreation(n *containerpb.CreateNodePoolRequest) error {
+	req := &containerpb.GetNodePoolRequest{
+		ProjectId:  n.ProjectId,
+		Zone:       n.Zone,
+		ClusterId:  n.ClusterId,
+		NodePoolId: n.NodePool.Name,
+	}
+	for i := 1; i <= maxTries; i++ {
+		nodePool, err := c.clientGKE.GetNodePool(c.ctx, req)
+		if err != nil {
+			if strings.Contains(err.Error(), "code = NotFound") {
+				retry := time.Second * 10
+				log.Printf("Node Pool %v not ready, retrying in %v", n.NodePool.Name, retry)
+				time.Sleep(retry)
+				continue
+			}
+			log.Fatalf("Couldn't get node-pool info:%v", err)
 		}
 
-		if cluster.Status == containerpb.Cluster_ERROR || cluster.Status == containerpb.Cluster_RECONCILING || cluster.Status == containerpb.Cluster_STOPPING {
-			log.Fatalf("Cluster Creation failed: %s", cluster.StatusMessage)
+		if nodePool.Status == containerpb.NodePool_ERROR || nodePool.Status == containerpb.NodePool_STOPPING || nodePool.Status == containerpb.NodePool_RECONCILING || nodePool.Status == containerpb.NodePool_RUNNING_WITH_ERROR {
+			log.Fatalf("NodePool Creation failed: %s", nodePool.StatusMessage)
 		}
-		if cluster.Status == containerpb.Cluster_RUNNING {
-			log.Printf("Cluster %v is running", cluster.Name)
+		if nodePool.Status == containerpb.NodePool_RUNNING {
+			log.Printf("NodePool %v is running", nodePool.Name)
 			return nil
 		}
 		retry := time.Second * 10
-		log.Printf("Cluster not ready, current status:%v retrying in %v", cluster.Status, retry)
+		log.Printf("Node Pool %v not ready, current status:%v retrying in %v", nodePool.Name, nodePool.Status, retry)
 		time.Sleep(retry)
 	}
+	log.Fatalf("NodePool %v was not created after trying %d times", n.NodePool.Name, maxTries)
+	return nil
 }
 
-// ClusterDelete deletes a k8s cluster.
-func (c *GKE) ClusterDelete(*kingpin.ParseContext) error {
+// NodePoolCreate deletes a new k8s node-pool in an existing cluster
+func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 
-	req := &containerpb.DeleteClusterRequest{
-		ProjectId: c.clusterConfig.ProjectId,
-		Zone:      c.clusterConfig.Zone,
-		ClusterId: c.clusterConfig.Cluster.Name,
+	for _, pool := range c.nodePoolConfig {
+		log.Printf("Removing nodepool %v from cluster %v in project %v, zone %v", pool.NodePool.Name, pool.ClusterId, pool.ProjectId, pool.Zone)
+
+		req := &containerpb.DeleteNodePoolRequest{
+			ProjectId:  pool.ProjectId,
+			Zone:       pool.Zone,
+			ClusterId:  pool.ClusterId,
+			NodePoolId: pool.NodePool.Name,
+		}
+
+		if _, err := c.clientGKE.DeleteNodePool(c.ctx, req); err != nil {
+			log.Fatal("Couldn't delete the node-pool:%v", err)
+		}
+		log.Printf("Node Pool %s set for deletion", pool.NodePool.Name)
+		c.waitForNodePoolDeletion(pool)
 	}
+	return nil
+}
 
-	log.Printf("Removing cluster %v from project %v, zone %v", req.ClusterId, req.ProjectId, req.Zone)
-
-	if _, err := c.clientGKE.DeleteCluster(c.ctx, req); err != nil {
-		log.Fatal(err)
+func (c *GKE) waitForNodePoolDeletion(n *containerpb.CreateNodePoolRequest) error {
+	req := &containerpb.GetNodePoolRequest{
+		ProjectId:  n.ProjectId,
+		Zone:       n.Zone,
+		ClusterId:  n.ClusterId,
+		NodePoolId: n.NodePool.Name,
 	}
+	for i := 1; i <= maxTries; i++ {
+		nodePool, err := c.clientGKE.GetNodePool(c.ctx, req)
+		if err != nil {
+			if strings.Contains(err.Error(), "code = NotFound") {
+				return nil
+			}
+			log.Fatalf("Couldn't get node-pool info:%v", err)
+		}
 
-	log.Printf("Cluster %s set for deletion", req.ClusterId)
+		retry := time.Second * 10
+		log.Printf("NodePool %v is being deleted. Waiting for it to be deleted.", nodePool.Name)
+		time.Sleep(retry)
+	}
+	log.Fatalf("NodePool %v was not deleted after trying %d times", n.NodePool.Name, maxTries)
 	return nil
 }
 
 // NewResourceClient sets the client used for resource operations.
 func (c *GKE) NewResourceClient(*kingpin.ParseContext) error {
 	req := &containerpb.GetClusterRequest{
-		ProjectId: c.clusterConfig.ProjectId,
-		Zone:      c.clusterConfig.Zone,
-		ClusterId: c.clusterConfig.Cluster.Name,
+		ProjectId: c.nodePoolConfig[0].ProjectId,
+		Zone:      c.nodePoolConfig[0].Zone,
+		ClusterId: c.nodePoolConfig[0].ClusterId,
 	}
 	rep, err := c.clientGKE.GetCluster(c.ctx, req)
 	if err != nil {

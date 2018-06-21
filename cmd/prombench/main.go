@@ -19,21 +19,21 @@ func main() {
 	k8sGKE := app.Command("gke", `Google container engine provider - https://cloud.google.com/kubernetes-engine/.Requires`).
 		Action(g.NewGKEClient).
 		Action(g.ConfigParse)
-	k8sGKE.Flag("config", "yaml GKE config file used to create or delete the k8s cluster and nodes").
-		PlaceHolder("cluster.yaml").
+	k8sGKE.Flag("config", "yaml GKE config file used to scale_up or scale_down the prow cluster").
+		PlaceHolder("node-pool.yaml").
 		Short('c').
-		Default("../../config/cluster.yaml").
+		Default("../../config/node-pool.yaml").
 		ExistingFileVar(&g.ClusterConfigFile)
 	k8sGKE.Flag("auth", "json authentication file for the project - https://cloud.google.com/iam/docs/creating-managing-service-account-keys. If not set the tool will use the GOOGLE_APPLICATION_CREDENTIALS env variable (export GOOGLE_APPLICATION_CREDENTIALS=key.json)").
 		PlaceHolder("key.json").
 		Short('a').
 		ExistingFileVar(&g.AuthFile)
 
-	k8sGKECluster := k8sGKE.Command("cluster", "Create or delete k8s clusters")
-	k8sGKECluster.Command("create", "gke cluster create -a key.json  -c ../../config/cluster.yaml").
-		Action(g.ClusterCreate)
-	k8sGKECluster.Command("delete", "gke cluster delete -a key.json  -c ../../config/cluster.yaml").
-		Action(g.ClusterDelete)
+	k8sGKECluster := k8sGKE.Command("cluster", "Scale up or down a k8s clusters by creating node-pools")
+	k8sGKECluster.Command("scale_up", "gke cluster scale_up -a key.json  -c ../../config/node-pool.yaml").
+		Action(g.NodePoolCreate)
+	k8sGKECluster.Command("scale_down", "gke cluster scale_down -a key.json  -c ../../config/node-pool.yaml").
+		Action(g.NodePoolDelete)
 
 	k8sGKEResource := k8sGKE.Command("resource", "Create,update and delete different k8s resources - deployments, services, config maps etc.").
 		Action(g.NewResourceClient)
@@ -45,9 +45,9 @@ func main() {
 	k8sGKEResource.Flag("vars", "When provided it will substitute the token holders in the resources file. Follows the standard golang template formating - {{ hashStable }}.").
 		Short('v').
 		StringMapVar(&g.ResourceVars)
-	k8sGKEResource.Command("apply", "gke resource apply -a ../../config/key.json -c ../../config/cluster.yaml -f ../../config/resources.yaml --vars hashStable:COMMIT1 --vars hashTesting:COMMIT2").
+	k8sGKEResource.Command("apply", "gke resource apply -a ../../config/key.json -c ../../config/node-pool.yaml -f ../../config/resources.yaml --vars hashStable:COMMIT1 --vars hashTesting:COMMIT2").
 		Action(g.ResourceApply)
-	k8sGKEResource.Command("delete", "gke resource delete -a ../../config/key.json -c ../../config/cluster.yaml -f ../../config/resources.yaml --vars hashStable:COMMIT1 --vars hashTesting:COMMIT2").
+	k8sGKEResource.Command("delete", "gke resource delete -a ../../config/key.json -c ../../config/node-pool.yaml -f ../../config/resources.yaml --vars hashStable:COMMIT1 --vars hashTesting:COMMIT2").
 		Action(g.ResourceDelete)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
