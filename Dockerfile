@@ -19,8 +19,8 @@ COPY prombench /bin/prombench
 RUN mkdir -p /prombench
 
 COPY Makefile /prombench/Makefile
-COPY spec.example.yaml /prombench/spec.example.yaml
+# COPY spec.example.yaml /prombench/spec.example.yaml
 COPY config /prombench/config
 COPY manifests /prombench/manifests
 
-WORKDIR    /prombench
+WORKDIR /prombench

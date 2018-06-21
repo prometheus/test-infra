@@ -11,7 +11,7 @@ MANIFEST_TEMPLATES := $(wildcard manifests/*.yaml)
 MANIFESTS          := $(patsubst %,$(build_path)/%,$(MANIFEST_TEMPLATES))
 
 PROMBENCH_CMD        = /bin/prombench
-DOCKER_TAG = gcr.io/prometheus-test-204522/prombench:v0.1.0 
+DOCKER_TAG = gcr.io/prometheus-test-204522/prombench:v0.1.0
 
 deploy: check-deps cluster-deploy
 
@@ -24,7 +24,7 @@ docker: build
 	@docker build -t $(DOCKER_TAG) .
 	@docker push $(DOCKER_TAG)
 
-.PHONY: deploy clean build docker
+.PHONY: deploy clean build docker manifests
 
 $(spec):
 	@mkdir -p $(dir $@)
@@ -32,14 +32,14 @@ $(spec):
 
 init: $(spec)
 
-$(path)/.build/config/%.yaml: init
+$(path)/.build/config/%.yaml:
 	@echo "creating config $*"
 	@mkdir -p $(dir $@)
 	@jinja2 config/$*.yaml > $@
 
 cluster-config: $(CONFIGS)
 
-$(path)/.build/manifests/%.yaml: init
+$(path)/.build/manifests/%.yaml:
 	@echo "creating manifest $*"
 	@mkdir -p $(dir $@)
 	@jinja2 manifests/$*.yaml > $@
@@ -48,11 +48,11 @@ manifests: $(MANIFESTS)
 
 .PHONY: init cluster-config manifests
 
-cluster-deploy: cluster-config manifests 
+cluster-deploy: clean-manifests cluster-config manifests 
 	$(PROMBENCH_CMD) gke cluster create -a /etc/serviceaccount/service-account.json -c $(build_path)/config/cluster.yaml
 	$(PROMBENCH_CMD) gke resource apply -a /etc/serviceaccount/service-account.json -c $(build_path)/config/cluster.yaml  -f $(build_path)/manifests
 
-clean-cluster: cluster-config manifests
+clean-cluster: clean-manifests cluster-config manifests
 	$(PROMBENCH_CMD) gke resource delete -a /etc/serviceaccount/service-account.json -c $(build_path)/config/cluster.yaml  -f $(build_path)/manifests
 	$(PROMBENCH_CMD) gke cluster delete -a /etc/serviceaccount/service-account.json -c $(build_path)/config/cluster.yaml
 
@@ -62,4 +62,4 @@ clean-manifests:
 check-deps:
 	@which jinja2 || echo "Jinja2 CLI is missing. Try to install with 'pip install pyyaml jinja2-cli[yaml]'"
 
-.PHONY: clean-manifests cluster-deploy clean-cluster check-deps
+.PHONY: manifests clean-manifests cluster-deploy cluster-config clean-cluster check-deps  
