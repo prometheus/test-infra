@@ -11,25 +11,44 @@ metadata:
   namespace: prombench-{{ environ('PR_NUMBER') }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: Role
 metadata:
-  name: 101573837983485973441-cluster-admin-binding
+  name: loadgen-scaler
+  namespace: prombench-{{ environ('PR_NUMBER') }}
+rules:
+- apiGroups:
+  - extensions
+  resources:
+  - deployments
+  verbs: ["get", "update"]
+---
+#need to give update access to loadgen-scaler
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: loadgen-scaler
+  namespace: prombench-{{ environ('PR_NUMBER') }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
+  kind: Role
+  name: loadgen-scaler
 subjects:
-- kind: User
-  name: "101573837983485973441"
-  #need to give put and get access to loadgen-scaler
 - kind: ServiceAccount
   name: loadgen-scaler
   namespace: prombench-{{ environ('PR_NUMBER') }}
 ---
+#Prometheus RBAC
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: prombench-{{ environ('PR_NUMBER') }}
+---
+#Not made during cluster creation time to create with specific service-account  
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: prometheus
+  name: prometheus-{{ environ('PR_NUMBER') }}
 rules:
 - apiGroups: [""]
   resources:
@@ -47,12 +66,6 @@ rules:
 - nonResourceURLs: ["/metrics"]
   verbs: ["get"]
 ---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: prometheus
-  namespace: prombench-{{ environ('PR_NUMBER') }}
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -60,7 +73,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: prometheus
+  name: prometheus-{{ environ('PR_NUMBER') }}
 subjects:
 - kind: ServiceAccount
   name: prometheus
