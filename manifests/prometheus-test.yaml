@@ -182,6 +182,9 @@ data:
       - role: node
 
       relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_node_label_cloud_google_com_gke_nodepool]
+        regex: prometheus-{{ environ('PR_NUMBER') }}|nodes-{{ environ('PR_NUMBER') }}      
       - action: labelmap
         regex: __meta_kubernetes_node_label_(.+)
       - target_label: __address__
@@ -203,6 +206,9 @@ data:
 
       kubernetes_sd_configs:
       - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ environ('PR_NUMBER') }}
 
       relabel_configs:
       - action: keep
@@ -222,9 +228,11 @@ data:
         ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         insecure_skip_verify: true
       bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-
       kubernetes_sd_configs:
       - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ environ('PR_NUMBER') }}
 
       relabel_configs:
       - action: replace

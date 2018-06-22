@@ -23,13 +23,16 @@ spec:
         runAsUser: 65534
       hostNetwork: true
       hostPID: true
-      nodeSelector:
-        matchExpressions:
-        - key: cloud.google.com/gke-nodepool
-          operator: In
-          values:
-          - prometheus-{{ environ('PR_NUMBER') }}
-          - nodes-{{ environ('PR_NUMBER') }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: cloud.google.com/gke-nodepool
+                operator: In
+                values:
+                - prometheus-{{ environ('PR_NUMBER') }}
+                - nodes-{{ environ('PR_NUMBER') }}
       containers:
       - image: quay.io/prometheus/node-exporter:v0.15.2
         args:
