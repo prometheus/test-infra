@@ -367,6 +367,10 @@ func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
 				c.deploymentApply(resource)
 			case "Namespace":
 				c.nameSpaceApply(resource)
+			case "Role":
+				c.roleApply(resource)
+			case "RoleBinding":
+				c.roleBindingApply(resource)
 			case "Service":
 				c.serviceApply(resource)
 			case "ServiceAccount":
@@ -437,6 +441,10 @@ func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 				c.deploymentDelete(resource)
 			case "Namespace":
 				c.nameSpaceDelete(resource)
+			case "Role":
+				c.roleDelete(resource)
+			case "RoleBinding":
+				c.roleBindingDelete(resource)
 			case "Service":
 				c.serviceDelete(resource)
 			case "ServiceAccount":

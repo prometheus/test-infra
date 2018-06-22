@@ -44,7 +44,6 @@ func (c *GKE) clusterRoleBindingDelete(resource runtime.Object) error {
 	}
 	return nil
 }
-
 func (c *GKE) configMapDelete(resource runtime.Object) error {
 	req := resource.(*apiCoreV1.ConfigMap)
 	client := c.clientset.CoreV1().ConfigMaps(req.Namespace)
@@ -99,6 +98,40 @@ func (c *GKE) deploymentDelete(resource runtime.Object) error {
 func (c *GKE) nameSpaceDelete(resource runtime.Object) error {
 	req := resource.(*apiCoreV1.Namespace)
 	client := c.clientset.CoreV1().Namespaces()
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
+	delPolicy := apiMetaV1.DeletePropagationForeground
+	if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{
+		PropagationPolicy: &delPolicy,
+	}); err != nil {
+		log.Printf("resource delete failed - kind: %v , error: %v", kind, err)
+
+	} else {
+		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
+	}
+	return nil
+}
+
+func (c *GKE) roleDelete(resource runtime.Object) error {
+	req := resource.(*rbac.Role)
+	client := c.clientset.RbacV1().Roles(req.Namespace)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
+	delPolicy := apiMetaV1.DeletePropagationForeground
+	if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{
+		PropagationPolicy: &delPolicy,
+	}); err != nil {
+		log.Printf("resource delete failed - kind: %v , error: %v", kind, err)
+
+	} else {
+		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
+	}
+	return nil
+}
+
+func (c *GKE) roleBindingDelete(resource runtime.Object) error {
+	req := resource.(*rbac.RoleBinding)
+	client := c.clientset.RbacV1().RoleBindings(req.Namespace)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 
 	delPolicy := apiMetaV1.DeletePropagationForeground
