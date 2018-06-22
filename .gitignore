@@ -1,1 +1,3 @@
 clusters
+.terraform*
+terraform*
