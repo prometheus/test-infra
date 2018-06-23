@@ -151,14 +151,26 @@ func (c *GKE) checkNodePoolExists(n *containerpb.CreateNodePoolRequest) error {
 func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 
 	for _, pool := range c.nodePoolConfig {
-		log.Printf("Received a NodePool create request: %+v", pool)
-
+		log.Printf("Received a NodePool create request: %v", pool)
+		var i int
 		c.checkNodePoolExists(pool)
-		_, err := c.clientGKE.CreateNodePool(c.ctx, pool)
-		if err != nil {
-			log.Fatalf("Couldn't create a node-pool:%v", err)
+		for i = 1; i <= maxTries; i++ {
+			_, err := c.clientGKE.CreateNodePool(c.ctx, pool)
+			if err != nil {
+				if strings.Contains(err.Error(), "Please wait and try again once it is done") {
+					retry := time.Second * 20
+					log.Printf("NodePool operation is ongoing on the cluster. Retrying after 20 seconds.")
+					time.Sleep(retry)
+					continue
+				}
+				log.Fatalf("Couldn't create a node-pool:%v", err)
+			}
+			c.waitForNodePoolCreation(pool)
+			break
 		}
-		c.waitForNodePoolCreation(pool)
+		if i > maxTries {
+			log.Fatalf("NodePool operation was not free after trying %d times", maxTries)
+		}
 	}
 	return nil
 }
@@ -197,10 +209,13 @@ func (c *GKE) waitForNodePoolCreation(n *containerpb.CreateNodePoolRequest) erro
 	return nil
 }
 
+//TODO handle case of user running deploy , then delete on same PR
+//and deploy is in resource apply stage and delete is in node deletion phase
 // NodePoolCreate deletes a new k8s node-pool in an existing cluster
 func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 
 	for _, pool := range c.nodePoolConfig {
+		log.Printf("Received a NodePool delete request: %v", pool)
 		req := &containerpb.DeleteNodePoolRequest{
 			ProjectId:  pool.ProjectId,
 			Zone:       pool.Zone,
@@ -208,12 +223,25 @@ func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 			NodePoolId: pool.NodePool.Name,
 		}
 
-		if _, err := c.clientGKE.DeleteNodePool(c.ctx, req); err != nil {
-			log.Fatal("Couldn't delete the node-pool:%v", err)
+		var i int
+		for i = 1; i <= maxTries; i++ {
+			_, err := c.clientGKE.DeleteNodePool(c.ctx, req)
+			if err != nil {
+				if strings.Contains(err.Error(), "Please wait and try again once it is done") {
+					retry := time.Second * 20
+					log.Printf("NodePool operation is ongoing on the cluster. Retrying after 20 seconds.")
+					time.Sleep(retry)
+					continue
+				}
+				log.Fatal("Couldn't delete the node-pool:%v", err)
+			}
+			log.Printf("Node Pool %s set for deletion", pool.NodePool.Name)
+			c.waitForNodePoolDeletion(pool)
+			break
 		}
-		log.Printf("Node Pool %s set for deletion", pool.NodePool.Name)
-		c.waitForNodePoolDeletion(pool)
-		log.Printf("Removed nodepool %v from cluster %v in project %v, zone %v", pool.NodePool.Name, pool.ClusterId, pool.ProjectId, pool.Zone)
+		if i > maxTries {
+			log.Fatalf("NodePool operation was not free after trying %d times", maxTries)
+		}
 	}
 	return nil
 }
