@@ -1,7 +1,9 @@
+#On using nodeAffinity, node-exporter was being deployed on prow node also
+#Hence using 2 DaemonSets to use nodeSelector
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
-  name: node-exporter
+  name: node-exporter-prometheus
   namespace: prombench-{{ environ('PR_NUMBER') }}
 spec:
   selector:
@@ -23,16 +25,63 @@ spec:
         runAsUser: 65534
       hostNetwork: true
       hostPID: true
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: cloud.google.com/gke-nodepool
-                operator: In
-                values:
-                - prometheus-{{ environ('PR_NUMBER') }}
-                - nodes-{{ environ('PR_NUMBER') }}
+      nodeSelector:
+        cloud.google.com/gke-nodepool: prometheus-{{ environ('PR_NUMBER') }}
+      containers:
+      - image: quay.io/prometheus/node-exporter:v0.15.2
+        args:
+        - "--path.procfs=/host/proc"
+        - "--path.sysfs=/host/sys"
+        name: node-exporter
+        ports:
+        - containerPort: 9100
+          hostPort: 9100
+          name: scrape
+        volumeMounts:
+        - name: proc
+          readOnly:  true
+          mountPath: /host/proc
+        - name: sys
+          readOnly: true
+          mountPath: /host/sys
+      tolerations:
+      - effect: NoSchedule
+        operator: Exists
+      volumes:
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: sys
+        hostPath:
+          path: /sys
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: node-exporter-nodes
+  namespace: prombench-{{ environ('PR_NUMBER') }}
+spec:
+  selector:
+    matchLabels:
+      app: node-exporter
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      namespace: prombench-{{ environ('PR_NUMBER') }}
+      labels:
+        app: node-exporter
+      name: node-exporter
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+      hostNetwork: true
+      hostPID: true
+      nodeSelector:
+        cloud.google.com/gke-nodepool: nodes-{{ environ('PR_NUMBER') }}
       containers:
       - image: quay.io/prometheus/node-exporter:v0.15.2
         args:
