@@ -20,7 +20,7 @@ clean: clean-cluster clean-manifests
 build:
 	@vgo build -o prombench cmd/prombench/main.go
 
-docker: build
+docker:
 	@docker build -t $(DOCKER_TAG) .
 	@docker push $(DOCKER_TAG)
 
@@ -44,15 +44,15 @@ $(path)/.build/manifests/%.yaml:
 	@mkdir -p $(dir $@)
 	@jinja2 manifests/$*.yaml > $@
 
-manifests: clean-manifests $(MANIFESTS)
+manifests: $(MANIFESTS)
 
 .PHONY: init cluster-config manifests
 
-cluster-deploy: clean-manifests cluster-config manifests
+cluster-deploy: cluster-config manifests
 	$(PROMBENCH_CMD) gke cluster scaleUp -a /etc/serviceaccount/service-account.json -c $(build_path)/config/node-pool.yaml
 	$(PROMBENCH_CMD) gke resource apply -a /etc/serviceaccount/service-account.json -c $(build_path)/config/node-pool.yaml  -f $(build_path)/manifests
 
-clean-cluster: clean-manifests cluster-config manifests
+clean-cluster: cluster-config manifests
 	$(PROMBENCH_CMD) gke resource delete -a /etc/serviceaccount/service-account.json -c $(build_path)/config/node-pool.yaml  -f $(build_path)/manifests
 	$(PROMBENCH_CMD) gke cluster scaleDown -a /etc/serviceaccount/service-account.json -c $(build_path)/config/node-pool.yaml
 
@@ -62,4 +62,4 @@ clean-manifests:
 check-deps:
 	@which jinja2 || echo "Jinja2 CLI is missing. Try to install with 'pip install pyyaml jinja2-cli[yaml]'"
 
-.PHONY: manifests clean-manifests cluster-deploy cluster-config clean-cluster check-deps  
+.PHONY: manifests clean-manifests cluster-deploy cluster-config clean-cluster check-deps

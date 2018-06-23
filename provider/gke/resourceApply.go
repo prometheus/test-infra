@@ -171,6 +171,7 @@ func (c *GKE) daemonSetApply(resource runtime.Object) {
 			log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 		}
 	}
+	c.waitForDaemonSet(resource)
 }
 
 func (c *GKE) deploymentApply(resource runtime.Object) {
@@ -211,6 +212,7 @@ func (c *GKE) deploymentApply(resource runtime.Object) {
 			log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 		}
 	}
+	c.waitForDeployment(resource)
 }
 
 func (c *GKE) nameSpaceApply(resource runtime.Object) {
@@ -409,4 +411,5 @@ func (c *GKE) serviceApply(resource runtime.Object) {
 			log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 		}
 	}
+	c.waitForService(resource)
 }

@@ -26,7 +26,7 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
-const maxTries = 25
+const maxTries = 30
 
 // New is the GKE constructor.
 func New() *GKE {
