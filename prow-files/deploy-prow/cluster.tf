@@ -22,12 +22,11 @@ resource "google_container_cluster" "primary" {
   zone = "${var.zone}"
   initial_node_count = 1
 
-
   min_master_version = "${var.kubernetes_version}"
   node_version = "${var.kubernetes_version}"
 
   node_config {
-    machine_type = "n1-standard-1"
+    machine_type = "n1-standard-2"
     labels {
       isolation = "prow"
     }

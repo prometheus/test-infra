@@ -1,33 +1,45 @@
 # This file contains Kubernetes YAML files for the most important prow
 # components. Don't edit resources in this file. Instead, pull them out into
 # their own files.
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: prow
----
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: prow
-  namespace: prow
+---
+# Acc to GKE docs, we need to make user cluster-admin before making RBAC roles
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-admin-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  #This is for the service-account that will be used to deploy prombench
+  #This is needed to make prometheus SD RBAC role & loadgen-scaler roles to grant access to scale deployments up and down
+- kind: User
+  name: "prow-test@prometheus-test-204522.iam.gserviceaccount.com"
+  #This is for to grant access to prow components
+- kind: User
+  name: "system:serviceaccount:default:prow"
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: plugins
-  namespace: prow
 data:
-  plugins: ""
+  plugins.yaml: |
+    plugins:
+      sipian/prometheus:
+      - benchmark
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: config
-  namespace: prow
 data:
-  config: |
+  config.yaml: |
     periodics:
     - interval: 10m
       agent: kubernetes
@@ -41,7 +53,6 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: prowjobs.prow.k8s.io
-  namespace: prow
 spec:
   group: prow.k8s.io
   version: v1
@@ -93,7 +104,6 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: hook
-  namespace: prow
   labels:
     app: hook
 spec:
@@ -105,7 +115,6 @@ spec:
       maxUnavailable: 1
   template:
     metadata:
-      namespace: prow
       labels:
         app: hook
     spec:
@@ -113,7 +122,7 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
       - name: hook
-        image: gcr.io/prometheus-test-204522/hook:v20180616-stat-235-g2de599c8c
+        image: gcr.io/prometheus-test-204522/hook:v20180623-stat-597-g6d2f9659b
         imagePullPolicy: Always
         args:
         - --dry-run=false
@@ -153,7 +162,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: hook
-  namespace: prow
 spec:
   selector:
     app: hook
@@ -165,21 +173,19 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: plank
-  namespace: prow
   labels:
     app: plank
 spec:
   replicas: 1 # Do not scale up.
   template:
     metadata:
-      namespace: prow
       labels:
         app: plank
     spec:
       serviceAccountName: prow
       containers:
       - name: plank
-        image: gcr.io/k8s-prow/plank:v20180529-e9431eaa3
+        image: gcr.io/k8s-prow/plank:v20180620-3b98af6f3
         args:
         - --dry-run=false
         volumeMounts:
@@ -203,21 +209,19 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: sinker
-  namespace: prow
   labels:
     app: sinker
 spec:
   replicas: 1
   template:
     metadata:
-      namespace: prow
       labels:
         app: sinker
     spec:
       serviceAccountName: prow
       containers:
       - name: sinker
-        image: gcr.io/k8s-prow/sinker:v20180529-e9431eaa3
+        image: gcr.io/k8s-prow/sinker:v20180620-3b98af6f3
         volumeMounts:
         - name: config
           mountPath: /etc/config
@@ -233,7 +237,6 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: deck
-  namespace: prow
   labels:
     app: deck
 spec:
@@ -245,7 +248,6 @@ spec:
       maxUnavailable: 1
   template:
     metadata:
-      namespace: prow
       labels:
         app: deck
     spec:
@@ -253,7 +255,7 @@ spec:
       serviceAccountName: prow
       containers:
       - name: deck
-        image: gcr.io/k8s-prow/deck:v20180529-e9431eaa3
+        image: gcr.io/k8s-prow/deck:v20180620-3b98af6f3
         args:
         - --hook-url=http://hook:8888/plugin-help
         ports:
@@ -274,7 +276,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: deck
-  namespace: prow  
 spec:
   selector:
     app: deck
@@ -287,14 +288,12 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: horologium
-  namespace: prow
   labels:
     app: horologium
 spec:
   replicas: 1
   template:
     metadata:
-      namespace: prow
       labels:
         app: horologium
     spec:
@@ -302,7 +301,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: horologium
-        image: gcr.io/k8s-prow/horologium:v20180529-e9431eaa3
+        image: gcr.io/k8s-prow/horologium:v20180620-3b98af6f3
         volumeMounts:
         - name: config
           mountPath: /etc/config
@@ -318,7 +317,6 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: ing
-  namespace: prow
 spec:
   rules:
   - http:
@@ -331,21 +329,3 @@ spec:
         backend:
           serviceName: hook
           servicePort: 8888
----
-# Acc to GKE docs, we need to make user cluster-admin before making RBAC roles
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: cluster-admin-binding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-  #This is for the service-account that will be used to deploy prombench
-  #This is needed to make prometheus SD RBAC role & loadgen-scaler roles to grant access to scale deployments up and down
-- kind: User
-  name: "prow-test@prometheus-test-204522.iam.gserviceaccount.com"
-  #This is for to grant access to prow components
-- kind: User
-  name: "system:serviceaccount:prow:prow"
