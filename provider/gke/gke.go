@@ -235,7 +235,7 @@ func (c *GKE) waitForNodePoolDeletion(n *containerpb.CreateNodePoolRequest) erro
 		}
 
 		retry := time.Second * 10
-		log.Printf("NodePool %v is being deleted. Waiting for it to be deleted.", nodePool.Name)
+		log.Printf("NodePool %v is being deleted. Retrying after 10 seconds.", nodePool.Name)
 		time.Sleep(retry)
 	}
 	log.Fatalf("NodePool %v was not deleted after trying %d times", n.NodePool.Name, maxTries)
@@ -433,22 +433,9 @@ func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 				c.clusterRoleDelete(resource)
 			case "ClusterRoleBinding":
 				c.clusterRoleBindingDelete(resource)
-			case "ConfigMap":
-				c.configMapDelete(resource)
-			case "DaemonSet":
-				c.daemonSetDelete(resource)
-			case "Deployment":
-				c.deploymentDelete(resource)
+			/* Deleting namespace will delete all components in the namespace. Don't need to delete separately */
 			case "Namespace":
 				c.nameSpaceDelete(resource)
-			case "Role":
-				c.roleDelete(resource)
-			case "RoleBinding":
-				c.roleBindingDelete(resource)
-			case "Service":
-				c.serviceDelete(resource)
-			case "ServiceAccount":
-				c.serviceAccountDelete(resource)
 			}
 		}
 	}

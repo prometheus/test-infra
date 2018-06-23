@@ -2,6 +2,8 @@ package gke
 
 import (
 	"log"
+	"strings"
+	"time"
 
 	apiCoreV1 "k8s.io/api/core/v1"
 	apiExtensionsV1beta1 "k8s.io/api/extensions/v1beta1"
@@ -107,9 +109,29 @@ func (c *GKE) nameSpaceDelete(resource runtime.Object) error {
 		log.Printf("resource delete failed - kind: %v , error: %v", kind, err)
 
 	} else {
-		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
+		log.Printf("resource deleting - kind: %v , name: %v", kind, req.Name)
 	}
+	c.waitForNameSpaceDeletion(resource)
 	return nil
+}
+
+func (c *GKE) waitForNameSpaceDeletion(resource runtime.Object) {
+	req := resource.(*apiCoreV1.Namespace)
+	client := c.clientset.CoreV1().Namespaces()
+
+	for i := 1; i <= maxTries; i++ {
+		_, err := client.Get(req.Name, apiMetaV1.GetOptions{})
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				return
+			}
+			log.Fatalf("Couldn't get namespace info:%v", err)
+		}
+		retry := time.Second * 10
+		log.Printf("All the components of namespace %v are being deleted. Retrying after 10 seconds.", req.Name)
+		time.Sleep(retry)
+	}
+	log.Fatalf("Namespace %v was not deleted after trying %d times", req.Name, maxTries)
 }
 
 func (c *GKE) roleDelete(resource runtime.Object) error {
