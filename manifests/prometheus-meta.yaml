@@ -1,82 +1,3 @@
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: prometheus-meta
-  namespace: prombench-{{ environ('PR_NUMBER') }}
-  labels:
-    app: prometheus-meta
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: prometheus
-      prometheus: meta
-  template:
-    metadata:
-      namespace: prombench-{{ environ('PR_NUMBER') }}
-      labels:
-        app: prometheus
-        prometheus: meta
-    spec:
-      serviceAccountName: prometheus
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - topologyKey: kubernetes.io/hostname
-            labelSelector:
-              matchExpressions:
-              - key: app
-                operator: In
-                values:
-                - prometheus
-      securityContext:
-        runAsUser: 0
-      containers:
-      - image: quay.io/prometheus/prometheus:v2.3.0
-        args:
-        - "--config.file=/etc/prometheus/config/prometheus.yaml"
-        - "--storage.tsdb.path=/data"
-        - "--storage.tsdb.min-block-duration=15m"
-        - "--storage.tsdb.max-block-duration=4h"
-        name: prometheus
-        volumeMounts:
-        - name: config-volume
-          mountPath: /etc/prometheus/config
-        - name: instance-ssd
-          mountPath: /data
-      volumes:
-      - name: config-volume
-        configMap:
-          name: prometheus-meta
-      - name: instance-ssd
-        hostPath:
-          # /mnt is where GKE keeps it's SSD
-          # don't change this if you want Prometheus to take advantage of these local SSDs
-          path: /mnt/disks/ssd0
-      terminationGracePeriodSeconds: 300
-      nodeSelector:
-        cloud.google.com/gke-nodepool: prometheus-{{ environ('PR_NUMBER') }}
-        isolation: prometheus
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: prometheus-meta
-  namespace: prombench-{{ environ('PR_NUMBER') }}
-  labels:
-    prometheus: meta
-    app: prometheus
-spec:
-  type: LoadBalancer
-  # clusterIP: None
-  ports:
-  #should be 1 port
-  - name: prometheus
-    port: 9090
-  selector:
-    app: prometheus
-    prometheus: meta
----
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -157,3 +78,82 @@ data:
       - action: replace
         source_labels: [__meta_kubernetes_pod_node_name]
         target_label: nodeName
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: prometheus-meta
+  namespace: prombench-{{ environ('PR_NUMBER') }}
+  labels:
+    app: prometheus-meta
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+      prometheus: meta
+  template:
+    metadata:
+      namespace: prombench-{{ environ('PR_NUMBER') }}
+      labels:
+        app: prometheus
+        prometheus: meta
+    spec:
+      serviceAccountName: prometheus
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - prometheus
+      securityContext:
+        runAsUser: 0
+      containers:
+      - image: quay.io/prometheus/prometheus:v2.3.0
+        args:
+        - "--config.file=/etc/prometheus/config/prometheus.yaml"
+        - "--storage.tsdb.path=/data"
+        - "--storage.tsdb.min-block-duration=15m"
+        - "--storage.tsdb.max-block-duration=4h"
+        name: prometheus
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/prometheus/config
+        - name: instance-ssd
+          mountPath: /data
+      volumes:
+      - name: config-volume
+        configMap:
+          name: prometheus-meta
+      - name: instance-ssd
+        hostPath:
+          # /mnt is where GKE keeps it's SSD
+          # don't change this if you want Prometheus to take advantage of these local SSDs
+          path: /mnt/disks/ssd0
+      terminationGracePeriodSeconds: 300
+      nodeSelector:
+        cloud.google.com/gke-nodepool: prometheus-{{ environ('PR_NUMBER') }}
+        isolation: prometheus
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-meta
+  namespace: prombench-{{ environ('PR_NUMBER') }}
+  labels:
+    prometheus: meta
+    app: prometheus
+spec:
+  type: LoadBalancer
+  # clusterIP: None
+  ports:
+  #should be 1 port
+  - name: prometheus
+    port: 9090
+  selector:
+    app: prometheus
+    prometheus: meta
