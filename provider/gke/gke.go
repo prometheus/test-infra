@@ -175,7 +175,7 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 	return nil
 }
 
-func (c *GKE) waitForNodePoolCreation(n *containerpb.CreateNodePoolRequest) error {
+func (c *GKE) waitForNodePoolCreation(n *containerpb.CreateNodePoolRequest) {
 	req := &containerpb.GetNodePoolRequest{
 		ProjectId:  n.ProjectId,
 		Zone:       n.Zone,
@@ -199,14 +199,14 @@ func (c *GKE) waitForNodePoolCreation(n *containerpb.CreateNodePoolRequest) erro
 		}
 		if nodePool.Status == containerpb.NodePool_RUNNING {
 			log.Printf("NodePool %v is running", nodePool.Name)
-			return nil
+			return
 		}
 		retry := time.Second * 10
 		log.Printf("Node Pool %v not ready, current status:%v retrying in %v", nodePool.Name, nodePool.Status, retry)
 		time.Sleep(retry)
 	}
 	log.Fatalf("NodePool %v was not created after trying %d times", n.NodePool.Name, maxTries)
-	return nil
+	return
 }
 
 //TODO handle case of user running deploy , then delete on same PR
@@ -232,6 +232,9 @@ func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 					log.Printf("NodePool operation is ongoing on the cluster. Retrying after 20 seconds.")
 					time.Sleep(retry)
 					continue
+				} else if strings.Contains(err.Error(), "code = NotFound") {
+					log.Printf("NodePool %s has already been deleted.", pool.NodePool.Name)
+					break
 				}
 				log.Fatal("Couldn't delete the node-pool:%v", err)
 			}
@@ -246,7 +249,7 @@ func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 	return nil
 }
 
-func (c *GKE) waitForNodePoolDeletion(n *containerpb.CreateNodePoolRequest) error {
+func (c *GKE) waitForNodePoolDeletion(n *containerpb.CreateNodePoolRequest) {
 	req := &containerpb.GetNodePoolRequest{
 		ProjectId:  n.ProjectId,
 		Zone:       n.Zone,
@@ -257,7 +260,7 @@ func (c *GKE) waitForNodePoolDeletion(n *containerpb.CreateNodePoolRequest) erro
 		nodePool, err := c.clientGKE.GetNodePool(c.ctx, req)
 		if err != nil {
 			if strings.Contains(err.Error(), "code = NotFound") {
-				return nil
+				return
 			}
 			log.Fatalf("Couldn't get node-pool info:%v", err)
 		}
@@ -267,7 +270,7 @@ func (c *GKE) waitForNodePoolDeletion(n *containerpb.CreateNodePoolRequest) erro
 		time.Sleep(retry)
 	}
 	log.Fatalf("NodePool %v was not deleted after trying %d times", n.NodePool.Name, maxTries)
-	return nil
+	return
 }
 
 // NewResourceClient sets the client used for resource operations.
