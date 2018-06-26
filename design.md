@@ -22,4 +22,4 @@ The TODO list can be found [here](https://github.com/sipian/prombench/issues/5)
 
 - [Prombench](manifests) is deployed on these nodepools in a new namespace `prombench-<PR_NUMBER>` (Only one Prombench instance can run on a PR)
 
-- When `/benchmark delete` is triggered, the nodepool and namespace is deleted
+- When `/benchmark cancel` is triggered, the nodepools and namespace are deleted
