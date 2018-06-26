@@ -1,7 +1,7 @@
 # prometheus-test-environment
 A Kubernetes cluster preconfigured for E2E testing and benchmarking Prometheus
 
-The prow setup used to automate benchmarking can be found [here](https://github.com/sipian/test-infra/tree/prometheus-prow/prow/)
+The design details and instructions on how to run can be found [here](design.md)
 
 # A benchmarking tool preconfigured for testing Prometheus
 1. Create the k8s cluster described by a configuration file.
