@@ -7,7 +7,7 @@ The TODO list can be found [here](https://github.com/sipian/prombench/issues/5)
 
 - Assume [Prow](https://github.com/sipian/test-infra/tree/prometheus-prow/prow/) is already running on a GKE cluster. <br/> Instructions on how to deploy a prow-cluster can be found [here](prow-files/deploy-prow).<br/>The benchmark plugin added to prow can be found [here](https://github.com/sipian/test-infra/tree/prometheus-prow/prow/plugins/benchmark)
 
-- When Prombench is triggered using `/benchmark pr` or `/benchmark release`, the following environment variables are set in the Prowjob [start-benchmark](https://github.com/sipian/test-infra/blob/prometheus-prow/prow/config-prometheus.yaml#L34):
+- When Prombench is triggered using `/benchmark pr` or `/benchmark release [version_number(ex:2.3.0-rc.1)|Default:latest]`, the following environment variables are set in the Prowjob [start-benchmark](https://github.com/sipian/test-infra/blob/prometheus-prow/prow/config-prometheus.yaml#L34):
 	- ZONE : zone of the prow cluster
 	- CLUSTER_NAME : Name of the prow cluster
 	- PR_NUMBER : Number of the PR where this comment was written
