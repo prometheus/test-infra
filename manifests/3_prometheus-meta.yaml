@@ -1,8 +1,9 @@
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-meta
-  namespace: prombench-{{ environ('PR_NUMBER') }}
+  namespace: prombench-{{ .PR_NUMBER }}
 data:
   prometheus.yaml: |
     global:
@@ -21,7 +22,7 @@ data:
       relabel_configs:
       - action: keep
         source_labels: [__meta_kubernetes_node_label_cloud_google_com_gke_nodepool]
-        regex: prometheus-{{ environ('PR_NUMBER') }}|nodes-{{ environ('PR_NUMBER') }}
+        regex: prometheus-{{ .PR_NUMBER }}|nodes-{{ .PR_NUMBER }}
       - action: labelmap
         regex: __meta_kubernetes_node_label_(.+)
       - target_label: __address__
@@ -44,7 +45,7 @@ data:
       relabel_configs:
       - action: keep
         source_labels: [__meta_kubernetes_node_label_cloud_google_com_gke_nodepool]
-        regex: prometheus-{{ environ('PR_NUMBER') }}|nodes-{{ environ('PR_NUMBER') }}
+        regex: prometheus-{{ .PR_NUMBER }}|nodes-{{ .PR_NUMBER }}
       - action: labelmap
         regex: __meta_kubernetes_node_label_(.+)
       - target_label: __address__
@@ -64,7 +65,7 @@ data:
       - role: endpoints
         namespaces:
           names:
-            - prombench-{{ environ('PR_NUMBER') }}
+            - prombench-{{ .PR_NUMBER }}
       relabel_configs:
       - action: keep
         source_labels: [__meta_kubernetes_service_label_app]
@@ -72,6 +73,9 @@ data:
       - action: replace
         source_labels: [__meta_kubernetes_service_label_app]
         target_label: job
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_label_node]
+        target_label: node
       - action: replace
         target_label: prometheus
         source_labels: [__meta_kubernetes_service_label_prometheus]
@@ -83,7 +87,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: prometheus-meta
-  namespace: prombench-{{ environ('PR_NUMBER') }}
+  namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: prometheus-meta
 spec:
@@ -94,7 +98,7 @@ spec:
       prometheus: meta
   template:
     metadata:
-      namespace: prombench-{{ environ('PR_NUMBER') }}
+      namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: prometheus
         prometheus: meta
@@ -136,14 +140,14 @@ spec:
           path: /mnt/disks/ssd0
       terminationGracePeriodSeconds: 300
       nodeSelector:
-        cloud.google.com/gke-nodepool: prometheus-{{ environ('PR_NUMBER') }}
+        cloud.google.com/gke-nodepool: prometheus-{{ .PR_NUMBER }}
         isolation: prometheus
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: prometheus-meta
-  namespace: prombench-{{ environ('PR_NUMBER') }}
+  namespace: prombench-{{ .PR_NUMBER }}
   labels:
     prometheus: meta
     app: prometheus

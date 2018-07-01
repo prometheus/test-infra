@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 data:
   prometheus-dashboard.yaml: |
@@ -95,7 +96,7 @@ data:
             "expr": "prometheus_build_info{job=\"prometheus\",prometheus=~\"(test+).*\"}",
             "format": "time_series",
             "intervalFactor": 1,
-            "legendFormat": "{{prometheus}} - {{version}} - {{revision}}",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - {{"{{"}}version{{"}}"}} - {{"{{"}}revision{{"}}"}}",
             "refId": "A"
           }
         ],
@@ -175,7 +176,7 @@ data:
             "expr": "time() - process_start_time_seconds{job=\"prometheus\",prometheus=~\"(test+).*\"}",
             "format": "time_series",
             "intervalFactor": 1,
-            "legendFormat": "{{prometheus}} - Uptime",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Uptime",
             "refId": "A"
           }
         ],
@@ -258,14 +259,14 @@ data:
             "expr": "process_max_fds{job=\"prometheus\",prometheus=~\"(test+).*\"}",
             "format": "time_series",
             "intervalFactor": 1,
-            "legendFormat": "{{prometheus}} - Max",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Max",
             "refId": "A"
           },
           {
             "expr": "process_open_fds{job=\"prometheus\",prometheus=~\"(test+).*\"}",
             "format": "time_series",
             "intervalFactor": 1,
-            "legendFormat": "{{prometheus}} - Open",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Open",
             "refId": "B"
           }
         ],
@@ -353,7 +354,7 @@ data:
             "expr": "prometheus_tsdb_head_series{job=\"prometheus\",prometheus=~\"(test+).*\"}",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Time series",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Time series",
             "metric": "prometheus_local_storage_memory_series",
             "refId": "A",
             "step": 10
@@ -443,7 +444,7 @@ data:
             "expr": "prometheus_tsdb_head_active_appenders{job=\"prometheus\",prometheus=~\"(test+).*\"}",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Head Appenders",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Head Appenders",
             "metric": "prometheus_local_storage_memory_series",
             "refId": "A",
             "step": 10
@@ -530,7 +531,7 @@ data:
             "expr": "rate(prometheus_tsdb_head_samples_appended_total{job=\"prometheus\",prometheus=~\"(test+).*\"}[1m])",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - samples/s",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - samples/s",
             "metric": "prometheus_local_storage_ingested_samples_total",
             "refId": "A",
             "step": 10
@@ -626,7 +627,7 @@ data:
             "expr": "prometheus_tsdb_head_chunks{job=\"prometheus\",prometheus=~\"(test+).*\"}",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Chunks",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Chunks",
             "metric": "prometheus_local_storage_memory_chunks",
             "refId": "A",
             "step": 10
@@ -716,7 +717,7 @@ data:
             "expr": "rate(prometheus_tsdb_head_chunks_created_total{job=\"prometheus\",prometheus=~\"(test+).*\"}[1m])",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Created",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Created",
             "metric": "prometheus_local_storage_chunk_ops_total",
             "refId": "A",
             "step": 10
@@ -807,7 +808,7 @@ data:
             "expr": "rate(prometheus_tsdb_head_chunks_removed_total{job=\"prometheus\",prometheus=~\"(test+).*\"}[1m])",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Removed",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Removed",
             "metric": "prometheus_local_storage_chunk_ops_total",
             "refId": "B",
             "step": 10
@@ -906,7 +907,7 @@ data:
             "expr": "prometheus_tsdb_head_min_time{job=\"prometheus\",prometheus=~\"(test+).*\"}",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Min",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Min",
             "metric": "prometheus_local_storage_series_chunks_persisted_count",
             "refId": "A",
             "step": 10
@@ -923,7 +924,7 @@ data:
             "expr": "prometheus_tsdb_head_max_time{job=\"prometheus\",prometheus=~\"(test+).*\"}",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Max",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Max",
             "metric": "prometheus_local_storage_series_chunks_persisted_count",
             "refId": "B",
             "step": 10
@@ -1014,7 +1015,7 @@ data:
             "expr": "rate(prometheus_tsdb_head_gc_duration_seconds_sum{job=\"prometheus\",prometheus=~\"(test+).*\"}[1m])",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - GC Time/s",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - GC Time/s",
             "metric": "prometheus_local_storage_series_chunks_persisted_count",
             "refId": "A",
             "step": 10
@@ -1109,7 +1110,7 @@ data:
             "expr": "prometheus_tsdb_blocks_loaded{job=\"prometheus\",prometheus=~\"(test+).*\"}",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Blocks Loaded",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Blocks Loaded",
             "metric": "prometheus_local_storage_indexing_batch_sizes_sum",
             "refId": "A",
             "step": 10
@@ -1202,7 +1203,7 @@ data:
             "format": "time_series",
             "interval": "",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Reloads",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Reloads",
             "metric": "prometheus_local_storage_series_chunks_persisted_count",
             "refId": "A",
             "step": 10
@@ -1294,7 +1295,7 @@ data:
             "format": "time_series",
             "interval": "",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Fsync Latency",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Fsync Latency",
             "metric": "prometheus_local_storage_series_chunks_persisted_count",
             "refId": "A",
             "step": 10
@@ -1304,7 +1305,7 @@ data:
             "format": "time_series",
             "interval": "",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Truncate Latency",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Truncate Latency",
             "metric": "prometheus_local_storage_series_chunks_persisted_count",
             "refId": "B",
             "step": 10
@@ -1397,7 +1398,7 @@ data:
             "format": "time_series",
             "interval": "",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - WAL Corruptions",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - WAL Corruptions",
             "metric": "prometheus_local_storage_series_chunks_persisted_count",
             "refId": "A",
             "step": 10
@@ -1407,7 +1408,7 @@ data:
             "format": "time_series",
             "interval": "",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Reload Failures",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Reload Failures",
             "metric": "prometheus_local_storage_series_chunks_persisted_count",
             "refId": "B",
             "step": 10
@@ -1417,7 +1418,7 @@ data:
             "format": "time_series",
             "interval": "",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Head Series Not Found",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Head Series Not Found",
             "metric": "prometheus_local_storage_series_chunks_persisted_count",
             "refId": "C",
             "step": 10
@@ -1427,7 +1428,7 @@ data:
             "format": "time_series",
             "interval": "",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Compaction Failures",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Compaction Failures",
             "metric": "prometheus_local_storage_series_chunks_persisted_count",
             "refId": "D",
             "step": 10
@@ -1437,7 +1438,7 @@ data:
             "format": "time_series",
             "interval": "",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Retention Cutoff Failures",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Retention Cutoff Failures",
             "metric": "prometheus_local_storage_series_chunks_persisted_count",
             "refId": "E",
             "step": 10
@@ -1529,7 +1530,7 @@ data:
             "format": "time_series",
             "interval": "",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Compactions",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Compactions",
             "metric": "prometheus_local_storage_series_chunks_persisted_count",
             "refId": "A",
             "step": 10
@@ -1619,7 +1620,7 @@ data:
             "expr": "rate(prometheus_tsdb_compaction_duration_seconds_sum{job=\"prometheus\",prometheus=~\"(test+).*\"}[10m])",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}}",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}}",
             "metric": "prometheus_local_storage_series_chunks_persisted_count",
             "refId": "A",
             "step": 10
@@ -1711,7 +1712,7 @@ data:
             "expr": "rate(prometheus_tsdb_retention_cutoffs_total[10m])",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Retention Cutoffs",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Retention Cutoffs",
             "metric": "last",
             "refId": "A",
             "step": 10
@@ -1801,7 +1802,7 @@ data:
             "expr": "rate(prometheus_tsdb_compaction_chunk_range_sum{job=\"prometheus\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_range_count{job=\"prometheus\",prometheus=~\"(test+).*\"}[10m])",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Chunk Time Range",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Chunk Time Range",
             "metric": "prometheus_local_storage_series_chunks_persisted_count",
             "refId": "A",
             "step": 10
@@ -1892,7 +1893,7 @@ data:
             "expr": "rate(prometheus_tsdb_compaction_chunk_size_sum{job=\"prometheus\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_samples_sum{job=\"prometheus\",prometheus=~\"(test+).*\"}[10m])",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Bytes/Sample",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Bytes/Sample",
             "metric": "prometheus_local_storage_series_chunks_persisted_count",
             "refId": "A",
             "step": 10
@@ -1983,7 +1984,7 @@ data:
             "expr": "rate(prometheus_tsdb_compaction_chunk_samples_sum{job=\"prometheus\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_samples_count{job=\"prometheus\",prometheus=~\"(test+).*\"}[10m])",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Chunk Samples",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Chunk Samples",
             "metric": "prometheus_local_storage_series_chunks_persisted_count",
             "refId": "A",
             "step": 10
@@ -2084,7 +2085,7 @@ data:
           {
             "expr": "process_resident_memory_bytes{job=\"prometheus\",prometheus=~\"(test+).*\"}",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - RSS",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - RSS",
             "metric": "process_resident_memory_bytes",
             "refId": "B",
             "step": 10
@@ -2092,7 +2093,7 @@ data:
           {
             "expr": "prometheus_local_storage_target_heap_size_bytes{job=\"prometheus\",prometheus=~\"(test+).*\"}",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Target heap size",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Target heap size",
             "metric": "go_memstats_alloc_bytes",
             "refId": "D",
             "step": 10
@@ -2100,7 +2101,7 @@ data:
           {
             "expr": "go_memstats_next_gc_bytes{job=\"prometheus\",prometheus=~\"(test+).*\"}",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Next GC",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Next GC",
             "metric": "go_memstats_next_gc_bytes",
             "refId": "C",
             "step": 10
@@ -2108,7 +2109,7 @@ data:
           {
             "expr": "go_memstats_alloc_bytes{job=\"prometheus\",prometheus=~\"(test+).*\"}",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Allocated",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Allocated",
             "metric": "go_memstats_alloc_bytes",
             "refId": "A",
             "step": 10
@@ -2199,7 +2200,7 @@ data:
           {
             "expr": "rate(go_memstats_alloc_bytes_total{job=\"prometheus\",prometheus=~\"(test+).*\"}[1m])",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Allocated Bytes/s",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Allocated Bytes/s",
             "metric": "go_memstats_alloc_bytes",
             "refId": "A",
             "step": 10
@@ -2287,7 +2288,7 @@ data:
           {
             "expr": "irate(process_cpu_seconds_total{job=\"prometheus\",prometheus=~\"(test+).*\"}[1m])",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Irate",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Irate",
             "metric": "prometheus_local_storage_ingested_samples_total",
             "refId": "A",
             "step": 10
@@ -2295,7 +2296,7 @@ data:
           {
             "expr": "rate(process_cpu_seconds_total{job=\"prometheus\",prometheus=~\"(test+).*\"}[5m])",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - 5m rate",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - 5m rate",
             "metric": "prometheus_local_storage_ingested_samples_total",
             "refId": "B",
             "step": 10
@@ -2388,7 +2389,7 @@ data:
             "expr": "rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",prometheus=~\"(test+).*\"}[1m])",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - {{handler}}",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - {{"{{"}}handler{{"}}"}}",
             "metric": "prometheus_local_storage_memory_chunkdescs",
             "refId": "A",
             "step": 10
@@ -2479,7 +2480,7 @@ data:
             "expr": "rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",prometheus=~\"(test+).*\"}[1m]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",prometheus=~\"(test+).*\"}[1m])",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - {{handler}}",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - {{"{{"}}handler{{"}}"}}",
             "metric": "prometheus_local_storage_memory_chunkdescs",
             "refId": "A",
             "step": 10
@@ -2570,7 +2571,7 @@ data:
             "expr": "rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",prometheus=~\"(test+).*\"}[1m])",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - {{handler}}",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - {{"{{"}}handler{{"}}"}}",
             "metric": "prometheus_local_storage_memory_chunkdescs",
             "refId": "A",
             "step": 10
@@ -2661,7 +2662,7 @@ data:
             "expr": "rate(prometheus_engine_query_duration_seconds_sum{job=\"prometheus\",prometheus=~\"(test+).*\"}[1m])",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - {{slice}}",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - {{"{{"}}slice{{"}}"}}",
             "metric": "prometheus_local_storage_memory_chunkdescs",
             "refId": "A",
             "step": 10
@@ -2751,7 +2752,7 @@ data:
             "expr": "rate(prometheus_rule_group_iterations_missed_total{job=\"prometheus\",prometheus=~\"(test+).*\"}[1m])  ",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Rule group missed",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Rule group missed",
             "metric": "prometheus_local_storage_memory_chunkdescs",
             "refId": "B",
             "step": 10
@@ -2760,7 +2761,7 @@ data:
             "expr": "rate(prometheus_rule_evaluation_failures_total{job=\"prometheus\",prometheus=~\"(test+).*\"}[1m])",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Rule evals failed",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Rule evals failed",
             "metric": "prometheus_local_storage_memory_chunkdescs",
             "refId": "C",
             "step": 10
@@ -2850,7 +2851,7 @@ data:
             "expr": "rate(prometheus_rule_group_duration_seconds_sum{job=\"prometheus\",prometheus=~\"(test+).*\"}[1m])",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Rule evaluation duration",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Rule evaluation duration",
             "metric": "prometheus_local_storage_memory_chunkdescs",
             "refId": "A",
             "step": 10
@@ -2944,7 +2945,7 @@ data:
             "expr": "prometheus_rule_group_interval_seconds{job=\"prometheus\",prometheus=~\"(test+).*\",rule_group=~\"$RuleGroup\"}\n",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Interval",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Interval",
             "metric": "prometheus_local_storage_memory_chunkdescs",
             "refId": "A",
             "step": 10
@@ -2953,7 +2954,7 @@ data:
             "expr": "prometheus_rule_group_last_duration_seconds{job=\"prometheus\",prometheus=~\"(test+).*\",rule_group=~\"$RuleGroup\"}\n",
             "format": "time_series",
             "intervalFactor": 2,
-            "legendFormat": "{{prometheus}} - Last Duration",
+            "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Last Duration",
             "metric": "prometheus_local_storage_memory_chunkdescs",
             "refId": "B",
             "step": 10
@@ -3039,4 +3040,4 @@ kind: ConfigMap
 metadata:
   creationTimestamp: null
   name: grafana-dashboards
-  namespace: prombench-{{ environ('PR_NUMBER') }}
+  namespace: prombench-{{ .PR_NUMBER }}

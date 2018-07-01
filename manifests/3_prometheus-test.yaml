@@ -1,8 +1,9 @@
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-test
-  namespace: prombench-{{ environ('PR_NUMBER') }}
+  namespace: prombench-{{ .PR_NUMBER }}
 data:
   prometheus.yaml: |
     global:
@@ -22,7 +23,7 @@ data:
       relabel_configs:
       - action: keep
         source_labels: [__meta_kubernetes_node_label_cloud_google_com_gke_nodepool]
-        regex: prometheus-{{ environ('PR_NUMBER') }}|nodes-{{ environ('PR_NUMBER') }}      
+        regex: prometheus-{{ .PR_NUMBER }}|nodes-{{ .PR_NUMBER }}      
       - action: labelmap
         regex: __meta_kubernetes_node_label_(.+)
       - target_label: __address__
@@ -46,7 +47,7 @@ data:
       - role: endpoints
         namespaces:
           names:
-            - prombench-{{ environ('PR_NUMBER') }}
+            - prombench-{{ .PR_NUMBER }}
 
       relabel_configs:
       - action: keep
@@ -70,7 +71,7 @@ data:
       - role: endpoints
         namespaces:
           names:
-            - prombench-{{ environ('PR_NUMBER') }}
+            - prombench-{{ .PR_NUMBER }}
 
       relabel_configs:
       - action: replace
@@ -96,23 +97,23 @@ data:
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: prometheus-test-{{ environ('PROMETHEUS_1_NAME') }}
-  namespace: prombench-{{ environ('PR_NUMBER') }}
+  name: prometheus-test-{{ .PROMETHEUS_1_NAME }}
+  namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: prometheus
-    prometheus: test-{{ environ('PROMETHEUS_1_NAME') }}
+    prometheus: test-{{ .PROMETHEUS_1_NAME }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: prometheus
-      prometheus: test-{{ environ('PROMETHEUS_1_NAME') }}
+      prometheus: test-{{ .PROMETHEUS_1_NAME }}
   template:
     metadata:
-      namespace: prombench-{{ environ('PR_NUMBER') }}
+      namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: prometheus
-        prometheus: test-{{ environ('PROMETHEUS_1_NAME') }}
+        prometheus: test-{{ .PROMETHEUS_1_NAME }}
     spec:
       serviceAccountName: prometheus
       affinity:
@@ -129,7 +130,7 @@ spec:
         runAsUser: 0
       containers:
       - name: prometheus
-        image: {{ environ('PROMETHEUS_1_IMAGE') }}
+        image: {{ .PROMETHEUS_1_IMAGE }}
         imagePullPolicy: Always
         args: [
           "--config.file=/etc/prometheus/config/prometheus.yaml",
@@ -153,17 +154,17 @@ spec:
           path: /mnt/disks/ssd0
       terminationGracePeriodSeconds: 300
       nodeSelector:
-        cloud.google.com/gke-nodepool: prometheus-{{ environ('PR_NUMBER') }}
+        cloud.google.com/gke-nodepool: prometheus-{{ .PR_NUMBER }}
         isolation: prometheus
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: prometheus-test-{{ environ('PROMETHEUS_1_NAME') }}
-  namespace: prombench-{{ environ('PR_NUMBER') }}
+  name: prometheus-test-{{ .PROMETHEUS_1_NAME }}
+  namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: prometheus
-    prometheus: test-{{ environ('PROMETHEUS_1_NAME') }}
+    prometheus: test-{{ .PROMETHEUS_1_NAME }}
 spec:
   type: LoadBalancer
   ports:
@@ -172,28 +173,28 @@ spec:
     port: 9090
   selector:
     app: prometheus
-    prometheus: test-{{ environ('PROMETHEUS_2_NAME') }}
+    prometheus: test-{{ .PROMETHEUS_2_NAME }}
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: prometheus-test-{{ environ('PROMETHEUS_2_NAME') }}
-  namespace: prombench-{{ environ('PR_NUMBER') }}
+  name: prometheus-test-{{ .PROMETHEUS_2_NAME }}
+  namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: prometheus
-    prometheus: test-{{ environ('PROMETHEUS_2_NAME') }}
+    prometheus: test-{{ .PROMETHEUS_2_NAME }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: prometheus
-      prometheus: test-{{ environ('PROMETHEUS_2_NAME') }}
+      prometheus: test-{{ .PROMETHEUS_2_NAME }}
   template:
     metadata:
-      namespace: prombench-{{ environ('PR_NUMBER') }}
+      namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: prometheus
-        prometheus: test-{{ environ('PROMETHEUS_2_NAME') }}
+        prometheus: test-{{ .PROMETHEUS_2_NAME }}
     spec:
       serviceAccountName: prometheus
       affinity:
@@ -210,7 +211,7 @@ spec:
         runAsUser: 0
       containers:
       - name: prometheus
-        image: {{ environ('PROMETHEUS_2_IMAGE') }}
+        image: {{ .PROMETHEUS_2_IMAGE }}
         imagePullPolicy: Always
         args: [
           "--config.file=/etc/prometheus/config/prometheus.yaml",
@@ -234,17 +235,17 @@ spec:
           path: /mnt/disks/ssd0
       terminationGracePeriodSeconds: 300
       nodeSelector:
-        cloud.google.com/gke-nodepool: prometheus-{{ environ('PR_NUMBER') }}
+        cloud.google.com/gke-nodepool: prometheus-{{ .PR_NUMBER }}
         isolation: prometheus
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: prometheus-test-{{ environ('PROMETHEUS_2_NAME') }}
-  namespace: prombench-{{ environ('PR_NUMBER') }}
+  name: prometheus-test-{{ .PROMETHEUS_2_NAME }}
+  namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: prometheus
-    prometheus: test-{{ environ('PROMETHEUS_2_NAME') }}
+    prometheus: test-{{ .PROMETHEUS_2_NAME }}
 spec:
   type: LoadBalancer
   ports:
@@ -253,4 +254,4 @@ spec:
     port: 9090
   selector:
     app: prometheus
-    prometheus: test-{{ environ('PROMETHEUS_2_NAME') }}
+    prometheus: test-{{ .PROMETHEUS_2_NAME }}

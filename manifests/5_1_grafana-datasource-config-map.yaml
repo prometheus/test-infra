@@ -1,10 +1,11 @@
+---
 apiVersion: v1
 data:
   prometheus-datasource.yaml: |
     apiVersion: 1
 
     deleteDatasources:
-      - name: Prometheus
+      - name: Prometheus-prombench-{{ .PR_NUMBER }}
         orgId: 1
 
     datasources:
@@ -12,7 +13,7 @@ data:
       type: prometheus
       access: proxy
       orgId: 1
-      url: http://prometheus-meta.prombench-{{ environ('PR_NUMBER') }}:9090
+      url: http://prometheus-meta.prombench-{{ .PR_NUMBER }}:9090
       basicAuth: true
       basicAuthUser: admin
       basicAuthPassword: admin
@@ -31,4 +32,4 @@ kind: ConfigMap
 metadata:
   creationTimestamp: null
   name: grafana-datasources
-  namespace: prombench-{{ environ('PR_NUMBER') }}
+  namespace: prombench-{{ .PR_NUMBER }}

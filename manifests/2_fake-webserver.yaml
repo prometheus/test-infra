@@ -1,13 +1,14 @@
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: fake-webserver
-  namespace: prombench-{{ environ('PR_NUMBER') }}  
+  namespace: prombench-{{ .PR_NUMBER }}  
 spec:
   replicas: 5
   template:
     metadata:
-      namespace: prombench-{{ environ('PR_NUMBER') }}
+      namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: fake-webserver
     spec:
@@ -26,14 +27,14 @@ spec:
         - name: metrics5
           containerPort: 8084
       nodeSelector:
-        cloud.google.com/gke-nodepool: nodes-{{ environ('PR_NUMBER') }}
+        cloud.google.com/gke-nodepool: nodes-{{ .PR_NUMBER }}
         isolation: none
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: fake-webserver
-  namespace: prombench-{{ environ('PR_NUMBER') }}
+  namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: fake-webserver
     monitored: "true"

@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-loadgen
-  namespace: prombench-{{ environ('PR_NUMBER') }}
+  namespace: prombench-{{ .PR_NUMBER }}
 data:
   config.yaml: |
     scaler:
@@ -59,12 +59,12 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: prometheus-loadgen-scaler
-  namespace: prombench-{{ environ('PR_NUMBER') }}
+  namespace: prombench-{{ .PR_NUMBER }}
 spec:
   replicas: 1
   template:
     metadata:
-      namespace: prombench-{{ environ('PR_NUMBER') }}
+      namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: loadgen-scaler
     spec:
@@ -75,7 +75,7 @@ spec:
         imagePullPolicy: Always
         env: 
         - name: PROMBENCH_NAMESPACE
-          value: prombench-{{ environ('PR_NUMBER') }}
+          value: prombench-{{ .PR_NUMBER }}
         args:
         - "scaler"
         volumeMounts:
@@ -86,19 +86,19 @@ spec:
         configMap:
           name: prometheus-loadgen
       nodeSelector:
-        cloud.google.com/gke-nodepool: nodes-{{ environ('PR_NUMBER') }}
+        cloud.google.com/gke-nodepool: nodes-{{ .PR_NUMBER }}
         isolation: none
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: prometheus-loadgen-querier
-  namespace: prombench-{{ environ('PR_NUMBER') }}
+  namespace: prombench-{{ .PR_NUMBER }}
 spec:
   replicas: 1
   template:
     metadata:
-      namespace: prombench-{{ environ('PR_NUMBER') }}
+      namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: loadgen-querier
     spec:
@@ -108,11 +108,11 @@ spec:
         imagePullPolicy: Always
         env: 
         - name: PROMBENCH_NAMESPACE
-          value: prombench-{{ environ('PR_NUMBER') }}
+          value: prombench-{{ .PR_NUMBER }}
         args:
         - "querier"
-        - "{{ environ('PROMETHEUS_1_NAME') }}"
-        - "{{ environ('PROMETHEUS_2_NAME') }}"
+        - "{{ .PROMETHEUS_1_NAME }}"
+        - "{{ .PROMETHEUS_2_NAME }}"
         volumeMounts:
         - name: config-volume
           mountPath: /etc/loadgen
@@ -121,14 +121,14 @@ spec:
         configMap:
           name: prometheus-loadgen
       nodeSelector:
-        cloud.google.com/gke-nodepool: nodes-{{ environ('PR_NUMBER') }}
+        cloud.google.com/gke-nodepool: nodes-{{ .PR_NUMBER }}
         isolation: none
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: prometheus-loadgen-querier
-  namespace: prombench-{{ environ('PR_NUMBER') }}
+  namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: loadgen-querier
 spec:

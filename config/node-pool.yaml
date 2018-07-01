@@ -1,7 +1,8 @@
-zone: {{ environ('ZONE') }}
-clusterid: {{ environ('CLUSTER_NAME') }}
+---
+zone: {{ .ZONE }}
+clusterid: {{ .CLUSTER_NAME }}
 nodepool:
-  name: prometheus-{{ environ('PR_NUMBER') }}
+  name: prometheus-{{ .PR_NUMBER }}
   initialnodecount: 3
   config:
     machinetype: n1-standard-1
@@ -11,10 +12,10 @@ nodepool:
     labels:
       isolation: prometheus
 ---
-zone: {{ environ('ZONE') }}
-clusterid: {{ environ('CLUSTER_NAME') }}
+zone: {{ .ZONE }}
+clusterid: {{ .CLUSTER_NAME }}
 nodepool:
-  name: nodes-{{ environ('PR_NUMBER') }}
+  name: nodes-{{ .PR_NUMBER }}
   initialnodecount: 1
   config:
     machinetype: n1-standard-2
