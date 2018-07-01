@@ -102,11 +102,20 @@ func (c *GKE) ConfigParse(*kingpin.ParseContext) error {
 		log.Fatalf("error reading the config file:%v", err)
 	}
 
-	splitBy := "zone"
+	fileContentParsed := bytes.NewBufferString("")
+	if len(c.ResourceVars) > 0 {
+		t := template.New("resource")
+		t.Option("missingkey=error")
+		if err := template.Must(t.Parse(string(content))).Execute(fileContentParsed, c.ResourceVars); err != nil {
+			log.Fatalf("executing template:%v", err)
+		}
+	}
 
-	for _, text := range strings.Split(string(content), splitBy)[1:] {
+	separator := "---"
+
+	for _, text := range strings.Split(fileContentParsed.String(), separator)[1:] {
 		config := &containerpb.CreateNodePoolRequest{}
-		if err = yamlGo.UnmarshalStrict([]byte(splitBy+text), config); err != nil {
+		if err = yamlGo.UnmarshalStrict([]byte(text), config); err != nil {
 			log.Fatalf("error parsing the config file:%v", err)
 		}
 		config.ProjectId = projectID
@@ -209,8 +218,6 @@ func (c *GKE) waitForNodePoolCreation(n *containerpb.CreateNodePoolRequest) {
 	return
 }
 
-//TODO handle case of user running deploy , then delete on same PR
-//and deploy is in resource apply stage and delete is in node deletion phase
 // NodePoolCreate deletes a new k8s node-pool in an existing cluster
 func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 
@@ -346,7 +353,7 @@ func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
 		// handle directory
 		if info, err := os.Stat(file); err == nil && info.IsDir() {
 			err := filepath.Walk(file, func(path string, f os.FileInfo, err error) error {
-				if filepath.Ext(path) == ".yaml" {
+				if filepath.Ext(path) == ".yaml" || filepath.Ext(path) == ".yml" {
 					fileList = append(fileList, path)
 				}
 				return nil
@@ -366,18 +373,19 @@ func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
 		}
 
 		fileContentParsed := bytes.NewBufferString("")
-		t := template.New("resource")
-		t.Option("missingkey=error")
-		if err := template.Must(t.Parse(string(fileContent))).Execute(fileContentParsed, c.ResourceVars); err != nil {
-			log.Fatalf("executing template:%v", err)
+		if len(c.ResourceVars) > 0 {
+			t := template.New("resource")
+			t.Option("missingkey=error")
+			if err := template.Must(t.Parse(string(fileContent))).Execute(fileContentParsed, c.ResourceVars); err != nil {
+				log.Fatalf("executing template:%v", err)
+			}
 		}
 
-		splitBy := "apiVersion"
+		separator := "---"
 		decode := scheme.Codecs.UniversalDeserializer().Decode
 
-		for _, text := range strings.Split(fileContentParsed.String(), splitBy)[1:] {
-			resource, _, err := decode([]byte(splitBy+text), nil, nil)
-
+		for _, text := range strings.Split(fileContentParsed.String(), separator)[1:] {
+			resource, _, err := decode([]byte(text), nil, nil)
 			if err != nil {
 				log.Fatalf("error while decoding the resource file: %v", err)
 			}
@@ -423,7 +431,7 @@ func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 		// handle directory
 		if info, err := os.Stat(file); err == nil && info.IsDir() {
 			err := filepath.Walk(file, func(path string, f os.FileInfo, err error) error {
-				if filepath.Ext(path) == ".yaml" {
+				if filepath.Ext(path) == ".yaml" || filepath.Ext(path) == ".yml" {
 					fileList = append(fileList, path)
 				}
 				return nil
@@ -441,17 +449,21 @@ func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 		if err != nil {
 			log.Fatalf("error while reading the resource file:%v", err)
 		}
-		fileContentParsed := bytes.NewBufferString("")
 
-		if err := template.Must(template.New("resource").Parse(string(fileContent))).Execute(fileContentParsed, c.ResourceVars); err != nil {
-			log.Println("executing template:", err)
+		fileContentParsed := bytes.NewBufferString("")
+		if len(c.ResourceVars) > 0 {
+			t := template.New("resource")
+			t.Option("missingkey=error")
+			if err := template.Must(t.Parse(string(fileContent))).Execute(fileContentParsed, c.ResourceVars); err != nil {
+				log.Fatalf("executing template:%v", err)
+			}
 		}
 
-		splitBy := "apiVersion"
+		separator := "---"
 		decode := scheme.Codecs.UniversalDeserializer().Decode
 
-		for _, text := range strings.Split(fileContentParsed.String(), splitBy)[1:] {
-			resource, _, err := decode([]byte(splitBy+text), nil, nil)
+		for _, text := range strings.Split(fileContentParsed.String(), separator)[1:] {
+			resource, _, err := decode([]byte(text), nil, nil)
 
 			if err != nil {
 				log.Fatalf("error while decoding the resource file: %v", err)

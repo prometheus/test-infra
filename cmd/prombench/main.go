@@ -28,6 +28,9 @@ func main() {
 		PlaceHolder("key.json").
 		Short('a').
 		ExistingFileVar(&g.AuthFile)
+	k8sGKE.Flag("vars", "When provided it will substitute the token holders in the resources file. Follows the standard golang template formating - {{ .hashStable }}.").
+		Short('v').
+		StringMapVar(&g.ResourceVars)
 
 	k8sGKECluster := k8sGKE.Command("cluster", "Scale up or down a k8s clusters by creating node-pools")
 	k8sGKECluster.Command("scaleUp", "gke cluster scaleUp -a key.json  -c ../../config/node-pool.yaml").
@@ -42,9 +45,6 @@ func main() {
 		Short('f').
 		Default("../../config/resources.yaml").
 		ExistingFilesOrDirsVar(&g.ResourceFiles)
-	k8sGKEResource.Flag("vars", "When provided it will substitute the token holders in the resources file. Follows the standard golang template formating - {{ hashStable }}.").
-		Short('v').
-		StringMapVar(&g.ResourceVars)
 	k8sGKEResource.Command("apply", "gke resource apply -a ../../config/key.json -c ../../config/node-pool.yaml -f ../../config/resources.yaml --vars hashStable:COMMIT1 --vars hashTesting:COMMIT2").
 		Action(g.ResourceApply)
 	k8sGKEResource.Command("delete", "gke resource delete -a ../../config/key.json -c ../../config/node-pool.yaml -f ../../config/resources.yaml --vars hashStable:COMMIT1 --vars hashTesting:COMMIT2").
