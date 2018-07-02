@@ -3670,8 +3670,8 @@ data:
         ]
       },
       "time": {
-        "from": "2018-07-01T18:00:07.365Z",
-        "to": "2018-07-01T18:13:55.553Z"
+        "from": "now-30m",
+        "to": "now"
       },
       "timepicker": {
         "refresh_intervals": [
