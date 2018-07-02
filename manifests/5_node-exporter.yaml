@@ -42,7 +42,7 @@ spec:
       nodeSelector:
         cloud.google.com/gke-nodepool: prometheus-{{ .PR_NUMBER }}
       containers:
-      - image: quay.io/prometheus/node-exporter:v0.15.2
+      - image: quay.io/prometheus/node-exporter:v0.16.0
         args:
         - "--path.procfs=/host/proc"
         - "--path.sysfs=/host/sys"
@@ -108,7 +108,7 @@ spec:
       nodeSelector:
         cloud.google.com/gke-nodepool: prometheus-{{ .PR_NUMBER }}
       containers:
-      - image: quay.io/prometheus/node-exporter:v0.15.2
+      - image: quay.io/prometheus/node-exporter:v0.16.0
         args:
         - "--path.procfs=/host/proc"
         - "--path.sysfs=/host/sys"
@@ -174,7 +174,7 @@ spec:
       nodeSelector:
         cloud.google.com/gke-nodepool: prometheus-{{ .PR_NUMBER }}
       containers:
-      - image: quay.io/prometheus/node-exporter:v0.15.2
+      - image: quay.io/prometheus/node-exporter:v0.16.0
         args:
         - "--path.procfs=/host/proc"
         - "--path.sysfs=/host/sys"
@@ -229,7 +229,7 @@ spec:
       nodeSelector:
         cloud.google.com/gke-nodepool: nodes-{{ .PR_NUMBER }}
       containers:
-      - image: quay.io/prometheus/node-exporter:v0.15.2
+      - image: quay.io/prometheus/node-exporter:v0.16.0
         args:
         - "--path.procfs=/host/proc"
         - "--path.sysfs=/host/sys"

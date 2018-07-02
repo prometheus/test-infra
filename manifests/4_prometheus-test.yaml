@@ -166,7 +166,6 @@ metadata:
     app: prometheus
     prometheus: test-{{ .PROMETHEUS_1_NAME }}
 spec:
-  type: LoadBalancer
   ports:
   #should be 1 port
   - name: prometheus
@@ -247,7 +246,6 @@ metadata:
     app: prometheus
     prometheus: test-{{ .PROMETHEUS_2_NAME }}
 spec:
-  type: LoadBalancer
   ports:
   #should be 1 port
   - name: prometheus
