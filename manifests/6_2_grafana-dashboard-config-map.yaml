@@ -1718,7 +1718,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_tsdb_retention_cutoffs_total[10m])",
+                  "expr": "rate(prometheus_tsdb_retention_cutoffs_total{job=\"prometheus\",prometheus=~\"(test+).*\"}[10m])",
                   "format": "time_series",
                   "intervalFactor": 2,
                   "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Retention Cutoffs",

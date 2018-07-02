@@ -20,7 +20,7 @@ clean:
 		-v ZONE:${ZONE} -v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER}
 
 build:
-	go build -o prombench cmd/prombench/main.go
+	@vgo build -o prombench cmd/prombench/main.go
 
 docker: build
 	@docker build -t $(DOCKER_TAG) .

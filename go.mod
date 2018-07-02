@@ -1,4 +1,4 @@
-module github.com/prometheus/benchmark
+module github.com/prometheus/prombench
 
 require (
 	github.com/appc/cni v0.0.0-20160512091013-b634ff6bcd40
