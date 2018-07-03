@@ -1,11 +1,14 @@
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: fake-webserver
+  namespace: prombench-{{ .PR_NUMBER }}  
 spec:
-  replicas: {{ workers.appInstances }}
+  replicas: 5
   template:
     metadata:
+      namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: fake-webserver
     spec:
@@ -23,16 +26,15 @@ spec:
           containerPort: 8083
         - name: metrics5
           containerPort: 8084
-        resources:
-          requests:
-            cpu: 25m
       nodeSelector:
+        cloud.google.com/gke-nodepool: nodes-{{ .PR_NUMBER }}
         isolation: none
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: fake-webserver
+  namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: fake-webserver
     monitored: "true"
@@ -41,22 +43,17 @@ spec:
   - name: metrics1
     port: 8080
     targetPort: metrics1
-  ports:
   - name: metrics2
     port: 8081
     targetPort: metrics2
-  ports:
   - name: metrics3
     port: 8082
     targetPort: metrics3
-  ports:
   - name: metrics4
     port: 8083
     targetPort: metrics4
-  ports:
   - name: metrics5
     port: 8084
     targetPort: metrics5
   selector:
     app: fake-webserver
-
