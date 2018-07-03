@@ -1,0 +1,26 @@
+---
+zone: {{ .ZONE }}
+clusterid: {{ .CLUSTER_NAME }}
+nodepool:
+  name: prometheus-{{ .PR_NUMBER }}
+  initialnodecount: 3
+  config:
+    machinetype: n1-standard-1
+    imagetype: COS
+    disksizegb: 100
+    localssdcount: 1
+    labels:
+      isolation: prometheus
+---
+zone: {{ .ZONE }}
+clusterid: {{ .CLUSTER_NAME }}
+nodepool:
+  name: nodes-{{ .PR_NUMBER }}
+  initialnodecount: 1
+  config:
+    machinetype: n1-standard-2
+    imagetype: COS
+    disksizegb: 100
+    localssdcount: 0
+    labels:
+      isolation: none
