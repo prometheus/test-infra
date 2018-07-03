@@ -404,6 +404,8 @@ func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
 				c.daemonSetApply(resource)
 			case "Deployment":
 				c.deploymentApply(resource)
+			case "Ingress":
+				c.ingressApply(resource)
 			case "Namespace":
 				c.nameSpaceApply(resource)
 			case "Role":

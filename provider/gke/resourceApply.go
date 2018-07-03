@@ -215,6 +215,46 @@ func (c *GKE) deploymentApply(resource runtime.Object) {
 	c.waitForDeployment(resource)
 }
 
+func (c *GKE) ingressApply(resource runtime.Object) {
+	switch resource.GetObjectKind().GroupVersionKind().Version {
+	case "v1beta1":
+		req := resource.(*apiExtensionsV1beta1.Ingress)
+		client := c.clientset.ExtensionsV1beta1().Ingresses(req.Namespace)
+		kind := resource.GetObjectKind().GroupVersionKind().Kind
+
+		list, err := client.List(apiMetaV1.ListOptions{})
+		if err != nil {
+			log.Fatalf("error listing resource : %v ; error: config maps:%v", kind, err)
+		}
+
+		var exists bool
+		for _, l := range list.Items {
+			if l.Name == req.Name {
+				exists = true
+				break
+			}
+		}
+
+		if exists {
+			err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+				_, err := client.Update(req)
+				return err
+			})
+			if err != nil {
+				log.Fatalf("resource update failed - kind: %v , error: %v", kind, err)
+			}
+			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+		} else {
+			_, err := client.Create(req)
+
+			if err != nil {
+				log.Fatalf("resource creation failed - kind: %v , error: %v", kind, err)
+			}
+			log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
+		}
+	}
+}
+
 func (c *GKE) nameSpaceApply(resource runtime.Object) {
 	switch resource.GetObjectKind().GroupVersionKind().Version {
 	case "v1":
