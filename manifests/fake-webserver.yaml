@@ -1,0 +1,62 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: fake-webserver
+spec:
+  replicas: {{ workers.appInstances }}
+  template:
+    metadata:
+      labels:
+        app: fake-webserver
+    spec:
+      containers:
+      - name: fake-webserver
+        image: quay.io/fabxc/fake-webserver
+        ports:
+        - name: metrics1
+          containerPort: 8080
+        - name: metrics2
+          containerPort: 8081
+        - name: metrics3
+          containerPort: 8082
+        - name: metrics4
+          containerPort: 8083
+        - name: metrics5
+          containerPort: 8084
+        resources:
+          requests:
+            cpu: 25m
+      nodeSelector:
+        isolation: none
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fake-webserver
+  labels:
+    app: fake-webserver
+    monitored: "true"
+spec:
+  ports:
+  - name: metrics1
+    port: 8080
+    targetPort: metrics1
+  ports:
+  - name: metrics2
+    port: 8081
+    targetPort: metrics2
+  ports:
+  - name: metrics3
+    port: 8082
+    targetPort: metrics3
+  ports:
+  - name: metrics4
+    port: 8083
+    targetPort: metrics4
+  ports:
+  - name: metrics5
+    port: 8084
+    targetPort: metrics5
+  selector:
+    app: fake-webserver
+
