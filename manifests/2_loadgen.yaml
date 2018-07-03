@@ -1,0 +1,141 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-loadgen
+  namespace: prombench-{{ .PR_NUMBER }}
+data:
+  config.yaml: |
+    scaler:
+      name: fake-webserver
+      high: 5
+      low: 2
+      intervalMinutes: 5
+    querier:
+      groups:
+      - name: simple_range
+        interval: 4s
+        type: range
+        start: 2h
+        end: 1h
+        step: 15s
+        queries:
+        - expr: go_goroutines
+        - expr: container_memory_rss
+        - expr: kube_pod_container_info
+        - expr: codelab_api_http_requests_in_progress
+        - expr: codelab_api_requests_total
+      - name: aggr_instant
+        interval: 10s
+        type: instant
+        queries:
+        - expr: sum by(image) (container_memory_rss)
+        - expr: sum by(instance) (rate(node_cpu{mode!="idle"}[2m]))
+        - expr: sum by(instance) (rate(node_cpu[2m]))
+        - expr: sum by(instance) (rate(codelab_api_requests_total[2m]))
+        - expr: sum by(instance) (rate(codelab_api_requests_total{method=~"GET|POST"}[2m]))
+      - name: aggr_range
+        interval: 10s
+        type: range
+        start: 1h
+        end: 0h
+        step: 15s
+        queries:
+        - expr: sum by(image) (container_memory_rss)
+        - expr: sum by(instance) (rate(node_cpu{mode!="idle"}[2m]))
+        - expr: sum by(instance) (rate(node_cpu[2m]))
+        - expr: sum by(instance) (rate(codelab_api_requests_total[2m]))
+        - expr: sum by(instance) (rate(codelab_api_requests_total{method=~"GET|POST"}[2m]))
+      - name: heavy_instant
+        interval: 20s
+        queries:
+        - expr: rate(codelab_api_requests_total{method=~"GET|POST"}[1m])
+        - expr: sum without(instance) (rate(codelab_api_requests_total{method=~"GET|POST"}[1m]))
+        - expr: histogram_quantile(0.99, sum by(path, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[1m])))
+        - expr: histogram_quantile(0.99, sum by(path, method, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[1m])))
+        - expr: histogram_quantile(0.99, sum by(instance, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[1m])))
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: prometheus-loadgen-scaler
+  namespace: prombench-{{ .PR_NUMBER }}
+spec:
+  replicas: 1
+  template:
+    metadata:
+      namespace: prombench-{{ .PR_NUMBER }}
+      labels:
+        app: loadgen-scaler
+    spec:
+      serviceAccountName: loadgen-scaler
+      containers:
+      - name: prom-load-generator
+        image: gcr.io/prometheus-test-204522/prometheus-bench-loadgen:v0.1.0
+        imagePullPolicy: Always
+        env: 
+        - name: PROMBENCH_NAMESPACE
+          value: prombench-{{ .PR_NUMBER }}
+        args:
+        - "scaler"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/loadgen
+      volumes:
+      - name: config-volume
+        configMap:
+          name: prometheus-loadgen
+      nodeSelector:
+        cloud.google.com/gke-nodepool: nodes-{{ .PR_NUMBER }}
+        isolation: none
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: prometheus-loadgen-querier
+  namespace: prombench-{{ .PR_NUMBER }}
+spec:
+  replicas: 1
+  template:
+    metadata:
+      namespace: prombench-{{ .PR_NUMBER }}
+      labels:
+        app: loadgen-querier
+    spec:
+      containers:
+      - name: prom-load-generator
+        image: gcr.io/prometheus-test-204522/prometheus-bench-loadgen:v0.1.0
+        imagePullPolicy: Always
+        env: 
+        - name: PROMBENCH_NAMESPACE
+          value: prombench-{{ .PR_NUMBER }}
+        args:
+        - "querier"
+        - "{{ .PROMETHEUS_1_NAME }}"
+        - "{{ .PROMETHEUS_2_NAME }}"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/loadgen
+      volumes:
+      - name: config-volume
+        configMap:
+          name: prometheus-loadgen
+      nodeSelector:
+        cloud.google.com/gke-nodepool: nodes-{{ .PR_NUMBER }}
+        isolation: none
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-loadgen-querier
+  namespace: prombench-{{ .PR_NUMBER }}
+  labels:
+    app: loadgen-querier
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: prometheus
+    port: 8080
+  selector:
+    app: loadgen-querier
