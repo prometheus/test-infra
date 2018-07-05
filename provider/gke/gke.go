@@ -113,7 +113,12 @@ func (c *GKE) ConfigParse(*kingpin.ParseContext) error {
 
 	separator := "---"
 
-	for _, text := range strings.Split(fileContentParsed.String(), separator)[1:] {
+	for _, text := range strings.Split(fileContentParsed.String(), separator) {
+		text = strings.TrimSpace(text)
+		if len(text) == 0 {
+			continue
+		}
+
 		config := &containerpb.CreateNodePoolRequest{}
 		if err = yamlGo.UnmarshalStrict([]byte(text), config); err != nil {
 			log.Fatalf("error parsing the config file:%v", err)
@@ -384,7 +389,12 @@ func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
 		separator := "---"
 		decode := scheme.Codecs.UniversalDeserializer().Decode
 
-		for _, text := range strings.Split(fileContentParsed.String(), separator)[1:] {
+		for _, text := range strings.Split(fileContentParsed.String(), separator) {
+			text = strings.TrimSpace(text)
+			if len(text) == 0 {
+				continue
+			}
+
 			resource, _, err := decode([]byte(text), nil, nil)
 			if err != nil {
 				log.Fatalf("error while decoding the resource file: %v", err)
@@ -464,7 +474,13 @@ func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 		separator := "---"
 		decode := scheme.Codecs.UniversalDeserializer().Decode
 
-		for _, text := range strings.Split(fileContentParsed.String(), separator)[1:] {
+		for _, text := range strings.Split(fileContentParsed.String(), separator) {
+
+			text = strings.TrimSpace(text)
+			if len(text) == 0 {
+				continue
+			}
+
 			resource, _, err := decode([]byte(text), nil, nil)
 
 			if err != nil {
