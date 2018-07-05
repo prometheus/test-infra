@@ -2,7 +2,6 @@
 #Hence using 2 DaemonSets to use nodeSelector
 #
 #Node_Exporter is done after prometheus to use pod-affinity
----
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
