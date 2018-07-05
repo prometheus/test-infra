@@ -1,4 +1,3 @@
----
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -9,7 +8,17 @@ data:
     global:
       scrape_interval: 5s
 
-    scrape_configs:   
+    scrape_configs:
+
+    # prometheus-meta job is added separately because prometheus-meta has a
+    # web.external-url of <INGRESS-IP>/prombench-{{ .PR_NUMBER }}/prometheus-meta/
+    - job_name: prometheus-meta
+      metrics_path: /prombench-{{ .PR_NUMBER }}/prometheus-meta/metrics
+      static_configs:
+        - targets: ['localhost:9090']
+          labels:
+            prometheus: 'meta'
+
     - job_name: kubelet
       scheme: https
       tls_config:
@@ -95,13 +104,13 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: prometheus
+      app: prometheus-meta
       prometheus: meta
   template:
     metadata:
       namespace: prombench-{{ .PR_NUMBER }}
       labels:
-        app: prometheus
+        app: prometheus-meta
         prometheus: meta
     spec:
       serviceAccountName: prometheus
@@ -124,6 +133,7 @@ spec:
         - "--storage.tsdb.path=/data"
         - "--storage.tsdb.min-block-duration=15m"
         - "--storage.tsdb.max-block-duration=4h"
+        - "--web.external-url=http://{{.INGRESS_IP}}/prombench-{{ .PR_NUMBER }}/prometheus-meta/"
         name: prometheus
         volumeMounts:
         - name: config-volume
@@ -151,14 +161,11 @@ metadata:
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
     prometheus: meta
-    app: prometheus
+    app: prometheus-meta
 spec:
-  type: LoadBalancer
-  # clusterIP: None
   ports:
-  #should be 1 port
   - name: prometheus
     port: 9090
   selector:
-    app: prometheus
+    app: prometheus-meta
     prometheus: meta
