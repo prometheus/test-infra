@@ -29,11 +29,6 @@ func main() {
 		Short('c').
 		Default("config/cluster.yaml").
 		ExistingFileVar(&g.ConfigFile)
-	k8sGKE.Flag("pool", "GKE Nodepool-config yaml file").
-		PlaceHolder("node-pool.yaml").
-		Short('p').
-		Default("config/node-pool.yaml").
-		ExistingFileVar(&g.NodePoolConfigFile)
 	k8sGKE.Flag("file", "yaml file used to apply or delete k8s resources. If directory is given, all the yaml files from are read recursively from it.").
 		PlaceHolder("resources.yaml").
 		Short('f').
@@ -45,17 +40,16 @@ func main() {
 
 	// cluster operations
 	k8sGKECluster := k8sGKE.Command("cluster", "Create or delete GKE k8s clusters")
-	k8sGKECluster.Command("create", "gke cluster create -a service-account.json  -c config/cluster.yaml").
+	k8sGKECluster.Command("create", "gke cluster create -a service-account.json -c config/cluster.yaml").
 		Action(g.ClusterCreate)
-	k8sGKECluster.Command("delete", "gke cluster delete -a service-account.json  -c config/cluster.yaml").
+	k8sGKECluster.Command("delete", "gke cluster delete -a service-account.json -c config/cluster.yaml").
 		Action(g.ClusterDelete)
 
 	// node-pool operations
-	k8sGKENodePool := k8sGKE.Command("nodepool", "Scale up or down a k8s clusters using node-pools").
-		Action(g.NodePoolConfigParse)
-	k8sGKENodePool.Command("create", "gke nodepool create -a service-account.json  -c config/cluster.yaml -p config/node-pool.yaml").
+	k8sGKENodePool := k8sGKE.Command("nodepool", "Scale up or down a k8s clusters using node-pools")
+	k8sGKENodePool.Command("create", "gke nodepool create -a service-account.json -c config/cluster.yaml").
 		Action(g.NodePoolCreate)
-	k8sGKENodePool.Command("delete", "gke nodepool delete -a service-account.json  -c config/cluster.yaml -p config/node-pool.yaml").
+	k8sGKENodePool.Command("delete", "gke nodepool delete -a service-account.json -c config/cluster.yaml").
 		Action(g.NodePoolDelete)
 
 	k8sGKEResource := k8sGKE.Command("resource", "Create,update and delete different k8s resources - deployments, services, config maps etc.").

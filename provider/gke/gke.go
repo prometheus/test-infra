@@ -44,10 +44,10 @@ type GKE struct {
 	ClusterId string
 	// The cluster config file location provided to the cli.
 	ConfigFile string
-	// The nodepool config file location provided to the cli.
-	NodePoolConfigFile string
 	// The auth file used to authenticate the cli.
 	AuthFile string
+	// The gke client for nodepools operations.
+	clusterConfig *containerpb.CreateClusterRequest
 	// The gke client for nodepools operations.
 	nodePoolConfig []*containerpb.CreateNodePoolRequest
 	// The gke client used when performing GKE requests.
@@ -110,37 +110,41 @@ func (c *GKE) ConfigParse(*kingpin.ParseContext) error {
 	}
 	config := &containerpb.CreateClusterRequest{}
 	if err = yamlGo.UnmarshalStrict(content, config); err != nil {
-		log.Fatalf("Error parsing the cluster config file:%v", err)
+		log.Fatalf("Error parsing the cluster section in config file %f:%v", c.ConfigFile, err)
 	}
-
+	config.ProjectId = c.ProjectId
+	c.clusterConfig = config
 	c.Zone = config.Zone
 	c.ClusterId = config.Cluster.Name
 
+	clusterNodePools := config.Cluster.NodePools[:0]
+
+	for _, pool := range config.Cluster.NodePools {
+		if pool.Config.Labels["isolation"] == "prometheus" || pool.Config.Labels["isolation"] == "none" {
+			config := &containerpb.CreateNodePoolRequest{
+				ProjectId: c.ProjectId,
+				Zone:      c.Zone,
+				ClusterId: c.ClusterId,
+				NodePool:  pool,
+			}
+			c.nodePoolConfig = append(c.nodePoolConfig, config)
+		} else {
+			clusterNodePools = append(clusterNodePools, pool)
+		}
+	}
+	c.clusterConfig.Cluster.NodePools = clusterNodePools
 	return nil
 }
 
 /* Cluster operations */
 // ClusterCreate creates a new k8s cluster
 func (c *GKE) ClusterCreate(*kingpin.ParseContext) error {
-	content, err := c.applyTemplateVars(c.ConfigFile)
-	if err != nil {
-		log.Fatalf("Couldn't apply template to file %s: %v", c.ConfigFile, err)
-	}
 
-	config := &containerpb.CreateClusterRequest{}
-	if err = yamlGo.UnmarshalStrict(content, config); err != nil {
-		log.Fatalf("Error parsing the cluster config file:%v", err)
-	}
-	config.ProjectId = c.ProjectId
-
-	log.Printf("Cluster create request: %+v", config)
-
-	_, err = c.clientGKE.CreateCluster(c.ctx, config)
+	log.Printf("Cluster %s create is called for project %s and zone %s", c.ClusterId, c.ProjectId, c.Zone)
+	_, err := c.clientGKE.CreateCluster(c.ctx, c.clusterConfig)
 	if err != nil {
 		log.Fatalf("Couldn't create a cluster:%v", err)
 	}
-
-	log.Printf("Cluster %s create is called for project %s and zone %s", config.Cluster.Name, config.ProjectId, config.Zone)
 
 	return c.waitForClusterCreation()
 }
@@ -220,31 +224,6 @@ func (c *GKE) waitForClusterDeletion() error {
 }
 
 /* Node Pool operations */
-// ConfigParse populates and validates the cluster configuraiton options.
-func (c *GKE) NodePoolConfigParse(*kingpin.ParseContext) error {
-
-	// creating node-pool requests from config file
-	content, err := c.applyTemplateVars(c.NodePoolConfigFile)
-	if err != nil {
-		log.Fatalf("Couldn't apply template to file %s: %v", c.NodePoolConfigFile, err)
-	}
-	separator := "---"
-
-	for _, text := range strings.Split(string(content), separator) {
-		text = strings.TrimSpace(text)
-		if len(text) == 0 {
-			continue
-		}
-		config := &containerpb.CreateNodePoolRequest{}
-		if err = yamlGo.UnmarshalStrict([]byte(text), config); err != nil {
-			log.Fatalf("error parsing the config file:%v", err)
-		}
-		config.ProjectId = c.ProjectId
-		c.nodePoolConfig = append(c.nodePoolConfig, config)
-	}
-	return nil
-}
-
 // NodePoolCreate creates a new k8s node-pool in an existing cluster
 func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 

@@ -1,38 +1,33 @@
-zone: europe-west1-b
+#prombench cluster config
+zone: {{ .ZONE }}
 cluster:
-  name: prombench
-  addonsconfig:
-    kubernetesdashboard: 
-      disabled: false
-  initialclusterversion: 1.9.6-gke.0
+  name: {{ .CLUSTER_NAME }}
+  initialclusterversion: 1.10.4-gke.2
   nodepools:
-  - initialnodecount: 1
-    <<: &label
-      name: prometheus-stable
+  - name: prow
+    initialnodecount: 2
+    config:
+      machinetype: n1-standard-2
+      imagetype: COS
+      labels:
+        isolation: prow
+  # These node-pools will be deployed on triggering benchmark
+  # isolation: prometheus & none will be used to differentiate them from cluster's node-pool
+  - name: prometheus-{{ .PR_NUMBER }}
+    initialnodecount: 2
     config:
       machinetype: n1-standard-1
       imagetype: COS
       disksizegb: 100
       localssdcount: 1
       labels:
-        <<: *label
-  - initialnodecount: 1
-    <<: &label
-      name: prometheus-test
+        isolation: prometheus
+  - name: nodes-{{ .PR_NUMBER }}
+    initialnodecount: 1
     config:
-      machinetype: n1-standard-1
+      machinetype: n1-standard-2
       imagetype: COS
       disksizegb: 100
-      localssdcount: 1
+      localssdcount: 0
       labels:
-        <<: *label
-  - initialnodecount: 1
-    <<: &label
-      name: load-collector
-    config:
-      machinetype: n1-standard-1
-      imagetype: COS
-      disksizegb: 100
-      localssdcount: 1
-      labels:
-        <<: *label
+        isolation: none
