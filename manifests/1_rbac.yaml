@@ -43,36 +43,14 @@ metadata:
   name: prometheus
   namespace: prombench-{{ .PR_NUMBER }}
 ---
-#Not made during cluster creation time to create with specific service-account  
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: prometheus-{{ .PR_NUMBER }}
-rules:
-- apiGroups: [""]
-  resources:
-  - nodes
-  - nodes/proxy
-  - services
-  - endpoints
-  - pods
-  verbs: ["get", "list", "watch"]
-- apiGroups:
-  - extensions
-  resources:
-  - ingresses
-  verbs: ["get", "list", "watch"]
-- nonResourceURLs: ["/metrics"]
-  verbs: ["get"]
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: prometheus
+  name: prometheus-{{ .PR_NUMBER }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: prometheus-{{ .PR_NUMBER }}
+  name: prometheus
 subjects:
 - kind: ServiceAccount
   name: prometheus
