@@ -32,7 +32,7 @@ data:
         target_label: __metrics_path__
         replacement: /api/v1/nodes/${1}/proxy/metrics
 
-    # Scrapes the endpoint lists for the Kubernetes API server, kube-state-metrics,
+    # Scrapes the endpoint lists for the Kubernetes API server
     # and node-exporter, which we all consider part of a default setup.
     - job_name: standard-endpoints
       tls_config:
