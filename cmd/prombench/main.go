@@ -26,12 +26,10 @@ func main() {
 	k8sGKE.Flag("config", "GKE cluster-config yaml file").
 		PlaceHolder("cluster.yaml").
 		Short('c').
-		Default("config/cluster.yaml").
 		ExistingFileVar(&g.ConfigFile)
 	k8sGKE.Flag("file", "yaml file used to apply or delete k8s resources. If directory is given, all the yaml files from are read recursively from it.").
 		PlaceHolder("resources.yaml").
 		Short('f').
-		Default("manifests").
 		ExistingFilesOrDirsVar(&g.ResourceFiles)
 	k8sGKE.Flag("vars", "When provided it will substitute the token holders in the yaml file. Follows the standard golang template formating - {{ .hashStable }}.").
 		Short('v').
