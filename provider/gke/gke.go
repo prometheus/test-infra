@@ -185,7 +185,7 @@ func (c *GKE) waitForClusterCreation() error {
 		}
 
 		if cluster.Status == containerpb.Cluster_ERROR || cluster.Status == containerpb.Cluster_RECONCILING || cluster.Status == containerpb.Cluster_STOPPING {
-			log.Fatalf("Cluster Creation failed: %s", cluster.StatusMessage)
+			log.Fatalf("Cluster Creation failed %s: %s", cluster.Status, cluster.StatusMessage)
 		}
 		if cluster.Status == containerpb.Cluster_RUNNING {
 			log.Printf("Cluster %v is running", cluster.Name)
