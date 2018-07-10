@@ -1,3 +1,5 @@
+#A new namespace is created to differentiate the instances of prombench
+#A PR can just have 1 prombench-instance associated with it
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -9,7 +11,7 @@ metadata:
   name: loadgen-scaler
   namespace: prombench-{{ .PR_NUMBER }}
 ---
-#need to give update access to loadgen-scaler
+#need to give get/update access to loadgen-scaler
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -23,13 +25,13 @@ subjects:
   name: loadgen-scaler
   namespace: prombench-{{ .PR_NUMBER }}
 ---
-#Prometheus RBAC
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: prometheus
   namespace: prombench-{{ .PR_NUMBER }}
 ---
+#Need to give Prometheus servers access to pull metrics
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:

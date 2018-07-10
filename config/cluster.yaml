@@ -19,7 +19,7 @@ cluster:
       machinetype: n1-standard-1
       imagetype: COS
       disksizegb: 100
-      localssdcount: 1
+      localssdcount: 1  #SSD is used to give fast-lookup to Prometheus servers being benchmarked
       labels:
         isolation: prometheus
   - name: nodes-{{ .PR_NUMBER }}
@@ -28,6 +28,6 @@ cluster:
       machinetype: n1-standard-2
       imagetype: COS
       disksizegb: 100
-      localssdcount: 0
+      localssdcount: 0  #SSD not needed for fake-webservers (has lesser disk operations)
       labels:
         isolation: none
