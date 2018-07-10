@@ -30,7 +30,6 @@ gsutil mb -p $PROJECT_ID  gs://prometheus-prow/
 ```
 
 - Since GKE requires cluster-admin-binding to be granted to user before allowing to create RBAC rules, add the following email-ids as User in [rbac.yaml](rbac.yaml)
-	- email associated with service-account (This can be found in client_email field in serviceaccout.json file)
 	- email associated with gcloud developer account (`gcloud config get-value account`)
 
 - Run `kubectl apply -f rbac.yaml && kubectl apply -f nginx-controller.yaml && kubectl apply -f prow.yaml` to deploy prow components & [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx).

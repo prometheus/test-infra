@@ -8,9 +8,6 @@ roleRef:
   kind: ClusterRole
   name: cluster-admin
 subjects:
-  #This is for the service-account that will be used to deploy prombench
-  #This is needed to make prometheus SD RBAC role & loadgen-scaler roles to grant access to scale deployments up and down
-- kind: User
-  name: "(SERVICE_ACCOUNT_EMAIL)"
+  #This is needed to grant access to create RBAC roles
 - kind: User
   name: "(GCLOUD_DEVELOPER_ACCOUNT_EMAIL)"

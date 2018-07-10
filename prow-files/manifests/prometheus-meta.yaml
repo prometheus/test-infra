@@ -10,7 +10,7 @@ data:
     scrape_configs:
 
     # prometheus-meta job is added separately because prometheus-meta has a
-    # web.external-url of <INGRESS-IP>/prometheus-meta/
+    # web.external-url of INGRESS_IP/prometheus-meta/
     - job_name: prometheus-meta
       metrics_path: /prometheus-meta/metrics
       static_configs:
