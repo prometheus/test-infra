@@ -1,0 +1,13 @@
+#prombench cluster config
+zone: {{ .ZONE }}
+cluster:
+  name: {{ .CLUSTER_NAME }}
+  initialclusterversion: 1.10.4-gke.2
+  nodepools:
+  - name: prow
+    initialnodecount: 2
+    config:
+      machinetype: n1-standard-2
+      imagetype: COS
+      labels:
+        isolation: prow
