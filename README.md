@@ -1,14 +1,7 @@
 # prometheus-test-environment
-A Kubernetes cluster preconfigured for E2E testing and benchmarking Prometheus
+An automated E2E testing and benchmarking tool for Prometheus
 
 The design details and instructions on how to run can be found [here](design.md)
-
-# A benchmarking tool preconfigured for testing Prometheus
-1. Create the k8s cluster described by a configuration file.
-2. Apply a k8s resource file to create all required pods,services and config maps.
-3. Create a service account with Kubernetes Admin access 
-4. Follow [this](https://github.com/coreos/prometheus-operator/issues/357#issuecomment-363498455) to get primaryemail of the serviceaccount user and add this to \_rbac.yaml
-
 
 Current supports k8s cluster on [GKE - Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/).
 
@@ -16,8 +9,7 @@ Current supports k8s cluster on [GKE - Google Kubernetes Engine](https://cloud.g
 The project uses [vgo](https://github.com/golang/vgo) without any vendoring.
 ```
 go get -u golang.org/x/vgo
-cd cmd/prombench
-vgo build // reads go.mod from the project root and downloads all dependancies.
+make build // reads go.mod from the project root and downloads all dependancies.
 ```
 
 ## Pre-requisites
