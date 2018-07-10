@@ -4,13 +4,6 @@ cluster:
   name: {{ .CLUSTER_NAME }}
   initialclusterversion: 1.10.4-gke.2
   nodepools:
-  - name: prow
-    initialnodecount: 2
-    config:
-      machinetype: n1-standard-2
-      imagetype: COS
-      labels:
-        isolation: prow
   # These node-pools will be deployed on triggering benchmark
   # isolation: prometheus & none will be used to differentiate them from cluster's node-pool
   - name: prometheus-{{ .PR_NUMBER }}
