@@ -20,7 +20,6 @@ func main() {
 		Action(g.NewGKEClient).
 		Action(g.ConfigParse)
 	k8sGKE.Flag("auth", "json authentication file for the project - https://cloud.google.com/iam/docs/creating-managing-service-account-keys. If not set the tool will use the GOOGLE_APPLICATION_CREDENTIALS env variable (export GOOGLE_APPLICATION_CREDENTIALS=service-account.json)").
-		Required().
 		PlaceHolder("service-account.json").
 		Short('a').
 		ExistingFileVar(&g.AuthFile)
