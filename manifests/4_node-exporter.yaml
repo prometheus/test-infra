@@ -1,7 +1,7 @@
 #On using nodeAffinity, node-exporter was being deployed on prow node also
 #Hence using 2 DaemonSets to use nodeSelector
 #
-#Node_Exporter is done after prometheus to use pod-affinity
+#Node_Exporter is done after deploying prometheus to use pod-affinity
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
