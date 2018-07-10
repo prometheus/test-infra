@@ -1,7 +1,6 @@
 # How to Deploy Prow
 
-- Create a [ServiceAccount](https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform#step_3_create_service_account_credentials) on GKE with role at least as `Kubernetes Engine Service Agent`
-and download the json file.
+- Create a [ServiceAccount](https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform#step_3_create_service_account_credentials) on GKE with role `Kubernetes Engine Service Agent & Kubernetes Engine Admin` and download the json file.
 
 - Create a GKE cluster.
 ```
