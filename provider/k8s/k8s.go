@@ -71,27 +71,30 @@ func (c *K8s) ResourceApply(deployments map[string][]byte) error {
 
 			switch resource.GetObjectKind().GroupVersionKind().Kind {
 			case "ClusterRole":
-				return c.clusterRoleApply(resource)
+				err = c.clusterRoleApply(resource)
 			case "ClusterRoleBinding":
-				return c.clusterRoleBindingApply(resource)
+				err = c.clusterRoleBindingApply(resource)
 			case "ConfigMap":
-				return c.configMapApply(resource)
+				err = c.configMapApply(resource)
 			case "DaemonSet":
-				return c.daemonSetApply(resource)
+				err = c.daemonSetApply(resource)
 			case "Deployment":
-				return c.deploymentApply(resource)
+				err = c.deploymentApply(resource)
 			case "Ingress":
-				return c.ingressApply(resource)
+				err = c.ingressApply(resource)
 			case "Namespace":
-				return c.nameSpaceApply(resource)
+				err = c.nameSpaceApply(resource)
 			case "Role":
-				return c.roleApply(resource)
+				err = c.roleApply(resource)
 			case "RoleBinding":
-				return c.roleBindingApply(resource)
+				err = c.roleBindingApply(resource)
 			case "Service":
-				return c.serviceApply(resource)
+				err = c.serviceApply(resource)
 			case "ServiceAccount":
-				return c.serviceAccountApply(resource)
+				err = c.serviceAccountApply(resource)
+			}
+			if err != nil {
+				return errors.Wrapf(err, "apply manifest file:%v", name)
 			}
 		}
 	}
@@ -134,11 +137,12 @@ func (c *K8s) ResourceDelete(deployments map[string][]byte) error {
 }
 
 func (c *K8s) clusterRoleApply(resource runtime.Object) error {
+	req := resource.(*rbac.ClusterRole)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*rbac.ClusterRole)
 		client := c.clt.RbacV1().ClusterRoles()
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
 
 		list, err := client.List(apiMetaV1.ListOptions{})
 		if err != nil {
@@ -158,30 +162,31 @@ func (c *K8s) clusterRoleApply(resource runtime.Object) error {
 				_, err := client.Update(req)
 				return err
 			}); err != nil {
-				return errors.Wrapf(err, "resource update failed - kind: %v", kind)
+				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+			return nil
 		} else if _, err := client.Create(req); err != nil {
-			return errors.Wrapf(err, "resource creation failed - kind: %v ", kind)
+			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 		return nil
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 
 }
 
 func (c *K8s) clusterRoleBindingApply(resource runtime.Object) error {
+	req := resource.(*rbac.ClusterRoleBinding)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*rbac.ClusterRoleBinding)
 		client := c.clt.RbacV1().ClusterRoleBindings()
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		list, err := client.List(apiMetaV1.ListOptions{})
 		if err != nil {
-			return errors.Wrapf(err, "error listing resource : %v ", kind)
+			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
 
 		var exists bool
@@ -197,29 +202,32 @@ func (c *K8s) clusterRoleBindingApply(resource runtime.Object) error {
 				_, err := client.Update(req)
 				return err
 			}); err != nil {
-				return errors.Wrapf(err, "resource update failed - kind: %v", kind)
+				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+			return nil
 		} else if _, err := client.Create(req); err != nil {
-			return errors.Wrapf(err, "resource creation failed - kind: %v ", kind)
+			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
 }
 
 func (c *K8s) configMapApply(resource runtime.Object) error {
+	req := resource.(*apiCoreV1.ConfigMap)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*apiCoreV1.ConfigMap)
+
 		client := c.clt.CoreV1().ConfigMaps(req.Namespace)
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
 
 		list, err := client.List(apiMetaV1.ListOptions{})
 		if err != nil {
-			return errors.Wrapf(err, "error listing resource : %v", kind)
+			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
 
 		var exists bool
@@ -235,29 +243,30 @@ func (c *K8s) configMapApply(resource runtime.Object) error {
 				_, err := client.Update(req)
 				return err
 			}); err != nil {
-				return errors.Wrapf(err, "resource update failed - kind: %v", kind)
+				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+			return nil
 		} else if _, err := client.Create(req); err != nil {
-			return errors.Wrapf(err, "resource creation failed - kind: %v", kind)
+			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
 }
 
 func (c *K8s) daemonSetApply(resource runtime.Object) error {
+	req := resource.(*apiExtensionsV1beta1.DaemonSet)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1beta1":
-		req := resource.(*apiExtensionsV1beta1.DaemonSet)
 		client := c.clt.ExtensionsV1beta1().DaemonSets(req.Namespace)
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		list, err := client.List(apiMetaV1.ListOptions{})
 		if err != nil {
-			return errors.Wrapf(err, "error listing resource : %v", kind)
+			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
 
 		var exists bool
@@ -273,15 +282,16 @@ func (c *K8s) daemonSetApply(resource runtime.Object) error {
 				_, err := client.Update(req)
 				return err
 			}); err != nil {
-				return errors.Wrapf(err, "resource update failed - kind: %v", kind)
+				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+			return nil
 		} else if _, err := client.Create(req); err != nil {
-			return errors.Wrapf(err, "resource creation failed - kind: %v", kind)
+			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	c.daemonsetReady(resource)
 	return nil
@@ -289,14 +299,14 @@ func (c *K8s) daemonSetApply(resource runtime.Object) error {
 
 func (c *K8s) deploymentApply(resource runtime.Object) error {
 	req := resource.(*apiExtensionsV1beta1.Deployment)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1beta1":
 		client := c.clt.ExtensionsV1beta1().Deployments(req.Namespace)
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		list, err := client.List(apiMetaV1.ListOptions{})
 		if err != nil {
-			return errors.Wrapf(err, "error listing resource : %v", kind)
+			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
 
 		var exists bool
@@ -312,15 +322,16 @@ func (c *K8s) deploymentApply(resource runtime.Object) error {
 				_, err := client.Update(req)
 				return err
 			}); err != nil {
-				return errors.Wrapf(err, "resource update failed - kind: %v", kind)
+				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+			return nil
 		} else if _, err := client.Create(req); err != nil {
-			return errors.Wrapf(err, "resource creation failed - kind: %v", kind)
+			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return provider.RetryUntilTrue(
 		fmt.Sprintf("applying deployment:%v", req.Name),
@@ -328,15 +339,15 @@ func (c *K8s) deploymentApply(resource runtime.Object) error {
 }
 
 func (c *K8s) ingressApply(resource runtime.Object) error {
+	req := resource.(*apiExtensionsV1beta1.Ingress)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1beta1":
-		req := resource.(*apiExtensionsV1beta1.Ingress)
 		client := c.clt.ExtensionsV1beta1().Ingresses(req.Namespace)
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		list, err := client.List(apiMetaV1.ListOptions{})
 		if err != nil {
-			return errors.Wrapf(err, "error listing resource : %v", kind)
+			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
 
 		var exists bool
@@ -352,29 +363,30 @@ func (c *K8s) ingressApply(resource runtime.Object) error {
 				_, err := client.Update(req)
 				return err
 			}); err != nil {
-				return errors.Wrapf(err, "resource update failed - kind: %v", kind)
+				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+			return nil
 		} else if _, err := client.Create(req); err != nil {
-			return errors.Wrapf(err, "resource creation failed - kind: %v", kind)
+			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
 }
 
 func (c *K8s) nameSpaceApply(resource runtime.Object) error {
+	req := resource.(*apiCoreV1.Namespace)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*apiCoreV1.Namespace)
 		client := c.clt.CoreV1().Namespaces()
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		list, err := client.List(apiMetaV1.ListOptions{})
 		if err != nil {
-			return errors.Wrapf(err, "error listing resource : %v", kind)
+			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
 
 		var exists bool
@@ -390,30 +402,31 @@ func (c *K8s) nameSpaceApply(resource runtime.Object) error {
 				_, err := client.Update(req)
 				return err
 			}); err != nil {
-				return errors.Wrapf(err, "resource update failed - kind: %v", kind)
+				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+			return nil
 		} else if _, err := client.Create(req); err != nil {
-			return errors.Wrapf(err, "resource creation failed - kind: %v", kind)
+			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
 }
 
 func (c *K8s) roleApply(resource runtime.Object) error {
+	req := resource.(*rbac.Role)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*rbac.Role)
 		client := c.clt.RbacV1().Roles(req.Namespace)
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		list, err := client.List(apiMetaV1.ListOptions{})
 		if err != nil {
-			return errors.Wrapf(err, "error listing resource : %v", kind)
+			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
 
 		var exists bool
@@ -429,29 +442,30 @@ func (c *K8s) roleApply(resource runtime.Object) error {
 				_, err := client.Update(req)
 				return err
 			}); err != nil {
-				return errors.Wrapf(err, "resource update failed - kind: %v", kind)
+				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+			return nil
 		} else if _, err := client.Create(req); err != nil {
-			return errors.Wrapf(err, "resource creation failed - kind: %v", kind)
+			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
 }
 
 func (c *K8s) roleBindingApply(resource runtime.Object) error {
+	req := resource.(*rbac.RoleBinding)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*rbac.RoleBinding)
 		client := c.clt.RbacV1().RoleBindings(req.Namespace)
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		list, err := client.List(apiMetaV1.ListOptions{})
 		if err != nil {
-			return errors.Wrapf(err, "error listing resource : %v", kind)
+			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
 
 		var exists bool
@@ -467,29 +481,30 @@ func (c *K8s) roleBindingApply(resource runtime.Object) error {
 				_, err := client.Update(req)
 				return err
 			}); err != nil {
-				return errors.Wrapf(err, "resource update failed - kind: %v", kind)
+				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+			return nil
 		} else if _, err := client.Create(req); err != nil {
-			return errors.Wrapf(err, "resource creation failed - kind: %v", kind)
+			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
 }
 
 func (c *K8s) serviceAccountApply(resource runtime.Object) error {
+	req := resource.(*apiCoreV1.ServiceAccount)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*apiCoreV1.ServiceAccount)
 		client := c.clt.CoreV1().ServiceAccounts(req.Namespace)
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		list, err := client.List(apiMetaV1.ListOptions{})
 		if err != nil {
-			return errors.Wrapf(err, "error listing resource : %v", kind)
+			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
 
 		var exists bool
@@ -505,29 +520,30 @@ func (c *K8s) serviceAccountApply(resource runtime.Object) error {
 				_, err := client.Update(req)
 				return err
 			}); err != nil {
-				return errors.Wrapf(err, "resource update failed - kind: %v", kind)
+				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+			return nil
 		} else if _, err := client.Create(req); err != nil {
-			return errors.Wrapf(err, "resource creation failed - kind: %v", kind)
+			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
 }
 
 func (c *K8s) serviceApply(resource runtime.Object) error {
 	req := resource.(*apiCoreV1.Service)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.CoreV1().Services(req.Namespace)
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		list, err := client.List(apiMetaV1.ListOptions{})
 		if err != nil {
-			return errors.Wrapf(err, "error listing resource : %v", kind)
+			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
 
 		var exists bool
@@ -543,15 +559,16 @@ func (c *K8s) serviceApply(resource runtime.Object) error {
 				_, err := client.Update(req)
 				return err
 			}); err != nil {
-				return errors.Wrapf(err, "resource update failed - kind: %v", kind)
+				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+			return nil
 		} else if _, err := client.Create(req); err != nil {
-			return errors.Wrapf(err, "resource creation failed - kind: %v", kind)
+			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 
 	return provider.RetryUntilTrue(
@@ -560,212 +577,210 @@ func (c *K8s) serviceApply(resource runtime.Object) error {
 }
 
 func (c *K8s) clusterRoleDelete(resource runtime.Object) error {
+	req := resource.(*rbac.ClusterRole)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*rbac.ClusterRole)
 		client := c.clt.RbacV1().ClusterRoles()
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			return errors.Wrapf(err, "resource delete failed - kind: %v ", kind)
+			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
 }
 
 func (c *K8s) clusterRoleBindingDelete(resource runtime.Object) error {
+	req := resource.(*rbac.ClusterRoleBinding)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*rbac.ClusterRoleBinding)
 		client := c.clt.RbacV1().ClusterRoleBindings()
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v", kind)
+			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
 }
 func (c *K8s) configMapDelete(resource runtime.Object) error {
+	req := resource.(*apiCoreV1.ConfigMap)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*apiCoreV1.ConfigMap)
 		client := c.clt.CoreV1().ConfigMaps(req.Namespace)
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v", kind)
+			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
 }
 
 func (c *K8s) daemonSetDelete(resource runtime.Object) error {
+	req := resource.(*apiExtensionsV1beta1.DaemonSet)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*apiExtensionsV1beta1.DaemonSet)
 		client := c.clt.ExtensionsV1beta1().DaemonSets(req.Namespace)
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v", kind)
+			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
 }
 
 func (c *K8s) deploymentDelete(resource runtime.Object) error {
+	req := resource.(*apiExtensionsV1beta1.Deployment)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*apiExtensionsV1beta1.Deployment)
 		client := c.clt.ExtensionsV1beta1().Deployments(req.Namespace)
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v", kind)
+			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
 }
 
 func (c *K8s) ingressDelete(resource runtime.Object) error {
+	req := resource.(*apiExtensionsV1beta1.Ingress)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*apiExtensionsV1beta1.Ingress)
 		client := c.clt.ExtensionsV1beta1().Ingresses(req.Namespace)
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v", kind)
+			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
 }
 
 func (c *K8s) namespaceDelete(resource runtime.Object) error {
+	req := resource.(*apiCoreV1.Namespace)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*apiCoreV1.Namespace)
 		client := c.clt.CoreV1().Namespaces()
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v", kind)
+			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleting - kind: %v , name: %v", kind, req.Name)
 		return provider.RetryUntilTrue(
 			fmt.Sprintf("deleting namespace:%v", req.Name),
 			func() (bool, error) { return c.namespaceDeleted(resource) })
-
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
-	return nil
 }
 
 func (c *K8s) roleDelete(resource runtime.Object) error {
+	req := resource.(*rbac.Role)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*rbac.Role)
 		client := c.clt.RbacV1().Roles(req.Namespace)
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v", kind)
+			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
 }
 
 func (c *K8s) roleBindingDelete(resource runtime.Object) error {
+	req := resource.(*rbac.RoleBinding)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*rbac.RoleBinding)
 		client := c.clt.RbacV1().RoleBindings(req.Namespace)
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v", kind)
+			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
 }
 
 func (c *K8s) serviceDelete(resource runtime.Object) error {
+	req := resource.(*apiCoreV1.Service)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*apiCoreV1.Service)
 		client := c.clt.CoreV1().Services(req.Namespace)
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v", kind)
+			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
 }
 
 func (c *K8s) serviceAccountDelete(resource runtime.Object) error {
+	req := resource.(*apiCoreV1.ServiceAccount)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*apiCoreV1.ServiceAccount)
 		client := c.clt.CoreV1().ServiceAccounts(req.Namespace)
-		kind := resource.GetObjectKind().GroupVersionKind().Kind
-
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v", kind)
+			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
-		return fmt.Errorf("unknown object version: %v", v)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
 }
 
 func (c *K8s) serviceExists(resource runtime.Object) (bool, error) {
+	req := resource.(*apiCoreV1.Service)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*apiCoreV1.Service)
 		client := c.clt.CoreV1().Services(req.Namespace)
-
 		res, err := client.Get(req.Name, apiMetaV1.GetOptions{})
 		if err != nil {
 			return false, errors.Wrapf(err, "Checking Service resource status failed")
@@ -780,11 +795,10 @@ func (c *K8s) serviceExists(resource runtime.Object) (bool, error) {
 				return true, nil
 			}
 			return false, nil
-
 		}
-		return false, fmt.Errorf("unsuported service type:%v", res.Spec.Type)
+		return false, fmt.Errorf("Checking not implemented for service type:%v name:%v", res.Spec.Type, req.Name)
 	default:
-		return false, fmt.Errorf("unknown object version: %v", v)
+		return false, fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 }
 
@@ -796,7 +810,7 @@ func (c *K8s) deploymentReady(resource runtime.Object) (bool, error) {
 
 		res, err := client.Get(req.Name, apiMetaV1.GetOptions{})
 		if err != nil {
-			return false, errors.Wrapf(err, "Checking Deployment resource status failed  %v", err)
+			return false, errors.Wrapf(err, "Checking Deployment resource:'%v' status failed err:%v", req.Name, err)
 		}
 		if res.Status.UnavailableReplicas == 0 {
 			return true, nil
@@ -815,7 +829,7 @@ func (c *K8s) daemonsetReady(resource runtime.Object) (bool, error) {
 
 		res, err := client.Get(req.Name, apiMetaV1.GetOptions{})
 		if err != nil {
-			return false, errors.Wrapf(err, "Checking DaemonSet resource status failed  %v", err)
+			return false, errors.Wrapf(err, "Checking DaemonSet resource:'%v' status failed err:%v", req.Name, err)
 		}
 		if res.Status.NumberUnavailable == 0 {
 			return true, nil
@@ -836,7 +850,7 @@ func (c *K8s) namespaceDeleted(resource runtime.Object) (bool, error) {
 			if apiErrors.IsNotFound(err) {
 				return false, nil
 			}
-			return false, errors.Wrapf(err, "Couldn't get namespace info:%v", err)
+			return false, errors.Wrapf(err, "Couldn't get namespace '%v' err:%v", req.Name, err)
 		}
 		return true, nil
 	default:
