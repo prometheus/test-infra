@@ -387,7 +387,7 @@ func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 // Each file can contain more than one resource definition where `----` is used as separator.
 func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
 	if err := c.k8sProvider.ResourceApply(c.deploymentsContent); err != nil {
-		log.Fatal("error while applying objects from a resource file", err)
+		log.Fatal("error while applying a resource err:", err)
 	}
 	return nil
 }
