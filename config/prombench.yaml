@@ -1,11 +1,9 @@
-#prombench cluster config
 zone: {{ .ZONE }}
+projectid: {{ .PROJECT_ID }}
 cluster:
   name: {{ .CLUSTER_NAME }}
-  initialclusterversion: 1.10.4-gke.2
   nodepools:
   # These node-pools will be deployed on triggering benchmark
-  # isolation: prometheus & none will be used to differentiate them from cluster's node-pool
   - name: prometheus-{{ .PR_NUMBER }}
     initialnodecount: 2
     config:
@@ -21,6 +19,6 @@ cluster:
       machinetype: n1-standard-2
       imagetype: COS
       disksizegb: 100
-      localssdcount: 0  #SSD not needed for fake-webservers (has lesser disk operations)
+      localssdcount: 0  #use standard HDD. SSD not needed for fake-webservers.
       labels:
         isolation: none
