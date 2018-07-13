@@ -17,12 +17,12 @@ func RetryUntilTrue(name string, fn func() (bool, error)) error {
 		if ready, err := fn(); err != nil {
 			return err
 		} else if !ready {
-			log.Printf("Request for '%v' not completed. Checking in %v", name, globalRetryTime)
+			log.Printf("Request for '%v' is in progress. Checking in %v", name, globalRetryTime)
 			time.Sleep(globalRetryTime)
 			continue
 		}
-		log.Printf("Request for '%v' is completed!", name)
+		log.Printf("Request for '%v' is done!", name)
 		return nil
 	}
-	return fmt.Errorf("Request for '%v' not completed after retrying %d times", name, globalRetryCount)
+	return fmt.Errorf("Request for '%v' hasn't completed after retrying %d times", name, globalRetryCount)
 }

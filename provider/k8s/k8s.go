@@ -94,7 +94,7 @@ func (c *K8s) ResourceApply(deployments map[string][]byte) error {
 				err = c.serviceAccountApply(resource)
 			}
 			if err != nil {
-				return errors.Wrapf(err, "apply manifest file:%v", name)
+				return errors.Wrapf(err, "apply resources from manifest file:%v", name)
 			}
 		}
 	}
@@ -803,6 +803,8 @@ func (c *K8s) serviceExists(resource runtime.Object) (bool, error) {
 }
 
 func (c *K8s) deploymentReady(resource runtime.Object) (bool, error) {
+	req := resource.(*apiExtensionsV1beta1.Deployment)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		req := resource.(*apiExtensionsV1beta1.Deployment)
@@ -817,11 +819,13 @@ func (c *K8s) deploymentReady(resource runtime.Object) (bool, error) {
 		}
 		return false, nil
 	default:
-		return false, fmt.Errorf("unknown object version: %v", v)
+		return false, fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 }
 
 func (c *K8s) daemonsetReady(resource runtime.Object) (bool, error) {
+	req := resource.(*apiExtensionsV1beta1.DaemonSet)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		req := resource.(*apiExtensionsV1beta1.DaemonSet)
@@ -835,12 +839,14 @@ func (c *K8s) daemonsetReady(resource runtime.Object) (bool, error) {
 			return true, nil
 		}
 	default:
-		return false, fmt.Errorf("unknown object version: %v", v)
+		return false, fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return false, nil
 }
 
 func (c *K8s) namespaceDeleted(resource runtime.Object) (bool, error) {
+	req := resource.(*apiCoreV1.Namespace)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		req := resource.(*apiCoreV1.Namespace)
@@ -854,6 +860,6 @@ func (c *K8s) namespaceDeleted(resource runtime.Object) (bool, error) {
 		}
 		return true, nil
 	default:
-		return false, fmt.Errorf("unknown object version: %v", v)
+		return false, fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 }
