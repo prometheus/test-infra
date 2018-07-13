@@ -122,14 +122,31 @@ func (c *K8s) ResourceDelete(deployments map[string][]byte) error {
 			if resource == nil {
 				continue
 			}
-			switch resource.GetObjectKind().GroupVersionKind().Kind {
-			case "ClusterRole":
-				return c.clusterRoleDelete(resource)
-			case "ClusterRoleBinding":
-				return c.clusterRoleBindingDelete(resource)
-			// Deleting namespace will delete all components in the namespace. Don't need to delete separately.
-			case "Namespace":
-				return c.namespaceDelete(resource)
+			switch kind := strings.ToLower(resource.GetObjectKind().GroupVersionKind().Kind); kind {
+			case "clusterrole":
+				err = c.clusterRoleDelete(resource)
+			case "clusterrolebinding":
+				err = c.clusterRoleBindingDelete(resource)
+			case "configmap":
+				err = c.configMapDelete(resource)
+			case "daemonset":
+				err = c.daemonsetDelete(resource)
+			case "deployment":
+				err = c.deploymentDelete(resource)
+			case "ingress":
+				err = c.ingressDelete(resource)
+			case "namespace":
+				err = c.namespaceDelete(resource)
+			case "service":
+				err = c.serviceDelete(resource)
+			case "serviceaccount":
+				err = c.serviceAccountDelete(resource)
+			default:
+				err = fmt.Errorf("deleting request for unimplimented resource type:%v", kind)
+			}
+
+			if err != nil {
+				return errors.Wrapf(err, "delete resources from manifest file:%v", name)
 			}
 		}
 	}
