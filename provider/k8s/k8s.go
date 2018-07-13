@@ -813,7 +813,8 @@ func (c *K8s) serviceExists(resource runtime.Object) (bool, error) {
 			}
 			return false, nil
 		}
-		return false, fmt.Errorf("Checking not implemented for service type:%v name:%v", res.Spec.Type, req.Name)
+		// For any other type we blindly assume that it is up and running as we have no way of checking.
+		return true, nil
 	default:
 		return false, fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
