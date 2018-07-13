@@ -646,7 +646,7 @@ func (c *K8s) configMapDelete(resource runtime.Object) error {
 	return nil
 }
 
-func (c *K8s) daemonSetDelete(resource runtime.Object) error {
+func (c *K8s) daemonsetDelete(resource runtime.Object) error {
 	req := resource.(*apiExtensionsV1beta1.DaemonSet)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 
@@ -669,7 +669,7 @@ func (c *K8s) deploymentDelete(resource runtime.Object) error {
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
-	case "v1":
+	case "v1beta1":
 		client := c.clt.ExtensionsV1beta1().Deployments(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
@@ -823,8 +823,8 @@ func (c *K8s) deploymentReady(resource runtime.Object) (bool, error) {
 	req := resource.(*apiExtensionsV1beta1.Deployment)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
-	case "v1":
 		req := resource.(*apiExtensionsV1beta1.Deployment)
+	case "v1beta1":
 		client := c.clt.ExtensionsV1beta1().Deployments(req.Namespace)
 
 		res, err := client.Get(req.Name, apiMetaV1.GetOptions{})
@@ -844,8 +844,8 @@ func (c *K8s) daemonsetReady(resource runtime.Object) (bool, error) {
 	req := resource.(*apiExtensionsV1beta1.DaemonSet)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
-	case "v1":
 		req := resource.(*apiExtensionsV1beta1.DaemonSet)
+	case "v1beta1":
 		client := c.clt.ExtensionsV1beta1().DaemonSets(req.Namespace)
 
 		res, err := client.Get(req.Name, apiMetaV1.GetOptions{})
