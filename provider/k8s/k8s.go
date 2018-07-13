@@ -709,7 +709,7 @@ func (c *K8s) namespaceDelete(resource runtime.Object) error {
 		client := c.clt.CoreV1().Namespaces()
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
+			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleting - kind: %v , name: %v", kind, req.Name)
 		return provider.RetryUntilTrue(
@@ -824,7 +824,6 @@ func (c *K8s) deploymentReady(resource runtime.Object) (bool, error) {
 	req := resource.(*apiExtensionsV1beta1.Deployment)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
-		req := resource.(*apiExtensionsV1beta1.Deployment)
 	case "v1beta1":
 		client := c.clt.ExtensionsV1beta1().Deployments(req.Namespace)
 
@@ -845,7 +844,6 @@ func (c *K8s) daemonsetReady(resource runtime.Object) (bool, error) {
 	req := resource.(*apiExtensionsV1beta1.DaemonSet)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
-		req := resource.(*apiExtensionsV1beta1.DaemonSet)
 	case "v1beta1":
 		client := c.clt.ExtensionsV1beta1().DaemonSets(req.Namespace)
 
@@ -867,7 +865,6 @@ func (c *K8s) namespaceDeleted(resource runtime.Object) (bool, error) {
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		req := resource.(*apiCoreV1.Namespace)
 		client := c.clt.CoreV1().Namespaces()
 
 		if _, err := client.Get(req.Name, apiMetaV1.GetOptions{}); err != nil {
