@@ -398,7 +398,7 @@ func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
 // Each file can container more than one resource definition where `apiVersion` is used as separator.
 func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 	if err := c.k8sProvider.ResourceDelete(c.deploymentsContent); err != nil {
-		log.Fatal("error while deleting objects from a manifest file", err)
+		log.Fatal("error while deleting objects from a manifest file err:", err)
 	}
 	return nil
 }
