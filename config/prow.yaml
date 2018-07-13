@@ -1,5 +1,6 @@
 #prombench cluster config
 zone: {{ .ZONE }}
+projectid: {{ .PROJECT_ID }}
 cluster:
   name: {{ .CLUSTER_NAME }}
   initialclusterversion: 1.10.4-gke.2
