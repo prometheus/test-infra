@@ -823,6 +823,7 @@ func (c *K8s) serviceExists(resource runtime.Object) (bool, error) {
 func (c *K8s) deploymentReady(resource runtime.Object) (bool, error) {
 	req := resource.(*apiExtensionsV1beta1.Deployment)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1beta1":
 		client := c.clt.ExtensionsV1beta1().Deployments(req.Namespace)
@@ -843,6 +844,7 @@ func (c *K8s) deploymentReady(resource runtime.Object) (bool, error) {
 func (c *K8s) daemonsetReady(resource runtime.Object) (bool, error) {
 	req := resource.(*apiExtensionsV1beta1.DaemonSet)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1beta1":
 		client := c.clt.ExtensionsV1beta1().DaemonSets(req.Namespace)
@@ -863,17 +865,18 @@ func (c *K8s) daemonsetReady(resource runtime.Object) (bool, error) {
 func (c *K8s) namespaceDeleted(resource runtime.Object) (bool, error) {
 	req := resource.(*apiCoreV1.Namespace)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.CoreV1().Namespaces()
 
 		if _, err := client.Get(req.Name, apiMetaV1.GetOptions{}); err != nil {
 			if apiErrors.IsNotFound(err) {
-				return false, nil
+				return true, nil
 			}
 			return false, errors.Wrapf(err, "Couldn't get namespace '%v' err:%v", req.Name, err)
 		}
-		return true, nil
+		return false, nil
 	default:
 		return false, fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
