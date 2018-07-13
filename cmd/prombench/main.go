@@ -23,7 +23,7 @@ func main() {
 		PlaceHolder("service-account.json").
 		Short('a').
 		ExistingFileVar(&g.AuthFile)
-	k8sGKE.Flag("file", "yaml file that describes the parameters for the object that will be deployed").
+	k8sGKE.Flag("file", "yaml file or folder  that describes the parameters for the object that will be deployed.").
 		Required().
 		Short('f').
 		ExistingFilesOrDirsVar(&g.DeploymentFiles)
@@ -33,24 +33,24 @@ func main() {
 
 	// Cluster operations.
 	k8sGKECluster := k8sGKE.Command("cluster", "manage GKE clusters")
-	k8sGKECluster.Command("create", "gke cluster create -a service-account.json -c config/cluster.yaml").
+	k8sGKECluster.Command("create", "gke cluster create -a service-account.json -f FileOrFolder").
 		Action(g.ClusterCreate)
-	k8sGKECluster.Command("delete", "gke cluster delete -a service-account.json -c config/cluster.yaml").
+	k8sGKECluster.Command("delete", "gke cluster delete -a service-account.json -f FileOrFolder").
 		Action(g.ClusterDelete)
 
 	// Cluster node-pool operations
 	k8sGKENodePool := k8sGKE.Command("nodepool", "manage GKE clusters nodepools")
-	k8sGKENodePool.Command("create", "gke nodepool create -a service-account.json -c config/nodepools.yaml").
+	k8sGKENodePool.Command("create", "gke nodepool create -a service-account.json -f FileOrFolder").
 		Action(g.NodePoolCreate)
-	k8sGKENodePool.Command("delete", "gke nodepool delete -a service-account.json -c config/nodepools.yaml").
+	k8sGKENodePool.Command("delete", "gke nodepool delete -a service-account.json -f FileOrFolder").
 		Action(g.NodePoolDelete)
 
 	// K8s resource operations.
-	k8sGKEResource := k8sGKE.Command("resource", "Apply and delete different k8s resources - deployments, services, config maps etc.").
+	k8sGKEResource := k8sGKE.Command("resource", `Apply and delete different k8s resources - deployments, services, config maps etc.Required variables -v PROJECT_ID, -v ZONE: -west1-b -v CLUSTER_NAME`).
 		Action(g.NewK8sProvider)
-	k8sGKEResource.Command("apply", "gke resource apply -a service-account.json -c config/resources.yaml -f manifests -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+	k8sGKEResource.Command("apply", "gke resource apply -a service-account.json -f manifestsFileOrFolder -v PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(g.ResourceApply)
-	k8sGKEResource.Command("delete", "gke resource delete -a service-account.json -c config/resources.yaml -f manifests -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+	k8sGKEResource.Command("delete", "gke resource delete -a service-account.json -f manifestsFileOrFolder -v PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(g.ResourceDelete)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
