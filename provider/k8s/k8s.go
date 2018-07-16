@@ -620,7 +620,7 @@ func (c *K8s) clusterRoleBindingDelete(resource runtime.Object) error {
 		client := c.clt.RbacV1().ClusterRoleBindings()
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
+			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
@@ -637,7 +637,7 @@ func (c *K8s) configMapDelete(resource runtime.Object) error {
 		client := c.clt.CoreV1().ConfigMaps(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
+			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
@@ -655,7 +655,7 @@ func (c *K8s) daemonsetDelete(resource runtime.Object) error {
 		client := c.clt.ExtensionsV1beta1().DaemonSets(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
+			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
@@ -673,7 +673,7 @@ func (c *K8s) deploymentDelete(resource runtime.Object) error {
 		client := c.clt.ExtensionsV1beta1().Deployments(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
+			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
@@ -691,7 +691,7 @@ func (c *K8s) ingressDelete(resource runtime.Object) error {
 		client := c.clt.ExtensionsV1beta1().Ingresses(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
+			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
@@ -729,7 +729,7 @@ func (c *K8s) roleDelete(resource runtime.Object) error {
 		client := c.clt.RbacV1().Roles(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
+			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
@@ -746,7 +746,7 @@ func (c *K8s) roleBindingDelete(resource runtime.Object) error {
 		client := c.clt.RbacV1().RoleBindings(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
+			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
@@ -764,7 +764,7 @@ func (c *K8s) serviceDelete(resource runtime.Object) error {
 		client := c.clt.CoreV1().Services(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
+			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
@@ -782,7 +782,7 @@ func (c *K8s) serviceAccountDelete(resource runtime.Object) error {
 		client := c.clt.CoreV1().ServiceAccounts(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
-			log.Printf("resource delete failed - kind: %v, name: %v", kind, req.Name)
+			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
