@@ -1,5 +1,5 @@
 PROMBENCH_CMD        = /bin/prombench
-DOCKER_TAG = gcr.io/prometheus-test-204522/prombench:v0.1.0
+DOCKER_TAG = docker.io/sipian/prombench:v2.0.0
 
 deploy:
 	$(PROMBENCH_CMD) gke nodepool create -a /etc/serviceaccount/service-account.json \
