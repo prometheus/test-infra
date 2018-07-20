@@ -11,6 +11,7 @@ spec:
   selector:
     matchLabels:
       app: node-exporter
+      node: test-{{ .PROMETHEUS_1_NAME }}
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 1
@@ -77,6 +78,7 @@ spec:
   selector:
     matchLabels:
       app: node-exporter
+      node: test-{{ .PROMETHEUS_2_NAME }}
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 1
