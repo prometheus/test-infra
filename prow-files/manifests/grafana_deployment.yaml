@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: grafana-core
@@ -7,6 +7,10 @@ metadata:
     component: core
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+        app: grafana
+        component: core
   template:
     metadata:
       labels:
@@ -19,7 +23,7 @@ spec:
         name: grafana-core
         imagePullPolicy: IfNotPresent
         # resources:
-        #   # keep request = limit to keep this container in guaranteed class
+        #   # keep request = limit to keep this container in guaranted class
         #   limits:
         #     cpu: 100m
         #     memory: 100Mi
@@ -27,11 +31,11 @@ spec:
         #     cpu: 100m
         #     memory: 100Mi
         env:
-          # The following env variables set up basic auth twith the default admin user and admin password.
+          # The following env variables set up basic auth with the default admin user and admin password.
           - name: GF_PATHS_PROVISIONING
             value: "/opt/grafana-provision"
           - name: GF_SERVER_ROOT_URL
-            value: "http://INGRESS-IP/grafana"
+            value: "http://{{ .INGRESS_IP }}/grafana"
           - name: GF_AUTH_ANONYMOUS_ENABLED
             value: "true"
           - name: GF_AUTH_ANONYMOUS_ORG_NAME

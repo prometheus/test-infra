@@ -146,7 +146,7 @@ func (c *K8s) ResourceDelete(deployments map[string][]byte) error {
 			if resource == nil {
 				continue
 			}
-			log.Printf(strings.ToLower(resource.GetObjectKind().GroupVersionKind().Kind))
+
 			switch kind := strings.ToLower(resource.GetObjectKind().GroupVersionKind().Kind); kind {
 			case "clusterrole":
 				err = c.clusterRoleDelete(resource)

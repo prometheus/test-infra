@@ -5,7 +5,7 @@ metadata:
 data:
   config.yaml: |
     plank:
-      job_url_template: 'http://INGRESS-IP/log?job={{.Spec.Job}}&id={{.Status.BuildID}}'
+      job_url_template: 'http://{{ .INGRESS_IP }}/log?job={{"{{"}}.Spec.Job{{"}}"}}&id={{"{{"}}.Status.BuildID{{"}}"}}'
       pod_pending_timeout: 60m
       default_decoration_config:
         timeout: 7200000000000 # 2h
@@ -16,10 +16,10 @@ data:
           entrypoint: "registry.svc.ci.openshift.org/ci/entrypoint:latest"
           sidecar: "registry.svc.ci.openshift.org/ci/sidecar:latest"
         gcs_configuration:
-          bucket: "prometheus-prow"
+          bucket: "{{ .GCS_BUCKET }}"
           path_strategy: "explicit"
-          default_org: "sipian"
-          default_repo: "prometheus"
+          default_org: "{{ .GITHUB_ORG }}"
+          default_repo: "{{ .GITHUB_REPO }}"
         gcs_credentials_secret: "service-account"
 
     log_level: info
@@ -38,7 +38,7 @@ data:
     # These configurations are NOT for PR presubmits as used by the trigger plugin. 
     # These are used to create prowjobs for the benchmark plugin. 
     presubmits:
-      sipian/prometheus:
+      {{ .GITHUB_ORG }}/{{ .GITHUB_REPO }}:
       - name: start-benchmark
         context: start-benchmark
         always_run: false
@@ -53,10 +53,12 @@ data:
             args:
             - "deploy"
             env:
+            - name: PROJECT_ID
+              value: "{{ .PROJECT_ID }}"
             - name: ZONE
-              value: "us-east1-b"
+              value: "{{ .ZONE }}"
             - name: CLUSTER_NAME
-              value: "prombench"
+              value: "{{ .CLUSTER_NAME }}"
             volumeMounts:
             - name: serviceaccount
               mountPath: /etc/serviceaccount/
@@ -81,10 +83,12 @@ data:
             args:
             - "clean"
             env:
+            - name: PROJECT_ID
+              value: "{{ .PROJECT_ID }}"
             - name: ZONE
-              value: us-east1-b
+              value: "{{ .ZONE }}"
             - name: CLUSTER_NAME
-              value: prombench
+              value: "{{ .CLUSTER_NAME }}"
             volumeMounts:
             - name: serviceaccount
               mountPath: /etc/serviceaccount/
