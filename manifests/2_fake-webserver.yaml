@@ -5,6 +5,9 @@ metadata:
   namespace: prombench-{{ .PR_NUMBER }}  
 spec:
   replicas: 5
+  selector:
+    matchLabels:
+      app: fake-webserver
   template:
     metadata:
       namespace: prombench-{{ .PR_NUMBER }}

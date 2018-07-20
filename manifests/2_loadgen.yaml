@@ -61,6 +61,9 @@ metadata:
   namespace: prombench-{{ .PR_NUMBER }}
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: loadgen-scaler
   template:
     metadata:
       namespace: prombench-{{ .PR_NUMBER }}
@@ -95,6 +98,9 @@ metadata:
   namespace: prombench-{{ .PR_NUMBER }}
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: loadgen-querier
   template:
     metadata:
       namespace: prombench-{{ .PR_NUMBER }}

@@ -244,6 +244,9 @@ func (c *K8s) clusterRoleBindingApply(resource runtime.Object) error {
 func (c *K8s) configMapApply(resource runtime.Object) error {
 	req := resource.(*apiCoreV1.ConfigMap)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
@@ -285,6 +288,9 @@ func (c *K8s) configMapApply(resource runtime.Object) error {
 func (c *K8s) daemonSetApply(resource runtime.Object) error {
 	req := resource.(*appsV1.DaemonSet)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
@@ -325,6 +331,9 @@ func (c *K8s) daemonSetApply(resource runtime.Object) error {
 func (c *K8s) deploymentApply(resource runtime.Object) error {
 	req := resource.(*appsV1.Deployment)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
@@ -366,6 +375,9 @@ func (c *K8s) deploymentApply(resource runtime.Object) error {
 func (c *K8s) ingressApply(resource runtime.Object) error {
 	req := resource.(*apiExtensionsV1beta1.Ingress)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1beta1":
@@ -445,6 +457,9 @@ func (c *K8s) nameSpaceApply(resource runtime.Object) error {
 func (c *K8s) roleApply(resource runtime.Object) error {
 	req := resource.(*rbac.Role)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
@@ -484,6 +499,9 @@ func (c *K8s) roleApply(resource runtime.Object) error {
 func (c *K8s) roleBindingApply(resource runtime.Object) error {
 	req := resource.(*rbac.RoleBinding)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
@@ -523,6 +541,9 @@ func (c *K8s) roleBindingApply(resource runtime.Object) error {
 func (c *K8s) serviceAccountApply(resource runtime.Object) error {
 	req := resource.(*apiCoreV1.ServiceAccount)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
@@ -562,6 +583,9 @@ func (c *K8s) serviceAccountApply(resource runtime.Object) error {
 func (c *K8s) serviceApply(resource runtime.Object) error {
 	req := resource.(*apiCoreV1.Service)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
@@ -640,6 +664,9 @@ func (c *K8s) clusterRoleBindingDelete(resource runtime.Object) error {
 func (c *K8s) configMapDelete(resource runtime.Object) error {
 	req := resource.(*apiCoreV1.ConfigMap)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
@@ -658,6 +685,9 @@ func (c *K8s) configMapDelete(resource runtime.Object) error {
 func (c *K8s) daemonsetDelete(resource runtime.Object) error {
 	req := resource.(*appsV1.DaemonSet)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
@@ -676,6 +706,9 @@ func (c *K8s) daemonsetDelete(resource runtime.Object) error {
 func (c *K8s) deploymentDelete(resource runtime.Object) error {
 	req := resource.(*appsV1.Deployment)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
@@ -694,6 +727,9 @@ func (c *K8s) deploymentDelete(resource runtime.Object) error {
 func (c *K8s) ingressDelete(resource runtime.Object) error {
 	req := resource.(*apiExtensionsV1beta1.Ingress)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1beta1":
@@ -732,6 +768,9 @@ func (c *K8s) namespaceDelete(resource runtime.Object) error {
 func (c *K8s) roleDelete(resource runtime.Object) error {
 	req := resource.(*rbac.Role)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
@@ -750,6 +789,10 @@ func (c *K8s) roleDelete(resource runtime.Object) error {
 func (c *K8s) roleBindingDelete(resource runtime.Object) error {
 	req := resource.(*rbac.RoleBinding)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.RbacV1().RoleBindings(req.Namespace)
@@ -767,6 +810,9 @@ func (c *K8s) roleBindingDelete(resource runtime.Object) error {
 func (c *K8s) serviceDelete(resource runtime.Object) error {
 	req := resource.(*apiCoreV1.Service)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
@@ -785,6 +831,9 @@ func (c *K8s) serviceDelete(resource runtime.Object) error {
 func (c *K8s) serviceAccountDelete(resource runtime.Object) error {
 	req := resource.(*apiCoreV1.ServiceAccount)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
@@ -803,6 +852,9 @@ func (c *K8s) serviceAccountDelete(resource runtime.Object) error {
 func (c *K8s) serviceExists(resource runtime.Object) (bool, error) {
 	req := resource.(*apiCoreV1.Service)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
@@ -832,6 +884,9 @@ func (c *K8s) serviceExists(resource runtime.Object) (bool, error) {
 func (c *K8s) deploymentReady(resource runtime.Object) (bool, error) {
 	req := resource.(*appsV1.Deployment)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
@@ -853,6 +908,9 @@ func (c *K8s) deploymentReady(resource runtime.Object) (bool, error) {
 func (c *K8s) daemonsetReady(resource runtime.Object) (bool, error) {
 	req := resource.(*appsV1.DaemonSet)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
