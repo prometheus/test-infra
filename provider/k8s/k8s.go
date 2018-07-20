@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
 
 	"github.com/pkg/errors"
 	appsV1 "k8s.io/api/apps/v1"
@@ -52,7 +53,17 @@ func New(ctx context.Context, config clientcmdapi.Config) (*K8s, error) {
 // The input map key is the filename and the bytes slice is the actual file content.
 // It expect files in the official k8s format.
 func (c *K8s) ResourceApply(deployments map[string][]byte) error {
-	for name, content := range deployments {
+
+	//create resources in order of yaml files
+	keys := make([]string, 0)
+	for k, _ := range deployments {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+	for _, k := range keys {
+		name := k
+		content := deployments[k]
 		separator := "---"
 		decode := scheme.Codecs.UniversalDeserializer().Decode
 
@@ -108,7 +119,17 @@ func (c *K8s) ResourceApply(deployments map[string][]byte) error {
 // The input map key is the filename and the bytes slice is the actual file content.
 // It expect files in the official k8s format.
 func (c *K8s) ResourceDelete(deployments map[string][]byte) error {
-	for name, content := range deployments {
+
+	//delete resources in order of yaml files
+	keys := make([]string, 0)
+	for k, _ := range deployments {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+	for _, k := range keys {
+		name := k
+		content := deployments[k]
 		separator := "---"
 		decode := scheme.Codecs.UniversalDeserializer().Decode
 
@@ -125,6 +146,7 @@ func (c *K8s) ResourceDelete(deployments map[string][]byte) error {
 			if resource == nil {
 				continue
 			}
+			log.Printf(strings.ToLower(resource.GetObjectKind().GroupVersionKind().Kind))
 			switch kind := strings.ToLower(resource.GetObjectKind().GroupVersionKind().Kind); kind {
 			case "clusterrole":
 				err = c.clusterRoleDelete(resource)
