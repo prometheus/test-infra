@@ -1,60 +1,9 @@
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: prowjobs.prow.k8s.io
-spec:
-  group: prow.k8s.io
-  version: v1
-  names:
-    kind: ProwJob
-    singular: prowjob
-    plural: prowjobs
-  scope: Namespaced
-  validation:
-    openAPIV3Schema:
-      properties:
-        spec:
-          properties:
-            max_concurrency:
-              type: integer
-              minimum: 0
-            type:
-              type: string
-              enum:
-              - "presubmit"
-              - "postsubmit"
-              - "periodic"
-              - "batch"
-        status:
-          properties:
-            state:
-              type: string
-              enum:
-              - "triggered"
-              - "pending"
-              - "success"
-              - "failure"
-              - "aborted"
-              - "error"
-          anyOf:
-          - not:
-              properties:
-                state:
-                  type: string
-                  enum:
-                  - "success"
-                  - "failure"
-                  - "error"
-                  - "aborted"
-          - required:
-            - completionTime
----
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: "deck"
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: "deck"
@@ -66,7 +15,7 @@ subjects:
 - kind: ServiceAccount
   name: "deck"
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: "deck"
@@ -90,7 +39,7 @@ kind: ServiceAccount
 metadata:
   name: "horologium"
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: "horologium"
@@ -103,7 +52,7 @@ rules:
       - create
       - list
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: "horologium"
@@ -120,7 +69,7 @@ kind: ServiceAccount
 metadata:
   name: "plank"
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: "plank"
@@ -142,7 +91,7 @@ rules:
       - list
       - update
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: "plank"
@@ -159,7 +108,7 @@ kind: ServiceAccount
 metadata:
   name: "sinker"
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: "sinker"
@@ -179,7 +128,7 @@ rules:
       - delete
       - list
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: "sinker"
@@ -216,7 +165,7 @@ data:
         - image: alpine
           command: ["/bin/date"]
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hook
@@ -229,6 +178,9 @@ spec:
     rollingUpdate:
       maxSurge: 1
       maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: hook
   template:
     metadata:
       labels:
@@ -284,7 +236,7 @@ spec:
   - port: 8888
   type: NodePort
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: plank
@@ -292,6 +244,9 @@ metadata:
     app: plank
 spec:
   replicas: 1 # Do not scale up.
+  selector:
+    matchLabels:
+      app: plank
   template:
     metadata:
       labels:
@@ -320,7 +275,7 @@ spec:
       nodeSelector:
         cloud.google.com/gke-nodepool: prow
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sinker
@@ -328,6 +283,9 @@ metadata:
     app: sinker
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: sinker
   template:
     metadata:
       labels:
@@ -348,7 +306,7 @@ spec:
       nodeSelector:
         cloud.google.com/gke-nodepool: prow
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deck
@@ -361,6 +319,9 @@ spec:
     rollingUpdate:
       maxSurge: 1
       maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: deck
   template:
     metadata:
       labels:
@@ -399,7 +360,7 @@ spec:
     targetPort: 8080
   type: NodePort
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: horologium
@@ -407,6 +368,9 @@ metadata:
     app: horologium
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: horologium
   template:
     metadata:
       labels:

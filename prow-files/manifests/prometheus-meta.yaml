@@ -86,7 +86,7 @@ data:
         source_labels: [__meta_kubernetes_pod_node_name]
         target_label: nodeName
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prometheus-meta
@@ -114,7 +114,7 @@ spec:
         - "--storage.tsdb.path=/data"
         - "--storage.tsdb.min-block-duration=15m"
         - "--storage.tsdb.max-block-duration=4h"
-        - "--web.external-url=http://INGRESS-IP/prometheus-meta"
+        - "--web.external-url=http://{{ .INGRESS_IP }}/prometheus-meta"
         name: prometheus
         volumeMounts:
         - name: config-volume

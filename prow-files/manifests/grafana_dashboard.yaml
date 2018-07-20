@@ -22,12 +22,6 @@ data:
           "version": "5.0.0"
         },
         {
-          "type": "panel",
-          "id": "graph",
-          "name": "Graph",
-          "version": "5.0.0"
-        },
-        {
           "type": "datasource",
           "id": "prometheus",
           "name": "Prometheus",
@@ -52,6 +46,7 @@ data:
       "gnetId": 6725,
       "graphTooltip": 1,
       "id": null,
+      "iteration": 1532083926170,
       "links": [],
       "panels": [
         {
@@ -61,6 +56,555 @@ data:
             "w": 24,
             "x": 0,
             "y": 0
+          },
+          "id": 47,
+          "panels": [
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": "prometheus-meta",
+              "fill": 1,
+              "gridPos": {
+                "h": 9,
+                "w": 12,
+                "x": 0,
+                "y": 1
+              },
+              "id": 51,
+              "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "max": true,
+                "min": true,
+                "show": true,
+                "total": false,
+                "values": true
+              },
+              "lines": true,
+              "linewidth": 1,
+              "links": [],
+              "nullPointMode": "null",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "node_memory_MemTotal_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}",
+                  "format": "time_series",
+                  "hide": false,
+                  "intervalFactor": 1,
+                  "legendFormat": "{{"{{"}}node{{"}}"}} - Total memory",
+                  "refId": "E"
+                },
+                {
+                  "expr": "node_memory_MemTotal_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"} - node_memory_MemFree_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"} - node_memory_Buffers_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"} - node_memory_Cached_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}",
+                  "format": "time_series",
+                  "intervalFactor": 1,
+                  "legendFormat": "{{"{{"}}node{{"}}"}} - Used",
+                  "refId": "A"
+                },
+                {
+                  "expr": "node_memory_Buffers_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}",
+                  "format": "time_series",
+                  "intervalFactor": 1,
+                  "legendFormat": "{{"{{"}}node{{"}}"}} - Buffers",
+                  "refId": "B"
+                },
+                {
+                  "expr": "node_memory_Cached_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}",
+                  "format": "time_series",
+                  "intervalFactor": 1,
+                  "legendFormat": "{{"{{"}}node{{"}}"}} - Cached",
+                  "refId": "C"
+                },
+                {
+                  "expr": "node_memory_MemFree_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}",
+                  "format": "time_series",
+                  "intervalFactor": 1,
+                  "legendFormat": "{{"{{"}}node{{"}}"}} - Free",
+                  "refId": "D"
+                }
+              ],
+              "thresholds": [],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Memory",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "bytes",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": "prometheus-meta",
+              "fill": 1,
+              "gridPos": {
+                "h": 9,
+                "w": 12,
+                "x": 12,
+                "y": 1
+              },
+              "id": 53,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "links": [],
+              "nullPointMode": "null",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "irate(node_disk_io_time_seconds_total{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\",device!~'^(md\\\\\\\\d+$|dm-)'}[5m])",
+                  "format": "time_series",
+                  "intervalFactor": 1,
+                  "legendFormat": "{{"{{"}}node{{"}}"}} - {{"{{"}}device{{"}}"}}",
+                  "refId": "A"
+                }
+              ],
+              "thresholds": [],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Disk I/O Utilisation",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "percentunit",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": "prometheus-meta",
+              "fill": 1,
+              "gridPos": {
+                "h": 9,
+                "w": 12,
+                "x": 0,
+                "y": 10
+              },
+              "id": 57,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "links": [],
+              "nullPointMode": "null",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "irate(node_context_switches_total{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}[5m])",
+                  "format": "time_series",
+                  "intervalFactor": 1,
+                  "legendFormat": "{{"{{"}}node{{"}}"}} - Context Switches",
+                  "refId": "A"
+                },
+                {
+                  "expr": "irate(node_intr_total{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}[5m])",
+                  "format": "time_series",
+                  "intervalFactor": 1,
+                  "legendFormat": "{{"{{"}}node{{"}}"}} - Interrupts",
+                  "refId": "B"
+                }
+              ],
+              "thresholds": [],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Context Switches / Interrupts",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": "prometheus-meta",
+              "description": "Disk space used of all filesystems mounted",
+              "fill": 1,
+              "gridPos": {
+                "h": 9,
+                "w": 12,
+                "x": 12,
+                "y": 10
+              },
+              "id": 61,
+              "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "max": true,
+                "min": true,
+                "show": true,
+                "total": false,
+                "values": true
+              },
+              "lines": true,
+              "linewidth": 1,
+              "links": [],
+              "nullPointMode": "null",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "100 - ((node_filesystem_avail_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\",device!~'rootfs'} * 100) / node_filesystem_size_bytes{node=~'(test+).*',device!~'rootfs'})",
+                  "format": "time_series",
+                  "intervalFactor": 1,
+                  "legendFormat": "{{"{{"}}node{{"}}"}} - {{"{{"}}mountpoint{{"}}"}}",
+                  "refId": "A"
+                }
+              ],
+              "thresholds": [],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Disk Space Used Basic",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "transparent": false,
+              "type": "graph",
+              "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "percent",
+                  "label": null,
+                  "logBase": 1,
+                  "max": "100",
+                  "min": "0",
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": "prometheus-meta",
+              "fill": 1,
+              "gridPos": {
+                "h": 9,
+                "w": 12,
+                "x": 0,
+                "y": 19
+              },
+              "id": 59,
+              "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "max": true,
+                "min": true,
+                "show": true,
+                "total": false,
+                "values": true
+              },
+              "lines": true,
+              "linewidth": 1,
+              "links": [],
+              "nullPointMode": "null",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "node_load1{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}",
+                  "format": "time_series",
+                  "intervalFactor": 1,
+                  "legendFormat": "{{"{{"}}node{{"}}"}} - Load 1m",
+                  "refId": "A"
+                },
+                {
+                  "expr": "node_load5{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}",
+                  "format": "time_series",
+                  "intervalFactor": 1,
+                  "legendFormat": "{{"{{"}}node{{"}}"}} - Load 5m",
+                  "refId": "B"
+                },
+                {
+                  "expr": "node_load15{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}",
+                  "format": "time_series",
+                  "intervalFactor": 1,
+                  "legendFormat": "{{"{{"}}node{{"}}"}} - Load 15m",
+                  "refId": "C"
+                }
+              ],
+              "thresholds": [],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "System Load",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": "prometheus-meta",
+              "fill": 1,
+              "gridPos": {
+                "h": 9,
+                "w": 12,
+                "x": 12,
+                "y": 19
+              },
+              "id": 55,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "links": [],
+              "nullPointMode": "null",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "1 - node_filesystem_free_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\",fstype!='rootfs',mountpoint!~'/(run|var).*',mountpoint!=''} / node_filesystem_size_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}",
+                  "format": "time_series",
+                  "intervalFactor": 1,
+                  "legendFormat": "{{"{{"}}node{{"}}"}} - {{"{{"}}mountpoint{{"}}"}}",
+                  "refId": "A"
+                }
+              ],
+              "thresholds": [],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Filesystem Fullness",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "percentunit",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "label": null,
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            }
+          ],
+          "title": "Node Metrics",
+          "type": "row"
+        },
+        {
+          "collapsed": true,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 1
           },
           "id": 45,
           "panels": [
@@ -75,7 +619,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 0,
-                "y": 1
+                "y": 2
               },
               "id": 40,
               "legend": {
@@ -101,10 +645,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "prometheus_build_info{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}",
+                  "expr": "prometheus_build_info{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{prometheus}} - {{version}} - {{revision}}",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - {{"{{"}}version{{"}}"}} - {{"{{"}}revision{{"}}"}}",
                   "refId": "A"
                 }
               ],
@@ -155,7 +699,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 8,
-                "y": 1
+                "y": 2
               },
               "id": 42,
               "legend": {
@@ -181,10 +725,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "time() - process_start_time_seconds{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}",
+                  "expr": "time() - process_start_time_seconds{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{prometheus}} - Uptime",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Uptime",
                   "refId": "A"
                 }
               ],
@@ -238,7 +782,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 16,
-                "y": 1
+                "y": 2
               },
               "id": 41,
               "legend": {
@@ -264,17 +808,17 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "process_max_fds{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}",
+                  "expr": "process_max_fds{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{prometheus}} - Max",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Max",
                   "refId": "A"
                 },
                 {
-                  "expr": "process_open_fds{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}",
+                  "expr": "process_open_fds{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{prometheus}} - Open",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Open",
                   "refId": "B"
                 }
               ],
@@ -333,7 +877,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 0,
-                "y": 8
+                "y": 9
               },
               "id": 3,
               "legend": {
@@ -359,10 +903,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "prometheus_tsdb_head_series{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}",
+                  "expr": "prometheus_tsdb_head_series{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Time series",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Time series",
                   "metric": "prometheus_local_storage_memory_series",
                   "refId": "A",
                   "step": 10
@@ -423,7 +967,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 8,
-                "y": 8
+                "y": 9
               },
               "id": 26,
               "legend": {
@@ -449,10 +993,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "prometheus_tsdb_head_active_appenders{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}",
+                  "expr": "prometheus_tsdb_head_active_appenders{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Head Appenders",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Head Appenders",
                   "metric": "prometheus_local_storage_memory_series",
                   "refId": "A",
                   "step": 10
@@ -510,7 +1054,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 16,
-                "y": 8
+                "y": 9
               },
               "id": 1,
               "legend": {
@@ -536,10 +1080,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_tsdb_head_samples_appended_total{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m])",
+                  "expr": "rate(prometheus_tsdb_head_samples_appended_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - samples/s",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - samples/s",
                   "metric": "prometheus_local_storage_ingested_samples_total",
                   "refId": "A",
                   "step": 10
@@ -601,7 +1145,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 0,
-                "y": 15
+                "y": 16
               },
               "id": 2,
               "legend": {
@@ -632,10 +1176,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "prometheus_tsdb_head_chunks{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}",
+                  "expr": "prometheus_tsdb_head_chunks{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Chunks",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Chunks",
                   "metric": "prometheus_local_storage_memory_chunks",
                   "refId": "A",
                   "step": 10
@@ -696,7 +1240,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 8,
-                "y": 15
+                "y": 16
               },
               "id": 4,
               "legend": {
@@ -722,10 +1266,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_tsdb_head_chunks_created_total{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m])",
+                  "expr": "rate(prometheus_tsdb_head_chunks_created_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Created",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Created",
                   "metric": "prometheus_local_storage_chunk_ops_total",
                   "refId": "A",
                   "step": 10
@@ -787,7 +1331,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 16,
-                "y": 15
+                "y": 16
               },
               "id": 25,
               "legend": {
@@ -813,10 +1357,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_tsdb_head_chunks_removed_total{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m])",
+                  "expr": "rate(prometheus_tsdb_head_chunks_removed_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Removed",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Removed",
                   "metric": "prometheus_local_storage_chunk_ops_total",
                   "refId": "B",
                   "step": 10
@@ -880,7 +1424,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 0,
-                "y": 22
+                "y": 23
               },
               "id": 28,
               "legend": {
@@ -912,10 +1456,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "prometheus_tsdb_head_min_time{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}",
+                  "expr": "prometheus_tsdb_head_min_time{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Min",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Min",
                   "metric": "prometheus_local_storage_series_chunks_persisted_count",
                   "refId": "A",
                   "step": 10
@@ -929,10 +1473,10 @@ data:
                   "refId": "C"
                 },
                 {
-                  "expr": "prometheus_tsdb_head_max_time{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}",
+                  "expr": "prometheus_tsdb_head_max_time{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Max",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Max",
                   "metric": "prometheus_local_storage_series_chunks_persisted_count",
                   "refId": "B",
                   "step": 10
@@ -994,7 +1538,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 8,
-                "y": 22
+                "y": 23
               },
               "id": 29,
               "legend": {
@@ -1020,10 +1564,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_tsdb_head_gc_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m])",
+                  "expr": "rate(prometheus_tsdb_head_gc_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - GC Time/s",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - GC Time/s",
                   "metric": "prometheus_local_storage_series_chunks_persisted_count",
                   "refId": "A",
                   "step": 10
@@ -1084,7 +1628,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 16,
-                "y": 22
+                "y": 23
               },
               "id": 14,
               "legend": {
@@ -1115,10 +1659,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "prometheus_tsdb_blocks_loaded{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}",
+                  "expr": "prometheus_tsdb_blocks_loaded{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Blocks Loaded",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Blocks Loaded",
                   "metric": "prometheus_local_storage_indexing_batch_sizes_sum",
                   "refId": "A",
                   "step": 10
@@ -1181,7 +1725,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 0,
-                "y": 29
+                "y": 30
               },
               "id": 30,
               "legend": {
@@ -1207,11 +1751,11 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_tsdb_reloads_total{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[10m])",
+                  "expr": "rate(prometheus_tsdb_reloads_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
                   "format": "time_series",
                   "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Reloads",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Reloads",
                   "metric": "prometheus_local_storage_series_chunks_persisted_count",
                   "refId": "A",
                   "step": 10
@@ -1273,7 +1817,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 8,
-                "y": 29
+                "y": 30
               },
               "id": 31,
               "legend": {
@@ -1299,21 +1843,21 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_tsdb_wal_fsync_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m]) / rate(prometheus_tsdb_wal_fsync_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m])",
+                  "expr": "rate(prometheus_tsdb_wal_fsync_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m]) / rate(prometheus_tsdb_wal_fsync_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
                   "format": "time_series",
                   "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Fsync Latency",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Fsync Latency",
                   "metric": "prometheus_local_storage_series_chunks_persisted_count",
                   "refId": "A",
                   "step": 10
                 },
                 {
-                  "expr": "rate(prometheus_tsdb_wal_truncate_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m]) / rate(prometheus_tsdb_wal_truncate_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m])",
+                  "expr": "rate(prometheus_tsdb_wal_truncate_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m]) / rate(prometheus_tsdb_wal_truncate_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
                   "format": "time_series",
                   "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Truncate Latency",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Truncate Latency",
                   "metric": "prometheus_local_storage_series_chunks_persisted_count",
                   "refId": "B",
                   "step": 10
@@ -1376,7 +1920,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 16,
-                "y": 29
+                "y": 30
               },
               "id": 32,
               "legend": {
@@ -1402,51 +1946,51 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_tsdb_wal_corruptions_total{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[10m])",
+                  "expr": "rate(prometheus_tsdb_wal_corruptions_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
                   "format": "time_series",
                   "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - WAL Corruptions",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - WAL Corruptions",
                   "metric": "prometheus_local_storage_series_chunks_persisted_count",
                   "refId": "A",
                   "step": 10
                 },
                 {
-                  "expr": "rate(prometheus_tsdb_reloads_failures_total{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[10m])",
+                  "expr": "rate(prometheus_tsdb_reloads_failures_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
                   "format": "time_series",
                   "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Reload Failures",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Reload Failures",
                   "metric": "prometheus_local_storage_series_chunks_persisted_count",
                   "refId": "B",
                   "step": 10
                 },
                 {
-                  "expr": "rate(prometheus_tsdb_head_series_not_found{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[10m])",
+                  "expr": "rate(prometheus_tsdb_head_series_not_found{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
                   "format": "time_series",
                   "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Head Series Not Found",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Head Series Not Found",
                   "metric": "prometheus_local_storage_series_chunks_persisted_count",
                   "refId": "C",
                   "step": 10
                 },
                 {
-                  "expr": "rate(prometheus_tsdb_compactions_failed_total{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[10m])",
+                  "expr": "rate(prometheus_tsdb_compactions_failed_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
                   "format": "time_series",
                   "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Compaction Failures",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Compaction Failures",
                   "metric": "prometheus_local_storage_series_chunks_persisted_count",
                   "refId": "D",
                   "step": 10
                 },
                 {
-                  "expr": "rate(prometheus_tsdb_retention_cutoffs_failures_total{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[10m])",
+                  "expr": "rate(prometheus_tsdb_retention_cutoffs_failures_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
                   "format": "time_series",
                   "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Retention Cutoff Failures",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Retention Cutoff Failures",
                   "metric": "prometheus_local_storage_series_chunks_persisted_count",
                   "refId": "E",
                   "step": 10
@@ -1508,7 +2052,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 0,
-                "y": 36
+                "y": 37
               },
               "id": 19,
               "legend": {
@@ -1534,11 +2078,11 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_tsdb_compactions_total{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[10m])",
+                  "expr": "rate(prometheus_tsdb_compactions_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
                   "format": "time_series",
                   "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Compactions",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Compactions",
                   "metric": "prometheus_local_storage_series_chunks_persisted_count",
                   "refId": "A",
                   "step": 10
@@ -1599,7 +2143,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 8,
-                "y": 36
+                "y": 37
               },
               "id": 33,
               "legend": {
@@ -1625,10 +2169,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_tsdb_compaction_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[10m])",
+                  "expr": "rate(prometheus_tsdb_compaction_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}}",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}}",
                   "metric": "prometheus_local_storage_series_chunks_persisted_count",
                   "refId": "A",
                   "step": 10
@@ -1691,7 +2235,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 16,
-                "y": 36
+                "y": 37
               },
               "id": 8,
               "legend": {
@@ -1717,10 +2261,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_tsdb_retention_cutoffs_total{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[10m])",
+                  "expr": "rate(prometheus_tsdb_retention_cutoffs_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Retention Cutoffs",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Retention Cutoffs",
                   "metric": "last",
                   "refId": "A",
                   "step": 10
@@ -1781,7 +2325,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 0,
-                "y": 43
+                "y": 44
               },
               "id": 27,
               "legend": {
@@ -1807,10 +2351,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_tsdb_compaction_chunk_range_sum{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_range_count{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[10m])",
+                  "expr": "rate(prometheus_tsdb_compaction_chunk_range_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_range_count{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Chunk Time Range",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Chunk Time Range",
                   "metric": "prometheus_local_storage_series_chunks_persisted_count",
                   "refId": "A",
                   "step": 10
@@ -1872,7 +2416,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 8,
-                "y": 43
+                "y": 44
               },
               "id": 35,
               "legend": {
@@ -1898,10 +2442,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_tsdb_compaction_chunk_size_sum{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_samples_sum{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[10m])",
+                  "expr": "rate(prometheus_tsdb_compaction_chunk_size_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_samples_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Bytes/Sample",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Bytes/Sample",
                   "metric": "prometheus_local_storage_series_chunks_persisted_count",
                   "refId": "A",
                   "step": 10
@@ -1963,7 +2507,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 16,
-                "y": 43
+                "y": 44
               },
               "id": 34,
               "legend": {
@@ -1989,10 +2533,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_tsdb_compaction_chunk_samples_sum{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_samples_count{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[10m])",
+                  "expr": "rate(prometheus_tsdb_compaction_chunk_samples_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_samples_count{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Chunk Samples",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Chunk Samples",
                   "metric": "prometheus_local_storage_series_chunks_persisted_count",
                   "refId": "A",
                   "step": 10
@@ -2060,7 +2604,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 0,
-                "y": 50
+                "y": 51
               },
               "id": 6,
               "legend": {
@@ -2091,33 +2635,33 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "process_resident_memory_bytes{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}",
+                  "expr": "process_resident_memory_bytes{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - RSS",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - RSS",
                   "metric": "process_resident_memory_bytes",
                   "refId": "B",
                   "step": 10
                 },
                 {
-                  "expr": "prometheus_local_storage_target_heap_size_bytes{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}",
+                  "expr": "prometheus_local_storage_target_heap_size_bytes{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Target heap size",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Target heap size",
                   "metric": "go_memstats_alloc_bytes",
                   "refId": "D",
                   "step": 10
                 },
                 {
-                  "expr": "go_memstats_next_gc_bytes{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}",
+                  "expr": "go_memstats_next_gc_bytes{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Next GC",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Next GC",
                   "metric": "go_memstats_next_gc_bytes",
                   "refId": "C",
                   "step": 10
                 },
                 {
-                  "expr": "go_memstats_alloc_bytes{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}",
+                  "expr": "go_memstats_alloc_bytes{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Allocated",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Allocated",
                   "metric": "go_memstats_alloc_bytes",
                   "refId": "A",
                   "step": 10
@@ -2180,7 +2724,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 8,
-                "y": 50
+                "y": 51
               },
               "id": 7,
               "legend": {
@@ -2206,9 +2750,9 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(go_memstats_alloc_bytes_total{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m])",
+                  "expr": "rate(go_memstats_alloc_bytes_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Allocated Bytes/s",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Allocated Bytes/s",
                   "metric": "go_memstats_alloc_bytes",
                   "refId": "A",
                   "step": 10
@@ -2265,7 +2809,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 16,
-                "y": 50
+                "y": 51
               },
               "id": 9,
               "legend": {
@@ -2294,17 +2838,17 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "irate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m])",
+                  "expr": "irate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Irate",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Irate",
                   "metric": "prometheus_local_storage_ingested_samples_total",
                   "refId": "A",
                   "step": 10
                 },
                 {
-                  "expr": "rate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[5m])",
+                  "expr": "rate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[5m])",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - 5m rate",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - 5m rate",
                   "metric": "prometheus_local_storage_ingested_samples_total",
                   "refId": "B",
                   "step": 10
@@ -2368,7 +2912,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 0,
-                "y": 57
+                "y": 58
               },
               "id": 38,
               "legend": {
@@ -2394,10 +2938,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m])",
+                  "expr": "rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - {{handler}}",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - {{"{{"}}handler{{"}}"}}",
                   "metric": "prometheus_local_storage_memory_chunkdescs",
                   "refId": "A",
                   "step": 10
@@ -2459,7 +3003,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 8,
-                "y": 57
+                "y": 58
               },
               "id": 37,
               "legend": {
@@ -2485,10 +3029,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m])",
+                  "expr": "rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - {{handler}}",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - {{"{{"}}handler{{"}}"}}",
                   "metric": "prometheus_local_storage_memory_chunkdescs",
                   "refId": "A",
                   "step": 10
@@ -2550,7 +3094,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 16,
-                "y": 57
+                "y": 58
               },
               "id": 36,
               "legend": {
@@ -2576,10 +3120,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m])",
+                  "expr": "rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - {{handler}}",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - {{"{{"}}handler{{"}}"}}",
                   "metric": "prometheus_local_storage_memory_chunkdescs",
                   "refId": "A",
                   "step": 10
@@ -2641,7 +3185,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 0,
-                "y": 64
+                "y": 65
               },
               "id": 24,
               "legend": {
@@ -2667,10 +3211,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_engine_query_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m])",
+                  "expr": "rate(prometheus_engine_query_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - {{slice}}",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - {{"{{"}}slice{{"}}"}}",
                   "metric": "prometheus_local_storage_memory_chunkdescs",
                   "refId": "A",
                   "step": 10
@@ -2731,7 +3275,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 8,
-                "y": 64
+                "y": 65
               },
               "id": 22,
               "legend": {
@@ -2757,19 +3301,19 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_rule_group_iterations_missed_total{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m])  ",
+                  "expr": "rate(prometheus_rule_group_iterations_missed_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])  ",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Rule group missed",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Rule group missed",
                   "metric": "prometheus_local_storage_memory_chunkdescs",
                   "refId": "B",
                   "step": 10
                 },
                 {
-                  "expr": "rate(prometheus_rule_evaluation_failures_total{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m])",
+                  "expr": "rate(prometheus_rule_evaluation_failures_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Rule evals failed",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Rule evals failed",
                   "metric": "prometheus_local_storage_memory_chunkdescs",
                   "refId": "C",
                   "step": 10
@@ -2830,7 +3374,7 @@ data:
                 "h": 7,
                 "w": 8,
                 "x": 16,
-                "y": 64
+                "y": 65
               },
               "id": 23,
               "legend": {
@@ -2856,10 +3400,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "rate(prometheus_rule_group_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}[1m])",
+                  "expr": "rate(prometheus_rule_group_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Rule evaluation duration",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Rule evaluation duration",
                   "metric": "prometheus_local_storage_memory_chunkdescs",
                   "refId": "A",
                   "step": 10
@@ -2922,7 +3466,7 @@ data:
                 "h": 7,
                 "w": 12,
                 "x": 0,
-                "y": 71
+                "y": 72
               },
               "id": 43,
               "legend": {
@@ -2950,19 +3494,19 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "prometheus_rule_group_interval_seconds{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\",rule_group=~\"$RuleGroup\"}\n",
+                  "expr": "prometheus_rule_group_interval_seconds{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\",rule_group=~\"$RuleGroup\"}\n",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Interval",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Interval",
                   "metric": "prometheus_local_storage_memory_chunkdescs",
                   "refId": "A",
                   "step": 10
                 },
                 {
-                  "expr": "prometheus_rule_group_last_duration_seconds{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\",rule_group=~\"$RuleGroup\"}\n",
+                  "expr": "prometheus_rule_group_last_duration_seconds{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\",rule_group=~\"$RuleGroup\"}\n",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{prometheus}} - Last Duration",
+                  "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Last Duration",
                   "metric": "prometheus_local_storage_memory_chunkdescs",
                   "refId": "B",
                   "step": 10
@@ -3008,636 +3552,6 @@ data:
           ],
           "title": "Prometheus Benchmark - 2.3.x",
           "type": "row"
-        },
-        {
-          "collapsed": true,
-          "gridPos": {
-            "h": 1,
-            "w": 24,
-            "x": 0,
-            "y": 1
-          },
-          "id": 47,
-          "panels": [],
-          "title": "Node Metrics",
-          "type": "row"
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "prometheus-meta",
-          "fill": 1,
-          "gridPos": {
-            "h": 9,
-            "w": 12,
-            "x": 0,
-            "y": 2
-          },
-          "id": 49,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "avg without (cpu)(irate(node_cpu_seconds_total{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\",mode!=\"idle\"}[5m]))",
-              "format": "time_series",
-              "hide": false,
-              "instant": false,
-              "intervalFactor": 1,
-              "legendFormat": "{{node}} - {{mode}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "CPU",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "percentunit",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ]
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "prometheus-meta",
-          "fill": 1,
-          "gridPos": {
-            "h": 9,
-            "w": 12,
-            "x": 12,
-            "y": 2
-          },
-          "id": 51,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": true,
-            "max": true,
-            "min": true,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "node_memory_MemTotal_bytes{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\"}",
-              "format": "time_series",
-              "hide": false,
-              "intervalFactor": 1,
-              "legendFormat": "{{node}} - Total memory",
-              "refId": "E"
-            },
-            {
-              "expr": "node_memory_MemTotal_bytes{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\"} - node_memory_MemFree_bytes{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\"} - node_memory_Buffers_bytes{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\"} - node_memory_Cached_bytes{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\"}",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{node}} - Used",
-              "refId": "A"
-            },
-            {
-              "expr": "node_memory_Buffers_bytes{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\"}",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{node}} - Buffers",
-              "refId": "B"
-            },
-            {
-              "expr": "node_memory_Cached_bytes{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\"}",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{node}} - Cached",
-              "refId": "C"
-            },
-            {
-              "expr": "node_memory_MemFree_bytes{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\"}",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{node}} - Free",
-              "refId": "D"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Memory",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "bytes",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ]
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "prometheus-meta",
-          "fill": 1,
-          "gridPos": {
-            "h": 9,
-            "w": 12,
-            "x": 0,
-            "y": 11
-          },
-          "id": 53,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "irate(node_disk_io_time_seconds_total{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\",device!~'^(md\\\\\\\\d+$|dm-)'}[5m])",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{node}} - {{device}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Disk I/O Utilisation",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "percentunit",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ]
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "prometheus-meta",
-          "description": "Disk space used of all filesystems mounted",
-          "fill": 1,
-          "gridPos": {
-            "h": 9,
-            "w": 12,
-            "x": 12,
-            "y": 11
-          },
-          "id": 61,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": true,
-            "max": true,
-            "min": true,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "100 - ((node_filesystem_avail_bytes{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\",device!~'rootfs'} * 100) / node_filesystem_size_bytes{node=~'(test+).*',device!~'rootfs'})",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{node}} - {{mountpoint}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Disk Space Used Basic",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "transparent": false,
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "percent",
-              "label": null,
-              "logBase": 1,
-              "max": "100",
-              "min": "0",
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ]
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "prometheus-meta",
-          "fill": 1,
-          "gridPos": {
-            "h": 9,
-            "w": 12,
-            "x": 0,
-            "y": 20
-          },
-          "id": 57,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "irate(node_context_switches_total{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\"}[5m])",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{node}} - Context Switches",
-              "refId": "A"
-            },
-            {
-              "expr": "irate(node_intr_total{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\"}[5m])",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{node}} - Interrupts",
-              "refId": "B"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Context Switches / Interrupts",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ]
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "prometheus-meta",
-          "fill": 1,
-          "gridPos": {
-            "h": 9,
-            "w": 12,
-            "x": 12,
-            "y": 20
-          },
-          "id": 55,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "1 - node_filesystem_free_bytes{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\",fstype!='rootfs',mountpoint!~'/(run|var).*',mountpoint!=''} / node_filesystem_size_bytes{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\"}",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{node}} - {{mountpoint}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Filesystem Fullness",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "percentunit",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ]
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "prometheus-meta",
-          "fill": 1,
-          "gridPos": {
-            "h": 9,
-            "w": 12,
-            "x": 0,
-            "y": 29
-          },
-          "id": 59,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": true,
-            "max": true,
-            "min": true,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "node_load1{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\"}",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{node}} - Load 1m",
-              "refId": "A"
-            },
-            {
-              "expr": "node_load5{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\"}",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{node}} - Load 5m",
-              "refId": "B"
-            },
-            {
-              "expr": "node_load15{job=\"node-exporter\",namespace=\"prombench-[[prombench-namespace]]\",node=~\"(test+).*\"}",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{node}} - Load 15m",
-              "refId": "C"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "System Load",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ]
         }
       ],
       "refresh": false,
@@ -3656,7 +3570,7 @@ data:
             "multi": false,
             "name": "RuleGroup",
             "options": [],
-            "query": "prometheus_rule_group_last_duration_seconds{job=\"prometheus\",namespace=\"prombench-[[prombench-namespace]]\",prometheus=~\"(test+).*\"}",
+            "query": "prometheus_rule_group_last_duration_seconds{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
             "refresh": 2,
             "regex": ".*rule_group=\"(.*?)\".*",
             "sort": 1,
@@ -3674,7 +3588,7 @@ data:
             "includeAll": false,
             "label": null,
             "multi": false,
-            "name": "prombench-namespace",
+            "name": "pr-number",
             "options": [],
             "query": "label_values(namespace)",
             "refresh": 2,
@@ -3720,7 +3634,7 @@ data:
       "timezone": "browser",
       "title": "Prombench",
       "uid": "7gmLoNDmz",
-      "version": 9
+      "version": 3
     }
 kind: ConfigMap
 metadata:
