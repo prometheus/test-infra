@@ -2,7 +2,7 @@
 #Hence using 2 DaemonSets to use nodeSelector
 #
 #Node_Exporter is done after deploying prometheus to use pod-affinity
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: node-exporter-prometheus-test-{{ .PROMETHEUS_1_NAME }}
@@ -68,7 +68,7 @@ spec:
         hostPath:
           path: /sys
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: node-exporter-prometheus-test-{{ .PROMETHEUS_2_NAME }}
@@ -134,7 +134,7 @@ spec:
         hostPath:
           path: /sys
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: node-exporter-nodes

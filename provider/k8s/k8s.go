@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/pkg/errors"
+	appsV1 "k8s.io/api/apps/v1"
 	apiCoreV1 "k8s.io/api/core/v1"
 	apiExtensionsV1beta1 "k8s.io/api/extensions/v1beta1"
 	rbac "k8s.io/api/rbac/v1"
@@ -69,29 +70,31 @@ func (c *K8s) ResourceApply(deployments map[string][]byte) error {
 				continue
 			}
 
-			switch resource.GetObjectKind().GroupVersionKind().Kind {
-			case "ClusterRole":
+			switch kind := strings.ToLower(resource.GetObjectKind().GroupVersionKind().Kind); kind {
+			case "clusterrole":
 				err = c.clusterRoleApply(resource)
-			case "ClusterRoleBinding":
+			case "clusterrolebinding":
 				err = c.clusterRoleBindingApply(resource)
-			case "ConfigMap":
+			case "configmap":
 				err = c.configMapApply(resource)
-			case "DaemonSet":
+			case "daemonset":
 				err = c.daemonSetApply(resource)
-			case "Deployment":
+			case "deployment":
 				err = c.deploymentApply(resource)
-			case "Ingress":
+			case "ingress":
 				err = c.ingressApply(resource)
-			case "Namespace":
+			case "namespace":
 				err = c.nameSpaceApply(resource)
-			case "Role":
+			case "role":
 				err = c.roleApply(resource)
-			case "RoleBinding":
+			case "rolebinding":
 				err = c.roleBindingApply(resource)
-			case "Service":
+			case "service":
 				err = c.serviceApply(resource)
-			case "ServiceAccount":
+			case "serviceaccount":
 				err = c.serviceAccountApply(resource)
+			default:
+				err = fmt.Errorf("creating request for unimplimented resource type:%v", kind)
 			}
 			if err != nil {
 				return errors.Wrapf(err, "apply resources from manifest file:%v", name)
@@ -137,6 +140,10 @@ func (c *K8s) ResourceDelete(deployments map[string][]byte) error {
 				err = c.ingressDelete(resource)
 			case "namespace":
 				err = c.namespaceDelete(resource)
+			case "role":
+				err = c.roleDelete(resource)
+			case "rolebinding":
+				err = c.roleBindingDelete(resource)
 			case "service":
 				err = c.serviceDelete(resource)
 			case "serviceaccount":
@@ -153,6 +160,7 @@ func (c *K8s) ResourceDelete(deployments map[string][]byte) error {
 	return nil
 }
 
+// Functions to create resources
 func (c *K8s) clusterRoleApply(resource runtime.Object) error {
 	req := resource.(*rbac.ClusterRole)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
@@ -275,12 +283,12 @@ func (c *K8s) configMapApply(resource runtime.Object) error {
 }
 
 func (c *K8s) daemonSetApply(resource runtime.Object) error {
-	req := resource.(*apiExtensionsV1beta1.DaemonSet)
+	req := resource.(*appsV1.DaemonSet)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
-	case "v1beta1":
-		client := c.clt.ExtensionsV1beta1().DaemonSets(req.Namespace)
+	case "v1":
+		client := c.clt.AppsV1().DaemonSets(req.Namespace)
 		list, err := client.List(apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
@@ -315,12 +323,12 @@ func (c *K8s) daemonSetApply(resource runtime.Object) error {
 }
 
 func (c *K8s) deploymentApply(resource runtime.Object) error {
-	req := resource.(*apiExtensionsV1beta1.Deployment)
+	req := resource.(*appsV1.Deployment)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
-	case "v1beta1":
-		client := c.clt.ExtensionsV1beta1().Deployments(req.Namespace)
+	case "v1":
+		client := c.clt.AppsV1().Deployments(req.Namespace)
 		list, err := client.List(apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
@@ -593,6 +601,7 @@ func (c *K8s) serviceApply(resource runtime.Object) error {
 		func() (bool, error) { return c.serviceExists(resource) })
 }
 
+// Functions to delete resources
 func (c *K8s) clusterRoleDelete(resource runtime.Object) error {
 	req := resource.(*rbac.ClusterRole)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
@@ -647,12 +656,12 @@ func (c *K8s) configMapDelete(resource runtime.Object) error {
 }
 
 func (c *K8s) daemonsetDelete(resource runtime.Object) error {
-	req := resource.(*apiExtensionsV1beta1.DaemonSet)
+	req := resource.(*appsV1.DaemonSet)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-		client := c.clt.ExtensionsV1beta1().DaemonSets(req.Namespace)
+		client := c.clt.AppsV1().DaemonSets(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
@@ -665,12 +674,12 @@ func (c *K8s) daemonsetDelete(resource runtime.Object) error {
 }
 
 func (c *K8s) deploymentDelete(resource runtime.Object) error {
-	req := resource.(*apiExtensionsV1beta1.Deployment)
+	req := resource.(*appsV1.Deployment)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
-	case "v1beta1":
-		client := c.clt.ExtensionsV1beta1().Deployments(req.Namespace)
+	case "v1":
+		client := c.clt.AppsV1().Deployments(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
@@ -687,7 +696,7 @@ func (c *K8s) ingressDelete(resource runtime.Object) error {
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
-	case "v1":
+	case "v1beta1":
 		client := c.clt.ExtensionsV1beta1().Ingresses(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
@@ -821,12 +830,12 @@ func (c *K8s) serviceExists(resource runtime.Object) (bool, error) {
 }
 
 func (c *K8s) deploymentReady(resource runtime.Object) (bool, error) {
-	req := resource.(*apiExtensionsV1beta1.Deployment)
+	req := resource.(*appsV1.Deployment)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
-	case "v1beta1":
-		client := c.clt.ExtensionsV1beta1().Deployments(req.Namespace)
+	case "v1":
+		client := c.clt.AppsV1().Deployments(req.Namespace)
 
 		res, err := client.Get(req.Name, apiMetaV1.GetOptions{})
 		if err != nil {
@@ -842,12 +851,12 @@ func (c *K8s) deploymentReady(resource runtime.Object) (bool, error) {
 }
 
 func (c *K8s) daemonsetReady(resource runtime.Object) (bool, error) {
-	req := resource.(*apiExtensionsV1beta1.DaemonSet)
+	req := resource.(*appsV1.DaemonSet)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
-	case "v1beta1":
-		client := c.clt.ExtensionsV1beta1().DaemonSets(req.Namespace)
+	case "v1":
+		client := c.clt.AppsV1().DaemonSets(req.Namespace)
 
 		res, err := client.Get(req.Name, apiMetaV1.GetOptions{})
 		if err != nil {
