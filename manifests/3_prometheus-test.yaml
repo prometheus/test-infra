@@ -93,7 +93,7 @@ data:
         target_label: __scheme__
         replacement: https
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prometheus-test-{{ .PROMETHEUS_1_NAME }}
@@ -173,7 +173,7 @@ spec:
     app: prometheus
     prometheus: test-{{ .PROMETHEUS_1_NAME }}
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prometheus-test-{{ .PROMETHEUS_2_NAME }}

@@ -54,7 +54,7 @@ data:
         - expr: histogram_quantile(0.99, sum by(path, method, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[1m])))
         - expr: histogram_quantile(0.99, sum by(instance, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[1m])))
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prometheus-loadgen-scaler
@@ -88,7 +88,7 @@ spec:
         cloud.google.com/gke-nodepool: nodes-{{ .PR_NUMBER }}
         isolation: none
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prometheus-loadgen-querier
