@@ -11,6 +11,12 @@ const (
 	globalRetryTime  = 10 * time.Second
 )
 
+//common struct used by k8s.go & gke.go to save name and content of input files
+type ResourceFile struct {
+	Name    string
+	Content []byte
+}
+
 // RetryUntilTrue returns when there is an error or the requested operation returns true.
 func RetryUntilTrue(name string, fn func() (bool, error)) error {
 	for i := 1; i <= globalRetryCount; i++ {
