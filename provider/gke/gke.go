@@ -29,8 +29,7 @@ import (
 // New is the GKE constructor.
 func New() *GKE {
 	return &GKE{
-		DeploymentVars:     make(map[string]string),
-		deploymentsContent: make(map[string][]byte),
+		DeploymentVars: make(map[string]string),
 	}
 }
 
@@ -48,7 +47,7 @@ type GKE struct {
 	// These are also used when the command requires some variables that are not provided by the deployment file.
 	DeploymentVars map[string]string
 	// DeploymentFile content after substituting the variables filename is used as the map key.
-	deploymentsContent map[string][]byte
+	deploymentsContent []provider.ResourceFile
 
 	ctx context.Context
 }
@@ -93,7 +92,7 @@ func (c *GKE) DeploymentsParse(*kingpin.ParseContext) error {
 			if err != nil {
 				return fmt.Errorf("couldn't apply template to file %s: %v", name, err)
 			}
-			c.deploymentsContent[name] = content
+			c.deploymentsContent = append(c.deploymentsContent, provider.ResourceFile{name, content})
 		}
 	}
 	return nil
@@ -102,15 +101,16 @@ func (c *GKE) DeploymentsParse(*kingpin.ParseContext) error {
 // ClusterCreate create a new cluster or applyes changes to an existing cluster.
 func (c *GKE) ClusterCreate(*kingpin.ParseContext) error {
 	req := &containerpb.CreateClusterRequest{}
-	for name, content := range c.deploymentsContent {
-		if err := yamlGo.UnmarshalStrict(content, req); err != nil {
-			log.Fatalf("Error parsing the cluster deployment file %f:%v", name, err)
+	for _, deployment := range c.deploymentsContent {
+
+		if err := yamlGo.UnmarshalStrict(deployment.Content, req); err != nil {
+			log.Fatalf("Error parsing the cluster deployment file %f:%v", deployment.Name, err)
 		}
 
 		log.Printf("Cluster create request: name:'%v', project `%s`,zone `%s`", req.Cluster.Name, req.ProjectId, req.Zone)
 		_, err := c.clientGKE.CreateCluster(c.ctx, req)
 		if err != nil {
-			log.Fatalf("Couldn't create cluster '%v', file:%v ,err: %v", name, req.Cluster.Name, err)
+			log.Fatalf("Couldn't create cluster '%v', file:%v ,err: %v", deployment.Name, req.Cluster.Name, err)
 		}
 
 		err = provider.RetryUntilTrue(
@@ -129,9 +129,9 @@ func (c *GKE) ClusterDelete(*kingpin.ParseContext) error {
 	// Use CreateClusterRequest struct to pass the UnmarshalStrict validation and
 	// than use the result to create the DeleteClusterRequest
 	reqC := &containerpb.CreateClusterRequest{}
-	for name, content := range c.deploymentsContent {
-		if err := yamlGo.UnmarshalStrict(content, reqC); err != nil {
-			log.Fatalf("Error parsing the cluster deployment file %f:%v", name, err)
+	for _, deployment := range c.deploymentsContent {
+		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
+			log.Fatalf("Error parsing the cluster deployment file %f:%v", deployment.Name, err)
 		}
 		reqD := &containerpb.DeleteClusterRequest{
 			ProjectId: reqC.ProjectId,
@@ -201,9 +201,9 @@ func (c *GKE) clusterRunning(zone, projectID, clusterID string) (bool, error) {
 func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 	reqC := &containerpb.CreateClusterRequest{}
 
-	for name, content := range c.deploymentsContent {
-		if err := yamlGo.UnmarshalStrict(content, reqC); err != nil {
-			log.Fatalf("Error parsing the cluster deployment file %f:%v", name, err)
+	for _, deployment := range c.deploymentsContent {
+		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
+			log.Fatalf("Error parsing the cluster deployment file %f:%v", deployment.Name, err)
 		}
 
 		for _, node := range reqC.Cluster.NodePools {
@@ -216,7 +216,7 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 			log.Printf("Cluster nodepool create request: cluster '%v', nodepool '%v' , project `%s`,zone `%s`", reqN.ClusterId, reqN.NodePool.Name, reqN.ProjectId, reqN.Zone)
 			_, err := c.clientGKE.CreateNodePool(c.ctx, reqN)
 			if err != nil {
-				log.Fatalf("Couldn't create cluster nodepool '%v', file:%v ,err: %v", reqN.NodePool.Name, name, err)
+				log.Fatalf("Couldn't create cluster nodepool '%v', file:%v ,err: %v", reqN.NodePool.Name, deployment.Name, err)
 			}
 
 			err = provider.RetryUntilTrue(
@@ -238,10 +238,10 @@ func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 	// Use CreateNodePoolRequest struct to pass the UnmarshalStrict validation and
 	// than use the result to create the DeleteNodePoolRequest
 	reqC := &containerpb.CreateClusterRequest{}
-	for name, content := range c.deploymentsContent {
+	for _, deployment := range c.deploymentsContent {
 
-		if err := yamlGo.UnmarshalStrict(content, reqC); err != nil {
-			log.Fatalf("Error parsing the cluster deployment file %f:%v", name, err)
+		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
+			log.Fatalf("Error parsing the cluster deployment file %f:%v", deployment.Name, err)
 		}
 
 		for _, node := range reqC.Cluster.NodePools {
@@ -395,7 +395,7 @@ func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
 // ResourceDelete iterates over all files passed as a cli argument
 // and deletes all resources defined in the resource files.
 //
-// Each file can container more than one resource definition where `apiVersion` is used as separator.
+// Each file can container more than one resource definition where `---` is used as separator.
 func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 	if err := c.k8sProvider.ResourceDelete(c.deploymentsContent); err != nil {
 		log.Fatal("error while deleting objects from a manifest file err:", err)

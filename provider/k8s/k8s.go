@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sort"
 
 	"github.com/pkg/errors"
 	appsV1 "k8s.io/api/apps/v1"
@@ -52,22 +51,14 @@ func New(ctx context.Context, config clientcmdapi.Config) (*K8s, error) {
 // ResourceApply applies manifest files.
 // The input map key is the filename and the bytes slice is the actual file content.
 // It expect files in the official k8s format.
-func (c *K8s) ResourceApply(deployments map[string][]byte) error {
+func (c *K8s) ResourceApply(deployments []provider.ResourceFile) error {
 
-	//create resources in order of yaml files
-	keys := make([]string, 0)
-	for k, _ := range deployments {
-		keys = append(keys, k)
-	}
+	for _, deployment := range deployments {
 
-	sort.Strings(keys)
-	for _, k := range keys {
-		name := k
-		content := deployments[k]
 		separator := "---"
 		decode := scheme.Codecs.UniversalDeserializer().Decode
 
-		for _, text := range strings.Split(string(content), separator) {
+		for _, text := range strings.Split(string(deployment.Content), separator) {
 			text = strings.TrimSpace(text)
 			if len(text) == 0 {
 				continue
@@ -75,7 +66,7 @@ func (c *K8s) ResourceApply(deployments map[string][]byte) error {
 
 			resource, _, err := decode([]byte(text), nil, nil)
 			if err != nil {
-				return errors.Wrapf(err, "decoding the resource file:%v", name)
+				return errors.Wrapf(err, "decoding the resource file:%v", deployment.Name)
 			}
 			if resource == nil {
 				continue
@@ -108,7 +99,7 @@ func (c *K8s) ResourceApply(deployments map[string][]byte) error {
 				err = fmt.Errorf("creating request for unimplimented resource type:%v", kind)
 			}
 			if err != nil {
-				return errors.Wrapf(err, "apply resources from manifest file:%v", name)
+				return errors.Wrapf(err, "apply resources from manifest file:%v", deployment.Name)
 			}
 		}
 	}
@@ -118,22 +109,13 @@ func (c *K8s) ResourceApply(deployments map[string][]byte) error {
 // ResourceDelete deletes all resources defined in the resource files.
 // The input map key is the filename and the bytes slice is the actual file content.
 // It expect files in the official k8s format.
-func (c *K8s) ResourceDelete(deployments map[string][]byte) error {
+func (c *K8s) ResourceDelete(deployments []provider.ResourceFile) error {
 
-	//delete resources in order of yaml files
-	keys := make([]string, 0)
-	for k, _ := range deployments {
-		keys = append(keys, k)
-	}
-
-	sort.Strings(keys)
-	for _, k := range keys {
-		name := k
-		content := deployments[k]
+	for _, deployment := range deployments {
 		separator := "---"
 		decode := scheme.Codecs.UniversalDeserializer().Decode
 
-		for _, text := range strings.Split(string(content), separator) {
+		for _, text := range strings.Split(string(deployment.Content), separator) {
 			text = strings.TrimSpace(text)
 			if len(text) == 0 {
 				continue
@@ -141,7 +123,7 @@ func (c *K8s) ResourceDelete(deployments map[string][]byte) error {
 
 			resource, _, err := decode([]byte(text), nil, nil)
 			if err != nil {
-				return errors.Wrapf(err, "decoding the resource file: %v", name)
+				return errors.Wrapf(err, "decoding the resource file: %v", deployment.Name)
 			}
 			if resource == nil {
 				continue
@@ -175,7 +157,7 @@ func (c *K8s) ResourceDelete(deployments map[string][]byte) error {
 			}
 
 			if err != nil {
-				return errors.Wrapf(err, "delete resources from manifest file:%v", name)
+				return errors.Wrapf(err, "delete resources from manifest file:%v", deployment.Name)
 			}
 		}
 	}
