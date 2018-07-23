@@ -1,0 +1,148 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-meta
+data:
+  prometheus.yaml: |
+    global:
+      scrape_interval: 5s
+
+    scrape_configs:
+
+    # prometheus-meta job is added separately because prometheus-meta has a
+    # web.external-url of INGRESS_IP/prometheus-meta/
+    - job_name: prometheus-meta
+      metrics_path: /prometheus-meta/metrics
+      static_configs:
+        - targets: ['localhost:9090']
+          labels:
+            prometheus: 'meta'
+
+    - job_name: kubelet
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecure_skip_verify: true
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+
+      kubernetes_sd_configs:
+      - role: node
+
+      relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - target_label: __address__
+        replacement: kubernetes.default.svc:443
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/${1}/proxy/metrics
+
+    - job_name: cadvisor
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecure_skip_verify: true
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+
+      kubernetes_sd_configs:
+      - role: node
+
+      relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - target_label: __address__
+        replacement: kubernetes.default.svc:443
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
+
+    # Scrapes the endpoint lists for the main Prometheus endpoints in all namespaces
+    - job_name: endpoints
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecure_skip_verify: true
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      kubernetes_sd_configs:
+      - role: endpoints
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: prometheus|node-exporter|loadgen-querier|grafana
+      - action: replace
+        source_labels: [__meta_kubernetes_service_label_app]
+        target_label: job
+      - action: replace
+        source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_label_node]
+        target_label: node
+      - action: replace
+        target_label: prometheus
+        source_labels: [__meta_kubernetes_service_label_prometheus]
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-meta
+  labels:
+    app: prometheus-meta
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus-meta
+      prometheus: meta
+  template:
+    metadata:
+      labels:
+        app: prometheus-meta
+        prometheus: meta
+    spec:
+      serviceAccountName: prometheus
+      securityContext:
+        runAsUser: 0
+      containers:
+      - image: quay.io/prometheus/prometheus:v2.3.0
+        args:
+        - "--config.file=/etc/prometheus/config/prometheus.yaml"
+        - "--storage.tsdb.path=/data"
+        - "--storage.tsdb.min-block-duration=15m"
+        - "--storage.tsdb.max-block-duration=4h"
+        - "--web.external-url=http://{{ .INGRESS_IP }}/prometheus-meta"
+        name: prometheus
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/prometheus/config
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: config-volume
+        configMap:
+          name: prometheus-meta
+      - name: data
+        emptyDir: {}
+      terminationGracePeriodSeconds: 300
+      nodeSelector:
+        cloud.google.com/gke-nodepool: prow
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-meta
+  labels:
+    prometheus: meta
+    app: prometheus-meta
+spec:
+  type: NodePort
+  ports:
+  - name: prometheus
+    port: 9090
+  selector:
+    app: prometheus-meta
+    prometheus: meta

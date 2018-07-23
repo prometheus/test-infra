@@ -1,0 +1,13 @@
+# Acc to GKE docs, we need to make user cluster-admin before making RBAC roles
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-admin-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  #This is needed to grant access to create RBAC roles
+- kind: User
+  name: "{{ .GCLOUD_DEVELOPER_ACCOUNT_EMAIL }}"
