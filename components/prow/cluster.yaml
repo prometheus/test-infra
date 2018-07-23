@@ -1,0 +1,14 @@
+projectid: {{ .PROJECT_ID }}
+zone: {{ .ZONE }}
+cluster:
+  name: {{ .CLUSTER_NAME }}
+  initialclusterversion: 1.10.4-gke.2
+  nodepools:
+  # GKE creates a label on every node in a pool
+  # cloud.google.com/gke-nodepool: <NODEPOOL_NAME>
+  # This node-pool will be used for prow, prometheus-meta & grafana
+  - name: prow
+    initialnodecount: 1
+    config:
+      machinetype: n1-standard-2
+      imagetype: COS

@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-core
+  labels:
+    app: grafana
+    component: core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+        app: grafana
+        component: core
+  template:
+    metadata:
+      labels:
+        app: grafana
+        component: core
+    spec:
+      serviceAccountName: prometheus
+      containers:
+      - image: grafana/grafana:5.0.0
+        name: grafana-core
+        imagePullPolicy: IfNotPresent
+        # resources:
+        #   # keep request = limit to keep this container in guaranted class
+        #   limits:
+        #     cpu: 100m
+        #     memory: 100Mi
+        #   requests:
+        #     cpu: 100m
+        #     memory: 100Mi
+        env:
+          # The following env variables set up basic auth with the default admin user and admin password.
+          - name: GF_PATHS_PROVISIONING
+            value: "/opt/grafana-provision"
+          - name: GF_SERVER_ROOT_URL
+            value: "http://{{ .INGRESS_IP }}/grafana"
+          - name: GF_AUTH_ANONYMOUS_ENABLED
+            value: "true"
+          - name: GF_AUTH_ANONYMOUS_ORG_NAME
+            value: "Main Org." 
+        readinessProbe:
+          httpGet:
+            path: /login
+            port: 3000
+          initialDelaySeconds: 30
+          timeoutSeconds: 1
+        volumeMounts:
+        - name: grafana-persistent-storage
+          mountPath: /var
+        - name: grafana-datasources
+          mountPath: /opt/grafana-provision/datasources
+        - name: grafana-dashboards
+          mountPath: /opt/grafana-provision/dashboards
+      volumes:
+      - name: grafana-persistent-storage
+        emptyDir: {}
+      - name: grafana-datasources
+        configMap:
+          name: grafana-datasources
+      - name: grafana-dashboards
+        configMap:
+          name: grafana-dashboards
+      nodeSelector:
+        cloud.google.com/gke-nodepool: prow
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  labels:
+    app: grafana
+    component: core
+spec:
+  type: NodePort
+  ports:
+    - port: 3000
+  selector:
+    app: grafana
+    component: core
