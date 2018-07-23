@@ -5,9 +5,9 @@
 
 ![Prombench Design](design.svg)
 
-It runs with Prow CI on a [GKE - Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) k8s cluster and it is designed in a way to support adding more k8s providers.
+It runs with [Prow CI](https://github.com/kubernetes/test-infra/blob/master/prow/) on a [GKE - Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) k8s cluster and it is designed in a way to support adding more k8s providers.
 
-Long term plans are to use the [prombench cli tool](https://github.com/prometheus/prombench/tree/master/cmd/prombench) to deploy and manage everything, but at the moment the  k8s golang client doesn't support `CustomResourceDefinition` objects so for those it uses `kubectl`.
+Long term plans are to use the [prombench cli tool](cmd/prombench) to deploy and manage everything, but at the moment the  k8s golang client doesn't support `CustomResourceDefinition` objects so for those it uses `kubectl`.
 
 ## Prerequisites 
 - Create a new Google cloud project - `prometheus-ci`
@@ -19,7 +19,7 @@ Long term plans are to use the [prombench cli tool](https://github.com/prometheu
 export PROJECT_ID=prometheus-ci 
 export CLUSTER_NAME=prow
 export ZONE=us-east1-b
-export GCLOUD_DEVELOPER_ACCOUNT_EMAIL=<client_email from the service-account.json>
+export GCLOUD_SERVICEACCOUNT_CLIENTID=<client_id from the service-account.json>
 export AUTH_FILE=<path to service-account.json>
 export GCS_BUCKET=prow
 export GITHUB_ORG=prometheus
@@ -30,8 +30,8 @@ export GITHUB_REPO=prometheus
 - Create the main k8s cluster to deploy the Prow components.
 
 ```
-../prombench gke cluster create -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
--v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -f prow.yaml
+./prombench gke cluster create -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
+-v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -f components/prow/cluster.yaml
 ```
 
 ## Initialize kubectl with cluster login credentials
@@ -50,22 +50,26 @@ kubectl create secret generic service-account --from-file=service-account.json=$
 
 ## Deploy all internal prow components and the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx) which will be used to access all public components.
 ```
-../prombench gke resource apply -a $AUTH_FILE -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME \
--v GCLOUD_DEVELOPER_ACCOUNT_EMAIL:$GCLOUD_DEVELOPER_ACCOUNT_EMAIL \
--f rbac.yaml -f nginx-controller.yaml -f prow.yaml
+./prombench gke resource apply -a $AUTH_FILE -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME \
+-v GCLOUD_SERVICEACCOUNT_CLIENTID:$GCLOUD_SERVICEACCOUNT_CLIENTID \
+-f components/prow/manifests/rbac.yaml -f components/prow/manifests/nginx-controller.yaml
 
 export INGRESS_IP=$(kubectl get ingress ingress-nginx)
 
-kubectl apply -f prowjob.yaml
+kubectl apply -f components/prow/manifests/prow_internals_1.yaml
+
+./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
+-v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v INGRESS_IP:$INGRESS_IP \
+-v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
+-v GCS_BUCKET:$GCS_BUCKET -f components/prow/manifests/prow_internals_2.yaml
 ```
 
 ## Deploy grafana & prometheus-meta.
 ```
-../prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
+./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
 -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v INGRESS_IP:$INGRESS_IP \
--v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_ORG \
--v GCS_BUCKET:$GCS_BUCKET \
--f manifests
+-v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
+-v GCS_BUCKET:$GCS_BUCKET -f components/prombench/manifests/results
 ```
 
 The components will be accessible at the following links:
@@ -74,5 +78,5 @@ The components will be accessible at the following links:
   * Prow dashboard :: http://INGRESS-IP/
   * Prow hook :: http://INGRESS-IP/hook
 
-(Prow-hook URL should be [added as a webhook](https://github.com/kubernetes/test-infra/blob/master/prow/getting_started.md#add-the-webhook-to-github) in the GitHub repository settings)
+- **Prow-hook URL should be [added as a webhook](https://github.com/kubernetes/test-infra/blob/master/prow/getting_started.md#add-the-webhook-to-github) in the GitHub repository settings**
 - __Don't forget to change Grafana default admin password.__
