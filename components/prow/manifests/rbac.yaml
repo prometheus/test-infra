@@ -10,4 +10,4 @@ roleRef:
 subjects:
   #This is needed to grant access to create RBAC roles
 - kind: User
-  name: "{{ .GCLOUD_DEVELOPER_ACCOUNT_EMAIL }}"
+  name: "{{ .GCLOUD_SERVICEACCOUNT_CLIENTID }}"
