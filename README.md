@@ -39,14 +39,22 @@ export GRAFANA_ADMIN_PASSWORD=$(openssl rand -hex 20)
 ```
 gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE
 ```
-## Follow [this](https://github.com/kubernetes/test-infra/blob/master/prow/getting_started.md#create-the-github-secrets) to create `hmac-token` and `oauth-token` to talk to GitHub.
+## Add an auth token that will be used to authenticate when sending requests to the github api.
+For this we will generate a [new auth token](https://github.com/settings/tokens) from the [Prombot account](https://github.com/prombot) which has access to all repos in the Prometheus org.
+
 ```
-kubectl create secret generic hmac-token --from-file=hmac=/path/to/hmac-token  
-kubectl create secret generic oauth-token --from-file=oauth=/path/to/prom-robot-oauth-token
+kubectl create secret generic oauth-token ***genratedToken***
 ```
+
+## Add a random token that will be used  to authenticate all webhook received from github.
+
+```
+kubectl create secret generic hmac-token $(openssl rand -hex 20)
+```
+
 ## Add the service-account json file as a kubernetes secret
 ```
-kubectl create secret generic service-account --from-file=service-account.json=$AUTH_FILE
+kubectl create secret generic service-account --from-file=$AUTH_FILE
 ```
 
 ## Deploy all internal prow components and the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx) which will be used to access all public components.
@@ -55,7 +63,7 @@ kubectl create secret generic service-account --from-file=service-account.json=$
 -v GCLOUD_SERVICEACCOUNT_CLIENTID:$GCLOUD_SERVICEACCOUNT_CLIENTID \
 -f components/prow/manifests/rbac.yaml -f components/prow/manifests/nginx-controller.yaml
 
-export INGRESS_IP=$(kubectl get ingress ingress-nginx)
+export INGRESS_IP=$(kubectl get ingress ing -o go-template='{{ range .status.loadBalancer.ingress}}{{.ip}}{{ end }}')
 
 kubectl apply -f components/prow/manifests/prow_internals_1.yaml
 
