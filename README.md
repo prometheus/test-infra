@@ -24,7 +24,7 @@ export AUTH_FILE=<path to service-account.json>
 export GCS_BUCKET=prow
 export GITHUB_ORG=prometheus
 export GITHUB_REPO=prometheus
-export GRAFANA_ADMIN_PASSWORD=password
+export GRAFANA_ADMIN_PASSWORD=$(openssl rand -hex 20)
 ```
 ## Setup Prow CI
 
