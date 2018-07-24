@@ -298,4 +298,77 @@ spec:
     targetPort: http
   - name: https
     port: 443
-    targetPort: https        
+    targetPort: https
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ing
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: deck
+          servicePort: 80
+      - path: /pr
+        backend:
+          serviceName: deck
+          servicePort: 80
+      - path: /command-help
+        backend:
+          serviceName: deck
+          servicePort: 80
+      - path: /tide
+        backend:
+          serviceName: deck
+          servicePort: 80
+      - path: /plugins
+        backend:
+          serviceName: deck
+          servicePort: 80
+      - path: /log
+        backend:
+          serviceName: deck
+          servicePort: 80
+      - path: /hook
+        backend:
+          serviceName: hook
+          servicePort: 8888
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-prometheus-meta
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: prometheus-meta
+          servicePort: 9090
+        path: /prometheus-meta
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-grafana
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: grafana
+          servicePort: 3000
+        path: /grafana
