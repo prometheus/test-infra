@@ -24,6 +24,7 @@ export AUTH_FILE=<path to service-account.json>
 export GCS_BUCKET=prow
 export GITHUB_ORG=prometheus
 export GITHUB_REPO=prometheus
+export GRAFANA_ADMIN_PASSWORD=password
 ```
 ## Setup Prow CI
 
@@ -68,8 +69,7 @@ kubectl apply -f components/prow/manifests/prow_internals_1.yaml
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
 -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v INGRESS_IP:$INGRESS_IP \
--v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
--v GCS_BUCKET:$GCS_BUCKET -f components/prombench/manifests/results
+-v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD -f components/prombench/manifests/results
 ```
 
 The components will be accessible at the following links:
