@@ -1,5 +1,5 @@
 FROM debian:sid
-MAINTAINER  The Prometheus Authors <prometheus-developers@googlegroups.com>
+LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com>"
 
 RUN \
     apt-get update && apt-get install -y --no-install-recommends \

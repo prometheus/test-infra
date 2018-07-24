@@ -1,5 +1,5 @@
 FROM golang:1.10.2
-MAINTAINER  The Prometheus Authors <prometheus-developers@googlegroups.com>
+LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com>"
 
 # Installing Docker
 RUN apt-get update
