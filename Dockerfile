@@ -10,10 +10,10 @@ RUN \
 	&& rm -rf /var/lib/apt/lists/*
 
 COPY prombench /bin/prombench
-RUN mkdir -p /prombench
+RUN mkdir -p /prombench/components/prombench/manifests
 
 COPY Makefile /prombench/Makefile
-COPY config /prombench/config
-COPY manifests /prombench/manifests
+COPY components/prombench/nodepools.yaml /prombench/components/prombench/nodepools.yaml
+COPY components/prombench/manifests/benchmark /prombench/components/prombench/manifests/benchmark
 
 WORKDIR /prombench
