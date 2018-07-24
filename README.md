@@ -25,6 +25,7 @@ export GCS_BUCKET=prow
 export GITHUB_ORG=prometheus
 export GITHUB_REPO=prometheus
 export GRAFANA_ADMIN_PASSWORD=$(openssl rand -hex 20)
+export HMAC_TOKEN=$(openssl rand -hex 20)
 ```
 ## Setup Prow CI
 
@@ -43,13 +44,24 @@ gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE
 For this we will generate a [new auth token](https://github.com/settings/tokens) from the [Prombot account](https://github.com/prombot) which has access to all repos in the Prometheus org.
 
 ```
-kubectl create secret generic oauth-token ***genratedToken***
+kubectl create secret generic oauth-token --from-literal=oauth=***genratedToken***
 ```
 
-## Add a random token that will be used  to authenticate all webhook received from github.
-
+## Setup the github webhooks.
+1. add the url as a github webhook
 ```
-kubectl create secret generic hmac-token $(openssl rand -hex 20)
+http://prombench.prometheus.io/hook
+```
+- Webhok Options: 
+  * Content Type: json
+  * Send Everything
+  * Secret: `echo $HMAC_TOKEN`
+
+the ip DNS record will be added once we get it from the ingress deployment in the following steps.
+
+2. Add the $HMAC_TOKEN as a secret in the prow cluster as this will be used to authenticate the webhook
+```
+kubectl create secret generic hmac-token --from-literal=hmac=$HMAC_TOKEN
 ```
 
 ## Add the service-account json file as a kubernetes secret
@@ -81,10 +93,7 @@ kubectl apply -f components/prow/manifests/prow_internals_1.yaml
 ```
 
 The components will be accessible at the following links:
-  * Grafana ::  http://INGRESS-IP/grafana
-  * Prometheus ::  http://INGRESS-IP/prometheus-meta
-  * Prow dashboard :: http://INGRESS-IP/
-  * Prow hook :: http://INGRESS-IP/hook
-
-- **Prow-hook URL should be [added as a webhook](https://github.com/kubernetes/test-infra/blob/master/prow/getting_started.md#add-the-webhook-to-github) in the GitHub repository settings**
-- __Don't forget to change Grafana default admin password.__
+  * Grafana ::  http://$INGRESS-IP/grafana
+  * Prometheus ::  http://$INGRESS-IP/prometheus-meta
+  * Prow dashboard :: http://$INGRESS-IP/
+  * Prow hook :: http://$INGRESS-IP/hook
