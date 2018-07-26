@@ -1,4 +1,4 @@
-FROM debian:sid
+FROM golang:1.10.2
 LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com>"
 
 RUN \
@@ -7,6 +7,7 @@ RUN \
         build-essential \
         ca-certificates \
         make \
+        git \
 	&& rm -rf /var/lib/apt/lists/*
 
 COPY prombench /bin/prombench
