@@ -99,7 +99,7 @@ func (c *K8s) ResourceApply(deployments []provider.ResourceFile) error {
 				err = fmt.Errorf("creating request for unimplimented resource type:%v", kind)
 			}
 			if err != nil {
-				return errors.Wrapf(err, "apply resources from manifest file:%v", deployment.Name)
+				log.Printf("error applying '%v' err:%v \n", deployment.Name, err)
 			}
 		}
 	}
@@ -157,7 +157,7 @@ func (c *K8s) ResourceDelete(deployments []provider.ResourceFile) error {
 			}
 
 			if err != nil {
-				return errors.Wrapf(err, "delete resources from manifest file:%v", deployment.Name)
+				log.Printf("error deleting '%v' err:%v \n", deployment.Name, err)
 			}
 		}
 	}
