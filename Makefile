@@ -25,7 +25,7 @@ start-pr:
             	 --web.console.templates=${DIR}/consoles
 
 deploy-pr: create-nodepool
-	printf ">> Deploying Prombench components"
+	printf ">> Deploying Prombench components for PR"
 	$(PROMBENCH_CMD) gke resource apply -a /etc/serviceaccount/service-account.json \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
 		-v PROMETHEUS_1_NAME:${PROMETHEUS_1_NAME} -v PROMETHEUS_1_IMAGE:${PROMETHEUS_1_IMAGE} \
@@ -40,7 +40,7 @@ deploy-pr: create-nodepool
 		-f /prombench/components/prombench/manifests/benchmark/node-exporter.yaml 	#node-exporter should be deployed after prometheus(to use pod-affinity)
 
 deploy-release: create-nodepool
-	printf ">> Deploying Prombench components"
+	printf ">> Deploying Prombench components for release"
 	$(PROMBENCH_CMD) gke resource apply -a /etc/serviceaccount/service-account.json \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
 		-v PROMETHEUS_1_NAME:${PROMETHEUS_1_NAME} -v PROMETHEUS_1_IMAGE:${PROMETHEUS_1_IMAGE} \
@@ -52,6 +52,13 @@ deploy-release: create-nodepool
 		-f /prombench/components/prombench/manifests/benchmark/loadgen.yaml \
 		-f /prombench/components/prombench/manifests/benchmark/prometheus-release.yaml \
 		-f /prombench/components/prombench/manifests/benchmark/node-exporter.yaml 	#node-exporter should be deployed after prometheus(to use pod-affinity)
+
+deploy:
+ifeq ($(ACTION),release)
+deploy:deploy-release
+else
+deploy:deploy-pr
+endif
 
 clean:
 	printf ">> Cleaning Prombench components"
