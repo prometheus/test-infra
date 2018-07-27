@@ -56,7 +56,7 @@ deploy-release: create-nodepool
 deploy:
 ifeq ($(ACTION),release)
 deploy:deploy-release
-else
+else ifeq ($(ACTION),pr)
 deploy:deploy-pr
 endif
 
