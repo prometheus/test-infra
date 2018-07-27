@@ -10,8 +10,8 @@ RUN \
         git \
 	&& rm -rf /var/lib/apt/lists/*
 
-COPY prombench /bin/prombench
 RUN mkdir -p /prombench/components/prombench/manifests
+COPY prombench /prombench/prombench
 
 COPY Makefile /prombench/Makefile
 COPY components/prombench/nodepools.yaml /prombench/components/prombench/nodepools.yaml

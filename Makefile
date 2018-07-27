@@ -1,4 +1,4 @@
-PROMBENCH_CMD        = /bin/prombench
+PROMBENCH_CMD        = ./prombench
 DOCKER_TAG = docker.io/sipian/prombench:v2.0.0
 
 create-nodepool:
