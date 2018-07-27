@@ -16,11 +16,17 @@ DOCKER_TAG = docker.io/sipian/prombench:v2.0.0
 #The values of these args are not constant are are dependent on /benchmark pr|release
 
 #For /benchmark release
+# 	PROMETHEUS_1_NAME is master
 #	PROMETHEUS_1_IMAGE is https://quay.io/prometheus/prometheus:master
+#
+# 	PROMETHEUS_2_NAME is [release-number|latest]
 # 	PROMETHEUS_2_IMAGE is https://quay.io/prometheus/prometheus:[v<RELEASE_NUMBER>|latest]
 
 #For /benchmark pr
+# 	PROMETHEUS_1_NAME is master
 #	PROMETHEUS_1_IMAGE is https://quay.io/prometheus/prometheus:master
+#
+# 	PROMETHEUS_2_NAME is pr-<PR_NUMBER>
 # 	PROMETHEUS_2_IMAGE is $DOCKER_TAG (with args as make start-pr)
 
 
