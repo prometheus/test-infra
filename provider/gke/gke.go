@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	gke "cloud.google.com/go/container/apiv1"
@@ -428,6 +429,12 @@ func (c *GKE) applyTemplateVars(file string) ([]byte, error) {
 
 	fileContentParsed := bytes.NewBufferString("")
 	t := template.New("resource").Option("missingkey=error")
+	// k8s objects can't have dots(.) se we add a custom function to allow normalising the variable values.
+	t = t.Funcs(template.FuncMap{
+		"normalise": func(t string) string {
+			return strings.Replace(t, ".", "-", -1)
+		},
+	})
 	if err := template.Must(t.Parse(string(content))).Execute(fileContentParsed, c.DeploymentVars); err != nil {
 		log.Fatalf("Failed to execute parse file: err:%v", file, err)
 	}
