@@ -1,6 +1,29 @@
 PROMBENCH_CMD        = ./prombench
 DOCKER_TAG = docker.io/sipian/prombench:v2.0.0
 
+#Prow config has the following args set in it's configuration during deployment 
+#	PROJECT_ID
+#	ZONE
+#	CLUSTER_NAME
+#
+#When the start-benchmark prow-job is created, the benchmark plugin adds the following args
+#	ACTION - [release|pr|clean]
+#	PR_NUMBER
+#	PROMETHEUS_1_NAME
+#	PROMETHEUS_1_IMAGE
+#	PROMETHEUS_2_NAME
+#	PROMETHEUS_2_IMAGE
+#The values of these args are not constant are are dependent on /benchmark pr|release
+
+#For /benchmark release
+#	PROMETHEUS_1_IMAGE is https://quay.io/prometheus/prometheus:master
+# 	PROMETHEUS_2_IMAGE is https://quay.io/prometheus/prometheus:[v<RELEASE_NUMBER>|latest]
+
+#For /benchmark pr
+#	PROMETHEUS_1_IMAGE is https://quay.io/prometheus/prometheus:master
+# 	PROMETHEUS_2_IMAGE is $DOCKER_TAG (with args as make start-pr)
+
+
 create-nodepool:
 	printf ">> Creating NodePools"
 	$(PROMBENCH_CMD) gke nodepool create -a /etc/serviceaccount/service-account.json \
@@ -79,6 +102,6 @@ build:
 
 docker: build
 	docker build -t $(DOCKER_TAG) .
-	docker push $(DOCKER_TAG)
+	#docker push $(DOCKER_TAG)
 
 .PHONY: create-nodepool start-pr deploy-pr deploy-release clean build docker
