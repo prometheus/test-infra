@@ -13,12 +13,13 @@ from prometheus_client import start_http_server, Histogram, Counter
 
 ca_cert_path = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 kube_token_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+namespace = ""
 
 def deployment_path(url, depl):
-    return '%s/apis/extensions/v1beta1/namespaces/%s/deployments/%s' % (url, os.environ['PROMBENCH_NAMESPACE'], depl)
+    return '%s/apis/extensions/v1beta1/namespaces/%s/deployments/%s' % (url, namespace, depl)
 
 def configmap_path(url, cm):
-    return '%s/api/v1/namespaces/%s/configmaps/%s' % (url, os.environ['PROMBENCH_NAMESPACE'], cm)
+    return '%s/api/v1/namespaces/%s/configmaps/%s' % (url, namespace, cm)
 
 class Scaler(object):
     """
@@ -80,9 +81,9 @@ class Querier(object):
         self.step = qg.get("step", "15s")
 
         if self.type == "instant":
-            self.url = "http://prometheus-test-%s.%s:9090/api/v1/query" % (target, os.environ['PROMBENCH_NAMESPACE'])
+            self.url = "http://prometheus-test-%s.%s:9090/api/v1/query" % (target, namespace)
         else:
-            self.url = "http://prometheus-test-%s.%s:9090/api/v1/query_range" % (target, os.environ['PROMBENCH_NAMESPACE'])
+            self.url = "http://prometheus-test-%s.%s:9090/api/v1/query_range" % (target, namespace)
 
     def run(self):
         print("run querier %s %s" % (self.target, self.name))
@@ -131,11 +132,12 @@ def duration_seconds(s):
     raise "unknown duration %s" % s
 
 def main():
-    if len(sys.argv) < 2 or sys.argv[1] not in ["scaler", "querier"]:
+    if len(sys.argv) < 3 or sys.argv[1] not in ["scaler", "querier"]:
         print("unexpected arguments")
-        print("usage: <load_generator> <scaler|querier>")
+        print("usage: <load_generator> <scaler|querier> <namespace>")
         exit(2)
 
+    namespace = sys.argv[2]
     host = os.environ.get('KUBERNETES_SERVICE_HOST')
     port = os.environ.get('KUBERNETES_PORT_443_TCP_PORT')
     url = 'https://%s:%s' % (host, port)
@@ -155,12 +157,12 @@ def main():
         Scaler(config["scaler"], url, req_kwargs).run()
         return
 
-    # process querier
-    if len(sys.argv) < 3:
+    # process querier for at least 2 targets
+    if len(sys.argv) < 4:
         print("No targets specified")
         exit(2)
 
-    for t in sys.argv[2:]:
+    for t in sys.argv[3:]:
         for g in config["querier"]["groups"]:
             p = threading.Thread(target=Querier(t, g).run)
             p.start()
