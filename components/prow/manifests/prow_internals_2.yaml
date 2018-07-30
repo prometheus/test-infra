@@ -159,20 +159,6 @@ data:
     plank:
       job_url_template: 'http://{{ .INGRESS_IP }}/log?job={{"{{"}}.Spec.Job{{"}}"}}&id={{"{{"}}.Status.BuildID{{"}}"}}'
       pod_pending_timeout: 60m
-      default_decoration_config:
-        timeout: 7200000000000 # 2h
-        grace_period: 15000000000 # 15s
-        utility_images:
-          clonerefs: "registry.svc.ci.openshift.org/ci/clonerefs:latest"
-          initupload: "registry.svc.ci.openshift.org/ci/initupload:latest"
-          entrypoint: "registry.svc.ci.openshift.org/ci/entrypoint:latest"
-          sidecar: "registry.svc.ci.openshift.org/ci/sidecar:latest"
-        gcs_configuration:
-          bucket: "{{ .GCS_BUCKET }}"
-          path_strategy: "explicit"
-          default_org: "{{ .GITHUB_ORG }}"
-          default_repo: "{{ .GITHUB_REPO }}"
-        gcs_credentials_secret: "service-account"
 
     log_level: info
 
@@ -243,34 +229,6 @@ data:
               secretName: service-account
           nodeSelector:
             cloud.google.com/gke-nodepool: prow
-      - name: build-PR-images
-        context: build-PR-images
-        always_run: false
-        skip_report: false
-        agent: kubernetes
-        decorate: true
-        path_alias: /github.com/prometheus/prometheus
-        spec:
-          containers:
-          - image: docker.io/sipian/golang-builder:prow
-            imagePullPolicy: Always
-            command:
-            - "./prow/benchmark_build.sh"
-            volumeMounts:
-            - name: serviceaccount
-              mountPath: /etc/serviceaccount
-              readOnly: true
-            - name: docker-sock
-              mountPath: /var/run/docker.sock
-          volumes:
-          - name: serviceaccount
-            secret:
-              secretName: service-account          
-          - name: docker-sock 
-            hostPath: 
-                path: /var/run/docker.sock
-          nodeSelector:
-            cloud.google.com/gke-nodepool: prow
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -297,11 +255,9 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
       - name: hook
-        image: docker.io/sipian/hook:2.0.0
+        image: docker.io/sipian/hook:v2.0.0
         imagePullPolicy: Always
         env:
-        - name: PROMBENCH_PROJECT_ID
-          value: "{{ .PROJECT_ID }}"
         - name: PROMBENCH_INGRESS_IP
           value: "{{ .INGRESS_IP }}"         
         args:

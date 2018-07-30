@@ -22,7 +22,7 @@ data:
       relabel_configs:
       - action: keep
         source_labels: [__meta_kubernetes_node_label_cloud_google_com_gke_nodepool]
-        regex: prometheus-{{ .PR_NUMBER }}|nodes-{{ .PR_NUMBER }}      
+        regex: prometheus-{{ .PR_NUMBER }}|nodes-{{ .PR_NUMBER }}
       - action: labelmap
         regex: __meta_kubernetes_node_label_(.+)
       - target_label: __address__
@@ -133,9 +133,7 @@ spec:
         imagePullPolicy: Always
         args: [
           "--config.file=/etc/prometheus/config/prometheus.yaml",
-          "--storage.tsdb.path=/data",
-          "--storage.tsdb.min-block-duration=15m",
-          "--storage.tsdb.max-block-duration=4h"
+          "--storage.tsdb.path=/data"
         ]
         volumeMounts:
         - name: config-volume
@@ -211,12 +209,13 @@ spec:
       - name: prometheus
         image: {{ .PROMETHEUS_2_IMAGE }}
         imagePullPolicy: Always
-        args: [
-          "--config.file=/etc/prometheus/config/prometheus.yaml",
-          "--storage.tsdb.path=/data",
-          "--storage.tsdb.min-block-duration=15m",
-          "--storage.tsdb.max-block-duration=4h"
-        ]
+        command:
+        - "make"
+        args:
+        - "start-pr"
+        - "REPO_OWNER={{ .REPO_OWNER }}"
+        - "REPO_NAME={{ .REPO_NAME }}"
+        - "PR_NUMBER={{ .PR_NUMBER }}"
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus/config
