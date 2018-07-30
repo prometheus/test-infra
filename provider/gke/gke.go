@@ -87,14 +87,14 @@ func (c *GKE) DeploymentsParse(*kingpin.ParseContext) error {
 		} else {
 			fileList = append(fileList, name)
 		}
+	}
 
-		for _, name := range fileList {
-			content, err := c.applyTemplateVars(name)
-			if err != nil {
-				return fmt.Errorf("couldn't apply template to file %s: %v", name, err)
-			}
-			c.deploymentsContent = append(c.deploymentsContent, provider.ResourceFile{name, content})
+	for _, name := range fileList {
+		content, err := c.applyTemplateVars(name)
+		if err != nil {
+			return fmt.Errorf("couldn't apply template to file %s: %v", name, err)
 		}
+		c.deploymentsContent = append(c.deploymentsContent, provider.ResourceFile{name, content})
 	}
 	return nil
 }
