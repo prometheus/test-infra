@@ -168,7 +168,6 @@ data:
           entrypoint: "registry.svc.ci.openshift.org/ci/entrypoint:latest"
           sidecar: "registry.svc.ci.openshift.org/ci/sidecar:latest"
         gcs_configuration:
-          bucket: "{{ .GCS_BUCKET }}"
           path_strategy: "explicit"
           default_org: "{{ .GITHUB_ORG }}"
           default_repo: "{{ .GITHUB_REPO }}"
@@ -241,34 +240,6 @@ data:
           - name: serviceaccount
             secret:
               secretName: service-account
-          nodeSelector:
-            cloud.google.com/gke-nodepool: prow
-      - name: build-PR-images
-        context: build-PR-images
-        always_run: false
-        skip_report: false
-        agent: kubernetes
-        decorate: true
-        path_alias: /github.com/prometheus/prometheus
-        spec:
-          containers:
-          - image: docker.io/sipian/golang-builder:prow
-            imagePullPolicy: Always
-            command:
-            - "./prow/benchmark_build.sh"
-            volumeMounts:
-            - name: serviceaccount
-              mountPath: /etc/serviceaccount
-              readOnly: true
-            - name: docker-sock
-              mountPath: /var/run/docker.sock
-          volumes:
-          - name: serviceaccount
-            secret:
-              secretName: service-account          
-          - name: docker-sock 
-            hostPath: 
-                path: /var/run/docker.sock
           nodeSelector:
             cloud.google.com/gke-nodepool: prow
 ---
