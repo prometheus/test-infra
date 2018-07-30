@@ -4,7 +4,7 @@ PR_NUMBER=$1
 
 if [ -z "$PR_NUMBER" ]; then echo "ERROR::PR NUMBER is missing in argument" && exit 1; fi
 
-DIR="go/src/github.com/prometheus/prometheus"
+DIR="/go/src/github.com/prometheus/prometheus"
 
 printf "\n\n>> Cloning repository 'prometheus/prometheus' \n\n"
 
