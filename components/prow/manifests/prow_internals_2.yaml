@@ -271,8 +271,6 @@ spec:
         image: docker.io/sipian/hook:2.0.0
         imagePullPolicy: Always
         env:
-        - name: PROMBENCH_PROJECT_ID
-          value: "{{ .PROJECT_ID }}"
         - name: PROMBENCH_INGRESS_IP
           value: "{{ .INGRESS_IP }}"         
         args:
