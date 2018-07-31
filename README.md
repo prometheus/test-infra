@@ -16,7 +16,11 @@ Long term plans are to use the [prombench cli tool](cmd/prombench) to deploy and
 export PROJECT_ID=prometheus-ci 
 export CLUSTER_NAME=prow
 export ZONE=us-east1-b
+
+#Google Kubernetes Engine requires granting the user the ability to create RBAC roles in Kubernetes.
+#GCLOUD_SERVICEACCOUNT_CLIENTID is used to grant cluster-admin-rights to the service-account
 export GCLOUD_SERVICEACCOUNT_CLIENTID=<client_id from the service-account.json>
+
 export AUTH_FILE=<path to service-account.json>
 export GCS_BUCKET=prow
 export GITHUB_ORG=prometheus
