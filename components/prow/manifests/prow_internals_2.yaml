@@ -168,25 +168,13 @@ data:
           entrypoint: "registry.svc.ci.openshift.org/ci/entrypoint:latest"
           sidecar: "registry.svc.ci.openshift.org/ci/sidecar:latest"
         gcs_configuration:
-          bucket: "{{ .GCS_BUCKET }}"
           path_strategy: "explicit"
           default_org: "{{ .GITHUB_ORG }}"
           default_repo: "{{ .GITHUB_REPO }}"
         gcs_credentials_secret: "service-account"
 
     log_level: info
-
-    periodics:
-    - interval: 10m
-      agent: kubernetes
-      name: echo-test
-      spec:
-        containers:
-        - image: alpine:latest
-          command: ["/bin/date"]
-        nodeSelector:
-          cloud.google.com/gke-nodepool: prow
-
+    
     # These configurations are NOT for PR presubmits as used by the trigger plugin. 
     # These are used to create prowjobs for the benchmark plugin. 
     presubmits:
@@ -243,34 +231,6 @@ data:
               secretName: service-account
           nodeSelector:
             cloud.google.com/gke-nodepool: prow
-      - name: build-PR-images
-        context: build-PR-images
-        always_run: false
-        skip_report: false
-        agent: kubernetes
-        decorate: true
-        path_alias: /github.com/prometheus/prometheus
-        spec:
-          containers:
-          - image: docker.io/sipian/golang-builder:prow
-            imagePullPolicy: Always
-            command:
-            - "./prow/benchmark_build.sh"
-            volumeMounts:
-            - name: serviceaccount
-              mountPath: /etc/serviceaccount
-              readOnly: true
-            - name: docker-sock
-              mountPath: /var/run/docker.sock
-          volumes:
-          - name: serviceaccount
-            secret:
-              secretName: service-account          
-          - name: docker-sock 
-            hostPath: 
-                path: /var/run/docker.sock
-          nodeSelector:
-            cloud.google.com/gke-nodepool: prow
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -300,8 +260,6 @@ spec:
         image: docker.io/sipian/hook:2.0.0
         imagePullPolicy: Always
         env:
-        - name: PROMBENCH_PROJECT_ID
-          value: "{{ .PROJECT_ID }}"
         - name: PROMBENCH_INGRESS_IP
           value: "{{ .INGRESS_IP }}"         
         args:
