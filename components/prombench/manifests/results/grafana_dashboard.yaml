@@ -3550,7 +3550,7 @@ data:
               ]
             }
           ],
-          "title": "Prometheus Benchmark - 2.3.x",
+          "title": "Prometheus Benchmark",
           "type": "row"
         }
       ],
