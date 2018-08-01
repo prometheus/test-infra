@@ -174,18 +174,7 @@ data:
         gcs_credentials_secret: "service-account"
 
     log_level: info
-
-    periodics:
-    - interval: 10m
-      agent: kubernetes
-      name: echo-test
-      spec:
-        containers:
-        - image: alpine:latest
-          command: ["/bin/date"]
-        nodeSelector:
-          cloud.google.com/gke-nodepool: prow
-
+    
     # These configurations are NOT for PR presubmits as used by the trigger plugin. 
     # These are used to create prowjobs for the benchmark plugin. 
     presubmits:
