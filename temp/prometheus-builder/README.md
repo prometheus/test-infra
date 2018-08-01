@@ -22,5 +22,6 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']" > config/prometheus.yaml
 
+docker build -t sipian/prometheus-builder:v1.0.0 .
 docker run --rm -p 9090:9090 -v /absolute-path/to/config:/etc/prometheus/config -v data:/data sipian/prometheus-builder:v1.0.0 <PR_NUMBER> 
 ```
