@@ -2,28 +2,32 @@
 
 ![Prombench Design](design.svg)
 
-It runs with [Prow CI](https://github.com/kubernetes/test-infra/blob/master/prow/) on a [Google Kubernetes Engine Cluster](https://cloud.google.com/kubernetes-engine/) and it is designed in a way to support deploying on different k8s providers if needed.
+It runs with [Prow CI](https://github.com/kubernetes/test-infra/blob/master/prow/) on a [Google Kubernetes Engine Cluster](https://cloud.google.com/kubernetes-engine/). <br/>
+It is designed for supporting more k8s providers in mind.
 
 Long term plans are to use the [prombench cli tool](cmd/prombench) to deploy and manage everything, but at the moment the  k8s golang client doesn't support `CustomResourceDefinition` objects so for those it uses `kubectl`.
 
 ## Prerequisites 
 - Create a new Google cloud project - `prometheus-ci`
 - Create a [Service Account](https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform#step_3_create_service_account_credentials) on GKE with role `Kubernetes Engine Service Agent & Kubernetes Engine Admin` and download the json file.
-- [Create a GCS bucket](https://console.cloud.google.com/storage/) `prow` in the same project which will be used for the [pod-utilities](https://github.com/kubernetes/test-infra/blob/master/prow/pod-utilities.md).
+- Generate a github auth token that will be used to authenticate when sending requests to the github api.
+Login with the [Prombot account](https://github.com/prombot) and generate a [new auth token](https://github.com/settings/tokens) with permissions:*public_repo, read:org, write:discussion*.
 
 - Set some env variable which will be used in the commands below.
 ```
 export PROJECT_ID=prometheus-ci 
 export CLUSTER_NAME=prow
-export ZONE=us-east1-b
-export GCLOUD_SERVICEACCOUNT_CLIENTID=<client_id from the service-account.json>
+export ZONE=europe-west3-a
 export AUTH_FILE=<path to service-account.json>
-export GCS_BUCKET=prow
 export GITHUB_ORG=prometheus
 export GITHUB_REPO=prometheus
 export GRAFANA_ADMIN_PASSWORD=$(openssl rand -hex 20)
 export HMAC_TOKEN=$(openssl rand -hex 20)
+export OAUTH_TOKEN=***Replace with the generated token from github***
+export GCLOUD_SERVICEACCOUNT_CLIENTID=<client_id from the service-account.json>
 ```
+**Note:** The `#GCLOUD_SERVICEACCOUNT_CLIENTID` is used to grant `cluster-admin-rights` to the `service-account` to be able to create RBAC roles which account is used by the `prombench` tool when managing the cluster for each job.
+
 ## Prow Setup.
 
 - Create the main k8s cluster to deploy the Prow components.
@@ -76,7 +80,7 @@ kubectl apply -f components/prow/manifests/prow_internals_1.yaml
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
 -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v INGRESS_IP:$INGRESS_IP \
 -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
--v GCS_BUCKET:$GCS_BUCKET -f components/prow/manifests/prow_internals_2.yaml
+-f components/prow/manifests/prow_internals_2.yaml
 ```
 
 - Deploy grafana & prometheus-meta.
