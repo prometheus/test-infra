@@ -54,41 +54,49 @@ export GCLOUD_SERVICEACCOUNT_CLIENTID=<client_id from the service-account.json>
 For this we will generate a [new auth token](https://github.com/settings/tokens) from the [Prombot account](https://github.com/prombot) which has access to all repos in the Prometheus org.
 
 - Add a [github webhook](https://github.com/prometheus/prometheus/settings/hooks) where to send the events.
-  * Content Type: json
-  * Send Issue comments
-   * Secret: `echo $HMAC_TOKEN`
-  * Payload URL: http://prombench.prometheus.io/hook
+  * Content Type: `json`
+  * Send:  `Issue comments,Pull requests`
+  * Secret: `echo $HMAC_TOKEN`
+  * Payload URL: `http://prombench.prometheus.io/hook`
 
 The ip DNS record for `prombench.prometheus.io` will be added once we get it from the ingress deployment in the following steps.
 
-- Deploy all internal prow components and the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx) which will be used to access all public components.
+- Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx) which will be used to access all public components.
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME \
 -v GCLOUD_SERVICEACCOUNT_CLIENTID:$GCLOUD_SERVICEACCOUNT_CLIENTID \
 -f components/prow/manifests/rbac.yaml -f components/prow/manifests/nginx-controller.yaml
+```
 
-export INGRESS_IP=$(kubectl get ingress ing -o go-template='{{ range .status.loadBalancer.ingress}}{{.ip}}{{ end }}')
+Get the ip using
+```
+kubectl get ingress ing -o go-template='{{ range .status.loadBalancer.ingress}}{{.ip}}{{ end }}'
+```
+and use it to set the DNS ip record for `prombench.prometheus.io`
 
+- Deploy all internal prow components
+```
 // kubectl is needed here since the prombench tool doesn't suport custom definition files.
 // Generate auth config so we can use kubectl.
 gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE
 kubectl apply -f components/prow/manifests/prow_internals_1.yaml
 
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
--v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v INGRESS_IP:$INGRESS_IP \
+-v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME \
 -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
 -f components/prow/manifests/prow_internals_2.yaml
 ```
 
 - Deploy grafana & prometheus-meta.
 ```
+export INGRESS_IP=$(kubectl get ingress ing -o go-template='{{ range .status.loadBalancer.ingress}}{{.ip}}{{ end }}')
+
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
 -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v INGRESS_IP:$INGRESS_IP \
 -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD -f components/prombench/manifests/results
 ```
 
 The services will be accessible at the following links:
-  * Grafana ::  http://$INGRESS-IP/grafana
-  * Prometheus ::  http://$INGRESS-IP/prometheus-meta
-  * Prow dashboard :: http://$INGRESS-IP/
-  * Prow hook :: http://$INGRESS-IP/hook
+  * Grafana ::  http://prombench.prometheus.io/grafana
+  * Prometheus ::  http://prombench.prometheus.io/prometheus-meta
+  * Prow dashboard :: http://prombench.prometheus.io/

@@ -157,7 +157,7 @@ metadata:
 data:
   config.yaml: |
     plank:
-      job_url_template: 'http://{{ .INGRESS_IP }}/log?job={{"{{"}}.Spec.Job{{"}}"}}&id={{"{{"}}.Status.BuildID{{"}}"}}'
+      job_url_template: 'http://prombench.prometheus.io/log?job={{"{{"}}.Spec.Job{{"}}"}}&id={{"{{"}}.Status.BuildID{{"}}"}}'
       pod_pending_timeout: 60m
       default_decoration_config:
         timeout: 7200000000000 # 2h
@@ -259,9 +259,6 @@ spec:
       - name: hook
         image: docker.io/sipian/hook:2.0.0
         imagePullPolicy: Always
-        env:
-        - name: PROMBENCH_INGRESS_IP
-          value: "{{ .INGRESS_IP }}"         
         args:
         - --dry-run=false
         ports:
