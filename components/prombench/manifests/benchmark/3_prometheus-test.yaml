@@ -96,23 +96,23 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prometheus-test-{{ .PROMETHEUS_1_NAME }}
+  name: prometheus-test-{{ normalise .RELEASE }}
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: prometheus
-    prometheus: test-{{ .PROMETHEUS_1_NAME }}
+    prometheus: test-{{ normalise .RELEASE }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: prometheus
-      prometheus: test-{{ .PROMETHEUS_1_NAME }}
+      prometheus: test-{{ normalise .RELEASE }}
   template:
     metadata:
       namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: prometheus
-        prometheus: test-{{ .PROMETHEUS_1_NAME }}
+        prometheus: test-{{ normalise .RELEASE }}
     spec:
       serviceAccountName: prometheus
       affinity:
@@ -129,7 +129,7 @@ spec:
         runAsUser: 0
       containers:
       - name: prometheus
-        image: {{ .PROMETHEUS_1_IMAGE }}
+        image: quay.io/prometheus/prometheus:{{ .RELEASE }}
         imagePullPolicy: Always
         args: [
           "--config.file=/etc/prometheus/config/prometheus.yaml",
@@ -159,11 +159,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: prometheus-test-{{ .PROMETHEUS_1_NAME }}
+  name: prometheus-test-{{ normalise .RELEASE }}
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: prometheus
-    prometheus: test-{{ .PROMETHEUS_1_NAME }}
+    prometheus: test-{{ normalise .RELEASE }}
 spec:
   ports:
   #should be 1 port
@@ -171,28 +171,28 @@ spec:
     port: 9090
   selector:
     app: prometheus
-    prometheus: test-{{ .PROMETHEUS_1_NAME }}
+    prometheus: test-{{ normalise .RELEASE }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prometheus-test-{{ .PROMETHEUS_2_NAME }}
+  name: prometheus-test-pr-{{ .PR_NUMBER }}
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: prometheus
-    prometheus: test-{{ .PROMETHEUS_2_NAME }}
+    prometheus: test-pr-{{ .PR_NUMBER }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: prometheus
-      prometheus: test-{{ .PROMETHEUS_2_NAME }}
+      prometheus: test-pr-{{ .PR_NUMBER }}
   template:
     metadata:
       namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: prometheus
-        prometheus: test-{{ .PROMETHEUS_2_NAME }}
+        prometheus: test-pr-{{ .PR_NUMBER }}
     spec:
       serviceAccountName: prometheus
       affinity:
@@ -209,14 +209,9 @@ spec:
         runAsUser: 0
       containers:
       - name: prometheus
-        image: {{ .PROMETHEUS_2_IMAGE }}
+        image: docker.io/sipian/prometheus-builder:v1.0.0
         imagePullPolicy: Always
-        args: [
-          "--config.file=/etc/prometheus/config/prometheus.yaml",
-          "--storage.tsdb.path=/data",
-          "--storage.tsdb.min-block-duration=15m",
-          "--storage.tsdb.max-block-duration=4h"
-        ]
+        args: ["{{ .PR_NUMBER }}"]
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus/config
@@ -239,11 +234,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: prometheus-test-{{ .PROMETHEUS_2_NAME }}
+  name: prometheus-test-pr-{{ .PR_NUMBER }}
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: prometheus
-    prometheus: test-{{ .PROMETHEUS_2_NAME }}
+    prometheus: test-pr-{{ .PR_NUMBER }}
 spec:
   ports:
   #should be 1 port
@@ -251,4 +246,4 @@ spec:
     port: 9090
   selector:
     app: prometheus
-    prometheus: test-{{ .PROMETHEUS_2_NAME }}
+    prometheus: test-pr-{{ .PR_NUMBER }}

@@ -5,13 +5,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: node-exporter-prometheus-test-{{ .PROMETHEUS_1_NAME }}
+  name: node-exporter-prometheus-test-{{ normalise .RELEASE }}
   namespace: prombench-{{ .PR_NUMBER }}
 spec:
   selector:
     matchLabels:
       app: node-exporter
-      node: test-{{ .PROMETHEUS_1_NAME }}
+      node: test-{{ normalise .RELEASE }}
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 1
@@ -21,7 +21,7 @@ spec:
       namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: node-exporter
-        node: test-{{ .PROMETHEUS_1_NAME }}
+        node: test-{{ normalise .RELEASE }}
       name: node-exporter
     spec:
       affinity:
@@ -32,7 +32,7 @@ spec:
               - key: prometheus
                 operator: In
                 values:
-                - test-{{ .PROMETHEUS_1_NAME }}
+                - test-{{ normalise .RELEASE }}
             topologyKey: cloud.google.com/gke-nodepool
       securityContext:
         runAsNonRoot: true
@@ -72,13 +72,13 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: node-exporter-prometheus-test-{{ .PROMETHEUS_2_NAME }}
+  name: node-exporter-prometheus-test-pr-{{ .PR_NUMBER }}
   namespace: prombench-{{ .PR_NUMBER }}
 spec:
   selector:
     matchLabels:
       app: node-exporter
-      node: test-{{ .PROMETHEUS_2_NAME }}
+      node: test-pr-{{ .PR_NUMBER }}
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 1
@@ -88,7 +88,7 @@ spec:
       namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: node-exporter
-        node: test-{{ .PROMETHEUS_2_NAME }}
+        node: test-pr-{{ .PR_NUMBER }}
       name: node-exporter
     spec:
       affinity:
@@ -99,7 +99,7 @@ spec:
               - key: prometheus
                 operator: In
                 values:
-                - test-{{ .PROMETHEUS_2_NAME }}
+                - test-pr-{{ .PR_NUMBER }}
             topologyKey: cloud.google.com/gke-nodepool
       securityContext:
         runAsNonRoot: true

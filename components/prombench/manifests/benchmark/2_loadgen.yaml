@@ -73,13 +73,11 @@ spec:
       serviceAccountName: loadgen-scaler
       containers:
       - name: prom-load-generator
-        image: gcr.io/prometheus-test-204522/prometheus-bench-loadgen:v0.1.0
+        image: docker.io/sipian/prombench-loadgen:v2.0.0
         imagePullPolicy: Always
-        env: 
-        - name: PROMBENCH_NAMESPACE
-          value: prombench-{{ .PR_NUMBER }}
         args:
         - "scaler"
+        - "prombench-{{ .PR_NUMBER }}"
         volumeMounts:
         - name: config-volume
           mountPath: /etc/loadgen
@@ -109,15 +107,13 @@ spec:
     spec:
       containers:
       - name: prom-load-generator
-        image: gcr.io/prometheus-test-204522/prometheus-bench-loadgen:v0.1.0
+        image: docker.io/sipian/prombench-loadgen:v2.0.0
         imagePullPolicy: Always
-        env: 
-        - name: PROMBENCH_NAMESPACE
-          value: prombench-{{ .PR_NUMBER }}
         args:
         - "querier"
-        - "{{ .PROMETHEUS_1_NAME }}"
-        - "{{ .PROMETHEUS_2_NAME }}"
+        - "prombench-{{ .PR_NUMBER }}"
+        - "{{ normalise .RELEASE }}"
+        - "pr-{{ .PR_NUMBER }}"
         volumeMounts:
         - name: config-volume
           mountPath: /etc/loadgen
