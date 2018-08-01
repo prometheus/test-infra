@@ -223,7 +223,7 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 				})
 
 			if err != nil {
-				log.Fatalf("nodepool create err:%v", err)
+				log.Fatalf("Couldn't create operation to create cluster nodepool '%v', file:%v ,err: %v", node.Name, deployment.Name, err)
 			}
 
 			err = provider.RetryUntilTrue(
@@ -233,7 +233,7 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 				})
 
 			if err != nil {
-				log.Fatalf("nodepool create err:%v", err)
+				log.Fatalf("Couldn't create cluster nodepool '%v', file:%v ,err: %v", node.Name, deployment.Name, err)
 			}
 		}
 	}
@@ -257,7 +257,7 @@ func (c *GKE) nodePoolCreateOperation(req *containerpb.CreateNodePoolRequest) (b
 
 			return false, nil
 		}
-		return false, errors.Wrapf(err, "create cluster node pool:%v", req.NodePool.Name)
+		return false, err
 	}
 	log.Printf("cluster node pool status: `%v`", rep.Status)
 	return false, nil
@@ -288,7 +288,7 @@ func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 				func() (bool, error) { return c.nodePoolDeleted(reqD) })
 
 			if err != nil {
-				log.Fatalf("nodepool delete err:%v", err)
+				log.Fatalf("Couldn't delete cluster nodepool '%v', file:%v ,err: %v", node.Name, deployment.Name, err)
 			}
 		}
 	}
@@ -313,7 +313,7 @@ func (c *GKE) nodePoolDeleted(req *containerpb.DeleteNodePoolRequest) (bool, err
 
 			return false, nil
 		}
-		return false, errors.Wrapf(err, "delete cluster node pool:%v", req.NodePoolId)
+		return false, err
 	}
 	log.Printf("cluster node pool status: `%v`", rep.Status)
 	return false, nil
