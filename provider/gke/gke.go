@@ -217,17 +217,17 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 			log.Printf("Cluster nodepool create request: cluster '%v', nodepool '%v' , project `%s`,zone `%s`", reqN.ClusterId, reqN.NodePool.Name, reqN.ProjectId, reqN.Zone)
 
 			err := provider.RetryUntilTrue(
-				fmt.Sprintf("creating operation to create nodepool:%v", reqN.NodePool.Name),
+				fmt.Sprintf("nodepool creation:%v", reqN.NodePool.Name),
 				func() (bool, error) {
 					return c.nodePoolCreated(reqN)
 				})
 
 			if err != nil {
-				log.Fatalf("Couldn't create operation to create cluster nodepool '%v', file:%v ,err: %v", node.Name, deployment.Name, err)
+				log.Fatalf("Couldn't create cluster nodepool '%v', file:%v ,err: %v", node.Name, deployment.Name, err)
 			}
 
 			err = provider.RetryUntilTrue(
-				fmt.Sprintf("creating nodepool:%v", reqN.NodePool.Name),
+				fmt.Sprintf("checking nodepool running status for:%v", reqN.NodePool.Name)
 				func() (bool, error) {
 					return c.nodePoolRunning(reqN.Zone, reqN.ProjectId, reqN.ClusterId, reqN.NodePool.Name)
 				})
