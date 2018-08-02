@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: prometheus-test
+  name: prometheus-bench
   namespace: prombench-{{ .PR_NUMBER }}
 data:
   prometheus.yaml: |
@@ -96,23 +96,23 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prometheus-test-{{ normalise .RELEASE }}
+  name: prometheus-{{ normalise .RELEASE }}
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: prometheus
-    prometheus: test-{{ normalise .RELEASE }}
+    prometheus: {{ normalise .RELEASE }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: prometheus
-      prometheus: test-{{ normalise .RELEASE }}
+      prometheus: {{ normalise .RELEASE }}
   template:
     metadata:
       namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: prometheus
-        prometheus: test-{{ normalise .RELEASE }}
+        prometheus: {{ normalise .RELEASE }}
     spec:
       serviceAccountName: prometheus
       affinity:
@@ -145,7 +145,7 @@ spec:
       volumes:
       - name: config-volume
         configMap:
-          name: prometheus-test
+          name: prometheus-bench
       - name: instance-ssd
         hostPath:
           # /mnt is where GKE keeps it's SSD
@@ -159,11 +159,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: prometheus-test-{{ normalise .RELEASE }}
+  name: prometheus-{{ normalise .RELEASE }}
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: prometheus
-    prometheus: test-{{ normalise .RELEASE }}
+    prometheus: {{ normalise .RELEASE }}
 spec:
   ports:
   #should be 1 port
@@ -171,28 +171,28 @@ spec:
     port: 9090
   selector:
     app: prometheus
-    prometheus: test-{{ normalise .RELEASE }}
+    prometheus: {{ normalise .RELEASE }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prometheus-test-pr-{{ .PR_NUMBER }}
+  name: prometheus-pr-{{ .PR_NUMBER }}
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: prometheus
-    prometheus: test-pr-{{ .PR_NUMBER }}
+    prometheus: pr-{{ .PR_NUMBER }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: prometheus
-      prometheus: test-pr-{{ .PR_NUMBER }}
+      prometheus: pr-{{ .PR_NUMBER }}
   template:
     metadata:
       namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: prometheus
-        prometheus: test-pr-{{ .PR_NUMBER }}
+        prometheus: pr-{{ .PR_NUMBER }}
     spec:
       serviceAccountName: prometheus
       affinity:
@@ -220,7 +220,7 @@ spec:
       volumes:
       - name: config-volume
         configMap:
-          name: prometheus-test
+          name: prometheus-bench
       - name: instance-ssd
         hostPath:
           # /mnt is where GKE keeps it's SSD
@@ -234,11 +234,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: prometheus-test-pr-{{ .PR_NUMBER }}
+  name: prometheus-pr-{{ .PR_NUMBER }}
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: prometheus
-    prometheus: test-pr-{{ .PR_NUMBER }}
+    prometheus: pr-{{ .PR_NUMBER }}
 spec:
   ports:
   #should be 1 port
@@ -246,4 +246,4 @@ spec:
     port: 9090
   selector:
     app: prometheus
-    prometheus: test-pr-{{ .PR_NUMBER }}
+    prometheus: pr-{{ .PR_NUMBER }}
