@@ -1,4 +1,15 @@
 apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometeus-meta
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1000Gi
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-meta
@@ -6,9 +17,7 @@ data:
   prometheus.yaml: |
     global:
       scrape_interval: 5s
-
     scrape_configs:
-
     # prometheus-meta job is added separately because prometheus-meta has a
     # web.external-url of INGRESS_IP/prometheus-meta/
     - job_name: prometheus-meta
@@ -112,8 +121,7 @@ spec:
         args:
         - "--config.file=/etc/prometheus/config/prometheus.yaml"
         - "--storage.tsdb.path=/data"
-        - "--storage.tsdb.min-block-duration=15m"
-        - "--storage.tsdb.max-block-duration=4h"
+        - "--storage.tsdb.retention=90d"
         - "--web.external-url=http://{{ .INGRESS_IP }}/prometheus-meta"
         name: prometheus
         volumeMounts:
@@ -126,7 +134,8 @@ spec:
         configMap:
           name: prometheus-meta
       - name: data
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: prometeus-meta
       terminationGracePeriodSeconds: 300
       nodeSelector:
         cloud.google.com/gke-nodepool: prow
