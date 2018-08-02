@@ -227,7 +227,7 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 			}
 
 			err = provider.RetryUntilTrue(
-				fmt.Sprintf("checking nodepool running status for:%v", reqN.NodePool.Name)
+				fmt.Sprintf("checking nodepool running status for:%v", reqN.NodePool.Name),
 				func() (bool, error) {
 					return c.nodePoolRunning(reqN.Zone, reqN.ProjectId, reqN.ClusterId, reqN.NodePool.Name)
 				})
@@ -260,7 +260,7 @@ func (c *GKE) nodePoolCreated(req *containerpb.CreateNodePoolRequest) (bool, err
 		return false, err
 	}
 	log.Printf("cluster node pool status: `%v`", rep.Status)
-	return false, nil
+	return true, nil
 }
 
 // NodePoolDelete deletes a new k8s node-pool in an existing cluster
@@ -284,11 +284,23 @@ func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 			log.Printf("Removing cluster node pool: `%v`,  cluster '%v', project '%v', zone '%v'", reqD.NodePoolId, reqD.ClusterId, reqD.ProjectId, reqD.Zone)
 
 			err := provider.RetryUntilTrue(
-				fmt.Sprintf("deleting nodepool:%v", reqD.NodePoolId),
-				func() (bool, error) { return c.nodePoolDeleted(reqD) })
+				fmt.Sprintf("nodepool deletion:%v", node.Name),
+				func() (bool, error) {
+					return c.nodePoolDeleted(reqD)
+				})
 
 			if err != nil {
-				log.Fatalf("Couldn't delete cluster nodepool '%v', file:%v ,err: %v", node.Name, deployment.Name, err)
+				log.Fatalf("Couldn't delete cluster nodepool '%v', file:%v ,err: %v", reqD.NodePoolId, deployment.Name, err)
+			}
+
+			err = provider.RetryUntilTrue(
+				fmt.Sprintf("checking nodepool deletion status for:%v", reqD.NodePoolId),
+				func() (bool, error) {
+					return c.nodePoolDeleting(reqD.Zone, reqD.ProjectId, reqD.ClusterId, reqD.NodePoolId)
+				})
+
+			if err != nil {
+				log.Fatalf("Couldn't delete cluster nodepool '%v', file:%v ,err: %v", reqD.NodePoolId, deployment.Name, err)
 			}
 		}
 	}
@@ -303,12 +315,9 @@ func (c *GKE) nodePoolDeleted(req *containerpb.DeleteNodePoolRequest) (bool, err
 		if !ok {
 			return false, fmt.Errorf("unknown reply status error %v", err)
 		}
-		if st.Code() == codes.NotFound {
-			return true, nil
-		}
 		if st.Code() == codes.FailedPrecondition {
 			// GKE cannot have two simultaneous nodepool operations running on it
-			// Waiting for any ongoing operation to complete before starting new one
+			// Waiting for any ongoing operation to complete before deleting current one
 			log.Printf("Cluster in 'FailedPrecondition' state '%s'", err)
 
 			return false, nil
@@ -316,6 +325,27 @@ func (c *GKE) nodePoolDeleted(req *containerpb.DeleteNodePoolRequest) (bool, err
 		return false, err
 	}
 	log.Printf("cluster node pool status: `%v`", rep.Status)
+	return true, nil
+}
+
+func (c *GKE) nodePoolDeleting(zone, projectID, clusterID, poolName string) (bool, error) {
+	req := &containerpb.GetNodePoolRequest{
+		ProjectId:  projectID,
+		Zone:       zone,
+		ClusterId:  clusterID,
+		NodePoolId: poolName,
+	}
+	rep, err := c.clientGKE.GetNodePool(c.ctx, req)
+
+	if err != nil {
+		// cluster node pool not found implies nodepool has been deleted.
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			return true, nil
+		}
+		return false, fmt.Errorf("Couldn't get node pool status:%v", err)
+	}
+
+	log.Printf("Current cluster node pool '%v' status:%v , %v", rep.Name, rep.Status, rep.StatusMessage)
 	return false, nil
 }
 
