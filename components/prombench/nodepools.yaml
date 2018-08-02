@@ -4,7 +4,7 @@ cluster:
   name: {{ .CLUSTER_NAME }}
   nodepools:
   # These node-pools will be deployed on triggering benchmark
-  - name: prometheus-{{ .PR_NUMBER }}
+  - name: {{ .PR_NUMBER }}-prometheus
     initialnodecount: 2
     config:
       machinetype: n1-highmem-32
@@ -13,7 +13,7 @@ cluster:
       localssdcount: 1  #SSD is used to give fast-lookup to Prometheus servers being benchmarked
       labels:
         isolation: prometheus
-  - name: nodes-{{ .PR_NUMBER }}
+  - name: {{ .PR_NUMBER }}-targets
     initialnodecount: 1
     config:
       machinetype: n1-highmem-32
