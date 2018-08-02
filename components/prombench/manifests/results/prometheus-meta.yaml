@@ -139,6 +139,9 @@ spec:
       - name: data
         persistentVolumeClaim:
           claimName: prometeus-meta
+      ports:
+      - name: web
+        containerPort: 9090
       terminationGracePeriodSeconds: 300
       nodeSelector:
         cloud.google.com/gke-nodepool: prow
