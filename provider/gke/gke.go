@@ -219,7 +219,7 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 			err := provider.RetryUntilTrue(
 				fmt.Sprintf("creating operation to create nodepool:%v", reqN.NodePool.Name),
 				func() (bool, error) {
-					return c.nodePoolCreateOperation(reqN)
+					return c.nodePoolCreated(reqN)
 				})
 
 			if err != nil {
@@ -242,7 +242,7 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 
 // nodePoolCreateOperation checks if there is any ongoing NodePool operation on the cluster
 // when creating a NodePool
-func (c *GKE) nodePoolCreateOperation(req *containerpb.CreateNodePoolRequest) (bool, error) {
+func (c *GKE) nodePoolCreated(req *containerpb.CreateNodePoolRequest) (bool, error) {
 
 	rep, err := c.clientGKE.CreateNodePool(c.ctx, req)
 	if err != nil {
