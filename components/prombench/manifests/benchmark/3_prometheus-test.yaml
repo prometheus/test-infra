@@ -210,6 +210,13 @@ spec:
                 - prometheus
       securityContext:
         runAsUser: 0
+      // The PR builder image takes a little longer to start due to closing and building te binay from scratch.
+      // So to make sure both pods start at the same time we use the init container to check when the other pod is ready.
+      // Without this the scraping graphs will show slightly time shifted to each other.
+      initContainers:
+        - name: init-prometheus-build-ready
+          image: buildpack-deps:18.10-curl
+           command: ['curl', '-m1', '-f','prometheus-pr-{{ .PR_NUMBER }}:9090/-/ready']
       containers:
       - name: prometheus
         image: docker.io/prombench/prometheus-builder:2.0.0
