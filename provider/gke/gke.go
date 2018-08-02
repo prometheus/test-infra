@@ -240,7 +240,7 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 	return nil
 }
 
-// nodePoolCreateOperation checks if there is any ongoing NodePool operation on the cluster
+// nodePoolCreated checks if there is any ongoing NodePool operation on the cluster
 // when creating a NodePool
 func (c *GKE) nodePoolCreated(req *containerpb.CreateNodePoolRequest) (bool, error) {
 
