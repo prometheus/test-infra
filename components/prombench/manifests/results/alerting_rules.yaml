@@ -1,0 +1,32 @@
+apiversion: v1
+kind: ConfigMap
+metadata:
+  name: alerting-rules
+data:
+  alert.rules: |
+    groups:
+    - name: memory
+      rules:
+      - alert: NodeMemoryUsage
+        expr: (((node_memory_MemTotal_bytes{job="node-exporter",namespace=~"[[:digit:]]+",node=~".+"}
+          - node_memory_MemFree_bytes{job="node-exporter",namespace=~"[[:digit:]]+",node=~".+"}
+          - node_memory_Buffers_bytes{job="node-exporter",namespace=~"[[:digit:]]+",node=~".+"}
+          - node_memory_Cached_bytes{job="node-exporter",namespace=~"[[:digit:]]+",node=~".+"})
+          / (node_memory_MemTotal_bytes{job="node-exporter",namespace=~"[[:digit:]]+",node=~".+"})
+          * 100)) > 80
+        for: 2m
+        annotations:
+          issue: '{{"{{"}}$labels.namespace{{"}}"}}'
+          description: '{{"{{"}}$labels.instance{{"}}"}}: Memory usage for node:{{"{{"}}$labels.node{{"}}"}}, PR:{{"{{"}}$labels.namespace{{"}}"}} is above 80% (current value is: {{"{{"}}$value{{"}}"}})'
+          summary: '{{"{{"}}$labels.instance{{"}}"}}: High memory usage detected'
+
+    - name: cpu
+      rules:
+      - alert: NodeCPUUsage
+        expr: (100 - (avg by(instance, node, namespace) (rate(node_cpu_seconds_total{job="node-exporter",mode="idle",namespace=~"[[:digit:]]+",node=~".+"}[5m]))
+          * 100)) > 90
+        for: 2m
+        annotations:
+          issue: '{{"{{"}}$labels.namespace{{"}}"}}'
+          description: '{{"{{"}}$labels.instance{{"}}"}}: CPU usage for node:{{"{{"}}$labels.node{{"}}"}}, PR:{{"{{"}}$labels.namespace{{"}}"}} is above 90% (current value is: {{"{{"}}$value{{"}}"}})'
+          summary: '{{"{{"}}$labels.instance{{"}}"}}: High CPU usage detected'
