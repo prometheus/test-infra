@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-test
-  namespace: prombench-{{ .PR_NUMBER }}
+  namespace: "{{ .PR_NUMBER }}"
 data:
   prometheus.yaml: |
     global:
@@ -46,7 +46,7 @@ data:
       - role: endpoints
         namespaces:
           names:
-            - prombench-{{ .PR_NUMBER }}
+            - {{ .PR_NUMBER }}
 
       relabel_configs:
       - action: keep
@@ -70,7 +70,7 @@ data:
       - role: endpoints
         namespaces:
           names:
-            - prombench-{{ .PR_NUMBER }}
+            - {{ .PR_NUMBER }}
 
       relabel_configs:
       - action: replace
@@ -97,7 +97,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prometheus-test-{{ normalise .RELEASE }}
-  namespace: prombench-{{ .PR_NUMBER }}
+  namespace: "{{ .PR_NUMBER }}"
   labels:
     app: prometheus
     prometheus: test-{{ normalise .RELEASE }}
@@ -109,7 +109,7 @@ spec:
       prometheus: test-{{ normalise .RELEASE }}
   template:
     metadata:
-      namespace: prombench-{{ .PR_NUMBER }}
+      namespace: "{{ .PR_NUMBER }}"
       labels:
         app: prometheus
         prometheus: test-{{ normalise .RELEASE }}
@@ -160,7 +160,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: prometheus-test-{{ normalise .RELEASE }}
-  namespace: prombench-{{ .PR_NUMBER }}
+  namespace: "{{ .PR_NUMBER }}"
   labels:
     app: prometheus
     prometheus: test-{{ normalise .RELEASE }}
@@ -177,7 +177,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prometheus-test-pr-{{ .PR_NUMBER }}
-  namespace: prombench-{{ .PR_NUMBER }}
+  namespace: "{{ .PR_NUMBER }}"
   labels:
     app: prometheus
     prometheus: test-pr-{{ .PR_NUMBER }}
@@ -189,7 +189,7 @@ spec:
       prometheus: test-pr-{{ .PR_NUMBER }}
   template:
     metadata:
-      namespace: prombench-{{ .PR_NUMBER }}
+      namespace: "{{ .PR_NUMBER }}"
       labels:
         app: prometheus
         prometheus: test-pr-{{ .PR_NUMBER }}
@@ -235,7 +235,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: prometheus-test-pr-{{ .PR_NUMBER }}
-  namespace: prombench-{{ .PR_NUMBER }}
+  namespace: "{{ .PR_NUMBER }}"
   labels:
     app: prometheus
     prometheus: test-pr-{{ .PR_NUMBER }}

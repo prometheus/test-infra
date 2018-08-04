@@ -3,4 +3,4 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: prombench-{{ .PR_NUMBER }}
+  name: "{{ .PR_NUMBER }}"

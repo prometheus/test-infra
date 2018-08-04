@@ -10,7 +10,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: loadgen-scaler
-  namespace: prombench-{{ .PR_NUMBER }}
+  namespace: "{{ .PR_NUMBER }}"
 ---
 #Need to give Prometheus servers access to pull metrics
 apiVersion: rbac.authorization.k8s.io/v1
@@ -24,4 +24,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: prometheus
-  namespace: prombench-{{ .PR_NUMBER }}
+  namespace: "{{ .PR_NUMBER }}"

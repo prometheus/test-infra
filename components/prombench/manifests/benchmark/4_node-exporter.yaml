@@ -6,7 +6,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: node-exporter-prometheus-test-{{ normalise .RELEASE }}
-  namespace: prombench-{{ .PR_NUMBER }}
+  namespace: "{{ .PR_NUMBER }}"
 spec:
   selector:
     matchLabels:
@@ -18,7 +18,7 @@ spec:
     type: RollingUpdate
   template:
     metadata:
-      namespace: prombench-{{ .PR_NUMBER }}
+      namespace: "{{ .PR_NUMBER }}"
       labels:
         app: node-exporter
         node: test-{{ normalise .RELEASE }}
@@ -73,7 +73,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: node-exporter-prometheus-test-pr-{{ .PR_NUMBER }}
-  namespace: prombench-{{ .PR_NUMBER }}
+  namespace: "{{ .PR_NUMBER }}"
 spec:
   selector:
     matchLabels:
@@ -85,7 +85,7 @@ spec:
     type: RollingUpdate
   template:
     metadata:
-      namespace: prombench-{{ .PR_NUMBER }}
+      namespace: "{{ .PR_NUMBER }}"
       labels:
         app: node-exporter
         node: test-pr-{{ .PR_NUMBER }}
@@ -140,7 +140,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: node-exporter-nodes
-  namespace: prombench-{{ .PR_NUMBER }}
+  namespace: "{{ .PR_NUMBER }}"
 spec:
   selector:
     matchLabels:
@@ -151,7 +151,7 @@ spec:
     type: RollingUpdate
   template:
     metadata:
-      namespace: prombench-{{ .PR_NUMBER }}
+      namespace: "{{ .PR_NUMBER }}"
       labels:
         app: node-exporter
       name: node-exporter
@@ -195,7 +195,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: node-exporter
-  namespace: prombench-{{ .PR_NUMBER }}
+  namespace: "{{ .PR_NUMBER }}"
   labels:
     app: node-exporter
     monitored: "true"

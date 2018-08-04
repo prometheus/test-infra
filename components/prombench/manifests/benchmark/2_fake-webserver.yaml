@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: fake-webserver
-  namespace: prombench-{{ .PR_NUMBER }}  
+  namespace: "{{ .PR_NUMBER }}"
 spec:
   replicas: 5
   selector:
@@ -10,7 +10,7 @@ spec:
       app: fake-webserver
   template:
     metadata:
-      namespace: prombench-{{ .PR_NUMBER }}
+      namespace: "{{ .PR_NUMBER }}"
       labels:
         app: fake-webserver
     spec:
@@ -36,7 +36,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: fake-webserver
-  namespace: prombench-{{ .PR_NUMBER }}
+  namespace: "{{ .PR_NUMBER }}"
   labels:
     app: fake-webserver
     monitored: "true"

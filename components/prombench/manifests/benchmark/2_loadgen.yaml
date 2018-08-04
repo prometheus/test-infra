@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-loadgen
-  namespace: prombench-{{ .PR_NUMBER }}
+  namespace: "{{ .PR_NUMBER }}"
 data:
   config.yaml: |
     scaler:
@@ -58,7 +58,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prometheus-loadgen-scaler
-  namespace: prombench-{{ .PR_NUMBER }}
+  namespace: "{{ .PR_NUMBER }}"
 spec:
   replicas: 1
   selector:
@@ -66,7 +66,7 @@ spec:
       app: loadgen-scaler
   template:
     metadata:
-      namespace: prombench-{{ .PR_NUMBER }}
+      namespace: "{{ .PR_NUMBER }}"
       labels:
         app: loadgen-scaler
     spec:
@@ -77,7 +77,7 @@ spec:
         imagePullPolicy: Always
         args:
         - "scaler"
-        - "prombench-{{ .PR_NUMBER }}"
+        - "{{ .PR_NUMBER }}"
         volumeMounts:
         - name: config-volume
           mountPath: /etc/loadgen
@@ -93,7 +93,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prometheus-loadgen-querier
-  namespace: prombench-{{ .PR_NUMBER }}
+  namespace: "{{ .PR_NUMBER }}"
 spec:
   replicas: 1
   selector:
@@ -101,7 +101,7 @@ spec:
       app: loadgen-querier
   template:
     metadata:
-      namespace: prombench-{{ .PR_NUMBER }}
+      namespace: "{{ .PR_NUMBER }}"
       labels:
         app: loadgen-querier
     spec:
@@ -111,7 +111,7 @@ spec:
         imagePullPolicy: Always
         args:
         - "querier"
-        - "prombench-{{ .PR_NUMBER }}"
+        - "{{ .PR_NUMBER }}"
         - "{{ normalise .RELEASE }}"
         - "pr-{{ .PR_NUMBER }}"
         volumeMounts:
@@ -129,7 +129,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: prometheus-loadgen-querier
-  namespace: prombench-{{ .PR_NUMBER }}
+  namespace: "{{ .PR_NUMBER }}"
   labels:
     app: loadgen-querier
 spec:
