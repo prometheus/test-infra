@@ -7,6 +7,28 @@ data:
     global:
       scrape_interval: 5s
 
+    rule_files:
+    - '/etc/prometheus-rules/alert.rules'
+
+    # Alerting specifies settings related to the Alertmanager.
+    alerting:
+      alertmanagers:
+      - kubernetes_sd_configs:
+          - role: pod
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_namespace]
+          regex: default
+          action: keep
+        - source_labels: [__meta_kubernetes_pod_label_app]
+          regex: alertmanager
+          action: keep
+        - source_labels: [__meta_kubernetes_pod_container_port_number]
+          regex:
+          action: drop
+
     scrape_configs:
 
     # prometheus-meta job is added separately because prometheus-meta has a
@@ -119,12 +141,17 @@ spec:
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus/config
+        - name: alerting-rules
+          mountPath: /etc/prometheus-rules
         - name: data
           mountPath: /data
       volumes:
       - name: config-volume
         configMap:
           name: prometheus-meta
+      - name: alerting-rules
+        configMap:
+          name: alerting-rules
       - name: data
         emptyDir: {}
       terminationGracePeriodSeconds: 300
