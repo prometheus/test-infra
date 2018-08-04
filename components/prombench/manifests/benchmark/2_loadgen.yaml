@@ -73,7 +73,7 @@ spec:
       serviceAccountName: loadgen-scaler
       containers:
       - name: prom-load-generator
-        image: docker.io/sipian/prombench-loadgen:v2.0.0
+        image: docker.io/prombench/loadgen:2.0.0
         imagePullPolicy: Always
         args:
         - "scaler"
@@ -107,7 +107,7 @@ spec:
     spec:
       containers:
       - name: prom-load-generator
-        image: docker.io/sipian/prombench-loadgen:v2.0.0
+        image: docker.io/prombench/loadgen:2.0.0
         imagePullPolicy: Always
         args:
         - "querier"

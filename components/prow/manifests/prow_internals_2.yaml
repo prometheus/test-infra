@@ -217,7 +217,7 @@ data:
         agent: kubernetes
         spec:
           containers:
-          - image: docker.io/sipian/prombench:v2.0.0
+          - image: docker.io/prombench/prombench:2.0.0
             imagePullPolicy: Always
             command:
             - "make"
@@ -243,7 +243,7 @@ data:
         agent: kubernetes
         spec:
           containers:
-          - image: docker.io/sipian/prombench:v2.0.0
+          - image: docker.io/prombench/prombench:2.0.0
             imagePullPolicy: Always
             command:
             - "make"
@@ -288,7 +288,7 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
       - name: hook
-        image: docker.io/sipian/hook:2.0.0
+        image: docker.io/prombench/hook:2.0.0
         imagePullPolicy: Always
         args:
         - --dry-run=false
@@ -354,7 +354,7 @@ spec:
       serviceAccountName: "plank"
       containers:
       - name: plank
-        image: docker.io/sipian/plank:2.0.0
+        image: docker.io/prombench/plank:2.0.0
         args:
         - --dry-run=false
         volumeMounts:
