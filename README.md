@@ -1,4 +1,4 @@
-# Automated E2E testing and benchmarking tool for Prometheus.
+# Automated Prometheus E2E testing and benchmarking.
 
 ![Prombench Design](design.svg)
 
@@ -6,16 +6,15 @@ It runs with [Prow CI](https://github.com/kubernetes/test-infra/blob/master/prow
 It is designed to support adding more k8s providers.
 
 
-Long term plans are to use the [prombench cli tool](cmd/prombench) to deploy and manage everything, but at the moment the  k8s golang client doesn't support `CustomResourceDefinition` objects so for those it uses `kubectl`.
-
 ## Prerequisites 
 - Create a new Google cloud project - `prometheus-ci`
 - Create a [Service Account](https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform#step_3_create_service_account_credentials) on GKE with role `Kubernetes Engine Service Agent & Kubernetes Engine Admin` and download the json file.
 - Generate a github auth token that will be used to authenticate when sending requests to the github api.
-Login with the [Prombot account](https://github.com/prombot) and generate a [new auth token](https://github.com/settings/tokens) with permissions:*public_repo, read:org, write:discussion*.
-
+  * Login with the [Prombot account](https://github.com/prombot) and generate a [new auth token](https://github.com/settings/tokens).  
+  permissions:*public_repo, read:org, write:discussion*.
 
 - Set some env variable which will be used in the commands below.
+  * **Note:** The `#GCLOUD_SERVICEACCOUNT_CLIENTID` is used to grant `cluster-admin-rights` to the `service-account` which needs to create RBAC roles. The `service-account` is used by the `prombench` tool when managing the cluster for each job.
 ```
 export PROJECT_ID=prometheus-ci 
 export CLUSTER_NAME=prow
@@ -28,7 +27,15 @@ export HMAC_TOKEN=$(openssl rand -hex 20)
 export OAUTH_TOKEN=***Replace with the generated token from github***
 export GCLOUD_SERVICEACCOUNT_CLIENTID=<client_id from the service-account.json>
 ```
-**Note:** The `#GCLOUD_SERVICEACCOUNT_CLIENTID` is used to grant `cluster-admin-rights` to the `service-account` which needs to create RBAC roles. The `service-account` is used by the `prombench` tool when managing the cluster for each job.
+  
+
+- Add a [github webhook](https://github.com/prometheus/prometheus/settings/hooks) where to send the events.
+  * Content Type: `json`
+  * Send:  `Issue comments,Pull requests`
+  * Secret: `echo $HMAC_TOKEN`
+  * Payload URL: `http://prombench.prometheus.io/hook`
+
+    * **Note:** The ip DNS record for `prombench.prometheus.io` will be added once we get it from the ingress deployment in the following steps.
 
 ## Prow Setup.
 
@@ -50,16 +57,6 @@ export GCLOUD_SERVICEACCOUNT_CLIENTID=<client_id from the service-account.json>
 -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)"
 
 ```
-- Add an auth token that will be used to authenticate when sending requests to the github api.
-For this we will generate a [new auth token](https://github.com/settings/tokens) from the [Prombot account](https://github.com/prombot) which has access to all repos in the Prometheus org.
-
-- Add a [github webhook](https://github.com/prometheus/prometheus/settings/hooks) where to send the events.
-  * Content Type: `json`
-  * Send:  `Issue comments,Pull requests`
-  * Secret: `echo $HMAC_TOKEN`
-  * Payload URL: `http://prombench.prometheus.io/hook`
-
-The ip DNS record for `prombench.prometheus.io` will be added once we get it from the ingress deployment in the following steps.
 
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx) which will be used to access all public components.
 ```
@@ -68,15 +65,16 @@ The ip DNS record for `prombench.prometheus.io` will be added once we get it fro
 -f components/prow/manifests/rbac.yaml -f components/prow/manifests/nginx-controller.yaml
 ```
 
-Get the ip using
+Get the ingress ip and use it to set the DNS ip record for `prombench.prometheus.io`.
 ```
 kubectl get ingress ing -o go-template='{{ range .status.loadBalancer.ingress}}{{.ip}}{{ end }}'
 ```
-and use it to set the DNS ip record for `prombench.prometheus.io`
+
 
 - Deploy all internal prow components
+
+  * **Note:** Long term plans are to use the [prombench cli tool](cmd/prombench) to deploy and manage everything, but at the moment the  k8s golang client doesn't support `CustomResourceDefinition` objects so for those it uses `kubectl`.
 ```
-// kubectl is needed here since the prombench tool doesn't suport custom definition files.
 // Generate auth config so we can use kubectl.
 gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE
 kubectl apply -f components/prow/manifests/prow_internals_1.yaml
@@ -87,7 +85,7 @@ kubectl apply -f components/prow/manifests/prow_internals_1.yaml
 -f components/prow/manifests/prow_internals_2.yaml
 ```
 
-- Deploy grafana & prometheus-meta.
+- Deploy the components that will collect and display the results.
 ```
 export INGRESS_IP=$(kubectl get ingress ing -o go-template='{{ range .status.loadBalancer.ingress}}{{.ip}}{{ end }}')
 
@@ -96,7 +94,7 @@ export INGRESS_IP=$(kubectl get ingress ing -o go-template='{{ range .status.loa
 -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD -f components/prombench/manifests/results
 ```
 
-The services will be accessible at the following links:
-  * Grafana ::  http://prombench.prometheus.io/grafana
+The services will be accessible at:
+  * Prow dashboard :: http://prombench.prometheus.io
+  * Grafana :: http://prombench.prometheus.io/grafana
   * Prometheus ::  http://prombench.prometheus.io/prometheus-meta
-  * Prow dashboard :: http://prombench.prometheus.io/
