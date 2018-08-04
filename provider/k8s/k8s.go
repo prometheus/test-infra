@@ -127,7 +127,7 @@ func (c *K8s) ResourceDelete(deployments []provider.ResourceFile) error {
 
 			resource, _, err := decode([]byte(text), nil, nil)
 			if err != nil {
-				return errors.Wrapf(err, "decoding the resource file: %v", deployment.Name)
+				return errors.Wrapf(err, "decoding the resource file:%v, section:%v...", deployment.Name, text[:100])
 			}
 			if resource == nil {
 				continue
