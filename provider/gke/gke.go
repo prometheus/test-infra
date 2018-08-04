@@ -227,7 +227,7 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 			}
 
 			err = provider.RetryUntilTrue(
-				fmt.Sprintf("checking nodepool running status for:%v", reqN.NodePool.Name)
+				fmt.Sprintf("checking nodepool running status for:%v", reqN.NodePool.Name),
 				func() (bool, error) {
 					return c.nodePoolRunning(reqN.Zone, reqN.ProjectId, reqN.ClusterId, reqN.NodePool.Name)
 				})
