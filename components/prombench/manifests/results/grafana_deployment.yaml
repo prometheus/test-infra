@@ -53,17 +53,30 @@ spec:
           mountPath: /var
         - name: grafana-datasources
           mountPath: /opt/grafana-provision/datasources
-        - name: grafana-dashboards
-          mountPath: /opt/grafana-provision/dashboards
+        - name: grafana-dashboard-config
+          mountPath: /opt/grafana-provision/dashboards/prometheus-dashboard.yaml
+          subPath: prometheus-dashboard.yaml
+        - name: grafana-dashboard-prombench
+          mountPath: /opt/grafana-provision/dashboards/prombench.json
+          subPath: prombench.json
+        - name: grafana-dashboard-prow
+          mountPath: /opt/grafana-provision/dashboards/prow-node.json
+          subPath: prow-node.json
       volumes:
       - name: grafana-persistent-storage
         emptyDir: {}
       - name: grafana-datasources
         configMap:
           name: grafana-datasources
-      - name: grafana-dashboards
+      - name: grafana-dashboard-config
         configMap:
-          name: grafana-dashboards
+          name: grafana-dashboard-config
+      - name: grafana-dashboard-prombench
+        configMap:
+          name: grafana-dashboard-prombench
+      - name: grafana-dashboard-prow
+        configMap:
+          name: grafana-dashboard-prow
       nodeSelector:
         cloud.google.com/gke-nodepool: prow
 ---
