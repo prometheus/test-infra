@@ -6,6 +6,7 @@ spec:
   selector:
     matchLabels:
       app: node-exporter
+      node: prow
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 1
@@ -14,6 +15,7 @@ spec:
     metadata:
       labels:
         app: node-exporter
+        node: prow
       name: node-exporter
     spec:
       securityContext:
