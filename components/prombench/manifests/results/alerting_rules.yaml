@@ -8,6 +8,8 @@ data:
     - name: memory
       rules:
       - alert: NodeMemoryUsage
+        #namespace and node filters are used to get metrics only from those node-exporters
+        #running on nodes where prometheus-servers are being benchmarked
         expr: (((node_memory_MemTotal_bytes{job="node-exporter",namespace=~"[[:digit:]]+",node=~".+"}
           - node_memory_MemFree_bytes{job="node-exporter",namespace=~"[[:digit:]]+",node=~".+"}
           - node_memory_Buffers_bytes{job="node-exporter",namespace=~"[[:digit:]]+",node=~".+"}
