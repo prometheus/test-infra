@@ -298,11 +298,13 @@ kind: Service
 metadata:
   name: hook
 spec:
+  type: NodePort
   selector:
     app: hook
   ports:
-  - port: 8888
-  type: NodePort
+  - name: http
+    port: 80
+    targetPort: http
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -425,7 +427,7 @@ spec:
     app: deck
   ports:
   - port: 80
-    targetPort: 8080
+    targetPort: http
   type: NodePort
 ---
 apiVersion: apps/v1
