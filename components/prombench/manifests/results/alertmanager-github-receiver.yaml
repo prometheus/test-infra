@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager-github-receiver
+spec:
+  replicas: 1 
+  selector:
+    matchLabels:
+      app: alertmanager-github-receiver
+  template:
+    metadata:
+      labels:
+        app: alertmanager-github-receiver
+    spec: 
+      containers:
+      - name: alertmanager-github-receiver
+        image: docker.io/krasimir/alertmanager-github-receiver
+        imagePullPolicy: Always
+        args:
+        - --authtokenFile=/etc/github/oauth
+        - --org={{ .GITHUB_ORG }}
+        - --repo={{ .GITHUB_REPO }}
+        volumeMounts:
+          - name: oauth-token
+            mountPath: /etc/github
+            readOnly: true
+        ports:
+          - name: webhook
+            containerPort: 9393
+      volumes:
+      - name: oauth-token
+        secret:
+          secretName: oauth-token
+      nodeSelector:
+        cloud.google.com/gke-nodepool: prow
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: alertmanager-github-receiver
+spec:
+  selector:
+    app: alertmanager-github-receiver
+  ports:
+  - port: 80
+    targetPort: webhook
