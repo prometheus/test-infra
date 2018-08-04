@@ -41,12 +41,13 @@ export GCLOUD_SERVICEACCOUNT_CLIENTID=<client_id from the service-account.json>
 - Add all required tokens as k8s secrets.
   * hmac is used when verifying requests from github.
   * oauth is used when sending requests to the github api.
-  * gke auth is used when scaling up and down the cluster.
+  * gke auth is used when scaling up and down the cluster.  
+  *2 printfs are used to remove the newline at the end of the line.*
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME \
 -f components/prow/manifests/secrets.yaml \
--v HMAC_TOKEN="$(echo $HMAC_TOKEN | base64)" \
--v OAUTH_TOKEN="$(echo $OAUTH_TOKEN | base64)" \
+-v HMAC_TOKEN="$(printf $(printf $HMAC_TOKEN | base64))" \
+-v OAUTH_TOKEN="$(printf $(printf $OAUTH_TOKEN | base64))" \
 -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)"
 
 ```
