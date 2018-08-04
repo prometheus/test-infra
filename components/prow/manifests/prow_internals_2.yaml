@@ -37,6 +37,37 @@ rules:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+  name: "hook"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: "hook"
+rules:
+  - apiGroups:
+      - "prow.k8s.io"
+    resources:
+      - prowjobs
+    verbs:
+      - create
+      - list
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: "hook"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: "hook"
+subjects:
+- kind: ServiceAccount
+  name: "hook"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
   name: "horologium"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -253,7 +284,7 @@ spec:
       labels:
         app: hook
     spec:
-      serviceAccountName: "horologium"
+      serviceAccountName: "hook"
       terminationGracePeriodSeconds: 180
       containers:
       - name: hook

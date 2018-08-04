@@ -97,6 +97,8 @@ func (c *K8s) ResourceApply(deployments []provider.ResourceFile) error {
 				err = c.serviceAccountApply(resource)
 			case "secret":
 				err = c.secretApply(resource)
+			case "persistentvolumeclaim":
+				err = c.persistentVolumeClaimApply(resource)
 			default:
 				err = fmt.Errorf("creating request for unimplimented resource type:%v", kind)
 			}
@@ -125,7 +127,7 @@ func (c *K8s) ResourceDelete(deployments []provider.ResourceFile) error {
 
 			resource, _, err := decode([]byte(text), nil, nil)
 			if err != nil {
-				return errors.Wrapf(err, "decoding the resource file: %v", deployment.Name)
+				return errors.Wrapf(err, "decoding the resource file:%v, section:%v...", deployment.Name, text[:100])
 			}
 			if resource == nil {
 				continue
@@ -156,6 +158,8 @@ func (c *K8s) ResourceDelete(deployments []provider.ResourceFile) error {
 				err = c.serviceAccountDelete(resource)
 			case "secret":
 				err = c.secretDelete(resource)
+			case "persistentvolumeclaim":
+				err = c.persistentVolumeClaimDelete(resource)
 			default:
 				err = fmt.Errorf("deleting request for unimplimented resource type:%v", kind)
 			}
@@ -674,6 +678,47 @@ func (c *K8s) secretApply(resource runtime.Object) error {
 	return nil
 }
 
+func (c *K8s) persistentVolumeClaimApply(resource runtime.Object) error {
+	req := resource.(*apiCoreV1.PersistentVolumeClaim)
+	kind := req.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
+	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
+	case "v1":
+		client := c.clt.CoreV1().PersistentVolumeClaims(req.Namespace)
+		list, err := client.List(apiMetaV1.ListOptions{})
+		if err != nil {
+			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
+		}
+
+		var exists bool
+		for _, l := range list.Items {
+			if l.Name == req.Name {
+				exists = true
+				break
+			}
+		}
+
+		if exists {
+			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+				_, err := client.Update(req)
+				return err
+			}); err != nil {
+				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
+			}
+			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+			return nil
+		} else if _, err := client.Create(req); err != nil {
+			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
+		}
+		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
+	default:
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
+	}
+	return nil
+}
+
 // Functions to delete resources
 func (c *K8s) clusterRoleDelete(resource runtime.Object) error {
 	req := resource.(*rbac.ClusterRole)
@@ -907,6 +952,26 @@ func (c *K8s) secretDelete(resource runtime.Object) error {
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.CoreV1().Secrets(req.Namespace)
+		delPolicy := apiMetaV1.DeletePropagationForeground
+		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
+		}
+		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
+	default:
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
+	}
+	return nil
+}
+
+func (c *K8s) persistentVolumeClaimDelete(resource runtime.Object) error {
+	req := resource.(*apiCoreV1.PersistentVolumeClaim)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
+	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
+	case "v1":
+		client := c.clt.CoreV1().PersistentVolumeClaims(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)

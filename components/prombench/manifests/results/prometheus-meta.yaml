@@ -1,4 +1,15 @@
 apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometeus-meta
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1000Gi
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-meta
@@ -9,7 +20,6 @@ data:
 
     rule_files:
     - '/etc/prometheus-rules/alert.rules'
-
     # Alerting specifies settings related to the Alertmanager.
     alerting:
       alertmanagers:
@@ -28,7 +38,7 @@ data:
         - source_labels: [__meta_kubernetes_pod_container_port_number]
           regex:
           action: drop
-
+          
     scrape_configs:
 
     # prometheus-meta job is added separately because prometheus-meta has a
@@ -91,7 +101,7 @@ data:
       relabel_configs:
       - action: keep
         source_labels: [__meta_kubernetes_service_label_app]
-        regex: prometheus|node-exporter|loadgen-querier|grafana
+        regex: prometheus|node-exporter|loadgen-querier
       - action: replace
         source_labels: [__meta_kubernetes_service_label_app]
         target_label: job
@@ -134,8 +144,7 @@ spec:
         args:
         - "--config.file=/etc/prometheus/config/prometheus.yaml"
         - "--storage.tsdb.path=/data"
-        - "--storage.tsdb.min-block-duration=15m"
-        - "--storage.tsdb.max-block-duration=4h"
+        - "--storage.tsdb.retention=90d"
         - "--web.external-url=http://{{ .INGRESS_IP }}/prometheus-meta"
         name: prometheus
         volumeMounts:
@@ -153,7 +162,8 @@ spec:
         configMap:
           name: alerting-rules
       - name: data
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: prometeus-meta
       terminationGracePeriodSeconds: 300
       nodeSelector:
         cloud.google.com/gke-nodepool: prow
