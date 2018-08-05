@@ -169,7 +169,6 @@ metadata:
     prometheus: test-{{ normalise .RELEASE }}
 spec:
   ports:
-  #should be 1 port
   - name: prometheus
     port: 80
     targetPort: prom-port
@@ -248,7 +247,6 @@ metadata:
     prometheus: test-pr-{{ .PR_NUMBER }}
 spec:
   ports:
-  #should be 1 port
   - name: prometheus
     port: 80
     targetPort: prom-port
