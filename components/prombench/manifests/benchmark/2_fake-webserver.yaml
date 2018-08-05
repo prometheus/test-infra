@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: fake-webserver
-        image: quay.io/prombench/fake-webserver:2.0.0
+        image: docker.io/prombench/fake-webserver:2.0.0
         ports:
         - name: metrics1
           containerPort: 8080
