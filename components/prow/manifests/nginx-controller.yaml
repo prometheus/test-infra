@@ -354,7 +354,7 @@ spec:
       paths:
       - backend:
           serviceName: prometheus-meta
-          servicePort: 9090
+          servicePort: 80
         path: /prometheus-meta
 ---
 apiVersion: extensions/v1beta1
