@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	globalRetryCount = 30
+	GlobalRetryCount = 30
 	globalRetryTime  = 10 * time.Second
 )
 
@@ -18,8 +18,8 @@ type ResourceFile struct {
 }
 
 // RetryUntilTrue returns when there is an error or the requested operation returns true.
-func RetryUntilTrue(name string, fn func() (bool, error)) error {
-	for i := 1; i <= globalRetryCount; i++ {
+func RetryUntilTrue(name string, retryCount int, fn func() (bool, error)) error {
+	for i := 1; i <= retryCount; i++ {
 		if ready, err := fn(); err != nil {
 			return err
 		} else if !ready {
@@ -30,5 +30,5 @@ func RetryUntilTrue(name string, fn func() (bool, error)) error {
 		log.Printf("Request for '%v' is done!", name)
 		return nil
 	}
-	return fmt.Errorf("Request for '%v' hasn't completed after retrying %d times", name, globalRetryCount)
+	return fmt.Errorf("Request for '%v' hasn't completed after retrying %d times", name, retryCount)
 }

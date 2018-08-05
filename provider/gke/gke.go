@@ -116,6 +116,7 @@ func (c *GKE) ClusterCreate(*kingpin.ParseContext) error {
 
 		err = provider.RetryUntilTrue(
 			fmt.Sprintf("creating cluster:%v", req.Cluster.Name),
+			provider.GlobalRetryCount,
 			func() (bool, error) { return c.clusterRunning(req.Zone, req.ProjectId, req.Cluster.Name) })
 
 		if err != nil {
@@ -143,6 +144,7 @@ func (c *GKE) ClusterDelete(*kingpin.ParseContext) error {
 
 		err := provider.RetryUntilTrue(
 			fmt.Sprintf("deleting cluster:%v", reqD.ClusterId),
+			provider.GlobalRetryCount,
 			func() (bool, error) { return c.clusterDeleted(reqD) })
 
 		if err != nil {
@@ -218,6 +220,7 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 
 			err := provider.RetryUntilTrue(
 				fmt.Sprintf("nodepool creation:%v", reqN.NodePool.Name),
+				provider.GlobalRetryCount,
 				func() (bool, error) {
 					return c.nodePoolCreated(reqN)
 				})
@@ -228,6 +231,7 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 
 			err = provider.RetryUntilTrue(
 				fmt.Sprintf("checking nodepool running status for:%v", reqN.NodePool.Name),
+				provider.GlobalRetryCount,
 				func() (bool, error) {
 					return c.nodePoolRunning(reqN.Zone, reqN.ProjectId, reqN.ClusterId, reqN.NodePool.Name)
 				})
@@ -285,6 +289,7 @@ func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 
 			err := provider.RetryUntilTrue(
 				fmt.Sprintf("deleting nodepool:%v", reqD.NodePoolId),
+				provider.GlobalRetryCount,
 				func() (bool, error) { return c.nodePoolDeleted(reqD) })
 
 			if err != nil {

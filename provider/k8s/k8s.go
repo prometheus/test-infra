@@ -381,6 +381,7 @@ func (c *K8s) deploymentApply(resource runtime.Object) error {
 	}
 	return provider.RetryUntilTrue(
 		fmt.Sprintf("applying deployment:%v", req.Name),
+		provider.GlobalRetryCount,
 		func() (bool, error) { return c.deploymentReady(resource) })
 }
 
@@ -634,6 +635,7 @@ func (c *K8s) serviceApply(resource runtime.Object) error {
 
 	return provider.RetryUntilTrue(
 		fmt.Sprintf("applying service:%v", req.Name),
+		provider.GlobalRetryCount,
 		func() (bool, error) { return c.serviceExists(resource) })
 }
 
@@ -853,6 +855,7 @@ func (c *K8s) namespaceDelete(resource runtime.Object) error {
 		log.Printf("resource deleting - kind: %v , name: %v", kind, req.Name)
 		return provider.RetryUntilTrue(
 			fmt.Sprintf("deleting namespace:%v", req.Name),
+			2*provider.GlobalRetryCount,
 			func() (bool, error) { return c.namespaceDeleted(resource) })
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
