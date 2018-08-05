@@ -1,5 +1,5 @@
 PROMBENCH_CMD        = ./prombench
-DOCKER_TAG = docker.io/sipian/prombench:v2.0.0
+DOCKER_TAG = docker.io/prombench/prombench:2.0.0
 
 deploy:
 	$(PROMBENCH_CMD) gke nodepool create -a /etc/serviceaccount/service-account.json \
