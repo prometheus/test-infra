@@ -92,6 +92,95 @@ data:
         regex: "https-metrics.*"
         target_label: __scheme__
         replacement: https
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-test-pr-{{ .PR_NUMBER }}
+  namespace: prombench-{{ .PR_NUMBER }}
+  labels:
+    app: prometheus
+    prometheus: test-pr-{{ .PR_NUMBER }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+      prometheus: test-pr-{{ .PR_NUMBER }}
+  template:
+    metadata:
+      namespace: prombench-{{ .PR_NUMBER }}
+      labels:
+        app: prometheus
+        prometheus: test-pr-{{ .PR_NUMBER }}
+    spec:
+      serviceAccountName: prometheus
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - prometheus
+      securityContext:
+        runAsUser: 0
+      containers:
+      - name: prometheus
+        image: docker.io/prombench/prometheus-builder:2.0.0
+        imagePullPolicy: Always
+        # The prometheus-builder takes a while to build and run
+        # so make sure we start it before the release deployment.
+        # Mark it ready only when prometheus is started.
+        # This way we have the least time difference in the scraped metrics.
+        readinessProbe:
+          tcpSocket:
+            port: 9090
+          initialDelaySeconds: 30
+          periodSeconds: 1
+        args: ["{{ .PR_NUMBER }}"]
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/prometheus/config
+        - name: instance-ssd
+          mountPath: /data
+        ports:
+        - name: prom-web
+          containerPort: 9090
+      volumes:
+      - name: config-volume
+        configMap:
+          name: prometheus-test
+      - name: instance-ssd
+        hostPath:
+          # /mnt is where GKE keeps it's SSD
+          # don't change this if you want Prometheus to take advantage of these local SSDs
+          path: /mnt/disks/ssd0
+      terminationGracePeriodSeconds: 300
+      nodeSelector:
+        cloud.google.com/gke-nodepool: prometheus-{{ .PR_NUMBER }}
+        isolation: prometheus
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-test-pr-{{ .PR_NUMBER }}
+  namespace: prombench-{{ .PR_NUMBER }}
+  labels:
+    app: prometheus
+    prometheus: test-pr-{{ .PR_NUMBER }}
+spec:
+  ports:
+  - name: prom-web
+    port: 80
+    targetPort: prom-web
+  selector:
+    app: prometheus
+    prometheus: test-pr-{{ .PR_NUMBER }}
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -143,7 +232,7 @@ spec:
         - name: instance-ssd
           mountPath: /data
         ports:
-        - name: prom-port
+        - name: prom-web
           containerPort: 9090
       volumes:
       - name: config-volume
@@ -169,87 +258,9 @@ metadata:
     prometheus: test-{{ normalise .RELEASE }}
 spec:
   ports:
-  - name: prometheus
+  - name: prom-web
     port: 80
-    targetPort: prom-port
+    targetPort: prom-web
   selector:
     app: prometheus
     prometheus: test-{{ normalise .RELEASE }}
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: prometheus-test-pr-{{ .PR_NUMBER }}
-  namespace: prombench-{{ .PR_NUMBER }}
-  labels:
-    app: prometheus
-    prometheus: test-pr-{{ .PR_NUMBER }}
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: prometheus
-      prometheus: test-pr-{{ .PR_NUMBER }}
-  template:
-    metadata:
-      namespace: prombench-{{ .PR_NUMBER }}
-      labels:
-        app: prometheus
-        prometheus: test-pr-{{ .PR_NUMBER }}
-    spec:
-      serviceAccountName: prometheus
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - topologyKey: kubernetes.io/hostname
-            labelSelector:
-              matchExpressions:
-              - key: app
-                operator: In
-                values:
-                - prometheus
-      securityContext:
-        runAsUser: 0
-      containers:
-      - name: prometheus
-        image: docker.io/prombench/prometheus-builder:2.0.0
-        imagePullPolicy: Always
-        args: ["{{ .PR_NUMBER }}"]
-        volumeMounts:
-        - name: config-volume
-          mountPath: /etc/prometheus/config
-        - name: instance-ssd
-          mountPath: /data
-        ports:
-        - name: prom-port
-          containerPort: 9090
-      volumes:
-      - name: config-volume
-        configMap:
-          name: prometheus-test
-      - name: instance-ssd
-        hostPath:
-          # /mnt is where GKE keeps it's SSD
-          # don't change this if you want Prometheus to take advantage of these local SSDs
-          path: /mnt/disks/ssd0
-      terminationGracePeriodSeconds: 300
-      nodeSelector:
-        cloud.google.com/gke-nodepool: prometheus-{{ .PR_NUMBER }}
-        isolation: prometheus
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: prometheus-test-pr-{{ .PR_NUMBER }}
-  namespace: prombench-{{ .PR_NUMBER }}
-  labels:
-    app: prometheus
-    prometheus: test-pr-{{ .PR_NUMBER }}
-spec:
-  ports:
-  - name: prometheus
-    port: 80
-    targetPort: prom-port
-  selector:
-    app: prometheus
-    prometheus: test-pr-{{ .PR_NUMBER }}
