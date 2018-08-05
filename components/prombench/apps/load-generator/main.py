@@ -81,9 +81,9 @@ class Querier(object):
         self.step = qg.get("step", "15s")
 
         if self.type == "instant":
-            self.url = "http://prometheus-test-%s.%s:9090/api/v1/query" % (target, namespace)
+            self.url = "http://prometheus-test-%s.%s/api/v1/query" % (target, namespace)
         else:
-            self.url = "http://prometheus-test-%s.%s:9090/api/v1/query_range" % (target, namespace)
+            self.url = "http://prometheus-test-%s.%s/api/v1/query_range" % (target, namespace)
 
     def run(self):
         print("run querier %s %s" % (self.target, self.name))
