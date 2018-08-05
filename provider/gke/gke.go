@@ -264,7 +264,7 @@ func (c *GKE) nodePoolCreated(req *containerpb.CreateNodePoolRequest) (bool, err
 		return false, err
 	}
 	log.Printf("cluster node pool status: `%v`", rep.Status)
-	return false, nil
+	return true, nil
 }
 
 // NodePoolDelete deletes a new k8s node-pool in an existing cluster
