@@ -204,7 +204,8 @@ spec:
   clusterIP: None
   ports:
   - name: metrics
-    port: 9100
+    port: 80
+    targetPort: scrape
     protocol: TCP
   selector:
     app: node-exporter

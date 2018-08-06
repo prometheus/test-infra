@@ -81,9 +81,9 @@ class Querier(object):
         self.step = qg.get("step", "15s")
 
         if self.type == "instant":
-            self.url = "http://prometheus-test-%s.%s:9090/api/v1/query" % (target, namespace)
+            self.url = "http://prometheus-test-%s.%s/api/v1/query" % (target, namespace)
         else:
-            self.url = "http://prometheus-test-%s.%s:9090/api/v1/query_range" % (target, namespace)
+            self.url = "http://prometheus-test-%s.%s/api/v1/query_range" % (target, namespace)
 
     def run(self):
         print("run querier %s %s" % (self.target, self.name))
@@ -137,6 +137,7 @@ def main():
         print("usage: <load_generator> <scaler|querier> <namespace>")
         exit(2)
 
+    global namespace
     namespace = sys.argv[2]
     host = os.environ.get('KUBERNETES_SERVICE_HOST')
     port = os.environ.get('KUBERNETES_PORT_443_TCP_PORT')

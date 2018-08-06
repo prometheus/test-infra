@@ -154,6 +154,9 @@ spec:
           mountPath: /etc/prometheus-rules
         - name: data
           mountPath: /data
+        ports:
+        - name: prom-web
+          containerPort: 9090
       volumes:
       - name: config-volume
         configMap:
@@ -178,8 +181,9 @@ metadata:
 spec:
   type: NodePort
   ports:
-  - name: prometheus
-    port: 9090
+  - name: prom-web
+    port: 80
+    targetPort: prom-web
   selector:
     app: prometheus-meta
     prometheus: meta

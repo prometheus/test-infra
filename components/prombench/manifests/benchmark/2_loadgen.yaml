@@ -73,7 +73,7 @@ spec:
       serviceAccountName: loadgen-scaler
       containers:
       - name: prom-load-generator
-        image: docker.io/sipian/prombench-loadgen:v2.0.0
+        image: docker.io/prombench/load-generator:2.0.0
         imagePullPolicy: Always
         args:
         - "scaler"
@@ -107,7 +107,7 @@ spec:
     spec:
       containers:
       - name: prom-load-generator
-        image: docker.io/sipian/prombench-loadgen:v2.0.0
+        image: docker.io/prombench/load-generator:2.0.0
         imagePullPolicy: Always
         args:
         - "querier"
@@ -117,6 +117,9 @@ spec:
         volumeMounts:
         - name: config-volume
           mountPath: /etc/loadgen
+        ports:
+        - name: loadgen-port
+          containerPort: 8080
       volumes:
       - name: config-volume
         configMap:
@@ -137,6 +140,7 @@ spec:
   clusterIP: None
   ports:
   - name: prometheus
-    port: 8080
+    port: 80
+    targetPort: loadgen-port
   selector:
     app: loadgen-querier
