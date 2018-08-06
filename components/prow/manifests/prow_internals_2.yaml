@@ -357,6 +357,7 @@ spec:
       containers:
       - name: plank
         image: docker.io/prombench/plank:2.0.0
+        imagePullPolicy: Always
         args:
         - --dry-run=false
         volumeMounts:
