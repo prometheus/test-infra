@@ -17,7 +17,7 @@ data:
         for: 2m
         annotations:
           issue: '{{"{{"}}$labels.namespace{{"}}"}}'
-          description: 'PR:{{"{{"}}$labels.namespace{{"}}"}} is using 15% more RAM than the release (current value is: {{"{{"}}$value{{"}}"}})'
+          description: 'PR:{{"{{"}}$labels.namespace{{"}}"}} : RAM usage higher than the set threshold. (current value is: {{"{{"}}$value{{"}}"}})'
           summary: 'High memory usage detected'
 
     - name: cpu
@@ -30,5 +30,6 @@ data:
         for: 2m
         annotations:
           issue: '{{"{{"}}$labels.namespace{{"}}"}}'
-          description: 'PR:{{"{{"}}$labels.namespace{{"}}"}} is using 15% more CPU time than the release (current value is: {{"{{"}}$value{{"}}"}})'
+          description: 'PR:{{"{{"}}$labels.namespace{{"}}"}} : CPU usage higher than the set threshold. (current value is: {{"{{"}}$value{{"}}"}})'          
           summary: 'High memory usage detected'
+

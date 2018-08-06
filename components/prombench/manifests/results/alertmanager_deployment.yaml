@@ -1,3 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager
+data:
+  config.yml: |-
+    global:
+      resolve_timeout: 5m
+
+    # The root route on which each incoming alert enters.
+    route:
+      group_by: ['namespace']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h 
+
+      # A default receiver
+      receiver: alertmanager-github-receiver
+
+    receivers:
+    - name: 'alertmanager-github-receiver'
+      webhook_configs:
+      - send_resolved: false
+        url: 'http://alertmanager-github-receiver/v1/receiver'
+---        
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -45,7 +70,6 @@ metadata:
 spec:
   selector:
     app: alertmanager
-  type: NodePort
   ports:
   - name: alertmanager
     protocol: TCP
