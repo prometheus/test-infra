@@ -7,8 +7,8 @@ data:
   config.yaml: |
     scaler:
       name: fake-webserver
-      high: 700
-      low: 100
+      high: 80
+      low: 10
       intervalMinutes: 15
     querier:
       groups:

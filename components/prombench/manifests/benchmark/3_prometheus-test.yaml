@@ -140,7 +140,8 @@ spec:
           tcpSocket:
             port: 9090
           initialDelaySeconds: 30
-          periodSeconds: 1
+          periodSeconds: 2
+          failureThreshold: 30
         args: ["{{ .PR_NUMBER }}"]
         volumeMounts:
         - name: config-volume
@@ -223,8 +224,6 @@ spec:
         args: [
           "--config.file=/etc/prometheus/config/prometheus.yaml",
           "--storage.tsdb.path=/data",
-          "--storage.tsdb.min-block-duration=15m",
-          "--storage.tsdb.max-block-duration=4h"
         ]
         volumeMounts:
         - name: config-volume
