@@ -52,8 +52,8 @@ export GCLOUD_SERVICEACCOUNT_CLIENTID=<client_id from the service-account.json>
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME \
 -f components/prow/manifests/secrets.yaml \
--v HMAC_TOKEN="$(printf $HMAC_TOKEN | base64 -w 0))" \
--v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0))" \
+-v HMAC_TOKEN="$(printf $HMAC_TOKEN | base64 -w 0)" \
+-v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
 -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)"
 
 ```
