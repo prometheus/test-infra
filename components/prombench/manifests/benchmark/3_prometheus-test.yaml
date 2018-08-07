@@ -6,7 +6,7 @@ metadata:
 data:
   prometheus.yaml: |
     global:
-      scrape_interval: 4s
+      scrape_interval: 1s
 
     scrape_configs:
     - job_name: kubelets
