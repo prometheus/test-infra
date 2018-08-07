@@ -36,13 +36,13 @@ class Scaler(object):
 
     def run(self):
         while True:
-            time.sleep(self.interval)
-
-            print("scaling deployment %s" % self.deployment)
-
+            print("scaling deployment %s down" % self.deployment)
             self.scale(self.low)
-            time.sleep(30)
+            time.sleep(self.interval)
+            
+            print("scaling deployment %s up" % self.deployment)
             self.scale(self.high)
+            time.sleep(self.interval)
 
     def scale(self, n):
         p = deployment_path(self.url, self.deployment)
