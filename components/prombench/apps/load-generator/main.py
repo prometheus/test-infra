@@ -36,11 +36,11 @@ class Scaler(object):
 
     def run(self):
         while True:
-            print("scaling deployment %s down" % self.deployment)
+            print("scaling deployment %s to %d" % self.deployment, self.low)
             self.scale(self.low)
             time.sleep(self.interval)
-            
-            print("scaling deployment %s up" % self.deployment)
+
+            print("scaling deployment %s to %d" % self.deployment, self.high)
             self.scale(self.high)
             time.sleep(self.interval)
 
