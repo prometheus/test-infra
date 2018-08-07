@@ -4,7 +4,7 @@ metadata:
   name: fake-webserver
   namespace: prombench-{{ .PR_NUMBER }}  
 spec:
-  replicas: 5
+  replicas: 1
   selector:
     matchLabels:
       app: fake-webserver
