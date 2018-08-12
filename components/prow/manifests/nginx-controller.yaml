@@ -35,7 +35,7 @@ spec:
           initialDelaySeconds: 30
           timeoutSeconds: 5
         ports:
-        - name: default-backend-port
+        - name: backend-port
           containerPort: 8080
         resources:
           limits:
@@ -57,7 +57,7 @@ metadata:
 spec:
   ports:
   - port: 80
-    targetPort: default-backend-port
+    targetPort: backend-port
   selector:
     app: default-http-backend
 ---
