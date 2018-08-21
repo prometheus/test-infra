@@ -1033,7 +1033,12 @@ func (c *K8s) deploymentReady(resource runtime.Object) (bool, error) {
 		if err != nil {
 			return false, errors.Wrapf(err, "Checking Deployment resource:'%v' status failed err:%v", req.Name, err)
 		}
-		if res.Status.UnavailableReplicas == 0 {
+
+		replicas := int32(1)
+		if req.Spec.Replicas != nil {
+			replicas = *req.Spec.Replicas
+		}
+		if res.Status.AvailableReplicas == replicas {
 			return true, nil
 		}
 		return false, nil
