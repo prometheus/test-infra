@@ -111,7 +111,7 @@ func (c *GKE) ClusterCreate(*kingpin.ParseContext) error {
 		log.Printf("Cluster create request: name:'%v', project `%s`,zone `%s`", req.Cluster.Name, req.ProjectId, req.Zone)
 		_, err := c.clientGKE.CreateCluster(c.ctx, req)
 		if err != nil {
-			log.Fatalf("Couldn't create cluster '%v', file:%v ,err: %v", deployment.Name, req.Cluster.Name, err)
+			log.Fatalf("Couldn't create cluster '%v', file:%v ,err: %v", req.Cluster.Name, deployment.Name, err)
 		}
 
 		err = provider.RetryUntilTrue(
