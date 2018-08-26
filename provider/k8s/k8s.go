@@ -1,11 +1,17 @@
 package k8s
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
+	"text/template"
 
 	"github.com/pkg/errors"
+	"gopkg.in/alecthomas/kingpin.v2"
 	appsV1 "k8s.io/api/apps/v1"
 	apiCoreV1 "k8s.io/api/core/v1"
 	apiExtensionsV1beta1 "k8s.io/api/extensions/v1beta1"
@@ -16,13 +22,12 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
 
 	"strings"
 
 	"github.com/prometheus/prombench/provider"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 // K8s is the main provider struct.
@@ -31,21 +36,118 @@ type K8s struct {
 	ctx context.Context
 }
 
-// New returns a k8s client that can apply and delete resources.
-func New(ctx context.Context, config clientcmdapi.Config) (*K8s, error) {
-	restConfig, err := clientcmd.NewDefaultClientConfig(config, &clientcmd.ConfigOverrides{}).ClientConfig()
-	if err != nil {
-		return nil, errors.Wrapf(err, "config error")
-	}
-	clientset, err := kubernetes.NewForConfig(restConfig)
-	if err != nil {
-		return nil, errors.Wrapf(err, "client error")
-	}
+type K8sClient struct {
+	// The k8s provider used when we work with the manifest files.
+	k8sProvider *K8s
+	// DeploymentFiles files provided from the cli.
+	DeploymentFiles []string
+	// Vaiables to subtitude in the DeploymentFiles.
+	// These are also used when the command requires some variables that are not provided by the deployment file.
+	DeploymentVars map[string]string
+	// DeploymentFile content after substituting the variables filename is used as the map key.
+	deploymentsContent []provider.ResourceFile
 
+	ctx context.Context
+}
+
+// New returns a k8s client that can apply and delete resources.
+func New(ctx context.Context, clientset *kubernetes.Clientset) *K8s {
 	return &K8s{
 		ctx: ctx,
 		clt: clientset,
+	}
+}
+
+// NewK8sClient returns a k8s client that can apply and delete resources.
+func NewK8sClient() (*K8sClient, error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, errors.Wrapf(err, "k8s config error")
+	}
+	// creates the clientset
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, errors.Wrapf(err, "k8s client error")
+	}
+
+	ctx := context.Background()
+	return &K8sClient{
+		k8sProvider:    New(ctx, clientset),
+		DeploymentVars: make(map[string]string),
+		ctx:            ctx,
 	}, nil
+}
+
+// DeploymentsParse parses the deployment files and saves the result as bytes grouped by the filename.
+// Any variables passed to the cli will be replaced in the resources files following the golang text template format.
+func (c *K8sClient) DeploymentsParse(*kingpin.ParseContext) error {
+	var fileList []string
+	for _, name := range c.DeploymentFiles {
+		if file, err := os.Stat(name); err == nil && file.IsDir() {
+			if err := filepath.Walk(name, func(path string, f os.FileInfo, err error) error {
+				if filepath.Ext(path) == ".yaml" || filepath.Ext(path) == ".yml" {
+					fileList = append(fileList, path)
+				}
+				return nil
+			}); err != nil {
+				return fmt.Errorf("error reading directory: %v", err)
+			}
+		} else {
+			fileList = append(fileList, name)
+		}
+	}
+
+	for _, name := range fileList {
+		content, err := c.applyTemplateVars(name)
+		if err != nil {
+			return fmt.Errorf("couldn't apply template to file %s: %v", name, err)
+		}
+		c.deploymentsContent = append(c.deploymentsContent, provider.ResourceFile{name, content})
+	}
+	return nil
+}
+
+// applyTemplateVars applys golang templates to deployment files
+func (c *K8sClient) applyTemplateVars(file string) ([]byte, error) {
+	content, err := ioutil.ReadFile(file)
+	if err != nil {
+		log.Fatalf("Error reading file %v:%v", file, err)
+	}
+
+	fileContentParsed := bytes.NewBufferString("")
+	t := template.New("resource").Option("missingkey=error")
+	// k8s objects can't have dots(.) se we add a custom function to allow normalising the variable values.
+	t = t.Funcs(template.FuncMap{
+		"normalise": func(t string) string {
+			return strings.Replace(t, ".", "-", -1)
+		},
+	})
+	if err := template.Must(t.Parse(string(content))).Execute(fileContentParsed, c.DeploymentVars); err != nil {
+		log.Fatalf("Failed to execute parse file: err:%v", file, err)
+	}
+	return fileContentParsed.Bytes(), nil
+}
+
+// ResourceApply iterates over all manifest files
+// and applies the resource definitions on the k8s cluster.
+//
+// Each file can contain more than one resource definition where `----` is used as separator.
+func (c *K8sClient) K8sResourceApply(*kingpin.ParseContext) error {
+	if err := c.k8sProvider.ResourceApply(c.deploymentsContent); err != nil {
+		log.Fatal("error while applying a resource err:", err)
+	}
+	return nil
+}
+
+// ResourceDelete iterates over all files passed as a cli argument
+// and deletes all resources defined in the resource files.
+//
+// Each file can container more than one resource definition where `---` is used as separator.
+func (c *K8sClient) K8sResourceDelete(*kingpin.ParseContext) error {
+	if err := c.k8sProvider.ResourceDelete(c.deploymentsContent); err != nil {
+		log.Fatal("error while deleting objects from a manifest file err:", err)
+	}
+	return nil
 }
 
 // ResourceApply applies manifest files.
