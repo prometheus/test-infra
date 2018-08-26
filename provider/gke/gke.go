@@ -24,6 +24,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	yamlGo "gopkg.in/yaml.v2"
 	"k8s.io/client-go/kubernetes"
+
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
@@ -96,7 +97,7 @@ func (c *GKE) DeploymentsParse(*kingpin.ParseContext) error {
 		if err != nil {
 			return fmt.Errorf("couldn't apply template to file %s: %v", name, err)
 		}
-		c.deploymentsContent = append(c.deploymentsContent, provider.ResourceFile{name, content})
+		c.deploymentsContent = append(c.deploymentsContent, provider.ResourceFile{Name: name, Content: content})
 	}
 	return nil
 }
@@ -107,7 +108,7 @@ func (c *GKE) ClusterCreate(*kingpin.ParseContext) error {
 	for _, deployment := range c.deploymentsContent {
 
 		if err := yamlGo.UnmarshalStrict(deployment.Content, req); err != nil {
-			log.Fatalf("Error parsing the cluster deployment file %f:%v", deployment.Name, err)
+			log.Fatalf("Error parsing the cluster deployment file %s:%v", deployment.Name, err)
 		}
 
 		log.Printf("Cluster create request: name:'%v', project `%s`,zone `%s`", req.Cluster.Name, req.ProjectId, req.Zone)
@@ -135,7 +136,7 @@ func (c *GKE) ClusterDelete(*kingpin.ParseContext) error {
 	reqC := &containerpb.CreateClusterRequest{}
 	for _, deployment := range c.deploymentsContent {
 		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
-			log.Fatalf("Error parsing the cluster deployment file %f:%v", deployment.Name, err)
+			log.Fatalf("Error parsing the cluster deployment file %s:%v", deployment.Name, err)
 		}
 		reqD := &containerpb.DeleteClusterRequest{
 			ProjectId: reqC.ProjectId,
@@ -156,7 +157,7 @@ func (c *GKE) ClusterDelete(*kingpin.ParseContext) error {
 	return nil
 }
 
-// clusterDeleted checks whether a cluster has been deleted or not
+// clusterDeleted checks whether a cluster has been deleted.
 func (c *GKE) clusterDeleted(req *containerpb.DeleteClusterRequest) (bool, error) {
 	rep, err := c.clientGKE.DeleteCluster(c.ctx, req)
 	if err != nil {
@@ -177,7 +178,7 @@ func (c *GKE) clusterDeleted(req *containerpb.DeleteClusterRequest) (bool, error
 	return false, nil
 }
 
-// clusterDeleted checks whether a cluster has been created or not
+// clusterDeleted checks whether a cluster is in a running state.
 func (c *GKE) clusterRunning(zone, projectID, clusterID string) (bool, error) {
 	req := &containerpb.GetClusterRequest{
 		ProjectId: projectID,
@@ -210,7 +211,7 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 
 	for _, deployment := range c.deploymentsContent {
 		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
-			log.Fatalf("Error parsing the cluster deployment file %f:%v", deployment.Name, err)
+			log.Fatalf("Error parsing the cluster deployment file %s:%v", deployment.Name, err)
 		}
 
 		for _, node := range reqC.Cluster.NodePools {
@@ -249,7 +250,7 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 }
 
 // nodePoolCreated checks if there is any ongoing NodePool operation on the cluster
-// when creating a NodePool
+// when creating a NodePool.
 func (c *GKE) nodePoolCreated(req *containerpb.CreateNodePoolRequest) (bool, error) {
 
 	rep, err := c.clientGKE.CreateNodePool(c.ctx, req)
@@ -271,7 +272,7 @@ func (c *GKE) nodePoolCreated(req *containerpb.CreateNodePoolRequest) (bool, err
 	return true, nil
 }
 
-// NodePoolDelete deletes a new k8s node-pool in an existing cluster
+// NodePoolDelete deletes a new k8s node-pool in an existing cluster.
 func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 	// Use CreateNodePoolRequest struct to pass the UnmarshalStrict validation and
 	// than use the result to create the DeleteNodePoolRequest
@@ -279,7 +280,7 @@ func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 	for _, deployment := range c.deploymentsContent {
 
 		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
-			log.Fatalf("Error parsing the cluster deployment file %f:%v", deployment.Name, err)
+			log.Fatalf("Error parsing the cluster deployment file %s:%v", deployment.Name, err)
 		}
 
 		for _, node := range reqC.Cluster.NodePools {
@@ -304,7 +305,7 @@ func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 	return nil
 }
 
-// nodePoolDeleted checks whether a nodepool has been deleted or not
+// nodePoolDeleted checks whether a nodepool has been deleted.
 func (c *GKE) nodePoolDeleted(req *containerpb.DeleteNodePoolRequest) (bool, error) {
 
 	rep, err := c.clientGKE.DeleteNodePool(c.ctx, req)
@@ -329,7 +330,7 @@ func (c *GKE) nodePoolDeleted(req *containerpb.DeleteNodePoolRequest) (bool, err
 	return false, nil
 }
 
-// nodePoolRunning checks whether a nodepool has been created or not
+// nodePoolRunning checks whether a nodepool has been created.
 func (c *GKE) nodePoolRunning(zone, projectID, clusterID, poolName string) (bool, error) {
 	req := &containerpb.GetNodePoolRequest{
 		ProjectId:  projectID,
@@ -354,7 +355,7 @@ func (c *GKE) nodePoolRunning(zone, projectID, clusterID, poolName string) (bool
 		rep.Status == containerpb.NodePool_RUNNING_WITH_ERROR ||
 		rep.Status == containerpb.NodePool_STOPPING ||
 		rep.Status == containerpb.NodePool_STATUS_UNSPECIFIED {
-		log.Fatalf("NodePool not in a status to become ready: %v", rep.Name, rep.StatusMessage)
+		log.Fatalf("NodePool %s not in a status to become ready: %v", rep.Name, rep.StatusMessage)
 	}
 
 	log.Printf("Current cluster node pool '%v' status:%v , %v", rep.Name, rep.Status, rep.StatusMessage)
@@ -417,7 +418,7 @@ func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 	config.AuthInfos[rep.Zone] = authInfo
 	config.CurrentContext = rep.Zone
 
-	k8sClientSet, err := newK8sClient(*config)
+	k8sClientSet, err := newK8sClientSet(*config)
 	if err != nil {
 		log.Fatal("k8s provider error", err)
 	}
@@ -426,7 +427,7 @@ func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 }
 
 // newK8sClient returns a k8s client from GKE config that can apply and delete resources.
-func newK8sClient(config clientcmdapi.Config) (*kubernetes.Clientset, error) {
+func newK8sClientSet(config clientcmdapi.Config) (*kubernetes.Clientset, error) {
 	restConfig, err := clientcmd.NewDefaultClientConfig(config, &clientcmd.ConfigOverrides{}).ClientConfig()
 	if err != nil {
 		return nil, errors.Wrapf(err, "k8s config error")
@@ -461,7 +462,7 @@ func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 	return nil
 }
 
-// applyTemplateVars applys golang templates to deployment files
+// applyTemplateVars applies golang templates to deployment files
 func (c *GKE) applyTemplateVars(file string) ([]byte, error) {
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -494,7 +495,7 @@ func (c *GKE) applyTemplateVars(file string) ([]byte, error) {
 		},
 	})
 	if err := template.Must(t.Parse(string(content))).Execute(fileContentParsed, c.DeploymentVars); err != nil {
-		log.Fatalf("Failed to execute parse file: err:%v", file, err)
+		log.Fatalf("Failed to execute parse file:%s err:%v", file, err)
 	}
 	return fileContentParsed.Bytes(), nil
 }

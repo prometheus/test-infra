@@ -102,12 +102,12 @@ func (c *K8sClient) DeploymentsParse(*kingpin.ParseContext) error {
 		if err != nil {
 			return fmt.Errorf("couldn't apply template to file %s: %v", name, err)
 		}
-		c.deploymentsContent = append(c.deploymentsContent, provider.ResourceFile{name, content})
+		c.deploymentsContent = append(c.deploymentsContent, provider.ResourceFile{Name: name, Content: content})
 	}
 	return nil
 }
 
-// applyTemplateVars applys golang templates to deployment files
+// applyTemplateVars applies golang templates to deployment files
 func (c *K8sClient) applyTemplateVars(file string) ([]byte, error) {
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -123,12 +123,12 @@ func (c *K8sClient) applyTemplateVars(file string) ([]byte, error) {
 		},
 	})
 	if err := template.Must(t.Parse(string(content))).Execute(fileContentParsed, c.DeploymentVars); err != nil {
-		log.Fatalf("Failed to execute parse file: err:%v", file, err)
+		log.Fatalf("Failed to execute parse file:%s err:%v", file, err)
 	}
 	return fileContentParsed.Bytes(), nil
 }
 
-// ResourceApply iterates over all manifest files
+// K8sResourceApply iterates over all manifest files
 // and applies the resource definitions on the k8s cluster.
 //
 // Each file can contain more than one resource definition where `----` is used as separator.
@@ -139,7 +139,7 @@ func (c *K8sClient) K8sResourceApply(*kingpin.ParseContext) error {
 	return nil
 }
 
-// ResourceDelete iterates over all files passed as a cli argument
+// K8sResourceDelete iterates over all files passed as a cli argument
 // and deletes all resources defined in the resource files.
 //
 // Each file can container more than one resource definition where `---` is used as separator.
