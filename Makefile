@@ -29,7 +29,8 @@ nodepool_delete:
 		-f components/prombench/nodepools.yaml
 
 build:
-	@vgo build -o prombench cmd/prombench/main.go
+	@go version | grep go1.11 || exit  "Requires golang 1.11 with support for modules!"
+	@GO111MODULE=on go build cmd/prombench/*.go
 
 docker: build
 	@docker build -t $(DOCKER_TAG) .
