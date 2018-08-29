@@ -15,9 +15,9 @@ import (
 
 	gke "cloud.google.com/go/container/apiv1"
 	"github.com/pkg/errors"
-	k8sProvider "github.com/prometheus/prombench/provider/k8s"
+	k8sProvider "github.com/prometheus/prombench/pkg/provider/k8s"
 
-	"github.com/prometheus/prombench/provider"
+	"github.com/prometheus/prombench/pkg/provider"
 	containerpb "google.golang.org/genproto/googleapis/container/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

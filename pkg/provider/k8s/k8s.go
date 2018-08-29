@@ -21,7 +21,7 @@ import (
 
 	"strings"
 
-	"github.com/prometheus/prombench/provider"
+	"github.com/prometheus/prombench/pkg/provider"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
