@@ -853,13 +853,10 @@ func (c *K8s) namespaceDelete(resource runtime.Object) error {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleting - kind: %v , name: %v", kind, req.Name)
-		return provider.RetryUntilTrue(
-			fmt.Sprintf("deleting namespace:%v", req.Name),
-			2*provider.GlobalRetryCount,
-			func() (bool, error) { return c.namespaceDeleted(resource) })
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
+	return nil
 }
 
 func (c *K8s) roleDelete(resource runtime.Object) error {
