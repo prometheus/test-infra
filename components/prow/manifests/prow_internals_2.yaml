@@ -37,6 +37,37 @@ rules:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+  name: "hook"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: "hook"
+rules:
+  - apiGroups:
+      - "prow.k8s.io"
+    resources:
+      - prowjobs
+    verbs:
+      - create
+      - list
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: "hook"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: "hook"
+subjects:
+- kind: ServiceAccount
+  name: "hook"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
   name: "horologium"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -186,7 +217,7 @@ data:
         agent: kubernetes
         spec:
           containers:
-          - image: docker.io/sipian/prombench:v2.0.0
+          - image: docker.io/prombench/prombench:2.0.0
             imagePullPolicy: Always
             command:
             - "make"
@@ -212,7 +243,7 @@ data:
         agent: kubernetes
         spec:
           containers:
-          - image: docker.io/sipian/prombench:v2.0.0
+          - image: docker.io/prombench/prombench:2.0.0
             imagePullPolicy: Always
             command:
             - "make"
@@ -253,11 +284,11 @@ spec:
       labels:
         app: hook
     spec:
-      serviceAccountName: "horologium"
+      serviceAccountName: "hook"
       terminationGracePeriodSeconds: 180
       containers:
       - name: hook
-        image: docker.io/sipian/hook:2.0.0
+        image: docker.io/prombench/hook:2.0.0
         imagePullPolicy: Always
         args:
         - --dry-run=false
@@ -298,11 +329,13 @@ kind: Service
 metadata:
   name: hook
 spec:
+  type: NodePort
   selector:
     app: hook
   ports:
-  - port: 8888
-  type: NodePort
+  - name: http
+    port: 80
+    targetPort: http
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -323,7 +356,8 @@ spec:
       serviceAccountName: "plank"
       containers:
       - name: plank
-        image: docker.io/sipian/plank:2.0.0
+        image: docker.io/prombench/plank:2.0.0
+        imagePullPolicy: Always
         args:
         - --dry-run=false
         volumeMounts:
@@ -425,7 +459,7 @@ spec:
     app: deck
   ports:
   - port: 80
-    targetPort: 8080
+    targetPort: http
   type: NodePort
 ---
 apiVersion: apps/v1

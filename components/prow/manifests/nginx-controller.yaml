@@ -35,7 +35,8 @@ spec:
           initialDelaySeconds: 30
           timeoutSeconds: 5
         ports:
-        - containerPort: 8080
+        - name: default-backend-port
+          containerPort: 8080
         resources:
           limits:
             cpu: 10m
@@ -56,7 +57,7 @@ metadata:
 spec:
   ports:
   - port: 80
-    targetPort: 8080
+    targetPort: default-backend-port
   selector:
     app: default-http-backend
 ---
@@ -338,7 +339,7 @@ spec:
       - path: /hook
         backend:
           serviceName: hook
-          servicePort: 8888
+          servicePort: 80
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
@@ -353,7 +354,7 @@ spec:
       paths:
       - backend:
           serviceName: prometheus-meta
-          servicePort: 9090
+          servicePort: 80
         path: /prometheus-meta
 ---
 apiVersion: extensions/v1beta1
@@ -370,5 +371,5 @@ spec:
       paths:
       - backend:
           serviceName: grafana
-          servicePort: 3000
+          servicePort: 80
         path: /grafana

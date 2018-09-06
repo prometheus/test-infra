@@ -36,13 +36,13 @@ class Scaler(object):
 
     def run(self):
         while True:
+            print("scaling deployment %s to %d" % (self.deployment, self.low))
+            self.scale(self.low)
             time.sleep(self.interval)
 
-            print("scaling deployment %s" % self.deployment)
-
-            self.scale(self.low)
-            time.sleep(30)
+            print("scaling deployment %s to %d" % (self.deployment, self.high))
             self.scale(self.high)
+            time.sleep(self.interval)
 
     def scale(self, n):
         p = deployment_path(self.url, self.deployment)
@@ -81,9 +81,9 @@ class Querier(object):
         self.step = qg.get("step", "15s")
 
         if self.type == "instant":
-            self.url = "http://prometheus-test-%s.%s:9090/api/v1/query" % (target, namespace)
+            self.url = "http://prometheus-test-%s.%s/api/v1/query" % (target, namespace)
         else:
-            self.url = "http://prometheus-test-%s.%s:9090/api/v1/query_range" % (target, namespace)
+            self.url = "http://prometheus-test-%s.%s/api/v1/query_range" % (target, namespace)
 
     def run(self):
         print("run querier %s %s" % (self.target, self.name))
@@ -137,6 +137,7 @@ def main():
         print("usage: <load_generator> <scaler|querier> <namespace>")
         exit(2)
 
+    global namespace
     namespace = sys.argv[2]
     host = os.environ.get('KUBERNETES_SERVICE_HOST')
     port = os.environ.get('KUBERNETES_PORT_443_TCP_PORT')

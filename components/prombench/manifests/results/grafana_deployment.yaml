@@ -62,6 +62,9 @@ spec:
         - name: grafana-dashboard-prow
           mountPath: /opt/grafana-provision/dashboards/prow-node.json
           subPath: prow-node.json
+        ports:
+        - name: grafana-web
+          containerPort: 3000
       volumes:
       - name: grafana-persistent-storage
         emptyDir: {}
@@ -90,7 +93,9 @@ metadata:
 spec:
   type: NodePort
   ports:
-    - port: 3000
+    - name:
+      port: 80
+      targetPort: grafana-web
   selector:
     app: grafana
     component: core
