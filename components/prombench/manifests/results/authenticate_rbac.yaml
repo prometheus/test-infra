@@ -30,11 +30,10 @@ kind: ClusterRole
 metadata:
   name: loadgen-scaler
 rules:
-- apiGroups:
-  - extensions
+- apiGroups: [""]
   resources:
   - deployments
-  verbs: ["get", "update"]
+  verbs: ["update"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

@@ -14,7 +14,7 @@ nodepool_create:
 resource_apply:
 	$(PROMBENCH_CMD) gke resource apply -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
-		-v PR_NUMBER:${PR_NUMBER} -v RELEASE:${RELEASE} \
+		-v PR_NUMBER:${PR_NUMBER} -v RELEASE:${RELEASE} -v WEBSERVER_REPLICAS:1 \
 		-f components/prombench/manifests/benchmark
 
 clean: resource_delete nodepool_delete
@@ -29,7 +29,8 @@ nodepool_delete:
 		-f components/prombench/nodepools.yaml
 
 build:
-	@vgo build -o prombench cmd/prombench/main.go
+	@go version | grep go1.11 || exit  "Requires golang 1.11 with support for modules!"
+	@GO111MODULE=on go build cmd/prombench/*.go
 
 docker: build
 	@docker build -t $(DOCKER_TAG) .
