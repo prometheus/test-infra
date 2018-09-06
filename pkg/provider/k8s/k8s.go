@@ -1,14 +1,9 @@
 package k8s
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
-	"path/filepath"
-	"text/template"
 
 	"github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -27,7 +22,7 @@ import (
 
 	"strings"
 
-	"github.com/prometheus/prombench/provider"
+	"github.com/prometheus/prombench/pkg/provider"
 )
 
 // K8s is the main provider struct.
@@ -36,6 +31,7 @@ type K8s struct {
 	ctx context.Context
 }
 
+// K8sClient holds the fields used to generate API reqeust from within a cluster.
 type K8sClient struct {
 	// The k8s provider used when we work with the manifest files.
 	k8sProvider *K8s
@@ -79,53 +75,72 @@ func NewK8sClient() (*K8sClient, error) {
 }
 
 // DeploymentsParse parses the deployment files and saves the result as bytes grouped by the filename.
-// Any variables passed to the cli will be replaced in the resources files following the golang text template format.
 func (c *K8sClient) DeploymentsParse(*kingpin.ParseContext) error {
-	var fileList []string
-	for _, name := range c.DeploymentFiles {
-		if file, err := os.Stat(name); err == nil && file.IsDir() {
-			if err := filepath.Walk(name, func(path string, f os.FileInfo, err error) error {
-				if filepath.Ext(path) == ".yaml" || filepath.Ext(path) == ".yml" {
-					fileList = append(fileList, path)
-				}
-				return nil
-			}); err != nil {
-				return fmt.Errorf("error reading directory: %v", err)
-			}
-		} else {
-			fileList = append(fileList, name)
-		}
+
+	deploymentsContent, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
+	if err != nil {
+		log.Fatalf("Couldn't parse deployment files: %v", err)
 	}
 
-	for _, name := range fileList {
-		content, err := c.applyTemplateVars(name)
-		if err != nil {
-			return fmt.Errorf("couldn't apply template to file %s: %v", name, err)
+	c.deploymentsContent = deploymentsContent
+	return nil
+}
+
+// Scale scales a deployment to a given number of replicas.
+func (c *K8sClient) Scale(replicas *int32) error {
+
+	for _, deployment := range c.deploymentsContent {
+		separator := "---"
+		decode := scheme.Codecs.UniversalDeserializer().Decode
+
+		for _, text := range strings.Split(string(deployment.Content), separator) {
+			text = strings.TrimSpace(text)
+			if len(text) == 0 {
+				continue
+			}
+
+			resource, _, err := decode([]byte(text), nil, nil)
+			if err != nil {
+				return errors.Wrapf(err, "decoding the resource file:%v, section:%v...", deployment.Name, text[:100])
+			}
+			if resource == nil {
+				continue
+			}
+
+			switch kind := strings.ToLower(resource.GetObjectKind().GroupVersionKind().Kind); kind {
+			case "deployment":
+				err = c.k8sProvider.deploymentScale(resource, replicas)
+			}
+			if err != nil {
+				return errors.Wrapf(err, "failed to scale '%v", deployment.Name)
+			}
 		}
-		c.deploymentsContent = append(c.deploymentsContent, provider.ResourceFile{Name: name, Content: content})
 	}
 	return nil
 }
 
-// applyTemplateVars applies golang templates to deployment files
-func (c *K8sClient) applyTemplateVars(file string) ([]byte, error) {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		log.Fatalf("Error reading file %v:%v", file, err)
+func (c *K8s) deploymentScale(resource runtime.Object, replicas *int32) error {
+	req := resource.(*appsV1.Deployment)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
 	}
+	req.Spec.Replicas = replicas
 
-	fileContentParsed := bytes.NewBufferString("")
-	t := template.New("resource").Option("missingkey=error")
-	// k8s objects can't have dots(.) se we add a custom function to allow normalising the variable values.
-	t = t.Funcs(template.FuncMap{
-		"normalise": func(t string) string {
-			return strings.Replace(t, ".", "-", -1)
-		},
-	})
-	if err := template.Must(t.Parse(string(content))).Execute(fileContentParsed, c.DeploymentVars); err != nil {
-		log.Fatalf("Failed to execute parse file:%s err:%v", file, err)
+	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
+	case "v1":
+		client := c.clt.AppsV1().Deployments(req.Namespace)
+		if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+			_, err := client.Update(req)
+			return err
+		}); err != nil {
+			return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
+		}
+		log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+	default:
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
-	return fileContentParsed.Bytes(), nil
+	return nil
 }
 
 // K8sResourceApply iterates over all manifest files
