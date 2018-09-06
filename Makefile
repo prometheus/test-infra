@@ -14,7 +14,7 @@ nodepool_create:
 resource_apply:
 	$(PROMBENCH_CMD) gke resource apply -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
-		-v PR_NUMBER:${PR_NUMBER} -v RELEASE:${RELEASE} -v WEBSERVER_REPLICAS:1 \
+		-v PR_NUMBER:${PR_NUMBER} -v RELEASE:${RELEASE} \
 		-f components/prombench/manifests/benchmark
 
 clean: resource_delete nodepool_delete
