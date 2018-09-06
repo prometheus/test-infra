@@ -1,7 +1,6 @@
 package gke
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -9,9 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
-	"strings"
-	"text/template"
 
 	gke "cloud.google.com/go/container/apiv1"
 	"github.com/pkg/errors"
@@ -76,29 +72,30 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 // DeploymentsParse parses the deployment files and saves the result as bytes grouped by the filename.
 // Any variables passed to the cli will be replaced in the resources files following the golang text template format.
 func (c *GKE) DeploymentsParse(*kingpin.ParseContext) error {
-	var fileList []string
-	for _, name := range c.DeploymentFiles {
-		if file, err := os.Stat(name); err == nil && file.IsDir() {
-			if err := filepath.Walk(name, func(path string, f os.FileInfo, err error) error {
-				if filepath.Ext(path) == ".yaml" || filepath.Ext(path) == ".yml" {
-					fileList = append(fileList, path)
-				}
-				return nil
-			}); err != nil {
-				return fmt.Errorf("error reading directory: %v", err)
-			}
-		} else {
-			fileList = append(fileList, name)
+
+	// When the PROJECT_ID is not provided from the cli read it from the auth file.
+	if v, ok := c.DeploymentVars["PROJECT_ID"]; !ok || v == "" {
+		content, err := ioutil.ReadFile(c.AuthFile)
+		if err != nil {
+			log.Fatalf("Couldn't read auth file: %v", err)
 		}
+		d := make(map[string]interface{})
+		if err := json.Unmarshal(content, &d); err != nil {
+			log.Fatalf("Couldn't parse auth file: %v", err)
+		}
+		v, ok := d["project_id"].(string)
+		if !ok {
+			log.Fatal("Couldn't get project id from the auth file")
+		}
+		c.DeploymentVars["PROJECT_ID"] = v
 	}
 
-	for _, name := range fileList {
-		content, err := c.applyTemplateVars(name)
-		if err != nil {
-			return fmt.Errorf("couldn't apply template to file %s: %v", name, err)
-		}
-		c.deploymentsContent = append(c.deploymentsContent, provider.ResourceFile{Name: name, Content: content})
+	deploymentsContent, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
+	if err != nil {
+		log.Fatalf("Couldn't parse deployment files: %v", err)
 	}
+
+	c.deploymentsContent = deploymentsContent
 	return nil
 }
 
@@ -460,42 +457,4 @@ func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 		log.Fatal("error while deleting objects from a manifest file err:", err)
 	}
 	return nil
-}
-
-// applyTemplateVars applies golang templates to deployment files
-func (c *GKE) applyTemplateVars(file string) ([]byte, error) {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		log.Fatalf("Error reading file %v:%v", file, err)
-	}
-
-	// When the PROJECT_ID is not provided from the cli read it from the auth file.
-	if v, ok := c.DeploymentVars["PROJECT_ID"]; !ok || v == "" {
-		content, err := ioutil.ReadFile(c.AuthFile)
-		if err != nil {
-			log.Fatalf("Couldn't read auth file: %v", err)
-		}
-		d := make(map[string]interface{})
-		if err := json.Unmarshal(content, &d); err != nil {
-			log.Fatalf("Couldn't parse auth file: %v", err)
-		}
-		v, ok := d["project_id"].(string)
-		if !ok {
-			log.Fatal("Couldn't get project id from the auth file")
-		}
-		c.DeploymentVars["PROJECT_ID"] = v
-	}
-
-	fileContentParsed := bytes.NewBufferString("")
-	t := template.New("resource").Option("missingkey=error")
-	// k8s objects can't have dots(.) se we add a custom function to allow normalising the variable values.
-	t = t.Funcs(template.FuncMap{
-		"normalise": func(t string) string {
-			return strings.Replace(t, ".", "-", -1)
-		},
-	})
-	if err := template.Must(t.Parse(string(content))).Execute(fileContentParsed, c.DeploymentVars); err != nil {
-		log.Fatalf("Failed to execute parse file:%s err:%v", file, err)
-	}
-	return fileContentParsed.Bytes(), nil
 }
