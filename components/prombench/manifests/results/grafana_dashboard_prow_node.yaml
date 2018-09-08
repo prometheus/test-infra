@@ -26,12 +26,12 @@ data:
         }
       ],
       "id": null,
-      "title": "Prow Node Metrics",
+      "title": "Node Metrics",
       "description": "Dashboard to view Node metrics",
       "tags": [
-        "prometheus",
         "prow",
-        "node"
+        "nodes",
+        "node-metrics"
       ],
       "style": "dark",
       "timezone": "browser",

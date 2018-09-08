@@ -33,6 +33,10 @@ data:
         ]
       },
       "description": "Metrics useful for benchmarking and loadtesting Prometheus itself. Designed primarily for Prometheus 2.3.x.",
+      "tags": [
+        "benchmark",
+        "node-metrics"
+      ],
       "editable": true,
       "gnetId": 6725,
       "graphTooltip": 1,
@@ -3548,7 +3552,6 @@ data:
       "refresh": false,
       "schemaVersion": 16,
       "style": "dark",
-      "tags": [],
       "templating": {
         "list": [
           {
