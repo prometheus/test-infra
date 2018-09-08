@@ -852,7 +852,7 @@ func (c *K8s) namespaceDelete(resource runtime.Object) error {
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
-		log.Printf("resource deleting - kind: %v , name: %v", kind, req.Name)
+		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
