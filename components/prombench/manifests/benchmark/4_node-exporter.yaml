@@ -145,6 +145,7 @@ spec:
   selector:
     matchLabels:
       app: node-exporter
+      node: web-server
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 1
@@ -154,6 +155,7 @@ spec:
       namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: node-exporter
+        node: web-server
       name: node-exporter
     spec:
       securityContext:
