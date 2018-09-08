@@ -1,6 +1,9 @@
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-prow
 data:
-  prow-node.json: |
+  prow-nodes.json: |
     {
       "__requires": [
         {
@@ -24,7 +27,7 @@ data:
       ],
       "id": null,
       "title": "Prow Node Metrics",
-      "description": "Dashboard to view Prow node metrics",
+      "description": "Dashboard to view Node metrics",
       "tags": [
         "prometheus",
         "prow",
@@ -82,7 +85,7 @@ data:
               },
               "targets": [
                 {
-                  "expr": "count(node_cpu_seconds_total{node=\"prow\", mode=\"system\"}) or count(node_cpu{node=\"prow\", mode=\"system\"})",
+                  "expr": "count(node_cpu_seconds_total{namespace=\"$namespace\",node=\"$node\", mode=\"system\"}) or count(node_cpu{namespace=\"$namespace\",node=\"$node\", mode=\"system\"})",
                   "instant": true,
                   "interval": "",
                   "intervalFactor": 2,
@@ -122,6 +125,7 @@ data:
               "editable": true,
               "error": false,
               "fill": 10,
+              "description": "(user: The time spent in userland) -- (system: The time spent in the kernel) -- (iowait: Time spent waiting for I/O) -- (idle: Time the CPU had nothing to do -- (irq&softirq: Time servicing interrupts) -- (guest: If you are running VMs, the CPU they use) -- (steal: If you are a VM, time other VMs \"stole\" from your CPUs)",
               "grid": {
                 "threshold1": 0,
                 "threshold1Color": "rgba(216, 200, 27, 0.27)",
@@ -158,7 +162,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"system\",node=\"prow\"}[5m])) or sum(irate(node_cpu{mode=\"system\",node=\"prow\"}[5m]))",
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"system\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"system\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "{{"{{"}}mode{{"}}"}}",
@@ -168,7 +172,7 @@ data:
                   "target": ""
                 },
                 {
-                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"user\",node=\"prow\"}[5m])) or sum(irate(node_cpu{mode=\"user\",node=\"prow\"}[5m]))",
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"user\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"user\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "user",
@@ -176,7 +180,7 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"nice\",node=\"prow\"}[5m])) or sum(irate(node_cpu{mode=\"nice\",node=\"prow\"}[5m]))",
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"nice\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"nice\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "nice",
@@ -184,7 +188,7 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"iowait\",node=\"prow\"}[5m])) or sum(irate(node_cpu{mode=\"iowait\",node=\"prow\"}[5m]))",
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"iowait\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"iowait\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "iowait",
@@ -192,14 +196,14 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"steal\",node=\"prow\"}[5m])) or sum(irate(node_cpu{mode=\"steal\",node=\"prow\"}[5m]))",
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"steal\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"steal\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
                   "intervalFactor": 2,
                   "legendFormat": "steal",
                   "refId": "H",
                   "step": 1200
                 },
                 {
-                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"idle\",node=\"prow\"}[5m])) or sum(irate(node_cpu{mode=\"idle\",node=\"prow\"}[5m]))",
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"idle\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"idle\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "idle",
@@ -207,7 +211,7 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"irq\",node=\"prow\"}[5m])) or sum(irate(node_cpu{mode=\"irq\",node=\"prow\"}[5m]))",
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"irq\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"irq\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "irq",
@@ -215,7 +219,7 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"softirq\",node=\"prow\"}[5m])) or sum(irate(node_cpu{mode=\"softirq\",node=\"prow\"}[5m]))",
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"softirq\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"softirq\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "softirq",
@@ -223,7 +227,7 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"guest\",node=\"prow\"}[5m])) or sum(irate(node_cpu{mode=\"guest\",node=\"prow\"}[5m]))",
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"guest\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"guest\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "guest",
@@ -323,7 +327,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "( node_memory_MemTotal_bytes{node=\"prow\"} - node_memory_MemFree_bytes{node=\"prow\"} - node_memory_Buffers_bytes{node=\"prow\"} - node_memory_Cached_bytes{node=\"prow\"} - node_memory_SwapCached_bytes{node=\"prow\"} - node_memory_Slab_bytes{node=\"prow\"} - node_memory_PageTables_bytes{node=\"prow\"} - node_memory_VmallocUsed_bytes{node=\"prow\"} ) or ( node_memory_MemTotal{node=\"prow\"} - node_memory_MemFree{node=\"prow\"} - node_memory_Buffers{node=\"prow\"} - node_memory_Cached{node=\"prow\"} - node_memory_SwapCached{node=\"prow\"} - node_memory_Slab{node=\"prow\"} - node_memory_PageTables{node=\"prow\"} - node_memory_VmallocUsed{node=\"prow\"} )",
+                  "expr": "( node_memory_MemTotal_bytes{namespace=\"$namespace\",node=\"$node\"} - node_memory_MemFree_bytes{namespace=\"$namespace\",node=\"$node\"} - node_memory_Buffers_bytes{namespace=\"$namespace\",node=\"$node\"} - node_memory_Cached_bytes{namespace=\"$namespace\",node=\"$node\"} - node_memory_SwapCached_bytes{namespace=\"$namespace\",node=\"$node\"} - node_memory_Slab_bytes{namespace=\"$namespace\",node=\"$node\"} - node_memory_PageTables_bytes{namespace=\"$namespace\",node=\"$node\"} - node_memory_VmallocUsed_bytes{namespace=\"$namespace\",node=\"$node\"} ) or ( node_memory_MemTotal{namespace=\"$namespace\",node=\"$node\"} - node_memory_MemFree{namespace=\"$namespace\",node=\"$node\"} - node_memory_Buffers{namespace=\"$namespace\",node=\"$node\"} - node_memory_Cached{namespace=\"$namespace\",node=\"$node\"} - node_memory_SwapCached{namespace=\"$namespace\",node=\"$node\"} - node_memory_Slab{namespace=\"$namespace\",node=\"$node\"} - node_memory_PageTables{namespace=\"$namespace\",node=\"$node\"} - node_memory_VmallocUsed{namespace=\"$namespace\",node=\"$node\"} )",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "Apps",
@@ -333,7 +337,7 @@ data:
                   "target": ""
                 },
                 {
-                  "expr": "node_memory_Buffers_bytes{node=\"prow\"} or node_memory_Buffers{node=\"prow\"}",
+                  "expr": "node_memory_Buffers_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_Buffers{namespace=\"$namespace\",node=\"$node\"}",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "Buffers",
@@ -341,7 +345,7 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "node_memory_Cached_bytes{node=\"prow\"} or node_memory_Cached{node=\"prow\"}",
+                  "expr": "node_memory_Cached_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_Cached{namespace=\"$namespace\",node=\"$node\"}",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "Cached",
@@ -349,7 +353,7 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "node_memory_MemFree_bytes{node=\"prow\"} or node_memory_MemFree{node=\"prow\"}",
+                  "expr": "node_memory_MemFree_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_MemFree{namespace=\"$namespace\",node=\"$node\"}",
                   "hide": false,
                   "interval": "",
                   "intervalFactor": 2,
@@ -358,7 +362,7 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "node_memory_Slab_bytes{node=\"prow\"} or node_memory_Slab{node=\"prow\"}",
+                  "expr": "node_memory_Slab_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_Slab{namespace=\"$namespace\",node=\"$node\"}",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "Slab",
@@ -366,7 +370,7 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "node_memory_SwapCached_bytes{node=\"prow\"} or node_memory_SwapCached{node=\"prow\"}",
+                  "expr": "node_memory_SwapCached_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_SwapCached{namespace=\"$namespace\",node=\"$node\"}",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "SwapCached",
@@ -374,7 +378,7 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "node_memory_PageTables_bytes{node=\"prow\"} or node_memory_PageTables{node=\"prow\"}",
+                  "expr": "node_memory_PageTables_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_PageTables{namespace=\"$namespace\",node=\"$node\"}",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "PageTables",
@@ -382,7 +386,7 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "node_memory_VmallocUsed_bytes{node=\"prow\"} or node_memory_VmallocUsed{node=\"prow\"}",
+                  "expr": "node_memory_VmallocUsed_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_VmallocUsed{namespace=\"$namespace\",node=\"$node\"}",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "VmallocUsed",
@@ -391,7 +395,7 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "(node_memory_SwapTotal_bytes{node=\"prow\"} - node_memory_SwapFree{node=\"prow\"}) or (node_memory_SwapTotal{node=\"prow\"} - node_memory_SwapFree{node=\"prow\"})",
+                  "expr": "(node_memory_SwapTotal_bytes{namespace=\"$namespace\",node=\"$node\"} - node_memory_SwapFree{namespace=\"$namespace\",node=\"$node\"}) or (node_memory_SwapTotal{namespace=\"$namespace\",node=\"$node\"} - node_memory_SwapFree{namespace=\"$namespace\",node=\"$node\"})",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "Swap",
@@ -400,7 +404,7 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "node_memory_Committed_AS_bytes{node=\"prow\"} or node_memory_Committed_AS{node=\"prow\"}",
+                  "expr": "node_memory_Committed_AS_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_Committed_AS{namespace=\"$namespace\",node=\"$node\"}",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "Committed",
@@ -409,7 +413,7 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "node_memory_Mapped_bytes{node=\"prow\"} or node_memory_Mapped{node=\"prow\"}",
+                  "expr": "node_memory_Mapped_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_Mapped{namespace=\"$namespace\",node=\"$node\"}",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "Mapped",
@@ -417,7 +421,7 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "node_memory_Active_bytes{node=\"prow\"} or node_memory_Active{node=\"prow\"}",
+                  "expr": "node_memory_Active_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_Active{namespace=\"$namespace\",node=\"$node\"}",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "Active",
@@ -426,7 +430,7 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "node_memory_Inactive_bytes{node=\"prow\"} or node_memory_Inactive{node=\"prow\"}",
+                  "expr": "node_memory_Inactive_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_Inactive{namespace=\"$namespace\",node=\"$node\"}",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "Inactive",
@@ -512,7 +516,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "node_load1{node=\"prow\"}",
+                  "expr": "node_load1{namespace=\"$namespace\",node=\"$node\"}",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "load",
@@ -599,7 +603,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "100.0 - 100 * (node_filesystem_avail_bytes{node=\"prow\",device !~'tmpfs',device!~'by-uuid'} / node_filesystem_size_bytes{node=\"prow\",device !~'tmpfs',device!~'by-uuid'}) or 100.0 - 100 * (node_filesystem_avail{node=\"prow\",device !~'tmpfs',device!~'by-uuid'} / node_filesystem_size{node=\"prow\",device !~'tmpfs',device!~'by-uuid'})",
+                  "expr": "100.0 - 100 * (node_filesystem_avail_bytes{namespace=\"$namespace\",node=\"$node\",device !~'tmpfs',device!~'by-uuid'} / node_filesystem_size_bytes{namespace=\"$namespace\",node=\"$node\",device !~'tmpfs',device!~'by-uuid'}) or 100.0 - 100 * (node_filesystem_avail{namespace=\"$namespace\",node=\"$node\",device !~'tmpfs',device!~'by-uuid'} / node_filesystem_size{namespace=\"$namespace\",node=\"$node\",device !~'tmpfs',device!~'by-uuid'})",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "{{"{{"}}mountpoint{{"}}"}}",
@@ -685,7 +689,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "irate(node_disk_io_time_seconds_total{node=\"prow\"}[5m])/10 or irate(node_disk_io_time_ms{node=\"prow\"}[5m])/10",
+                  "expr": "irate(node_disk_io_time_seconds_total{namespace=\"$namespace\",node=\"$node\"}[5m])/10 or irate(node_disk_io_time_ms{namespace=\"$namespace\",node=\"$node\"}[5m])/10",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "{{"{{"}}device{{"}}"}}",
@@ -776,7 +780,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "irate(node_disk_reads_completed_total{node=\"prow\"}[5m]) or irate(node_disk_reads_completed{node=\"prow\"}[5m])",
+                  "expr": "irate(node_disk_reads_completed_total{namespace=\"$namespace\",node=\"$node\"}[5m]) or irate(node_disk_reads_completed{namespace=\"$namespace\",node=\"$node\"}[5m])",
                   "interval": "",
                   "intervalFactor": 4,
                   "legendFormat": "{{"{{"}}device{{"}}"}}_read",
@@ -786,7 +790,7 @@ data:
                   "target": ""
                 },
                 {
-                  "expr": "irate(node_disk_writes_completed_total{node=\"prow\"}[5m]) or irate(node_disk_writes_completed{node=\"prow\"}[5m])",
+                  "expr": "irate(node_disk_writes_completed_total{namespace=\"$namespace\",node=\"$node\"}[5m]) or irate(node_disk_writes_completed{namespace=\"$namespace\",node=\"$node\"}[5m])",
                   "intervalFactor": 2,
                   "legendFormat": "{{"{{"}}device{{"}}"}}_write",
                   "metric": "",
@@ -876,7 +880,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "irate(node_disk_read_bytes_total{node=\"prow\"}[5m]) * 512 or irate(node_disk_sectors_read{node=\"prow\"}[5m]) * 512",
+                  "expr": "irate(node_disk_read_bytes_total{namespace=\"$namespace\",node=\"$node\"}[5m]) * 512 or irate(node_disk_sectors_read{namespace=\"$namespace\",node=\"$node\"}[5m]) * 512",
                   "interval": "",
                   "intervalFactor": 4,
                   "legendFormat": "{{"{{"}}device{{"}}"}}_read",
@@ -884,7 +888,7 @@ data:
                   "step": 2400
                 },
                 {
-                  "expr": "irate(node_disk_written_bytes_total{node=\"prow\"}[5m]) * 512 or irate(node_disk_sectors_written{node=\"prow\"}[5m]) * 512",
+                  "expr": "irate(node_disk_written_bytes_total{namespace=\"$namespace\",node=\"$node\"}[5m]) * 512 or irate(node_disk_sectors_written{namespace=\"$namespace\",node=\"$node\"}[5m]) * 512",
                   "interval": "",
                   "intervalFactor": 4,
                   "legendFormat": "{{"{{"}}device{{"}}"}}_write",
@@ -971,7 +975,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "irate(node_context_switches_total{node=\"prow\"}[5m]) or irate(node_context_switches{node=\"prow\"}[5m])",
+                  "expr": "irate(node_context_switches_total{namespace=\"$namespace\",node=\"$node\"}[5m]) or irate(node_context_switches{namespace=\"$namespace\",node=\"$node\"}[5m])",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "context switches",
@@ -1062,7 +1066,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "irate(node_network_receive_bytes_total{node=\"prow\"}[5m])*8 or irate(node_network_receive_bytes{node=\"prow\"}[5m])*8",
+                  "expr": "irate(node_network_receive_bytes_total{namespace=\"$namespace\",node=\"$node\"}[5m])*8 or irate(node_network_receive_bytes{namespace=\"$namespace\",node=\"$node\"}[5m])*8",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "{{"{{"}}device{{"}}"}}_in",
@@ -1072,7 +1076,7 @@ data:
                   "target": ""
                 },
                 {
-                  "expr": "irate(node_network_transmit_bytes_total{node=\"prow\"}[5m])*8 or irate(node_network_transmit_bytes{node=\"prow\"}[5m])*8",
+                  "expr": "irate(node_network_transmit_bytes_total{namespace=\"$namespace\",node=\"$node\"}[5m])*8 or irate(node_network_transmit_bytes{namespace=\"$namespace\",node=\"$node\"}[5m])*8",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "{{"{{"}}device{{"}}"}}_out",
@@ -1158,7 +1162,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "node_netstat_Tcp_CurrEstab{node=\"prow\"}",
+                  "expr": "node_netstat_Tcp_CurrEstab{namespace=\"$namespace\",node=\"$node\"}",
                   "intervalFactor": 2,
                   "legendFormat": "established",
                   "refId": "A",
@@ -1251,7 +1255,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "irate(node_netstat_Udp_InDatagrams{node=\"prow\"}[5m])",
+                  "expr": "irate(node_netstat_Udp_InDatagrams{namespace=\"$namespace\",node=\"$node\"}[5m])",
                   "intervalFactor": 2,
                   "legendFormat": "Udp_InDatagrams",
                   "refId": "A",
@@ -1259,14 +1263,14 @@ data:
                   "target": ""
                 },
                 {
-                  "expr": "irate(node_netstat_Udp_InErrors{node=\"prow\"}[5m])",
+                  "expr": "irate(node_netstat_Udp_InErrors{namespace=\"$namespace\",node=\"$node\"}[5m])",
                   "intervalFactor": 2,
                   "legendFormat": "Udp_InErrors",
                   "refId": "B",
                   "step": 1200
                 },
                 {
-                  "expr": "irate(node_netstat_Udp_OutDatagrams{node=\"prow\"}[5m])",
+                  "expr": "irate(node_netstat_Udp_OutDatagrams{namespace=\"$namespace\",node=\"$node\"}[5m])",
                   "interval": "",
                   "intervalFactor": 2,
                   "legendFormat": "Udp_OutDatagrams",
@@ -1274,7 +1278,7 @@ data:
                   "step": 1200
                 },
                 {
-                  "expr": "irate(node_netstat_Udp_NoPorts{node=\"prow\"}[5m])",
+                  "expr": "irate(node_netstat_Udp_NoPorts{namespace=\"$namespace\",node=\"$node\"}[5m])",
                   "intervalFactor": 2,
                   "legendFormat": "Udp_NoPorts",
                   "refId": "D",
@@ -1357,7 +1361,7 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "node_nf_conntrack_entries_limit{node=\"prow\"} - node_nf_conntrack_entries{node=\"prow\"}",
+                  "expr": "node_nf_conntrack_entries_limit{namespace=\"$namespace\",node=\"$node\"} - node_nf_conntrack_entries{namespace=\"$namespace\",node=\"$node\"}",
                   "intervalFactor": 2,
                   "legendFormat": "free",
                   "refId": "A",
@@ -1399,6 +1403,50 @@ data:
           "title": "New row"
         }
       ],
+      "templating": {
+        "list": [
+          {
+            "allValue": null,
+            "current": {},
+            "datasource": "prometheus-meta",
+            "hide": 0,
+            "includeAll": false,
+            "label": null,
+            "multi": false,
+            "name": "namespace",
+            "options": [],
+            "query": "label_values(namespace)",
+            "refresh": 2,
+            "regex": "default|prombench-\\d+",
+            "sort": 1,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {},
+            "datasource": "prometheus-meta",
+            "hide": 0,
+            "includeAll": false,
+            "label": null,
+            "multi": false,
+            "name": "node",
+            "options": [],
+            "query": "label_values({namespace=\"$namespace\"}, node)",
+            "refresh": 2,
+            "regex": ".*",
+            "sort": 0,
+            "tagValuesQuery": null,
+            "tags": [],
+            "tagsQuery": null,
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
       "time": {
         "from": "now-30m",
         "to": "now"
@@ -1437,6 +1485,3 @@ data:
       "links": [],
       "gnetId": 405
     }
-kind: ConfigMap
-metadata:
-  name: grafana-dashboard-prow
