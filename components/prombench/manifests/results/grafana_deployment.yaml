@@ -22,16 +22,7 @@ spec:
       - image: grafana/grafana:5.0.0
         name: grafana-core
         imagePullPolicy: IfNotPresent
-        # resources:
-        #   # keep request = limit to keep this container in guaranted class
-        #   limits:
-        #     cpu: 100m
-        #     memory: 100Mi
-        #   requests:
-        #     cpu: 100m
-        #     memory: 100Mi
         env:
-          # The following env variables set up basic auth with the default admin user and admin password.
           - name: GF_PATHS_PROVISIONING
             value: "/opt/grafana-provision"
           - name: GF_SERVER_ROOT_URL
@@ -53,8 +44,16 @@ spec:
           mountPath: /var
         - name: grafana-datasources
           mountPath: /opt/grafana-provision/datasources
-        - name: grafana-dashboards
-          mountPath: /opt/grafana-provision/dashboards
+        - name: grafana-dashboard-provision
+          mountPath: /opt/grafana-provision/dashboards/prometheus-dashboard.yaml
+          subPath: prometheus-dashboard.yaml
+        #dashboards json are saved in the path mentioned in grafana-dashboard-provision
+        - name: grafana-dashboard-bench
+          mountPath: /opt/grafana-provision/dashboards/bench-nodes.json
+          subPath: bench-nodes.json
+        - name: grafana-dashboard-prow
+          mountPath: /opt/grafana-provision/dashboards/prow-nodes.json
+          subPath: prow-nodes.json
         ports:
         - name: grafana-web
           containerPort: 3000
@@ -64,9 +63,15 @@ spec:
       - name: grafana-datasources
         configMap:
           name: grafana-datasources
-      - name: grafana-dashboards
+      - name: grafana-dashboard-provision
         configMap:
-          name: grafana-dashboards
+          name: grafana-dashboard-provision
+      - name: grafana-dashboard-bench
+        configMap:
+          name: grafana-dashboard-bench
+      - name: grafana-dashboard-prow
+        configMap:
+          name: grafana-dashboard-prow
       nodeSelector:
         cloud.google.com/gke-nodepool: prow
 ---

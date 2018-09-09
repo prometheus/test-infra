@@ -1,0 +1,18 @@
+#This is used to tell grafana the directory path from which it should update/insert all dashboards json
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-provision
+data:
+  prometheus-dashboard.yaml: |
+    apiVersion: 1
+
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      updateIntervalSeconds: 3 #how often Grafana will scan for changed dashboards
+      options:
+        path: /opt/grafana-provision/dashboards

@@ -1,18 +1,9 @@
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-bench
 data:
-  prometheus-dashboard.yaml: |
-    apiVersion: 1
-
-    providers:
-    - name: 'default'
-      orgId: 1
-      folder: ''
-      type: file
-      disableDeletion: false
-      updateIntervalSeconds: 3 #how often Grafana will scan for changed dashboards
-      options:
-        path: /opt/grafana-provision/dashboards
-  prombench.json: |
+  bench-nodes.json: |
     {
       "__requires": [
         {
@@ -42,6 +33,10 @@ data:
         ]
       },
       "description": "Metrics useful for benchmarking and loadtesting Prometheus itself. Designed primarily for Prometheus 2.3.x.",
+      "tags": [
+        "benchmark",
+        "node-metrics"
+      ],
       "editable": true,
       "gnetId": 6725,
       "graphTooltip": 1,
@@ -3557,7 +3552,6 @@ data:
       "refresh": false,
       "schemaVersion": 16,
       "style": "dark",
-      "tags": [],
       "templating": {
         "list": [
           {
@@ -3636,6 +3630,3 @@ data:
       "uid": "7gmLoNDmz",
       "version": 3
     }
-kind: ConfigMap
-metadata:
-  name: grafana-dashboards
