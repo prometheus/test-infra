@@ -1,3 +1,4 @@
+#When Grafana starts, it will update/insert this datasource.
 apiVersion: v1
 kind: ConfigMap
 metadata:

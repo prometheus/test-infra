@@ -22,16 +22,7 @@ spec:
       - image: grafana/grafana:5.0.0
         name: grafana-core
         imagePullPolicy: IfNotPresent
-        # resources:
-        #   # keep request = limit to keep this container in guaranted class
-        #   limits:
-        #     cpu: 100m
-        #     memory: 100Mi
-        #   requests:
-        #     cpu: 100m
-        #     memory: 100Mi
         env:
-          # The following env variables set up basic auth with the default admin user and admin password.
           - name: GF_PATHS_PROVISIONING
             value: "/opt/grafana-provision"
           - name: GF_SERVER_ROOT_URL
@@ -56,6 +47,7 @@ spec:
         - name: grafana-dashboard-provision
           mountPath: /opt/grafana-provision/dashboards/prometheus-dashboard.yaml
           subPath: prometheus-dashboard.yaml
+        #dashboards json are saved in the path mentioned in grafana-dashboard-provision
         - name: grafana-dashboard-bench
           mountPath: /opt/grafana-provision/dashboards/bench-nodes.json
           subPath: bench-nodes.json
