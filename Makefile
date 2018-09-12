@@ -1,5 +1,7 @@
 PROMBENCH_CMD        = ./prombench
 DOCKER_TAG = docker.io/prombench/prombench:2.0.0
+GOLANG_IMG = golang:1.11-alpine
+DOCKER_CMD = docker run --rm -t -v ${GOPATH}/src:/go/src -w /go/src/github.com/prometheus/prombench $(GOLANG_IMG)
 
 ifeq ($(AUTH_FILE),)
 AUTH_FILE = "/etc/serviceaccount/service-account.json"
@@ -29,8 +31,7 @@ nodepool_delete:
 		-f components/prombench/nodepools.yaml
 
 build:
-	@go version | grep go1.11 || exit  "Requires golang 1.11 with support for modules!"
-	@GO111MODULE=on go build cmd/prombench/*.go
+	@$(DOCKER_CMD) go build cmd/prombench/*.go	
 
 docker: build
 	@docker build -t $(DOCKER_TAG) .
