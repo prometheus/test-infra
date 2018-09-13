@@ -3111,7 +3111,7 @@ data:
               "renderer": "flot",
               "seriesOverrides": [],
               "spaceLength": 10,
-              "stack": true,
+              "stack": false,
               "steppedLine": false,
               "targets": [
                 {
@@ -3202,7 +3202,7 @@ data:
               "renderer": "flot",
               "seriesOverrides": [],
               "spaceLength": 10,
-              "stack": true,
+              "stack": false,
               "steppedLine": false,
               "targets": [
                 {
@@ -3292,7 +3292,7 @@ data:
               "renderer": "flot",
               "seriesOverrides": [],
               "spaceLength": 10,
-              "stack": true,
+              "stack": false,
               "steppedLine": false,
               "targets": [
                 {
@@ -3317,7 +3317,7 @@ data:
               "thresholds": [],
               "timeFrom": null,
               "timeShift": null,
-              "title": "Rule group evaulation problems/s",
+              "title": "Rule group evaluation problems/s",
               "tooltip": {
                 "msResolution": false,
                 "shared": true,
