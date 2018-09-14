@@ -23,77 +23,69 @@ import (
 	"strings"
 
 	"github.com/prometheus/prombench/pkg/provider"
+
+	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
-// K8s is the main provider struct.
-type K8s struct {
-	clt *kubernetes.Clientset
-	ctx context.Context
+// Resource holds the resource objects obtained after parsing deployment files
+type Resource struct {
+	FileName string
+	Objects  []runtime.Object
 }
 
-// K8sClient holds the fields used to generate API reqeust from within a cluster.
-type K8sClient struct {
-	// The k8s provider used when we work with the manifest files.
-	k8sProvider *K8s
+// K8s holds the fields used to generate API reqeust from within a cluster.
+type K8s struct {
+	clt *kubernetes.Clientset
 	// DeploymentFiles files provided from the cli.
 	DeploymentFiles []string
 	// Vaiables to subtitude in the DeploymentFiles.
 	// These are also used when the command requires some variables that are not provided by the deployment file.
 	DeploymentVars map[string]string
 	// DeploymentFile content after substituting the variables filename is used as the map key.
-	deploymentsContent []provider.ResourceFile
+	K8sResource []Resource
 
 	ctx context.Context
 }
 
 // New returns a k8s client that can apply and delete resources.
-func New(ctx context.Context, clientset *kubernetes.Clientset) *K8s {
-	return &K8s{
-		ctx: ctx,
-		clt: clientset,
+func New(ctx context.Context, config *clientcmdapi.Config) (*K8s, error) {
+	var restConfig *rest.Config
+	var err error
+	if config == nil {
+		restConfig, err = rest.InClusterConfig()
+	} else {
+		restConfig, err = clientcmd.NewDefaultClientConfig(*config, &clientcmd.ConfigOverrides{}).ClientConfig()
 	}
-}
 
-// NewK8sClient returns a k8s client that can apply and delete resources.
-func NewK8sClient() (*K8sClient, error) {
-	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, errors.Wrapf(err, "k8s config error")
 	}
-	// creates the clientset
-	clientset, err := kubernetes.NewForConfig(config)
+	clientset, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return nil, errors.Wrapf(err, "k8s client error")
 	}
 
-	ctx := context.Background()
-	return &K8sClient{
-		k8sProvider:    New(ctx, clientset),
-		DeploymentVars: make(map[string]string),
+	return &K8s{
 		ctx:            ctx,
+		clt:            clientset,
+		DeploymentVars: make(map[string]string),
 	}, nil
 }
 
-// DeploymentsParse parses the deployment files and saves the result as bytes grouped by the filename.
-func (c *K8sClient) DeploymentsParse(*kingpin.ParseContext) error {
-
-	deploymentsContent, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
+// DeploymentsParse parses the k8s objects deployment files and saves the result as bytes grouped by the filename.
+func (c *K8s) DeploymentsParse(*kingpin.ParseContext) error {
+	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
 	if err != nil {
 		log.Fatalf("Couldn't parse deployment files: %v", err)
 	}
 
-	c.deploymentsContent = deploymentsContent
-	return nil
-}
+	for _, deployment := range deploymentResource {
 
-// Scale scales a deployment to a given number of replicas.
-func (c *K8sClient) Scale(replicas *int32) error {
-
-	for _, deployment := range c.deploymentsContent {
-		separator := "---"
 		decode := scheme.Codecs.UniversalDeserializer().Decode
+		k8sObjects := make([]runtime.Object, 0)
 
-		for _, text := range strings.Split(string(deployment.Content), separator) {
+		for _, text := range strings.Split(string(deployment.Content), provider.Separator) {
 			text = strings.TrimSpace(text)
 			if len(text) == 0 {
 				continue
@@ -101,66 +93,16 @@ func (c *K8sClient) Scale(replicas *int32) error {
 
 			resource, _, err := decode([]byte(text), nil, nil)
 			if err != nil {
-				return errors.Wrapf(err, "decoding the resource file:%v, section:%v...", deployment.Name, text[:100])
+				return errors.Wrapf(err, "decoding the resource file:%v, section:%v...", deployment.FileName, text[:100])
 			}
 			if resource == nil {
 				continue
 			}
-
-			switch kind := strings.ToLower(resource.GetObjectKind().GroupVersionKind().Kind); kind {
-			case "deployment":
-				err = c.k8sProvider.deploymentScale(resource, replicas)
-			}
-			if err != nil {
-				return errors.Wrapf(err, "failed to scale '%v", deployment.Name)
-			}
+			k8sObjects = append(k8sObjects, resource)
 		}
-	}
-	return nil
-}
-
-func (c *K8s) deploymentScale(resource runtime.Object, replicas *int32) error {
-	req := resource.(*appsV1.Deployment)
-	kind := resource.GetObjectKind().GroupVersionKind().Kind
-	if len(req.Namespace) == 0 {
-		req.Namespace = "default"
-	}
-	req.Spec.Replicas = replicas
-
-	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
-	case "v1":
-		client := c.clt.AppsV1().Deployments(req.Namespace)
-		if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			_, err := client.Update(req)
-			return err
-		}); err != nil {
-			return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
+		if len(k8sObjects) > 0 {
+			c.K8sResource = append(c.K8sResource, Resource{FileName: deployment.FileName, Objects: k8sObjects})
 		}
-		log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
-	default:
-		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
-	}
-	return nil
-}
-
-// K8sResourceApply iterates over all manifest files
-// and applies the resource definitions on the k8s cluster.
-//
-// Each file can contain more than one resource definition where `----` is used as separator.
-func (c *K8sClient) K8sResourceApply(*kingpin.ParseContext) error {
-	if err := c.k8sProvider.ResourceApply(c.deploymentsContent); err != nil {
-		log.Fatal("error while applying a resource err:", err)
-	}
-	return nil
-}
-
-// K8sResourceDelete iterates over all files passed as a cli argument
-// and deletes all resources defined in the resource files.
-//
-// Each file can container more than one resource definition where `---` is used as separator.
-func (c *K8sClient) K8sResourceDelete(*kingpin.ParseContext) error {
-	if err := c.k8sProvider.ResourceDelete(c.deploymentsContent); err != nil {
-		log.Fatal("error while deleting objects from a manifest file err:", err)
 	}
 	return nil
 }
@@ -168,27 +110,11 @@ func (c *K8sClient) K8sResourceDelete(*kingpin.ParseContext) error {
 // ResourceApply applies manifest files.
 // The input map key is the filename and the bytes slice is the actual file content.
 // It expect files in the official k8s format.
-func (c *K8s) ResourceApply(deployments []provider.ResourceFile) error {
+func (c *K8s) ResourceApply(deployments []Resource) error {
 
+	var err error
 	for _, deployment := range deployments {
-
-		separator := "---"
-		decode := scheme.Codecs.UniversalDeserializer().Decode
-
-		for _, text := range strings.Split(string(deployment.Content), separator) {
-			text = strings.TrimSpace(text)
-			if len(text) == 0 {
-				continue
-			}
-
-			resource, _, err := decode([]byte(text), nil, nil)
-			if err != nil {
-				return errors.Wrapf(err, "decoding the resource file:%v, section:%v...", deployment.Name, text[:100])
-			}
-			if resource == nil {
-				continue
-			}
-
+		for _, resource := range deployment.Objects {
 			switch kind := strings.ToLower(resource.GetObjectKind().GroupVersionKind().Kind); kind {
 			case "clusterrole":
 				err = c.clusterRoleApply(resource)
@@ -220,7 +146,7 @@ func (c *K8s) ResourceApply(deployments []provider.ResourceFile) error {
 				err = fmt.Errorf("creating request for unimplimented resource type:%v", kind)
 			}
 			if err != nil {
-				log.Printf("error applying '%v' err:%v \n", deployment.Name, err)
+				log.Printf("error applying '%v' err:%v \n", deployment.FileName, err)
 			}
 		}
 	}
@@ -230,26 +156,11 @@ func (c *K8s) ResourceApply(deployments []provider.ResourceFile) error {
 // ResourceDelete deletes all resources defined in the resource files.
 // The input map key is the filename and the bytes slice is the actual file content.
 // It expect files in the official k8s format.
-func (c *K8s) ResourceDelete(deployments []provider.ResourceFile) error {
+func (c *K8s) ResourceDelete(deployments []Resource) error {
 
+	var err error
 	for _, deployment := range deployments {
-		separator := "---"
-		decode := scheme.Codecs.UniversalDeserializer().Decode
-
-		for _, text := range strings.Split(string(deployment.Content), separator) {
-			text = strings.TrimSpace(text)
-			if len(text) == 0 {
-				continue
-			}
-
-			resource, _, err := decode([]byte(text), nil, nil)
-			if err != nil {
-				return errors.Wrapf(err, "decoding the resource file:%v, section:%v...", deployment.Name, text[:100])
-			}
-			if resource == nil {
-				continue
-			}
-
+		for _, resource := range deployment.Objects {
 			switch kind := strings.ToLower(resource.GetObjectKind().GroupVersionKind().Kind); kind {
 			case "clusterrole":
 				err = c.clusterRoleDelete(resource)
@@ -280,9 +191,8 @@ func (c *K8s) ResourceDelete(deployments []provider.ResourceFile) error {
 			default:
 				err = fmt.Errorf("deleting request for unimplimented resource type:%v", kind)
 			}
-
 			if err != nil {
-				log.Printf("error deleting '%v' err:%v \n", deployment.Name, err)
+				log.Printf("error deleting '%v' err:%v \n", deployment.FileName, err)
 			}
 		}
 	}

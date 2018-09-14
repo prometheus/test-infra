@@ -14,13 +14,14 @@ import (
 
 const (
 	GlobalRetryCount = 30
+	Separator        = "---"
 	globalRetryTime  = 10 * time.Second
 )
 
-// ResourceFile is a common struct to save name and content of input files
-type ResourceFile struct {
-	Name    string
-	Content []byte
+// Resource holds the file contents obtained after parsing deployment files
+type Resource struct {
+	FileName string
+	Content  []byte
 }
 
 // RetryUntilTrue returns when there is an error or the requested operation returns true.
@@ -62,7 +63,7 @@ func applyTemplateVars(file string, deploymentVars map[string]string) ([]byte, e
 
 // DeploymentsParse parses the deployment files and returns the result as bytes grouped by the filename.
 // Any variables passed to the cli will be replaced in the resources files following the golang text template format.
-func DeploymentsParse(deploymentFiles []string, deploymentVars map[string]string) ([]ResourceFile, error) {
+func DeploymentsParse(deploymentFiles []string, deploymentVars map[string]string) ([]Resource, error) {
 	var fileList []string
 	for _, name := range deploymentFiles {
 		if file, err := os.Stat(name); err == nil && file.IsDir() {
@@ -79,13 +80,13 @@ func DeploymentsParse(deploymentFiles []string, deploymentVars map[string]string
 		}
 	}
 
-	deploymentsContent := make([]ResourceFile, 0)
+	deploymentObjects := make([]Resource, 0)
 	for _, name := range fileList {
 		content, err := applyTemplateVars(name, deploymentVars)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't apply template to file %s: %v", name, err)
 		}
-		deploymentsContent = append(deploymentsContent, ResourceFile{Name: name, Content: content})
+		deploymentObjects = append(deploymentObjects, Resource{FileName: name, Content: content})
 	}
-	return deploymentsContent, nil
+	return deploymentObjects, nil
 }
