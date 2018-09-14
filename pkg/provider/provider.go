@@ -18,7 +18,7 @@ const (
 	globalRetryTime  = 10 * time.Second
 )
 
-// Resource holds the file contents obtained after parsing deployment files
+// Resource holds the file contents obtained after parsing deployment files.
 type Resource struct {
 	FileName string
 	Content  []byte
@@ -40,7 +40,7 @@ func RetryUntilTrue(name string, retryCount int, fn func() (bool, error)) error 
 	return fmt.Errorf("Request for '%v' hasn't completed after retrying %d times", name, retryCount)
 }
 
-// ApplyTemplateVars applies golang templates to deployment files
+// ApplyTemplateVars applies golang templates to deployment files.
 func applyTemplateVars(file string, deploymentVars map[string]string) ([]byte, error) {
 	content, err := ioutil.ReadFile(file)
 	if err != nil {

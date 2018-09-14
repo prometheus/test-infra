@@ -28,7 +28,7 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
-// Resource holds the resource objects obtained after parsing deployment files
+// Resource holds the resource objects obtained after parsing deployment files.
 type Resource struct {
 	FileName string
 	Objects  []runtime.Object
@@ -199,7 +199,7 @@ func (c *K8s) ResourceDelete(deployments []Resource) error {
 	return nil
 }
 
-// Functions to create resources
+// Functions to create resources.
 func (c *K8s) clusterRoleApply(resource runtime.Object) error {
 	req := resource.(*rbac.ClusterRole)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
@@ -748,7 +748,7 @@ func (c *K8s) persistentVolumeClaimApply(resource runtime.Object) error {
 	return nil
 }
 
-// Functions to delete resources
+// Functions to delete resources.
 func (c *K8s) clusterRoleDelete(resource runtime.Object) error {
 	req := resource.(*rbac.ClusterRole)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind

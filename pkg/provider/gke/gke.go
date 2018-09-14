@@ -257,7 +257,7 @@ func (c *GKE) clusterRunning(zone, projectID, clusterID string) (bool, error) {
 	return false, nil
 }
 
-// NodePoolCreate creates a new k8s node-pool in an existing cluster
+// NodePoolCreate creates a new k8s node-pool in an existing cluster.
 func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 	reqC := &containerpb.CreateClusterRequest{}
 
@@ -477,7 +477,7 @@ func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 	return nil
 }
 
-// ResourceApply calls k8s.ResourceApply to apply the k8s objetcts in the manifest files
+// ResourceApply calls k8s.ResourceApply to apply the k8s objetcts in the manifest files.
 func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
 	if err := c.k8sProvider.ResourceApply(c.k8sResource); err != nil {
 		log.Fatal("error while applying a resource err:", err)
@@ -485,7 +485,7 @@ func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
 	return nil
 }
 
-// ResourceDelete calls k8s.ResourceDelete to apply the k8s objetcts in the manifest files
+// ResourceDelete calls k8s.ResourceDelete to apply the k8s objetcts in the manifest files.
 func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 	if err := c.k8sProvider.ResourceDelete(c.k8sResource); err != nil {
 		log.Fatal("error while deleting objects from a manifest file err:", err)
