@@ -5,6 +5,13 @@
 It runs with [Prow CI](https://github.com/kubernetes/test-infra/blob/master/prow/) on a [Google Kubernetes Engine Cluster](https://cloud.google.com/kubernetes-engine/).
 It is designed to support adding more k8s providers.
 
+## How to Use Prombench
+To start benchmarking a PR, a Prometheus maintainer can comment any of the following comments:
+- `/benchmark` (benchmark PR with the master branch.)
+- `/benchmark master`
+- `/benchmark 2.4.0` (Any release version can be added here. Don't prepend `v` to the release version.)
+
+To cancel benchmarking, a mantainer should comment `/benchmark cancel`.
 
 ## Prerequisites 
 - Create a new Google cloud project - `prometheus-ci`
