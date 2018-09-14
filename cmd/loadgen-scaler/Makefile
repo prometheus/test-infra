@@ -1,8 +1,8 @@
 PROMBENCH_CMD        = ./scaler
-DOCKER_TAG = docker.io/prombench/loadgen-scaler:2.0.0
+DOCKER_TAG = docker.io/prombench/scaler:2.0.0
 
 scale:
-	$(PROMBENCH_CMD) scale -v PR_NUMBER:${PR_NUMBER} -u ${SCALE_UP_REPLICAS} -d ${SCALE_DOWN_REPLICAS} -i ${INTERVAL_MINUTES} \
+	$(PROMBENCH_CMD) scale -v PR_NUMBER:${PR_NUMBER} ${SCALE_DOWN_REPLICAS} ${SCALE_UP_REPLICAS} ${INTERVAL} \
 		-f components/prombench/manifests/benchmark/2_fake-webserver.yaml
 
 build:
