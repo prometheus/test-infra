@@ -1,6 +1,6 @@
-FROM prombench/prombench:2.0.0
+FROM alpine:3.8
 
-COPY scaler /prombench/scaler
-COPY Makefile /prombench/Makefile
+COPY scaler scaler
+COPY tmp/2_fake-webserver.yaml 2_fake-webserver.yaml
 
-WORKDIR /prombench
+ENTRYPOINT ["/scaler", "scale","-f", "/2_fake-webserver.yaml"]
