@@ -28,7 +28,7 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
-// Resource holds the resource objects obtained after parsing deployment files.
+// Resource holds the resource objects after parsing deployment files.
 type Resource struct {
 	FileName string
 	Objects  []runtime.Object
@@ -42,8 +42,8 @@ type K8s struct {
 	// Vaiables to subtitude in the DeploymentFiles.
 	// These are also used when the command requires some variables that are not provided by the deployment file.
 	DeploymentVars map[string]string
-	// DeploymentFile content after substituting the variables filename is used as the map key.
-	K8sResource []Resource
+	// K8s resource.runtime objects after parsing the template variables, grouped by filename.
+	resources []Resource
 
 	ctx context.Context
 }
@@ -73,7 +73,13 @@ func New(ctx context.Context, config *clientcmdapi.Config) (*K8s, error) {
 	}, nil
 }
 
-// DeploymentsParse parses the k8s objects deployment files and saves the result as bytes grouped by the filename.
+// GetResourses is a getter function for Resources field in K8s.
+func (c *K8s) GetResourses() []Resource {
+	return c.resources
+}
+
+// DeploymentsParse parses the k8s objects deployment files and saves the result as k8s objects grouped by the filename.
+// Any variables passed to the cli will be replaced in the resources files following the golang text template format.
 func (c *K8s) DeploymentsParse(*kingpin.ParseContext) error {
 	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
 	if err != nil {
@@ -101,15 +107,14 @@ func (c *K8s) DeploymentsParse(*kingpin.ParseContext) error {
 			k8sObjects = append(k8sObjects, resource)
 		}
 		if len(k8sObjects) > 0 {
-			c.K8sResource = append(c.K8sResource, Resource{FileName: deployment.FileName, Objects: k8sObjects})
+			c.resources = append(c.resources, Resource{FileName: deployment.FileName, Objects: k8sObjects})
 		}
 	}
 	return nil
 }
 
-// ResourceApply applies manifest files.
-// The input map key is the filename and the bytes slice is the actual file content.
-// It expect files in the official k8s format.
+// ResourceApply applies k8s objects.
+// The input is a slice of structs containing the filename and the slice of k8s objects present in the file.
 func (c *K8s) ResourceApply(deployments []Resource) error {
 
 	var err error
@@ -153,9 +158,8 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 	return nil
 }
 
-// ResourceDelete deletes all resources defined in the resource files.
-// The input map key is the filename and the bytes slice is the actual file content.
-// It expect files in the official k8s format.
+// ResourceDelete deletes k8s objects.
+// The input is a slice of structs containing the filename and the slice of k8s objects present in the file.
 func (c *K8s) ResourceDelete(deployments []Resource) error {
 
 	var err error
@@ -199,7 +203,7 @@ func (c *K8s) ResourceDelete(deployments []Resource) error {
 	return nil
 }
 
-// Functions to create resources.
+// Functions to create different K8s objects.
 func (c *K8s) clusterRoleApply(resource runtime.Object) error {
 	req := resource.(*rbac.ClusterRole)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
@@ -748,7 +752,7 @@ func (c *K8s) persistentVolumeClaimApply(resource runtime.Object) error {
 	return nil
 }
 
-// Functions to delete resources.
+// Functions to delete different K8s objects.
 func (c *K8s) clusterRoleDelete(resource runtime.Object) error {
 	req := resource.(*rbac.ClusterRole)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
