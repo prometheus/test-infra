@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/pprof"
-	"os"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -37,7 +36,7 @@ func main() {
 	flag.Parse()
 
 	if *registerProcessMetrics {
-		registry.MustRegister(prometheus.NewProcessCollector(os.Getpid(), ""))
+		registry.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
 	}
 	if *registerGoMetrics {
 		registry.MustRegister(prometheus.NewGoCollector())
