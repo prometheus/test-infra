@@ -4,13 +4,7 @@ This is used for building prometheus binaries from Pull Requests and running the
 Prombench uses this to build binaries for the Pull Request being benchmarked.
 
 ### How to run
-
-#### Kubernetes Pod
-
-A sample deployment config can be found [here](../../components/prombench/manifests/benchmark/3_prometheus-test.yaml#L736)
-
 #### Docker Container
-
 ```
 mkdir -p config
 echo \
