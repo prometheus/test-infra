@@ -7,7 +7,7 @@ Prombench uses this to build binaries for the Pull Request being benchmarked.
 
 #### Kubernetes Pod
 
-A sample deployment config can be found [here](components/prombench/manifests/benchmark/3_prometheus-test.yaml#L176)
+A sample deployment config can be found [here](../../components/prombench/manifests/benchmark/3_prometheus-test.yaml#L736)
 
 #### Docker Container
 
