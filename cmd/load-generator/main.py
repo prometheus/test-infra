@@ -16,7 +16,7 @@ kube_token_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 namespace = ""
 
 def deployment_path(url, depl):
-    return '%s/apis/extensions/v1beta1/namespaces/%s/deployments/%s' % (url, namespace, depl)
+    return '%s/apis/apps/v1/namespaces/%s/deployments/%s' % (url, namespace, depl)
 
 def configmap_path(url, cm):
     return '%s/api/v1/namespaces/%s/configmaps/%s' % (url, namespace, cm)
