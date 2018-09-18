@@ -71,17 +71,21 @@ spec:
         image: docker.io/prombench/scaler:2.0.0
         imagePullPolicy: Always
         args:
-        - "-v PR_NUMBER:{{ .PR_NUMBER }}"     #Used to specify fake-webserver's namespace
+        - "scale"
+        - "-f"
+        - "/etc/scaler/webserver.yaml"
+        - "-v"
+        - "PR_NUMBER:{{ .PR_NUMBER }}"        #Used to specify fake-webserver's namespace
         - "20"                                #Scale Up replicas
         - "1"                                 #Scale Down replicas
         - "15m"                               #Sleep Interval between scaling
         volumeMounts:
-        - name: config-volume
-          mountPath: /etc/loadgen
+        - name: webserver-config-volume
+          mountPath: /etc/scaler
       volumes:
-      - name: config-volume
+      - name: webserver-config-volume
         configMap:
-          name: prometheus-loadgen
+          name: fake-webserver-config-for-scaler
       nodeSelector:
         cloud.google.com/gke-nodepool: nodes-{{ .PR_NUMBER }}
         isolation: none
