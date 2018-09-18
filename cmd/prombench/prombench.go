@@ -3,6 +3,7 @@ package main // import "github.com/prometheus/prombench/cmd/prombench"
 import (
 	"fmt"
 	"os"
+	"log"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -11,6 +12,7 @@ import (
 )
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Llongfile)
 
 	app := kingpin.New(filepath.Base(os.Args[0]), "The Prometheus benchmarking tool")
 	app.HelpFlag.Short('h')
