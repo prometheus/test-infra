@@ -5,11 +5,6 @@ metadata:
   namespace: prombench-{{ .PR_NUMBER }}
 data:
   config.yaml: |
-    scaler:
-      name: fake-webserver
-      high: 20
-      low: 1
-      intervalMinutes: 15
     querier:
       groups:
       - name: simple_range
@@ -73,18 +68,24 @@ spec:
       serviceAccountName: loadgen-scaler
       containers:
       - name: prom-load-generator
-        image: docker.io/prombench/load-generator:2.0.0
+        image: docker.io/prombench/scaler:2.0.0
         imagePullPolicy: Always
         args:
-        - "scaler"
-        - "prombench-{{ .PR_NUMBER }}"
+        - "scale"
+        - "-f"
+        - "/etc/scaler/webserver.yaml"
+        - "-v"
+        - "PR_NUMBER:{{ .PR_NUMBER }}"        #Used to specify fake-webserver's namespace
+        - "20"                                #Scale Up replicas
+        - "1"                                 #Scale Down replicas
+        - "15m"                               #Sleep Interval between scaling
         volumeMounts:
-        - name: config-volume
-          mountPath: /etc/loadgen
+        - name: webserver-config-volume
+          mountPath: /etc/scaler
       volumes:
-      - name: config-volume
+      - name: webserver-config-volume
         configMap:
-          name: prometheus-loadgen
+          name: fake-webserver-config-for-scaler
       nodeSelector:
         cloud.google.com/gke-nodepool: nodes-{{ .PR_NUMBER }}
         isolation: none

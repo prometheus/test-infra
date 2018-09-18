@@ -1,7 +1,6 @@
 package gke
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -9,9 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
-	"text/template"
 
 	gke "cloud.google.com/go/container/apiv1"
 	"github.com/pkg/errors"
@@ -23,6 +20,9 @@ import (
 	"google.golang.org/grpc/status"
 	"gopkg.in/alecthomas/kingpin.v2"
 	yamlGo "gopkg.in/yaml.v2"
+
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
@@ -33,6 +33,8 @@ func New() *GKE {
 		DeploymentVars: make(map[string]string),
 	}
 }
+
+type Resource = provider.Resource
 
 // GKE holds the fields used to generate an API request.
 type GKE struct {
@@ -47,8 +49,10 @@ type GKE struct {
 	// Vaiables to subtitude in the DeploymentFiles.
 	// These are also used when the command requires some variables that are not provided by the deployment file.
 	DeploymentVars map[string]string
-	// DeploymentFile content after substituting the variables filename is used as the map key.
-	deploymentsContent []provider.ResourceFile
+	// Content bytes after parsing the template variables, grouped by filename.
+	gkeResources []Resource
+	// K8s resource.runtime objects after parsing the template variables, grouped by filename.
+	k8sResources []k8sProvider.Resource
 
 	ctx context.Context
 }
@@ -70,48 +74,100 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	return nil
 }
 
-// DeploymentsParse parses the deployment files and saves the result as bytes grouped by the filename.
+// GKEDeploymentsParse parses the cluster/nodepool deployment files and saves the result as bytes grouped by the filename.
 // Any variables passed to the cli will be replaced in the resources files following the golang text template format.
-func (c *GKE) DeploymentsParse(*kingpin.ParseContext) error {
-	var fileList []string
-	for _, name := range c.DeploymentFiles {
-		if file, err := os.Stat(name); err == nil && file.IsDir() {
-			if err := filepath.Walk(name, func(path string, f os.FileInfo, err error) error {
-				if filepath.Ext(path) == ".yaml" || filepath.Ext(path) == ".yml" {
-					fileList = append(fileList, path)
-				}
-				return nil
-			}); err != nil {
-				return fmt.Errorf("error reading directory: %v", err)
-			}
-		} else {
-			fileList = append(fileList, name)
+func (c *GKE) GKEDeploymentsParse(*kingpin.ParseContext) error {
+	// When the PROJECT_ID is not provided from the cli read it from the auth file.
+	if v, ok := c.DeploymentVars["PROJECT_ID"]; !ok || v == "" {
+		content, err := ioutil.ReadFile(c.AuthFile)
+		if err != nil {
+			log.Fatalf("Couldn't read auth file: %v", err)
 		}
+		d := make(map[string]interface{})
+		if err := json.Unmarshal(content, &d); err != nil {
+			log.Fatalf("Couldn't parse auth file: %v", err)
+		}
+		v, ok := d["project_id"].(string)
+		if !ok {
+			log.Fatal("Couldn't get project id from the auth file")
+		}
+		c.DeploymentVars["PROJECT_ID"] = v
 	}
 
-	for _, name := range fileList {
-		content, err := c.applyTemplateVars(name)
+	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
+	if err != nil {
+		log.Fatalf("Couldn't parse deployment files: %v", err)
+	}
+
+	c.gkeResources = deploymentResource
+	return nil
+}
+
+// K8SDeploymentsParse parses the k8s objects deployment files and saves the result as k8s objects grouped by the filename.
+// Any variables passed to the cli will be replaced in the resources files following the golang text template format.
+func (c *GKE) K8SDeploymentsParse(*kingpin.ParseContext) error {
+	// When the PROJECT_ID is not provided from the cli read it from the auth file.
+	if v, ok := c.DeploymentVars["PROJECT_ID"]; !ok || v == "" {
+		content, err := ioutil.ReadFile(c.AuthFile)
 		if err != nil {
-			return fmt.Errorf("couldn't apply template to file %s: %v", name, err)
+			log.Fatalf("Couldn't read auth file: %v", err)
 		}
-		c.deploymentsContent = append(c.deploymentsContent, provider.ResourceFile{name, content})
+		d := make(map[string]interface{})
+		if err := json.Unmarshal(content, &d); err != nil {
+			log.Fatalf("Couldn't parse auth file: %v", err)
+		}
+		v, ok := d["project_id"].(string)
+		if !ok {
+			log.Fatal("Couldn't get project id from the auth file")
+		}
+		c.DeploymentVars["PROJECT_ID"] = v
+	}
+
+	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
+	if err != nil {
+		log.Fatalf("Couldn't parse deployment files: %v", err)
+	}
+
+	for _, deployment := range deploymentResource {
+
+		decode := scheme.Codecs.UniversalDeserializer().Decode
+		k8sObjects := make([]runtime.Object, 0)
+
+		for _, text := range strings.Split(string(deployment.Content), provider.Separator) {
+			text = strings.TrimSpace(text)
+			if len(text) == 0 {
+				continue
+			}
+
+			resource, _, err := decode([]byte(text), nil, nil)
+			if err != nil {
+				return errors.Wrapf(err, "decoding the resource file:%v, section:%v...", deployment.FileName, text[:100])
+			}
+			if resource == nil {
+				continue
+			}
+			k8sObjects = append(k8sObjects, resource)
+		}
+		if len(k8sObjects) > 0 {
+			c.k8sResources = append(c.k8sResources, k8sProvider.Resource{FileName: deployment.FileName, Objects: k8sObjects})
+		}
 	}
 	return nil
 }
 
-// ClusterCreate create a new cluster or applyes changes to an existing cluster.
+// ClusterCreate create a new cluster or applies changes to an existing cluster.
 func (c *GKE) ClusterCreate(*kingpin.ParseContext) error {
 	req := &containerpb.CreateClusterRequest{}
-	for _, deployment := range c.deploymentsContent {
+	for _, deployment := range c.gkeResources {
 
 		if err := yamlGo.UnmarshalStrict(deployment.Content, req); err != nil {
-			log.Fatalf("Error parsing the cluster deployment file %f:%v", deployment.Name, err)
+			log.Fatalf("Error parsing the cluster deployment file %s:%v", deployment.FileName, err)
 		}
 
 		log.Printf("Cluster create request: name:'%v', project `%s`,zone `%s`", req.Cluster.Name, req.ProjectId, req.Zone)
 		_, err := c.clientGKE.CreateCluster(c.ctx, req)
 		if err != nil {
-			log.Fatalf("Couldn't create cluster '%v', file:%v ,err: %v", req.Cluster.Name, deployment.Name, err)
+			log.Fatalf("Couldn't create cluster '%v', file:%v ,err: %v", req.Cluster.Name, deployment.FileName, err)
 		}
 
 		err = provider.RetryUntilTrue(
@@ -131,9 +187,9 @@ func (c *GKE) ClusterDelete(*kingpin.ParseContext) error {
 	// Use CreateClusterRequest struct to pass the UnmarshalStrict validation and
 	// than use the result to create the DeleteClusterRequest
 	reqC := &containerpb.CreateClusterRequest{}
-	for _, deployment := range c.deploymentsContent {
+	for _, deployment := range c.gkeResources {
 		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
-			log.Fatalf("Error parsing the cluster deployment file %f:%v", deployment.Name, err)
+			log.Fatalf("Error parsing the cluster deployment file %s:%v", deployment.FileName, err)
 		}
 		reqD := &containerpb.DeleteClusterRequest{
 			ProjectId: reqC.ProjectId,
@@ -154,6 +210,7 @@ func (c *GKE) ClusterDelete(*kingpin.ParseContext) error {
 	return nil
 }
 
+// clusterDeleted checks whether a cluster has been deleted.
 func (c *GKE) clusterDeleted(req *containerpb.DeleteClusterRequest) (bool, error) {
 	rep, err := c.clientGKE.DeleteCluster(c.ctx, req)
 	if err != nil {
@@ -174,6 +231,7 @@ func (c *GKE) clusterDeleted(req *containerpb.DeleteClusterRequest) (bool, error
 	return false, nil
 }
 
+// clusterRunning checks whether a cluster is in a running state.
 func (c *GKE) clusterRunning(zone, projectID, clusterID string) (bool, error) {
 	req := &containerpb.GetClusterRequest{
 		ProjectId: projectID,
@@ -200,13 +258,13 @@ func (c *GKE) clusterRunning(zone, projectID, clusterID string) (bool, error) {
 	return false, nil
 }
 
-// NodePoolCreate creates a new k8s node-pool in an existing cluster
+// NodePoolCreate creates a new k8s node-pool in an existing cluster.
 func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 	reqC := &containerpb.CreateClusterRequest{}
 
-	for _, deployment := range c.deploymentsContent {
+	for _, deployment := range c.gkeResources {
 		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
-			log.Fatalf("Error parsing the cluster deployment file %f:%v", deployment.Name, err)
+			log.Fatalf("Error parsing the cluster deployment file %s:%v", deployment.FileName, err)
 		}
 
 		for _, node := range reqC.Cluster.NodePools {
@@ -226,7 +284,7 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 				})
 
 			if err != nil {
-				log.Fatalf("Couldn't create cluster nodepool '%v', file:%v ,err: %v", node.Name, deployment.Name, err)
+				log.Fatalf("Couldn't create cluster nodepool '%v', file:%v ,err: %v", node.Name, deployment.FileName, err)
 			}
 
 			err = provider.RetryUntilTrue(
@@ -237,7 +295,7 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 				})
 
 			if err != nil {
-				log.Fatalf("Couldn't create cluster nodepool '%v', file:%v ,err: %v", node.Name, deployment.Name, err)
+				log.Fatalf("Couldn't create cluster nodepool '%v', file:%v ,err: %v", node.Name, deployment.FileName, err)
 			}
 		}
 	}
@@ -245,7 +303,7 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 }
 
 // nodePoolCreated checks if there is any ongoing NodePool operation on the cluster
-// when creating a NodePool
+// when creating a NodePool.
 func (c *GKE) nodePoolCreated(req *containerpb.CreateNodePoolRequest) (bool, error) {
 
 	rep, err := c.clientGKE.CreateNodePool(c.ctx, req)
@@ -267,15 +325,15 @@ func (c *GKE) nodePoolCreated(req *containerpb.CreateNodePoolRequest) (bool, err
 	return true, nil
 }
 
-// NodePoolDelete deletes a new k8s node-pool in an existing cluster
+// NodePoolDelete deletes a new k8s node-pool in an existing cluster.
 func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 	// Use CreateNodePoolRequest struct to pass the UnmarshalStrict validation and
 	// than use the result to create the DeleteNodePoolRequest
 	reqC := &containerpb.CreateClusterRequest{}
-	for _, deployment := range c.deploymentsContent {
+	for _, deployment := range c.gkeResources {
 
 		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
-			log.Fatalf("Error parsing the cluster deployment file %f:%v", deployment.Name, err)
+			log.Fatalf("Error parsing the cluster deployment file %s:%v", deployment.FileName, err)
 		}
 
 		for _, node := range reqC.Cluster.NodePools {
@@ -293,13 +351,14 @@ func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 				func() (bool, error) { return c.nodePoolDeleted(reqD) })
 
 			if err != nil {
-				log.Fatalf("Couldn't delete cluster nodepool '%v', file:%v ,err: %v", node.Name, deployment.Name, err)
+				log.Fatalf("Couldn't delete cluster nodepool '%v', file:%v ,err: %v", node.Name, deployment.FileName, err)
 			}
 		}
 	}
 	return nil
 }
 
+// nodePoolDeleted checks whether a nodepool has been deleted.
 func (c *GKE) nodePoolDeleted(req *containerpb.DeleteNodePoolRequest) (bool, error) {
 
 	rep, err := c.clientGKE.DeleteNodePool(c.ctx, req)
@@ -324,6 +383,7 @@ func (c *GKE) nodePoolDeleted(req *containerpb.DeleteNodePoolRequest) (bool, err
 	return false, nil
 }
 
+// nodePoolRunning checks whether a nodepool has been created.
 func (c *GKE) nodePoolRunning(zone, projectID, clusterID, poolName string) (bool, error) {
 	req := &containerpb.GetNodePoolRequest{
 		ProjectId:  projectID,
@@ -348,7 +408,7 @@ func (c *GKE) nodePoolRunning(zone, projectID, clusterID, poolName string) (bool
 		rep.Status == containerpb.NodePool_RUNNING_WITH_ERROR ||
 		rep.Status == containerpb.NodePool_STOPPING ||
 		rep.Status == containerpb.NodePool_STATUS_UNSPECIFIED {
-		log.Fatalf("NodePool not in a status to become ready: %v", rep.Name, rep.StatusMessage)
+		log.Fatalf("NodePool %s not in a status to become ready: %v", rep.Name, rep.StatusMessage)
 	}
 
 	log.Printf("Current cluster node pool '%v' status:%v , %v", rep.Name, rep.Status, rep.StatusMessage)
@@ -411,69 +471,25 @@ func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 	config.AuthInfos[rep.Zone] = authInfo
 	config.CurrentContext = rep.Zone
 
-	k8s, err := k8sProvider.New(c.ctx, *config)
+	c.k8sProvider, err = k8sProvider.New(c.ctx, config)
 	if err != nil {
 		log.Fatal("k8s provider error", err)
 	}
-	c.k8sProvider = k8s
 	return nil
 }
 
-// ResourceApply iterates over all manifest files
-// and applies the resource definitions on the k8s cluster.
-//
-// Each file can contain more than one resource definition where `----` is used as separator.
+// ResourceApply calls k8s.ResourceApply to apply the k8s objects in the manifest files.
 func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
-	if err := c.k8sProvider.ResourceApply(c.deploymentsContent); err != nil {
+	if err := c.k8sProvider.ResourceApply(c.k8sResources); err != nil {
 		log.Fatal("error while applying a resource err:", err)
 	}
 	return nil
 }
 
-// ResourceDelete iterates over all files passed as a cli argument
-// and deletes all resources defined in the resource files.
-//
-// Each file can container more than one resource definition where `---` is used as separator.
+// ResourceDelete calls k8s.ResourceDelete to apply the k8s objects in the manifest files.
 func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
-	if err := c.k8sProvider.ResourceDelete(c.deploymentsContent); err != nil {
+	if err := c.k8sProvider.ResourceDelete(c.k8sResources); err != nil {
 		log.Fatal("error while deleting objects from a manifest file err:", err)
 	}
 	return nil
-}
-
-func (c *GKE) applyTemplateVars(file string) ([]byte, error) {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		log.Fatalf("Error reading file %v:%v", file, err)
-	}
-
-	// When the PROJECT_ID is not provided from the cli read it from the auth file.
-	if v, ok := c.DeploymentVars["PROJECT_ID"]; !ok || v == "" {
-		content, err := ioutil.ReadFile(c.AuthFile)
-		if err != nil {
-			log.Fatalf("Couldn't read auth file: %v", err)
-		}
-		d := make(map[string]interface{})
-		if err := json.Unmarshal(content, &d); err != nil {
-			log.Fatalf("Couldn't parse auth file: %v", err)
-		}
-		v, ok := d["project_id"].(string)
-		if !ok {
-			log.Fatal("Couldn't get project id from the auth file")
-		}
-		c.DeploymentVars["PROJECT_ID"] = v
-	}
-
-	fileContentParsed := bytes.NewBufferString("")
-	t := template.New("resource").Option("missingkey=error")
-	// k8s objects can't have dots(.) se we add a custom function to allow normalising the variable values.
-	t = t.Funcs(template.FuncMap{
-		"normalise": func(t string) string {
-			return strings.Replace(t, ".", "-", -1)
-		},
-	})
-	if err := template.Must(t.Parse(string(content))).Execute(fileContentParsed, c.DeploymentVars); err != nil {
-		log.Fatalf("Failed to execute parse file: err:%v", file, err)
-	}
-	return fileContentParsed.Bytes(), nil
 }
