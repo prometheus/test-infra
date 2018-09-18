@@ -37,14 +37,14 @@ func new() *scale {
 
 func (s *scale) updateReplicas(replicas *int32) []k8s.Resource {
 	var k8sResource []k8s.Resource
-	for _, deployment := range s.k8sClient.K8sResource {
+	for _, deployment := range s.k8sClient.GetResourses() {
 		k8sObjects := make([]runtime.Object, 0)
 
 		for _, resource := range deployment.Objects {
 			if kind := strings.ToLower(resource.GetObjectKind().GroupVersionKind().Kind); kind == "deployment" {
 				req := resource.(*appsV1.Deployment)
 				req.Spec.Replicas = replicas
-				k8sObjects = append(k8sObjects, req)
+				k8sObjects = append(k8sObjects, req.DeepCopyObject())
 			}
 		}
 		if len(k8sObjects) > 0 {
@@ -55,27 +55,25 @@ func (s *scale) updateReplicas(replicas *int32) []k8s.Resource {
 }
 
 func (s *scale) scale(*kingpin.ParseContext) error {
-	log.Printf("Starting Prombench-Scaler:\n\t min: %d\n\t max: %d\n\t interval: %s", s.min, s.max, s.interval)
+	log.Printf("Starting Prombench-Scaler:\n\t max: %d\n\t min: %d\n\t interval: %s", s.max, s.min, s.interval)
 
-	minResourceObjects := s.updateReplicas(&s.min)
 	maxResourceObjects := s.updateReplicas(&s.max)
+	minResourceObjects := s.updateReplicas(&s.min)
 
 	for {
+		log.Printf("Scaling Deployment to %d", s.max)
+		if err := s.k8sClient.ResourceApply(maxResourceObjects); err != nil {
+			fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error scaling deployment"))
+		}
+
 		time.Sleep(s.interval)
 
 		log.Printf("Scaling Deployment to %d", s.min)
 		if err := s.k8sClient.ResourceApply(minResourceObjects); err != nil {
 			fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error scaling deployment"))
-			os.Exit(2)
 		}
 
 		time.Sleep(s.interval)
-
-		log.Printf("Scaling Deployment to %d", s.max)
-		if err := s.k8sClient.ResourceApply(maxResourceObjects); err != nil {
-			fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error scaling deployment"))
-			os.Exit(2)
-		}
 	}
 }
 
@@ -86,7 +84,7 @@ func main() {
 
 	s := new()
 
-	k8sApp := app.Command("scale", `Scale a Kubernetes deployment object periodically up and down`).
+	k8sApp := app.Command("scale", "Scale a Kubernetes deployment object periodically up and down. \nex: ./scaler scale -v NAMESPACE:scale -f fake-webserver.yaml 20 1 15m").
 		Action(s.k8sClient.DeploymentsParse).
 		Action(s.scale)
 	k8sApp.Flag("file", "yaml file or folder that describes the parameters for the deployment.").
@@ -96,12 +94,12 @@ func main() {
 	k8sApp.Flag("vars", "When provided it will substitute the token holders in the yaml file. Follows the standard golang template formating - {{ .hashStable }}.").
 		Short('v').
 		StringMapVar(&s.k8sClient.DeploymentVars)
-	k8sApp.Arg("min", "Number of Replicas to scale down.").
-		Required().
-		Int32Var(&s.min)
 	k8sApp.Arg("max", "Number of Replicas to scale up.").
 		Required().
 		Int32Var(&s.max)
+	k8sApp.Arg("min", "Number of Replicas to scale down.").
+		Required().
+		Int32Var(&s.min)
 	k8sApp.Arg("interval", "Time to wait before changing the number of replicas.").
 		Required().
 		DurationVar(&s.interval)
