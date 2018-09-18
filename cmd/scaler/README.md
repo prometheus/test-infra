@@ -10,6 +10,21 @@ go build scaler.go
 // reads go.mod from the project root and downloads all dependancies.
 ```
 
+## RBAC Roles
+The container running this tool should have the following RBAC configuration.
+```
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: scaler
+  namespace: prombench
+rules:
+- apiGroups: ["apps"]   #apiVersion of deployment being scaled
+  resources:
+  - deployments
+  verbs: ["get", "list", "update"]
+```
+
 ## Usage
 ```
 // (Note: These commands should be executed inside a k8s container)
