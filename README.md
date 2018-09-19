@@ -7,9 +7,8 @@ It is designed to support adding more k8s providers.
 
 ## How to trigger tests on Github
 A Prometheus maintainer can comment as follows to benchmark a PR:
-- `/benchmark` (benchmark PR with the master branch.)
-- `/benchmark master`
-- `/benchmark 2.4.0` (Any release version can be added here. Don't prepend `v` to the release version.)
+- `/benchmark` equivalent to `/benchmark master`  - benchmark PR with the master branch.
+- `/benchmark 2.4.0` - benchmark the PR with the 2.4.0 release(could be any release). Don't prepend `v` to the release version.
 
 To cancel benchmarking, a mantainer should comment `/benchmark cancel`.
 
