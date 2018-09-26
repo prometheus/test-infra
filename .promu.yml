@@ -1,0 +1,14 @@
+verbose: false
+go:
+    version: 1.11.0
+    cgo: false
+repository:
+    path: github.com/prometheus/prombench
+build:
+    binaries:
+        - name: prombench
+          path: ./cmd/prombench
+        - name: scaler
+          path: ./cmd/scaler
+        - name: fake-webserver
+          path: ./cmd/fake-webserver
