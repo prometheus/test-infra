@@ -94,7 +94,7 @@ export PR_NUMBER=<PR number to benchmark the release with>
 ### Prerequisites
 ---
 
-- Follow the steps mentioned in the [prerequisites](#Prerequisites) for manual setup.
+- Follow the steps mentioned in the [prerequisites](#prerequisites) for manual setup.
 
 - Generate a GitHub auth token that will be used to authenticate when sending requests to the GitHub api.
   * Login with the [Prombot account](https://github.com/prombot) and generate a [new auth token](https://github.com/settings/tokens).  
@@ -124,10 +124,10 @@ This is used to monitor GitHub comments and starts new tests.
   * gke auth is used when scaling up and down the cluster.
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME \
--f components/prow/manifests/secrets.yaml \
--v HMAC_TOKEN="$(printf $HMAC_TOKEN | base64 -w 0)" \
--v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
--v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)"
+    -f components/prow/manifests/secrets.yaml \
+    -v HMAC_TOKEN="$(printf $HMAC_TOKEN | base64 -w 0)" \
+    -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
+    -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)"
 ```
 
 - Deploy all internal prow components
@@ -142,14 +142,14 @@ export GITHUB_ORG=prometheus
 export GITHUB_REPO=prometheus
 
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
--v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME \
--v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
--f components/prow/manifests/prow_internals_2.yaml
+    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME \
+    -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
+    -f components/prow/manifests/prow_internals_2.yaml
 ```
 
 ### Deploy Prometheus-Meta & Grafana
 ---
-- Follow the steps mentioned in the [manual](#deploy-prometheus-meta-&-grafana) setup to deploy prometheus-meta & grafana.
+- Follow the steps mentioned in the [manual](#deploy-prometheus-meta--grafana) setup to deploy prometheus-meta & grafana.
 
 - Set the IP DNS record for `prombench.prometheus.io` to the nginx-ingress-controller IP address.
 
