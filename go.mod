@@ -7,6 +7,7 @@ require (
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf
 	github.com/appc/cni v0.0.0-20160512091013-b634ff6bcd40
+	github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973 // indirect
 	github.com/elazarl/go-bindata-assetfs v0.0.0-20151224045452-57eb5e1fc594
 	github.com/emicklei/go-restful v1.1.3
 	github.com/garyburd/redigo v0.0.0-20160525165706-b8dc90050f24
@@ -31,11 +32,16 @@ require (
 	github.com/mailru/easyjson v0.0.0-20180606163543-3fdea8d05856
 	github.com/mattn/go-colorable v0.0.0-20170221004137-d898aa9fb31c
 	github.com/mattn/go-isatty v0.0.0-20170216235908-dda3de49cbfc
+	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
 	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742
 	github.com/petar/GoLLRB v0.0.0-20130427215148-53be0d36a84c
 	github.com/peterbourgon/diskv v0.0.0-20180411000000-0646ccaebea1ed1539efcab30cae44019090093f
 	github.com/pkg/errors v0.8.0
+	github.com/prometheus/client_golang v0.9.0-pre1.0.20180926142155-2d5a6493f89f
+	github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910 // indirect
+	github.com/prometheus/common v0.0.0-20180801064454-c7de2306084e // indirect
+	github.com/prometheus/procfs v0.0.0-20180920065004-418d78d0b9a7 // indirect
 	github.com/samuel/go-zookeeper v0.0.0-20150817175050-177002e16a00
 	github.com/shurcooL/sanitized_anchor_name v0.0.0-20160918041101-1dba4b3954bc
 	github.com/spf13/pflag v1.0.1

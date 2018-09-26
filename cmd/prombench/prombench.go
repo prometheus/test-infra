@@ -2,8 +2,8 @@ package main // import "github.com/prometheus/prombench/cmd/prombench"
 
 import (
 	"fmt"
-	"os"
 	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
