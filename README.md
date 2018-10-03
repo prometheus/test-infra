@@ -5,13 +5,9 @@
 It runs with [Prow CI](https://github.com/kubernetes/test-infra/blob/master/prow/) on a [Google Kubernetes Engine Cluster](https://cloud.google.com/kubernetes-engine/).
 It is designed to support adding more k8s providers.
 
-## How to run tests manually
-
-### Prerequisites
+## Run tests manually
+### Create a k8s cluster
 ---
-
-#### Create a k8s cluster
-
 - Create a new project on Google Cloud.
 
 - Create a Service Account on GKE with role `Kubernetes Engine Service Agent` & `Kubernetes Engine Admin` and download the json file.
@@ -28,16 +24,16 @@ export AUTH_FILE=<path to service-account.json>
 ```
 
 ### Deploy Prometheus-Meta & Grafana
----
+> This is used for collecting and displaying the test results.
 
-This is used for collecting and displaying the test results.
+---
 
 - Set the following environment variables
 ```
 export GCLOUD_SERVICEACCOUNT_CLIENTID=<email-id present in service-account.json>
 export GRAFANA_ADMIN_PASSWORD=password
 ```
-**Note:** The `GCLOUD_SERVICEACCOUNT_CLIENTID` is used to grant cluster-admin-rights to the service-account. This is needed to create RBAC roles on GKE.
+> The `GCLOUD_SERVICEACCOUNT_CLIENTID` is used to grant cluster-admin-rights to the service-account. This is needed to create RBAC roles on GKE.
 
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx) which will be used to access Prometheus-Meta & Grafana.
 ```
@@ -48,6 +44,9 @@ export GRAFANA_ADMIN_PASSWORD=password
 
 - Export the nginx-ingress-controller IP address.
 ```
+// Generate auth config so we can use kubectl.
+gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE
+
 kubectl get ingress ing -o go-template='{{ range .status.loadBalancer.ingress}}{{.ip}}{{ end }}'
 
 export INGRESS_IP=$(kubectl get ingress ing -o go-template='{{ range \
@@ -71,7 +70,7 @@ export INGRESS_IP=$(kubectl get ingress ing -o go-template='{{ range \
 - Set the following environment variables.
 ```
 export RELEASE=<master or any prometheus release(ex: v2.3.0) >
-export PR_NUMBER=<PR number to benchmark the release with>
+export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 ```
 
 - Create the nodepools for the k8s objects
@@ -89,12 +88,15 @@ export PR_NUMBER=<PR number to benchmark the release with>
     -f components/prombench/manifests/benchmark
 ```
 
-## How to trigger tests on Github
+## Triggered tests by GitHub comments
 
-### Prerequisites
+### Create a k8s cluster
 ---
 
-- Follow the steps mentioned in the [prerequisites](#prerequisites) for manual setup.
+- Follow the steps mentioned in the [Create a k8s cluster](#create-a-k8s-cluster) in the manual setup.
+
+### Setup the GitHub API
+---
 
 - Generate a GitHub auth token that will be used to authenticate when sending requests to the GitHub api.
   * Login with the [Prombot account](https://github.com/prombot) and generate a [new auth token](https://github.com/settings/tokens).  
@@ -115,8 +117,9 @@ export OAUTH_TOKEN=***Replace with the generated token from github***
     * **Note:** The IP DNS record for `prombench.prometheus.io` will be added once we get it from the ingress deployment.
 
 ### Deploy Prow
+> This is used to monitor GitHub comments and starts new tests.
+
 ---
-This is used to monitor GitHub comments and starts new tests.
 
 - Add all required tokens as k8s secrets.
   * hmac is used when verifying requests from GitHub.
@@ -132,7 +135,7 @@ This is used to monitor GitHub comments and starts new tests.
 
 - Deploy all internal prow components
 
-  * **Note:** Long term plans are to use the [prombench cli tool](cmd/prombench) to deploy and manage everything, but at the moment `CustomResourceDefinition` is WIP in the k8s golang client library. So we use `kubectl` to deploy CRD.
+  * > Long term plans are to use the [prombench cli tool](cmd/prombench) to deploy and manage everything, but at the moment `CustomResourceDefinition` is WIP in the k8s golang client library. So we use `kubectl` to deploy CRD.
 ```
 // Generate auth config so we can use kubectl.
 gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE
@@ -164,6 +167,6 @@ export GITHUB_REPO=prometheus
 A Prometheus maintainer can comment as follows to benchmark a PR:
 - `/benchmark` (benchmark PR with the master branch.)
 - `/benchmark master`
-- `/benchmark 2.4.0` (Any release version can be added here. Don't prepend `v` to the release version.)
+- `/benchmark 2.4.0` (Any release version can be added here. Don't prepend `v` to the release version here. The benchmark plugin in Prow will prepend it.)
 
 To cancel benchmarking, a mantainer should comment `/benchmark cancel`.
