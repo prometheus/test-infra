@@ -135,7 +135,7 @@ export OAUTH_TOKEN=***Replace with the generated token from github***
 
 - Deploy all internal prow components
 
-  * > Long term plans are to use the [prombench cli tool](cmd/prombench) to deploy and manage everything, but at the moment `CustomResourceDefinition` is WIP in the k8s golang client library. So we use `kubectl` to deploy CRD.
+> Long term plans are to use the [prombench cli tool](cmd/prombench) to deploy and manage everything, but at the moment `CustomResourceDefinition` is WIP in the k8s golang client library. So we use `kubectl` to deploy CRD.
 ```
 // Generate auth config so we can use kubectl.
 gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE
