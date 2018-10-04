@@ -30,7 +30,7 @@ export AUTH_FILE=<path to service-account.json>
 
 - Set the following environment variables
 ```
-export GCLOUD_SERVICEACCOUNT_CLIENTID=<email-id present in service-account.json>
+export GCLOUD_SERVICEACCOUNT_CLIENTID=<client-id present in service-account.json>
 export GRAFANA_ADMIN_PASSWORD=password
 ```
 > The `GCLOUD_SERVICEACCOUNT_CLIENTID` is used to grant cluster-admin-rights to the service-account. This is needed to create RBAC roles on GKE.
@@ -45,12 +45,11 @@ export GRAFANA_ADMIN_PASSWORD=password
 - Export the nginx-ingress-controller IP address.
 ```
 // Generate auth config so we can use kubectl.
-gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE
+gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE --project=$PROJECT_ID
 
 kubectl get ingress ing -o go-template='{{ range .status.loadBalancer.ingress}}{{.ip}}{{ end }}'
 
-export INGRESS_IP=$(kubectl get ingress ing -o go-template='{{ range \
-    .status.loadBalancer.ingress}}{{.ip}}{{ end }}')
+export INGRESS_IP=$(kubectl get ingress ing -o go-template='{{ range .status.loadBalancer.ingress}}{{.ip}}{{ end }}')
 ```
 
 - Deploy Prometheus-meta & Grafana.

@@ -2,7 +2,7 @@ projectid: {{ .PROJECT_ID }}
 zone: {{ .ZONE }}
 cluster:
   name: {{ .CLUSTER_NAME }}
-  initialclusterversion: 1.10.4-gke.3
+  initialclusterversion: 1.10
   nodepools:
   # GKE creates a label on every node in a pool
   # cloud.google.com/gke-nodepool: <NODEPOOL_NAME>
