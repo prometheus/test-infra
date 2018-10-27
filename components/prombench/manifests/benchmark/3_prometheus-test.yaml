@@ -829,6 +829,7 @@ spec:
         args: [
           "--config.file=/etc/prometheus/config/prometheus.yaml",
           "--storage.tsdb.path=/data",
+          "--web.external-url=http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-release"
         ]
         volumeMounts:
         - name: config-volume
