@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-prometheus
+  namespace: prombench-{{ .PR_NUMBER }}
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: prometheus-test-{{ normalise .RELEASE }}
+          servicePort: 80
+        path: /{{ .PR_NUMBER }}/prometheus-release
+      - backend:
+          serviceName: prometheus-test-pr-{{ .PR_NUMBER }}
+          servicePort: 80
+        path: /{{ .PR_NUMBER }}/prometheus-pr
