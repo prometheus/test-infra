@@ -100,7 +100,7 @@ common-unused: $(GOVENDOR)
 .PHONY: common-build
 common-build: promu
 	@echo ">> building binaries"
-	$(PROMU) build --prefix $(PREFIX)
+	GO111MODULE=on $(PROMU) build --prefix $(PREFIX)
 
 .PHONY: common-tarball
 common-tarball: promu
@@ -121,12 +121,12 @@ common-docker-tag-latest:
 
 .PHONY: promu
 promu:
-	GOOS= GOARCH= $(GO) get -u github.com/prometheus/promu
+	GO111MODULE=off GOOS= GOARCH= $(GO) get -u github.com/prometheus/promu
 
 .PHONY: $(STATICCHECK)
 $(STATICCHECK):
-	GOOS= GOARCH= $(GO) get -u honnef.co/go/tools/cmd/staticcheck
+	GO111MODULE=off GOOS= GOARCH= $(GO) get -u honnef.co/go/tools/cmd/staticcheck
 
 .PHONY: $(GOVENDOR)
 $(GOVENDOR):
-	GOOS= GOARCH= $(GO) get -u github.com/kardianos/govendor
+	GO111MODULE=off GOOS= GOARCH= $(GO) get -u github.com/kardianos/govendor

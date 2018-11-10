@@ -5,15 +5,6 @@ DOCKER_IMAGE_TAG := 2.0.0
 
 include Makefile.common
 
-# This is to prevent go get promu, staticcheck & govendor from updating go.mod 
-export GO111MODULE = off
-
-.PHONY: build
-build: promu
-	@echo ">> building binaries"
-	@go version | grep go1.11 || exit  "Requires golang 1.11 with support for modules!"
-	@GO111MODULE=on $(PROMU) build
-
 # Prombench Commands
 ifeq ($(AUTH_FILE),)
 	AUTH_FILE = "/etc/serviceaccount/service-account.json"
