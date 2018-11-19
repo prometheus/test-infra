@@ -4,7 +4,7 @@ metadata:
   name: prometheus-test
   namespace: prombench-{{ .PR_NUMBER }}
 data:
-  prometheus.yaml: |
+  prometheus.yml: |
     global:
       scrape_interval: 5s
 
@@ -750,9 +750,9 @@ spec:
         args: ["{{ .PR_NUMBER }}"]
         volumeMounts:
         - name: config-volume
-          mountPath: /etc/prometheus/config
+          mountPath: /etc/prometheus
         - name: instance-ssd
-          mountPath: /data
+          mountPath: /prometheus
         ports:
         - name: prom-web
           containerPort: 9090
@@ -827,15 +827,13 @@ spec:
         image: quay.io/prometheus/prometheus:{{ .RELEASE }}
         imagePullPolicy: Always
         args: [
-          "--config.file=/etc/prometheus/config/prometheus.yaml",
-          "--storage.tsdb.path=/data",
           "--web.external-url=http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-release"
         ]
         volumeMounts:
         - name: config-volume
-          mountPath: /etc/prometheus/config
+          mountPath: /etc/prometheus
         - name: instance-ssd
-          mountPath: /data
+          mountPath: /prometheus
         ports:
         - name: prom-web
           containerPort: 9090

@@ -22,8 +22,8 @@ printf "\n\n>> Creating prometheus binaries\n\n"
 if ! make build; then printf "ERROR:: Building of binaries failed" && exit 1; fi
 
 printf "\n\n>> Starting prometheus\n\n"
-./prometheus --config.file=/etc/prometheus/config/prometheus.yaml \
-             --storage.tsdb.path=/data \
+./prometheus --config.file=/etc/prometheus/prometheus.yml \
+             --storage.tsdb.path=/prometheus \
              --web.console.libraries=${DIR}/console_libraries \
              --web.console.templates=${DIR}/consoles \
              --web.external-url=http://prombench.prometheus.io/$PR_NUMBER/prometheus-pr
