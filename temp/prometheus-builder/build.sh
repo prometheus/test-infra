@@ -1,6 +1,7 @@
 #!/bin/bash
 
 PR_NUMBER=$1
+FLAGS="${@:2}"
 
 if [ -z "$PR_NUMBER" ]; then echo "ERROR::PR NUMBER is missing in argument" && exit 1; fi
 
@@ -22,7 +23,7 @@ printf "\n\n>> Creating prometheus binaries\n\n"
 if ! make build; then printf "ERROR:: Building of binaries failed" && exit 1; fi
 
 printf "\n\n>> Starting prometheus\n\n"
-./prometheus --config.file=/etc/prometheus/prometheus.yml \
+./prometheus --config.file=/etc/prometheus/prometheus.yml $FLAGS \
              --storage.tsdb.path=/prometheus \
              --web.console.libraries=${DIR}/console_libraries \
              --web.console.templates=${DIR}/consoles \
