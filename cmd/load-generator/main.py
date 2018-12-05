@@ -69,7 +69,7 @@ class Querier(object):
         ["prometheus", "group", "expr", "type"],
     )
 
-    def __init__(self, target, qg):
+    def __init__(self, target, pr_number, qg):
         self.target = target
         self.name = qg["name"]
 
@@ -81,12 +81,12 @@ class Querier(object):
         self.step = qg.get("step", "15s")
 
         if self.type == "instant":
-            self.url = "http://prometheus-test-%s.%s/api/v1/query" % (target, namespace)
+            self.url = "http://prombench.prometheus.io/%s/prometheus-%s/api/v1/query" % (pr_number, target)
         else:
-            self.url = "http://prometheus-test-%s.%s/api/v1/query_range" % (target, namespace)
+            self.url = "http://prombench.prometheus.io/%s/prometheus-%s/api/v1/query_range" % (pr_number, target)
 
     def run(self):
-        print("run querier %s %s" % (self.target, self.name))
+        print("run querier %s %s for %s" % (self.target, self.name, self.url))
 
         while True:
             start = time.time()
@@ -132,13 +132,15 @@ def duration_seconds(s):
     raise "unknown duration %s" % s
 
 def main():
-    if len(sys.argv) < 3 or sys.argv[1] not in ["scaler", "querier"]:
+    if len(sys.argv) < 4 or sys.argv[1] not in ["scaler", "querier"]:
         print("unexpected arguments")
-        print("usage: <load_generator> <scaler|querier> <namespace>")
+        print("usage: <load_generator> <scaler|querier> <namespace> <pr_number>")
         exit(2)
 
     global namespace
     namespace = sys.argv[2]
+    pr_number = sys.argv[3]
+
     host = os.environ.get('KUBERNETES_SERVICE_HOST')
     port = os.environ.get('KUBERNETES_PORT_443_TCP_PORT')
     url = 'https://%s:%s' % (host, port)
@@ -158,14 +160,13 @@ def main():
         Scaler(config["scaler"], url, req_kwargs).run()
         return
 
-    # process querier for at least 2 targets
-    if len(sys.argv) < 4:
-        print("No targets specified")
-        exit(2)
-
-    for t in sys.argv[3:]:
+    if sys.argv[1] == "querier":
         for g in config["querier"]["groups"]:
-            p = threading.Thread(target=Querier(t, g).run)
+            p = threading.Thread(target=Querier("pr", pr_number, g).run)
+            p.start()
+
+        for g in config["querier"]["groups"]:
+            p = threading.Thread(target=Querier("release", pr_number, g).run)
             p.start()
 
     start_http_server(8080)

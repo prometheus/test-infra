@@ -113,8 +113,7 @@ spec:
         args:
         - "querier"
         - "prombench-{{ .PR_NUMBER }}"
-        - "{{ normalise .RELEASE }}"
-        - "pr-{{ .PR_NUMBER }}"
+        - "{{ .PR_NUMBER }}"
         volumeMounts:
         - name: config-volume
           mountPath: /etc/loadgen
