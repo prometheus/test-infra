@@ -827,7 +827,11 @@ spec:
         image: quay.io/prometheus/prometheus:{{ .RELEASE }}
         imagePullPolicy: Always
         args: [
-          "--web.external-url=http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-release"
+          {{if needConfigMapInArg .RELEASE}}
+          "--config.file=/etc/prometheus/prometheus.yml",
+          {{end}}
+          "--web.external-url=http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-release",
+          "--log.level=debug"
         ]
         volumeMounts:
         - name: config-volume
