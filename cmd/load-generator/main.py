@@ -87,6 +87,8 @@ class Querier(object):
 
     def run(self):
         print("run querier %s %s for %s" % (self.target, self.name, self.url))
+        print("Waiting for 20 seconds to allow prometheus server (%s) to be properly set-up" % (self.url))
+        time.sleep(20)
 
         while True:
             start = time.time()
@@ -110,6 +112,12 @@ class Querier(object):
 
             resp = requests.get(self.url, params)
             dur = time.time() - start
+
+            if resp.status_code == 404:
+                print("ERROR :: Querier returned 404 for prometheus instance %s." % (self.url))
+                sys.exit(1)
+            elif resp.status_code != 200:
+                print("WARNING :: Querier returned %d for prometheus instance %s." % (resp.status_code, self.url))
 
             print("query %s %s, status=%s, size=%d, dur=%.3f" % (self.target, expr, resp.status_code, len(resp.text), dur))
 
