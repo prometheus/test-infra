@@ -27,4 +27,5 @@ printf "\n\n>> Starting prometheus\n\n"
              --storage.tsdb.path=/prometheus \
              --web.console.libraries=${DIR}/console_libraries \
              --web.console.templates=${DIR}/consoles \
-             --web.external-url=http://prombench.prometheus.io/$PR_NUMBER/prometheus-pr
+             --web.external-url=http://prombench.prometheus.io/$PR_NUMBER/prometheus-pr \
+             --log.level=debug
