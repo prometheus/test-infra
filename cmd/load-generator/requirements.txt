@@ -1,5 +1,5 @@
-requests
-pyyaml
-pyopenssl
-prometheus_client
-datetime
+requests==2.20.1
+pyyaml==3.13
+pyopenssl==18.0.0
+prometheus_client==0.4.2
+datetime==4.3
