@@ -14,6 +14,7 @@ from prometheus_client import start_http_server, Histogram, Counter
 ca_cert_path = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 kube_token_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 namespace = ""
+max_404_errors = 30
 
 def deployment_path(url, depl):
     return '%s/apis/apps/v1/namespaces/%s/deployments/%s' % (url, namespace, depl)
@@ -69,9 +70,11 @@ class Querier(object):
         ["prometheus", "group", "expr", "type"],
     )
 
-    def __init__(self, target, qg):
+    def __init__(self, groupID, target, pr_number, qg):
         self.target = target
         self.name = qg["name"]
+        self.groupID = groupID
+        self.numberOfErrors = 0
 
         self.interval = duration_seconds(qg["interval"])
         self.queries = qg["queries"]
@@ -81,12 +84,14 @@ class Querier(object):
         self.step = qg.get("step", "15s")
 
         if self.type == "instant":
-            self.url = "http://prometheus-test-%s.%s/api/v1/query" % (target, namespace)
+            self.url = "http://prombench.prometheus.io/%s/prometheus-%s/api/v1/query" % (pr_number, target)
         else:
-            self.url = "http://prometheus-test-%s.%s/api/v1/query_range" % (target, namespace)
+            self.url = "http://prombench.prometheus.io/%s/prometheus-%s/api/v1/query_range" % (pr_number, target)
 
     def run(self):
-        print("run querier %s %s" % (self.target, self.name))
+        print("run querier %s %s for %s" % (self.target, self.name, self.url))
+        print("Waiting for 20 seconds to allow prometheus server (%s) to be properly set-up" % (self.url))
+        time.sleep(20)
 
         while True:
             start = time.time()
@@ -111,13 +116,25 @@ class Querier(object):
             resp = requests.get(self.url, params)
             dur = time.time() - start
 
-            print("query %s %s, status=%s, size=%d, dur=%.3f" % (self.target, expr, resp.status_code, len(resp.text), dur))
+            if resp.status_code == 404:
+                print("WARNING :: GroupId#%d : Querier returned 404 for prometheus instance %s." % (self.groupID, self.url))
+                self.numberOfErrors += 1
+                if self.numberOfErrors == max_404_errors:
+                    print("ERROR :: GroupId#%d : Querier returned 404 for prometheus instance %s %d times." % (self.groupID, self.url, max_404_errors))
+                    os._exit(1)
+            elif resp.status_code != 200:
+                print("WARNING :: GroupId#%d : Querier returned %d for prometheus instance %s." % (self.groupID, resp.status_code, self.url))
+            else:
+                print("GroupId#%d : query %s %s, status=%s, size=%d, dur=%.3f" % (self.groupID, self.target, expr, resp.status_code, len(resp.text), dur))
+                Querier.query_duration.labels(self.target, self.name, expr, self.type).observe(dur)
 
-            Querier.query_duration.labels(self.target, self.name, expr, self.type).observe(dur)
+        except IOError as e:
+            Querier.query_fail_count.labels(self.target, self.name, expr, self.type).inc()
+            print("WARNING :: GroupId#%d : Could not query prometheus instance %s. \n %s" % (self.groupID, self.url, e))
 
         except Exception as e:
             Querier.query_fail_count.labels(self.target, self.name, expr, self.type).inc()
-            print("Could not query prometheus instance %s. \n %s" % (self.url, e))
+            print("WARNING :: GroupId#%d : Could not query prometheus instance %s. \n %s" % (self.groupID, self.url, e))
 
 def duration_seconds(s):
     num = int(s[:-1])
@@ -132,13 +149,15 @@ def duration_seconds(s):
     raise "unknown duration %s" % s
 
 def main():
-    if len(sys.argv) < 3 or sys.argv[1] not in ["scaler", "querier"]:
+    if len(sys.argv) < 4 or sys.argv[1] not in ["scaler", "querier"]:
         print("unexpected arguments")
-        print("usage: <load_generator> <scaler|querier> <namespace>")
+        print("usage: <load_generator> <scaler|querier> <namespace> <pr_number>")
         exit(2)
 
     global namespace
     namespace = sys.argv[2]
+    pr_number = sys.argv[3]
+
     host = os.environ.get('KUBERNETES_SERVICE_HOST')
     port = os.environ.get('KUBERNETES_PORT_443_TCP_PORT')
     url = 'https://%s:%s' % (host, port)
@@ -158,14 +177,13 @@ def main():
         Scaler(config["scaler"], url, req_kwargs).run()
         return
 
-    # process querier for at least 2 targets
-    if len(sys.argv) < 4:
-        print("No targets specified")
-        exit(2)
+    if sys.argv[1] == "querier":
+        for i,g in enumerate(config["querier"]["groups"]):
+            p = threading.Thread(target=Querier(i, "pr", pr_number, g).run)
+            p.start()
 
-    for t in sys.argv[3:]:
-        for g in config["querier"]["groups"]:
-            p = threading.Thread(target=Querier(t, g).run)
+        for i,g in enumerate(config["querier"]["groups"]):
+            p = threading.Thread(target=Querier(i, "release", pr_number, g).run)
             p.start()
 
     start_http_server(8080)
