@@ -54,13 +54,6 @@ func applyTemplateVars(file string, deploymentVars map[string]string) ([]byte, e
 		"normalise": func(t string) string {
 			return strings.Replace(t, ".", "-", -1)
 		},
-		"needConfigMapInArg": func(t string) bool {
-			if t != "master" && t[1:6] < "2.6.0" {
-				return true
-			} else {
-				return false
-			}
-		},
 	})
 	if err := template.Must(t.Parse(string(content))).Execute(fileContentParsed, deploymentVars); err != nil {
 		log.Fatalf("Failed to execute parse file:%s err:%v", file, err)
