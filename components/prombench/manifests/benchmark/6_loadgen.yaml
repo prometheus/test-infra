@@ -106,6 +106,20 @@ spec:
       labels:
         app: loadgen-querier
     spec:
+      initContainers:
+      - name: check-prometheus-health
+        image: alpine:3.8
+        command: ['sh', '-c', 'apk add --no-cache curl &&
+                  for i in `seq 1 30`; do
+                    echo "Trial #$i";sleep 2;
+                    replyPR=$(curl -s -o /dev/null -w %{http_code} http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-pr/-/healthy);
+                    if [ "$replyPR" -ne "200" ]; then exit 1; fi;
+                    replyRelease=$(curl -s -o /dev/null -w %{http_code} http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-release/-/healthy);
+                    if [ "$replyRelease" -ne "200" ]; then exit 1; fi;
+                    echo "Both prometheus servers (/{{ .PR_NUMBER }}/prometheus-pr & /{{ .PR_NUMBER }}/prometheus-release) are healthy.";
+                    exit 0;
+                  done'
+      ]
       containers:
       - name: prom-load-generator
         image: docker.io/prombench/load-generator:2.0.0
