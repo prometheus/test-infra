@@ -123,9 +123,13 @@ class Querier(object):
 
             Querier.query_duration.labels(self.target, self.name, expr, self.type).observe(dur)
 
+        except IOError as e:
+            Querier.query_fail_count.labels(self.target, self.name, expr, self.type).inc()
+            print("WARNING :: Could not query prometheus instance %s. \n %s" % (self.url, e))
+
         except Exception as e:
             Querier.query_fail_count.labels(self.target, self.name, expr, self.type).inc()
-            print("Could not query prometheus instance %s. \n %s" % (self.url, e))
+            print("WARNING :: Could not query prometheus instance %s. \n %s" % (self.url, e))
 
 def duration_seconds(s):
     num = int(s[:-1])
