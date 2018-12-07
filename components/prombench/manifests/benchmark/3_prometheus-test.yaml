@@ -826,8 +826,14 @@ spec:
       - name: prometheus
         image: quay.io/prometheus/prometheus:{{ .RELEASE }}
         imagePullPolicy: Always
+        command: [ "/bin/prometheus" ]
         args: [
-          "--web.external-url=http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-release"
+          "--web.external-url=http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-release",
+          "--storage.tsdb.path=/prometheus",
+          "--web.console.libraries=/etc/prometheus/console_libraries",
+          "--web.console.templates=/etc/prometheus/consoles",
+          "--config.file=/etc/prometheus/prometheus.yml",
+          "--log.level=debug"
         ]
         volumeMounts:
         - name: config-volume
