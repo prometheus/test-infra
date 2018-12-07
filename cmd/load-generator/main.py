@@ -14,6 +14,7 @@ from prometheus_client import start_http_server, Histogram, Counter
 ca_cert_path = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 kube_token_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 namespace = ""
+max_404_errors = 30
 
 def deployment_path(url, depl):
     return '%s/apis/apps/v1/namespaces/%s/deployments/%s' % (url, namespace, depl)
@@ -69,9 +70,11 @@ class Querier(object):
         ["prometheus", "group", "expr", "type"],
     )
 
-    def __init__(self, target, pr_number, qg):
+    def __init__(self, groupID, target, pr_number, qg):
         self.target = target
         self.name = qg["name"]
+        self.groupID = groupID
+        self.numberOfErrors = 0
 
         self.interval = duration_seconds(qg["interval"])
         self.queries = qg["queries"]
@@ -114,22 +117,24 @@ class Querier(object):
             dur = time.time() - start
 
             if resp.status_code == 404:
-                print("ERROR :: Querier returned 404 for prometheus instance %s." % (self.url))
-                sys.exit(1)
+                print("WARNING :: GroupId#%d : Querier returned 404 for prometheus instance %s." % (self.groupID, self.url))
+                self.numberOfErrors += 1
+                if self.numberOfErrors == max_404_errors:
+                    print("ERROR :: GroupId#%d : Querier returned 404 for prometheus instance %s %d times." % (self.groupID, self.url, max_404_errors))
+                    os._exit(1)
             elif resp.status_code != 200:
-                print("WARNING :: Querier returned %d for prometheus instance %s." % (resp.status_code, self.url))
-
-            print("query %s %s, status=%s, size=%d, dur=%.3f" % (self.target, expr, resp.status_code, len(resp.text), dur))
-
-            Querier.query_duration.labels(self.target, self.name, expr, self.type).observe(dur)
+                print("WARNING :: GroupId#%d : Querier returned %d for prometheus instance %s." % (self.groupID, resp.status_code, self.url))
+            else:
+                print("GroupId#%d : query %s %s, status=%s, size=%d, dur=%.3f" % (self.groupID, self.target, expr, resp.status_code, len(resp.text), dur))
+                Querier.query_duration.labels(self.target, self.name, expr, self.type).observe(dur)
 
         except IOError as e:
             Querier.query_fail_count.labels(self.target, self.name, expr, self.type).inc()
-            print("WARNING :: Could not query prometheus instance %s. \n %s" % (self.url, e))
+            print("WARNING :: GroupId#%d : Could not query prometheus instance %s. \n %s" % (self.groupID, self.url, e))
 
         except Exception as e:
             Querier.query_fail_count.labels(self.target, self.name, expr, self.type).inc()
-            print("WARNING :: Could not query prometheus instance %s. \n %s" % (self.url, e))
+            print("WARNING :: GroupId#%d : Could not query prometheus instance %s. \n %s" % (self.groupID, self.url, e))
 
 def duration_seconds(s):
     num = int(s[:-1])
@@ -173,12 +178,12 @@ def main():
         return
 
     if sys.argv[1] == "querier":
-        for g in config["querier"]["groups"]:
-            p = threading.Thread(target=Querier("pr", pr_number, g).run)
+        for i,g in enumerate(config["querier"]["groups"]):
+            p = threading.Thread(target=Querier(i, "pr", pr_number, g).run)
             p.start()
 
-        for g in config["querier"]["groups"]:
-            p = threading.Thread(target=Querier("release", pr_number, g).run)
+        for i,g in enumerate(config["querier"]["groups"]):
+            p = threading.Thread(target=Querier(i, "release", pr_number, g).run)
             p.start()
 
     start_http_server(8080)
