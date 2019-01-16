@@ -35,7 +35,7 @@ const (
 	triggerCancelComment = "/benchmark cancel"
 
 	remindAfterHours     = time.Duration(48) * time.Hour  // 2 days
-	autoCancelAfterHours = time.Duration(240) * time.Hour // 10 days
+	autoCancelAfterHours = time.Duration(114) * time.Hour // 6 days
 )
 
 func (c *client) checkNamespaceTimeout(namespace *apiCoreV1.Namespace, nsRunningHours map[string]time.Duration) error {
