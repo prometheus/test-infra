@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: deletion-reminder
+---
+#Need to give deletion-reminder access to list namespaces
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: deletion-reminder
+rules:
+- apiGroups: [""]
+  resources:
+  - namespaces
+  verbs: ["list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name:  deletion-reminder
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: deletion-reminder
+subjects:
+- kind: ServiceAccount
+  name:  deletion-reminder
+  namespace: default
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deletion-reminder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deletion-reminder
+  template:
+    metadata:
+      labels:
+        app: deletion-reminder
+    spec:
+      serviceAccountName: deletion-reminder
+      containers:
+      - name: deletion-reminder
+        image: docker.io/prombench/deletion-reminder:1.0.0
+        imagePullPolicy: Always
+        args:
+        - "remind"
+        - "-f"
+        - "/etc/github/oauth"
+        volumeMounts:
+        - name: oauth
+          mountPath: /etc/github
+          readOnly: true
+      volumes:
+      - name: oauth
+        secret:
+          secretName: oauth-token

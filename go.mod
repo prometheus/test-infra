@@ -19,6 +19,8 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.1.0
 	github.com/google/btree v0.0.0-20180124185431-e89373fe6b4a
+	github.com/google/go-github v17.0.0+incompatible
+	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf
 	github.com/googleapis/gax-go v0.0.0-20180411000000-de2cc08e690b99dd3f7d19937d80d3d54e04682f
 	github.com/googleapis/gnostic v0.2.0

@@ -203,6 +203,16 @@ func (c *K8s) ResourceDelete(deployments []Resource) error {
 	return nil
 }
 
+// Functions to fetch details of different K8s objects.
+func (c *K8s) GetNameSpaces() ([]apiCoreV1.Namespace, error) {
+	client := c.clt.CoreV1().Namespaces()
+	list, err := client.List(apiMetaV1.ListOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "error listing namespaces.")
+	}
+	return list.Items, nil
+}
+
 // Functions to create different K8s objects.
 func (c *K8s) clusterRoleApply(resource runtime.Object) error {
 	req := resource.(*rbac.ClusterRole)
