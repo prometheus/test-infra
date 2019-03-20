@@ -85,7 +85,7 @@ metadata:
 spec:
   type: NodePort
   ports:
-    - name:
+    - name: grafana-web
       port: 80
       targetPort: grafana-web
   selector:
