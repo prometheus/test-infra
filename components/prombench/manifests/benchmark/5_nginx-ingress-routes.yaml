@@ -12,9 +12,9 @@ spec:
       paths:
       - backend:
           serviceName: prometheus-test-{{ normalise .RELEASE }}
-          servicePort: 80
+          servicePort: prom-web
         path: /{{ .PR_NUMBER }}/prometheus-release
       - backend:
           serviceName: prometheus-test-pr-{{ .PR_NUMBER }}
-          servicePort: 80
+          servicePort: prom-web
         path: /{{ .PR_NUMBER }}/prometheus-pr
