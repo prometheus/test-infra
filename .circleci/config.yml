@@ -26,9 +26,9 @@ jobs:
       - run:
           name: build docker image
           command: |
-            docker build -f Dockerfile -t $DOCKER_LOGIN/$CIRCLE_PROJECT_REPONAME:CIRCLE_TAG .
+            docker build -f Dockerfile -t $DOCKER_LOGIN/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG .
             echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
-              docker push $DOCKER_LOGIN/$CIRCLE_PROJECT_REPONAME:CIRCLE_TAG
+              docker push $DOCKER_LOGIN/$CIRCLE_PROJECT_REPONAME:$CIRCLE_TAG
 
 workflows:
   version: 2
