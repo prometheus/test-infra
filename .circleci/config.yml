@@ -12,3 +12,18 @@ jobs:
       - checkout
       - run: make vet
       - run: make build
+      - setup_remote_docker:
+        docker_layer_caching: true
+      - run:
+        name: build docker image
+        command: |
+          docker build -f Dockerfile -t $DOCKER_LOGIN/$CIRCLE_PROJECT_REPONAME:CIRCLE_TAG
+          echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
+          docker push $DOCKER_LOGIN/$CIRCLE_PROJECT_REPONAME:CIRCLE_TAG
+
+workflows:
+  version: 2
+  workflow:
+    jobs:
+      - build:
+        context: docker
