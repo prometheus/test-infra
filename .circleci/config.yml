@@ -3,7 +3,7 @@
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
 jobs:
-  build:
+  test:
     docker:
       - image: circleci/golang:1.11
 
@@ -12,6 +12,15 @@ jobs:
       - checkout
       - run: make vet
       - run: make build
+
+  build:
+    docker:
+      - image: circleci/golang:1.11
+
+    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+    steps:
+      - checkout
+      - run: make build 
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
@@ -19,11 +28,17 @@ jobs:
           command: |
             docker build -f Dockerfile -t $DOCKER_LOGIN/$CIRCLE_PROJECT_REPONAME:CIRCLE_TAG .
             echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
-            docker push $DOCKER_LOGIN/$CIRCLE_PROJECT_REPONAME:CIRCLE_TAG
+              docker push $DOCKER_LOGIN/$CIRCLE_PROJECT_REPONAME:CIRCLE_TAG
 
 workflows:
   version: 2
   build_workflow:
     jobs:
+      - test
       - build:
           context: docker
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*$/
