@@ -354,7 +354,7 @@ spec:
       paths:
       - backend:
           serviceName: prometheus-meta
-          servicePort: http
+          servicePort: prom-web
         path: /prometheus-meta
 ---
 apiVersion: extensions/v1beta1
@@ -371,5 +371,5 @@ spec:
       paths:
       - backend:
           serviceName: grafana
-          servicePort: http
+          servicePort: grafana-web
         path: /grafana
