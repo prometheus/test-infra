@@ -15,10 +15,12 @@ metadata:
   name: loadgen-restarter
   namespace: prombench-{{ .PR_NUMBER }}
 rules:
-- apiGroups: ["apps"]
+- apiGroups: [""]
   resources:
+  - pods
+  - pods/exec
   - deployments
-  verbs: ["get", "list", "update"]
+  verbs: ["create", "get", "list", "update"]
 ---
 #need to give get/update access to loadgen-scaler
 apiVersion: rbac.authorization.k8s.io/v1

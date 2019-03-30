@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math/rand"
+	//"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -55,9 +55,10 @@ func (s *restart) fetchResources(counter int) []k8s.Resource {
 
 func (s *restart) restart(*kingpin.ParseContext) error {
 	log.Printf("Starting Prombench-Restarter")
+	s.k8sClient.PrintCurrentPods()
 
-	reqResources := s.fetchResources(counter)
 	counter := 1
+	reqResources := s.fetchResources(counter)
 
 	for {
 		counter++
@@ -65,7 +66,8 @@ func (s *restart) restart(*kingpin.ParseContext) error {
 			fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error restarting deployment"))
 		}
 
-		time.Sleep((rand.Intn(20) + 10) * time.Minute)
+		time.Sleep(time.Duration(1) * time.Minute)
+		//time.Sleep(time.Duration(rand.Intn(20) + 10) * time.Minute)
 	}
 }
 

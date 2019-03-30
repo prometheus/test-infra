@@ -73,6 +73,14 @@ func New(ctx context.Context, config *clientcmdapi.Config) (*K8s, error) {
 	}, nil
 }
 
+func (c *K8s) PrintCurrentPods() error {
+	pods, err := c.clt.CoreV1().Pods("").List(apiMetaV1.ListOptions{})
+	ppods := c.clt.CoreV1().RESTClient().Get().Resource("pods")
+	log.Printf("pods: %v", pods)
+	log.Printf("ppods: %v", ppods)
+	return err
+}
+
 // GetResourses is a getter function for Resources field in K8s.
 func (c *K8s) GetResourses() []Resource {
 	return c.resources
