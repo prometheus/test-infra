@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	log.SetFlags(log.LstdFlags | log.Llongfile)
+	log.SetFlags(log.LTime | log.Lshortfile)
 
 	app := kingpin.New(filepath.Base(os.Args[0]), "The Prometheus benchmarking tool")
 	app.HelpFlag.Short('h')
