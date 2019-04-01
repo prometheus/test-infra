@@ -315,31 +315,31 @@ spec:
       - path: /
         backend:
           serviceName: deck
-          servicePort: 80
+          servicePort: http
       - path: /pr
         backend:
           serviceName: deck
-          servicePort: 80
+          servicePort: http
       - path: /command-help
         backend:
           serviceName: deck
-          servicePort: 80
+          servicePort: http
       - path: /tide
         backend:
           serviceName: deck
-          servicePort: 80
+          servicePort: http
       - path: /plugins
         backend:
           serviceName: deck
-          servicePort: 80
+          servicePort: http
       - path: /log
         backend:
           serviceName: deck
-          servicePort: 80
+          servicePort: http
       - path: /hook
         backend:
           serviceName: hook
-          servicePort: 80
+          servicePort: http
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
@@ -354,7 +354,7 @@ spec:
       paths:
       - backend:
           serviceName: prometheus-meta
-          servicePort: 80
+          servicePort: prom-web
         path: /prometheus-meta
 ---
 apiVersion: extensions/v1beta1
@@ -371,5 +371,5 @@ spec:
       paths:
       - backend:
           serviceName: grafana
-          servicePort: 80
+          servicePort: grafana-web
         path: /grafana
