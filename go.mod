@@ -22,6 +22,7 @@ require (
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf
 	github.com/googleapis/gax-go v0.0.0-20180411000000-de2cc08e690b99dd3f7d19937d80d3d54e04682f
 	github.com/googleapis/gnostic v0.2.0
+	github.com/gorilla/websocket v1.4.0
 	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7
 	github.com/hashicorp/go-cleanhttp v0.0.0-20160407174126-ad28ea4487f0
 	github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c

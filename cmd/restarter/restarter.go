@@ -7,15 +7,15 @@ import (
 	//"math/rand"
 	"os"
 	"path/filepath"
-	"strings"
+	//"strings"
 	"time"
 
-	appsV1 "k8s.io/api/apps/v1"
+	//appsV1 "k8s.io/api/apps/v1"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/prombench/pkg/provider/k8s"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"k8s.io/apimachinery/pkg/runtime"
+	//"k8s.io/apimachinery/pkg/runtime"
 )
 
 type restart struct {
@@ -33,37 +33,21 @@ func new() *restart {
 	}
 }
 
-func (s *restart) fetchResources(counter int) []k8s.Resource {
-	var k8sResource []k8s.Resource
-
-	for _, deployment := range s.k8sClient.GetResourses() {
-		k8sObjects := make([]runtime.Object, 0)
-
-		for _, resource := range deployment.Objects {
-			if kind := strings.ToLower(resource.GetObjectKind().GroupVersionKind().Kind); kind == "deployment" {
-				req := resource.(*appsV1.Deployment)
-				req.ObjectMeta.Labels["restart_counter"] = fmt.Sprintf("%v", counter)
-				k8sObjects = append(k8sObjects, req.DeepCopyObject())
-			}
-		}
-		if len(k8sObjects) > 0 {
-			k8sResource = append(k8sResource, k8s.Resource{FileName: deployment.FileName, Objects: k8sObjects})
-		}
-	}
-	return k8sResource
-}
-
 func (s *restart) restart(*kingpin.ParseContext) error {
 	log.Printf("Starting Prombench-Restarter")
-	s.k8sClient.PrintCurrentPods()
 
-	counter := 1
-	reqResources := s.fetchResources(counter)
+	namespace := "prombench-" + s.k8sClient.DeploymentVars["PR_NUMBER"]
+	pods, err := s.k8sClient.FetchCurrentPods(namespace,"app=prometheus")
+	if err != nil {
+		log.Printf("Error fetching pods: %v", err)
+	}
 
 	for {
-		counter++
-		if err := s.k8sClient.ResourceApply(reqResources); err != nil {
-			fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error restarting deployment"))
+		for _, pod := range pods.Items {
+			_, err := s.k8sClient.ExecuteInPod("ls", pod.ObjectMeta.Name, "prometheus", namespace)
+			if err != nil {
+				log.Printf("Error executing command: %v", err)
+			}
 		}
 
 		time.Sleep(time.Duration(1) * time.Minute)
@@ -79,12 +63,7 @@ func main() {
 	s := new()
 
 	k8sApp := app.Command("restart", "Restart a Kubernetes deployment object \nex: ./restarter restart").
-		Action(s.k8sClient.DeploymentsParse).
 		Action(s.restart)
-	k8sApp.Flag("file", "yaml file or folder that describes the parameters for the deployment.").
-		Required().
-		Short('f').
-		ExistingFilesOrDirsVar(&s.k8sClient.DeploymentFiles)
 	k8sApp.Flag("vars", "When provided it will substitute the token holders in the yaml file. Follows the standard golang template formating - {{ .hashStable }}.").
 		Short('v').
 		StringMapVar(&s.k8sClient.DeploymentVars)

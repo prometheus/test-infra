@@ -7,7 +7,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1000Gi
+      storage: 100Gi
 ---
 apiVersion: v1
 kind: ConfigMap

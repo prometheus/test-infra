@@ -3,7 +3,10 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
+	"net/url"
 
 	"github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -26,6 +29,7 @@ import (
 
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+	"github.com/gorilla/websocket"
 )
 
 // Resource holds the resource objects after parsing deployment files.
@@ -44,8 +48,14 @@ type K8s struct {
 	DeploymentVars map[string]string
 	// K8s resource.runtime objects after parsing the template variables, grouped by filename.
 	resources []Resource
+	// K8s rest config
+	config *rest.Config
 
 	ctx context.Context
+}
+
+type WebsocketRoundTripper struct {
+	Dialer *websocket.Dialer
 }
 
 // New returns a k8s client that can apply and delete resources.
@@ -69,16 +79,77 @@ func New(ctx context.Context, config *clientcmdapi.Config) (*K8s, error) {
 	return &K8s{
 		ctx:            ctx,
 		clt:            clientset,
+		config:			restConfig,
 		DeploymentVars: make(map[string]string),
 	}, nil
 }
 
-func (c *K8s) PrintCurrentPods() error {
-	pods, err := c.clt.CoreV1().Pods("").List(apiMetaV1.ListOptions{})
-	ppods := c.clt.CoreV1().RESTClient().Get().Resource("pods")
-	log.Printf("pods: %v", pods)
-	log.Printf("ppods: %v", ppods)
-	return err
+func (d *WebsocketRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
+	conn, resp, err := d.Dialer.Dial(r.URL.String(), r.Header)
+	if err == nil {
+		defer conn.Close()
+	}
+	if err != nil {
+		log.Printf("couldn't connect to pod: %v", err)
+	}
+	stdout := ""
+	for {
+		_, body, err := conn.ReadMessage()
+		if err != nil {
+			if err == io.EOF {
+				log.Printf("exec stdout: %v",stdout)
+				return resp, nil
+			}
+			if _, isClose := err.(*websocket.CloseError); isClose {
+				log.Printf("exec stdout: %v",stdout)
+				return resp, nil
+			}
+			return nil, err
+		}
+		stdout = stdout + string(body)
+	}
+}
+
+func (c *K8s) FetchCurrentPods(namespace, label string) (*apiCoreV1.PodList, error) {
+	pods, err := c.clt.CoreV1().Pods(namespace).List(apiMetaV1.ListOptions{
+		LabelSelector: label,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return pods, nil
+}
+
+func (c *K8s) ExecuteInPod(command, pod, container, namespace string) (*http.Response, error) {
+
+	u, err := url.Parse(c.config.Host)
+	u.Scheme = "wss"
+	u.Path = fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/exec", namespace, pod)
+	u.RawQuery = fmt.Sprintf("command=%s&container=%s&stderr=true&stdout=true", command, container)
+	req := &http.Request{
+		Method: http.MethodGet,
+		URL:    u,
+	}
+
+	tlsConfig, err := rest.TLSConfigFor(c.config)
+	if err != nil { return nil, err }
+
+	dialer := &websocket.Dialer{
+		Proxy:           http.ProxyFromEnvironment,
+		TLSClientConfig: tlsConfig,
+	}
+	rt := &WebsocketRoundTripper{
+		Dialer: dialer,
+	}
+	wrappedRoundTripper, err := rest.HTTPWrappersForConfig(c.config, rt)
+
+	resp, err := wrappedRoundTripper.RoundTrip(req)
+	
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // GetResourses is a getter function for Resources field in K8s.
