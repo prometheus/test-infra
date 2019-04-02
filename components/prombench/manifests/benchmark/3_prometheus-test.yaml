@@ -707,7 +707,6 @@ metadata:
   labels:
     app: prometheus
     prometheus: test-pr-{{ .PR_NUMBER }}
-    restart_counter: "0"
 spec:
   replicas: 1
   selector:
@@ -818,7 +817,6 @@ metadata:
   labels:
     app: prometheus
     prometheus: test-{{ normalise .RELEASE }}
-    restart_counter: "0"
 spec:
   replicas: 1
   selector:
@@ -850,12 +848,6 @@ spec:
         image: quay.io/prometheus/prometheus:{{ .RELEASE }}
         imagePullPolicy: Always
         readinessProbe:
-          tcpSocket:
-            port: 9090
-          initialDelaySeconds: 30
-          periodSeconds: 2
-          failureThreshold: 30
-        livenessProbe:
           tcpSocket:
             port: 9090
           initialDelaySeconds: 30

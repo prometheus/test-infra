@@ -23,13 +23,6 @@ spec:
         - "restart"
         - "-v"
         - "PR_NUMBER:{{ .PR_NUMBER }}"
-        volumeMounts:
-        - name: prometheus-config-volume
-          mountPath: /etc/restarter
-      volumes:
-      - name: prometheus-config-volume
-        configMap:
-          name: prometheus-test-config-restarter
       nodeSelector:
         cloud.google.com/gke-nodepool: nodes-{{ .PR_NUMBER }}
         isolation: none

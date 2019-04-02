@@ -36,20 +36,53 @@ func new() *restart {
 func (s *restart) restart(*kingpin.ParseContext) error {
 	log.Printf("Starting Prombench-Restarter")
 
-	namespace := "prombench-" + s.k8sClient.DeploymentVars["PR_NUMBER"]
+	prNo := s.k8sClient.DeploymentVars["PR_NUMBER"]
+	namespace := "prombench-" + prNo
 	pods, err := s.k8sClient.FetchCurrentPods(namespace,"app=prometheus")
+	killcommand := "/bin/kill -9 $(pidof prometheus)"
+	prDir := "/go/src/github.com/prometheus/prometheus"
+
+	runforPr := fmt.Sprintf(`cd %s ;
+	./prometheus --config.file=/etc/prometheus/prometheus.yml \
+             --storage.tsdb.path=/prometheus \
+             --web.console.libraries=%s/console_libraries \
+             --web.console.templates=%s/consoles \
+             --web.external-url=http://prombench.prometheus.io/%s/prometheus-pr \
+             --log.level=debug`, prDir, prDir, prDir, prNo)
+	runforRelease := fmt.Sprintf(`/bin/prometheus --config.file=/etc/prometheus/prometheus.yml \
+          --storage.tsdb.path=/prometheus \
+          --web.console.libraries=/etc/prometheus/console_libraries \
+          --web.console.templates=/etc/prometheus/consoles \
+          --web.external-url=http://prombench.prometheus.io/%s/prometheus-release \
+          --log.level=debug`, prNo)
+
 	if err != nil {
 		log.Printf("Error fetching pods: %v", err)
 	}
 
 	for {
 		for _, pod := range pods.Items {
-			_, err := s.k8sClient.ExecuteInPod("ls", pod.ObjectMeta.Name, "prometheus", namespace)
+			_, err := s.k8sClient.ExecuteInPod(killcommand, pod.ObjectMeta.Name, "prometheus", namespace)
 			if err != nil {
 				log.Printf("Error executing command: %v", err)
 			}
 		}
+		// wait for sometime maybe
+		log.Printf("sleepin 1 min")
+		time.Sleep(time.Duration(1) * time.Minute)
+		for _, pod := range pods.Items {
 
+			if pod.ObjectMeta.Labels["prometheus"][:7] == "test-pr" {
+				_, err := s.k8sClient.ExecuteInPod(runforPr, pod.ObjectMeta.Name, "prometheus", namespace)
+				if err != nil { log.Printf("Error executing command: %v", err) }
+			} else {
+				_, err := s.k8sClient.ExecuteInPod(runforRelease, pod.ObjectMeta.Name, "prometheus", namespace)
+				if err != nil { log.Printf("Error executing command: %v", err) }
+			}
+
+		}
+
+		log.Printf("sleepin 1 min again")
 		time.Sleep(time.Duration(1) * time.Minute)
 		//time.Sleep(time.Duration(rand.Intn(20) + 10) * time.Minute)
 	}

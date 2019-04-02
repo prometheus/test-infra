@@ -22,6 +22,7 @@ if ! git fetch origin pull/$PR_NUMBER/head:pr-branch; then
 fi
 
 git checkout pr-branch
+<<<<<<< HEAD
 
 echo ">> Creating prometheus binaries"
 if ! make build; then
