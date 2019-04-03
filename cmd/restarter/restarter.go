@@ -39,8 +39,12 @@ func (s *restart) restart(*kingpin.ParseContext) error {
 	prNo := s.k8sClient.DeploymentVars["PR_NUMBER"]
 	namespace := "prombench-" + prNo
 	pods, err := s.k8sClient.FetchCurrentPods(namespace,"app=prometheus")
-	killcommand := "/bin/kill -9 $(pidof prometheus)"
-	runcommand := "sh -c /scripts/restarter.sh"
+	//killcommand := "ls"
+	//runcommand := "ls"
+	killcommand := `sh -c '/bin/kill -9 $(pidof prometheus)'`
+	runcommand := `sh -c '/bin/kill -9 $(pidof prometheus)'`
+	//killcommand := "/bin/kill -9 $(pidof prometheus)"
+	//runcommand := "sh -c /scripts/restarter.sh"
 
 	if err != nil {
 		log.Printf("Error fetching pods: %v", err)

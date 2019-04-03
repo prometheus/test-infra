@@ -89,7 +89,8 @@ func (d *WebsocketRoundTripper) RoundTrip(r *http.Request) (*http.Response, erro
 		defer conn.Close()
 	}
 	if err != nil {
-		log.Printf("couldn't connect to pod: %v", err)
+		log.Printf("couldn't connect to pod: %v\n", err)
+		log.Printf("response: %v", resp)
 		return nil, err
 	}
 	stdout := ""
@@ -97,7 +98,7 @@ func (d *WebsocketRoundTripper) RoundTrip(r *http.Request) (*http.Response, erro
 		_, body, err := conn.ReadMessage()
 		if err != nil {
 			if _, isClose := err.(*websocket.CloseError); isClose {
-				log.Printf("cc exec stdout: %v",stdout)
+				log.Printf("exec stdout: %v",stdout)
 				return resp, nil
 			}
 			return nil, err
@@ -121,7 +122,12 @@ func (c *K8s) ExecuteInPod(command, pod, container, namespace string) (*http.Res
 	u, err := url.Parse(c.config.Host)
 	u.Scheme = "wss"
 	u.Path = fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/exec", namespace, pod)
-	u.RawQuery = fmt.Sprintf("command=%s&container=%s&stderr=true&stdout=true", command, container)
+	parameters := url.Values{}
+    parameters.Add("command", command)
+    parameters.Add("container", container)
+    parameters.Add("stdout", "true")
+    parameters.Add("stderr", "true")
+    u.RawQuery = parameters.Encode()
 	req := &http.Request{
 		Method: http.MethodGet,
 		URL:    u,
