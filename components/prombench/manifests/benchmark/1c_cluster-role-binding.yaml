@@ -18,8 +18,8 @@ rules:
 - apiGroups: [""]
   resources:
   - pods
-  - pods/exec
   - deployments
+  - pods/exec
   verbs: ["create", "get", "list", "update"]
 ---
 #need to give get/update access to loadgen-scaler

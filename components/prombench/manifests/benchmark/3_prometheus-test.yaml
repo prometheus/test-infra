@@ -699,6 +699,26 @@ data:
         target_label: nodeName
 
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-test-pr-restarter
+  namespace: prombench-{{ .PR_NUMBER }}
+data:
+  restarter.sh: |
+    echo "{{ .PR_NUMBER }} oo"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-test-release-restarter
+  namespace: prombench-{{ .PR_NUMBER }}
+data:
+  restarter.sh: |
+    echo "{{ .PR_NUMBER }} pp"
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -770,6 +790,8 @@ spec:
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus
+        - name: restarter-script
+          mountPath: /scripts
         - name: instance-ssd
           mountPath: /prometheus
         - name: prometheus-executable
@@ -781,6 +803,9 @@ spec:
       - name: config-volume
         configMap:
           name: prometheus-test
+      - name: restarter-script
+        configMap:
+          name: prometheus-test-pr-restarter
       - name: instance-ssd
         hostPath:
           path: /mnt/disks/ssd0 #gke ssds
@@ -869,6 +894,8 @@ spec:
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus
+        - name: restarter-script
+          mountPath: /scripts
         - name: instance-ssd
           mountPath: /prometheus
         ports:
@@ -878,6 +905,9 @@ spec:
       - name: config-volume
         configMap:
           name: prometheus-test
+      - name: restarter-script
+        configMap:
+          name: prometheus-test-release-restarter
       - name: instance-ssd
         hostPath:
           # /mnt is where GKE keeps it's SSD

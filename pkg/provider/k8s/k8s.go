@@ -3,7 +3,6 @@ package k8s
 import (
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -97,11 +96,6 @@ func (d *WebsocketRoundTripper) RoundTrip(r *http.Request) (*http.Response, erro
 	for {
 		_, body, err := conn.ReadMessage()
 		if err != nil {
-			// TODO comment out io.EOF check
-			if err == io.EOF {
-				log.Printf("exec stdout: %v",stdout)
-				return resp, nil
-			}
 			if _, isClose := err.(*websocket.CloseError); isClose {
 				log.Printf("cc exec stdout: %v",stdout)
 				return resp, nil
@@ -124,7 +118,6 @@ func (c *K8s) FetchCurrentPods(namespace, label string) (*apiCoreV1.PodList, err
 
 func (c *K8s) ExecuteInPod(command, pod, container, namespace string) (*http.Response, error) {
 
-	//command = url.QueryEscape(command)
 	u, err := url.Parse(c.config.Host)
 	u.Scheme = "wss"
 	u.Path = fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/exec", namespace, pod)
