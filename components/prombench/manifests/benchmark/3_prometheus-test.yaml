@@ -706,7 +706,11 @@ metadata:
   namespace: prombench-{{ .PR_NUMBER }}
 data:
   restarter.sh: |
-    echo "{{ .PR_NUMBER }} oo"
+    #!/bin/sh
+    echo "{{ .PR_NUMBER }} Restarting Pull Request!"
+  killer.sh: |
+    #!/bin/sh
+    echo "{{ .PR_NUMBER }} Killing Pull Request!"
 
 ---
 apiVersion: v1
@@ -716,7 +720,11 @@ metadata:
   namespace: prombench-{{ .PR_NUMBER }}
 data:
   restarter.sh: |
-    echo "{{ .PR_NUMBER }} pp"
+    #!/bin/sh
+    echo "{{ .PR_NUMBER }} Restarting Release!"
+  killer.sh: |
+    #!/bin/sh
+    echo "{{ .PR_NUMBER }} Killing Release!"
 
 ---
 apiVersion: apps/v1
@@ -729,6 +737,7 @@ metadata:
     prometheus: test-pr-{{ .PR_NUMBER }}
 spec:
   replicas: 1
+  shareProcessNamespace: true
   selector:
     matchLabels:
       app: prometheus
@@ -741,6 +750,7 @@ spec:
         prometheus: test-pr-{{ .PR_NUMBER }}
     spec:
       serviceAccountName: prometheus
+      shareProcessNamespace: true
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -790,8 +800,6 @@ spec:
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus
-        - name: restarter-script
-          mountPath: /scripts
         - name: instance-ssd
           mountPath: /prometheus
         - name: prometheus-executable
@@ -806,6 +814,7 @@ spec:
       - name: restarter-script
         configMap:
           name: prometheus-test-pr-restarter
+          defaultMode: 0744
       - name: instance-ssd
         hostPath:
           path: /mnt/disks/ssd0 #gke ssds
@@ -844,6 +853,7 @@ metadata:
     prometheus: test-{{ normalise .RELEASE }}
 spec:
   replicas: 1
+  shareProcessNamespace: true
   selector:
     matchLabels:
       app: prometheus
@@ -856,6 +866,7 @@ spec:
         prometheus: test-{{ normalise .RELEASE }}
     spec:
       serviceAccountName: prometheus
+      shareProcessNamespace: true
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -869,6 +880,18 @@ spec:
       securityContext:
         runAsUser: 0
       containers:
+      - name: restarter
+        image: busybox
+        securityContext:
+          capabilities:
+            add:
+              - SYS_PTRACE
+        stdin: true
+        tty: true
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: restarter-script
+          mountPath: /scripts
       - name: prometheus
         image: quay.io/prometheus/prometheus:{{ .RELEASE }}
         imagePullPolicy: Always
@@ -877,25 +900,19 @@ spec:
             port: 9090
           initialDelaySeconds: 30
           periodSeconds: 2
-          failureThreshold: 30
-        command: [
-          "sh",
-          "-c",
-          "exec /bin/prometheus \
-          --web.external-url=http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-release \
-          --storage.tsdb.path=/prometheus \
-          --web.console.libraries=/etc/prometheus/console_libraries \
-          --web.console.templates=/etc/prometheus/consoles \
-          --config.file=/etc/prometheus/prometheus.yml \
-          --log.level=debug & \
-          tail -f /dev/null"
+          failureThreshold: 150
+          command: [ "/bin/prometheus" ]
+          args: [
+            "--web.external-url=http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-release",
+            "--storage.tsdb.path=/prometheus",
+            "--web.console.libraries=/etc/prometheus/console_libraries",
+            "--web.console.templates=/etc/prometheus/consoles",
+            "--config.file=/etc/prometheus/prometheus.yml",
+            "--log.level=debug"
           ]
-        args: [ ]
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus
-        - name: restarter-script
-          mountPath: /scripts
         - name: instance-ssd
           mountPath: /prometheus
         ports:
@@ -908,6 +925,7 @@ spec:
       - name: restarter-script
         configMap:
           name: prometheus-test-release-restarter
+          defaultMode: 0744
       - name: instance-ssd
         hostPath:
           # /mnt is where GKE keeps it's SSD

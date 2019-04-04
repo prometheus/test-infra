@@ -39,12 +39,8 @@ func (s *restart) restart(*kingpin.ParseContext) error {
 	prNo := s.k8sClient.DeploymentVars["PR_NUMBER"]
 	namespace := "prombench-" + prNo
 	pods, err := s.k8sClient.FetchCurrentPods(namespace,"app=prometheus")
-	//killcommand := "ls"
-	//runcommand := "ls"
-	killcommand := `sh -c '/bin/kill -9 $(pidof prometheus)'`
-	runcommand := `sh -c '/bin/kill -9 $(pidof prometheus)'`
-	//killcommand := "/bin/kill -9 $(pidof prometheus)"
-	//runcommand := "sh -c /scripts/restarter.sh"
+	killcommand := `/scripts/killer.sh`
+	runcommand := `/scripts/restarter.sh`
 
 	if err != nil {
 		log.Printf("Error fetching pods: %v", err)
@@ -52,22 +48,24 @@ func (s *restart) restart(*kingpin.ParseContext) error {
 
 	for {
 		for _, pod := range pods.Items {
-			_, err := s.k8sClient.ExecuteInPod(killcommand, pod.ObjectMeta.Name, "prometheus", namespace)
+			_, err := s.k8sClient.ExecuteInPod(killcommand, pod.ObjectMeta.Name, "restarter", namespace)
 			if err != nil {
 				log.Printf("Error executing command: %v", err)
 			}
 		}
+
+		// wait 30 seconds before restarting
+		time.Sleep(time.Duration(30) * time.Second)
 
 		for _, pod := range pods.Items {
-			_, err := s.k8sClient.ExecuteInPod(runcommand, pod.ObjectMeta.Name, "prometheus", namespace)
+			_, err := s.k8sClient.ExecuteInPod(runcommand, pod.ObjectMeta.Name, "restarter", namespace)
 			if err != nil {
 				log.Printf("Error executing command: %v", err)
 			}
 		}
 
-		log.Printf("sleepin 15 sec again")
-		time.Sleep(time.Duration(15) * time.Second)
-		//time.Sleep(time.Duration(1) * time.Minute)
+		// Sleep for amount of time 10 >= n <= 30 mins
+		time.Sleep(time.Duration(5) * time.Minute)
 		//time.Sleep(time.Duration(rand.Intn(20) + 10) * time.Minute)
 	}
 }

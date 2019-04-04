@@ -98,7 +98,7 @@ func (d *WebsocketRoundTripper) RoundTrip(r *http.Request) (*http.Response, erro
 		_, body, err := conn.ReadMessage()
 		if err != nil {
 			if _, isClose := err.(*websocket.CloseError); isClose {
-				log.Printf("exec stdout: %v",stdout)
+				log.Printf("exec stdout: %v", stdout)
 				return resp, nil
 			}
 			return nil, err
