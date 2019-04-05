@@ -108,27 +108,26 @@ def duration_seconds(s):
     raise "unknown duration %s" % s
 
 def main():
-    if len(sys.argv) < 4 or sys.argv[1] not in ["scaler", "querier"]:
+    if len(sys.argv) < 3:
         print("unexpected arguments")
-        print("usage: <load_generator> <scaler|querier> <namespace> <pr_number>")
+        print("usage: <load_generator> <namespace> <pr_number>")
         exit(2)
 
     global namespace
-    namespace = sys.argv[2]
-    pr_number = sys.argv[3]
+    namespace = sys.argv[1]
+    pr_number = sys.argv[2]
 
     config = yaml.load(open("/etc/loadgen/config.yaml", 'r').read())
 
     print("loaded configuration")
 
-    if sys.argv[1] == "querier":
-        for i,g in enumerate(config["querier"]["groups"]):
-            p = threading.Thread(target=Querier(i, "pr", pr_number, g).run)
-            p.start()
+    for i,g in enumerate(config["querier"]["groups"]):
+        p = threading.Thread(target=Querier(i, "pr", pr_number, g).run)
+        p.start()
 
-        for i,g in enumerate(config["querier"]["groups"]):
-            p = threading.Thread(target=Querier(i, "release", pr_number, g).run)
-            p.start()
+    for i,g in enumerate(config["querier"]["groups"]):
+        p = threading.Thread(target=Querier(i, "release", pr_number, g).run)
+        p.start()
 
     start_http_server(8080)
     print("started HTTP server on 8080")

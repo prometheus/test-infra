@@ -111,7 +111,6 @@ spec:
         image: docker.io/prombench/load-generator:2.0.0
         imagePullPolicy: Always
         args:
-        - "querier"
         - "prombench-{{ .PR_NUMBER }}"
         - "{{ .PR_NUMBER }}"
         volumeMounts:
