@@ -708,9 +708,22 @@ data:
   restarter.sh: |
     #!/bin/sh
     echo "{{ .PR_NUMBER }} Restarting Pull Request!"
+    cd /go/src/github.com/prometheus/prometheus
+    ./prometheus --config.file=/etc/prometheus/prometheus.yml \
+             --storage.tsdb.path=/prometheus \
+             --web.console.libraries=console_libraries \
+             --web.console.templates=consoles \
+             --web.external-url=http://prombench.prometheus.io/$PR_NUMBER/prometheus-pr \
+             --log.level=debug &
   killer.sh: |
     #!/bin/sh
     echo "{{ .PR_NUMBER }} Killing Pull Request!"
+  fetchtini.sh: |
+    #!/bin/sh
+    echo "{{ .PR_NUMBER }} Adding tini init!"
+    wget -O /executables/tini \
+    https://github.com/krallin/tini/releases/download/v0.18.0/tini-static
+    chmod +x /executables/tini
 
 ---
 apiVersion: v1
@@ -721,10 +734,44 @@ metadata:
 data:
   restarter.sh: |
     #!/bin/sh
-    echo "{{ .PR_NUMBER }} Restarting Release!"
+    echo "{{ .PR_NUMBER }} Starting Release!"
+    kill -SIGHUP $(pidof start.sh)
   killer.sh: |
     #!/bin/sh
-    echo "{{ .PR_NUMBER }} Killing Release!"
+    echo "Killing Release!"
+    kill -9 $(pidof prometheus)
+  fetchtini.sh: |
+    #!/bin/sh
+    echo "{{ .PR_NUMBER }} Adding tini init!"
+    wget -O /executables/tini \
+    https://github.com/krallin/tini/releases/download/v0.18.0/tini-static
+    chmod +x /executables/tini
+  start.sh: |
+    #!/bin/sh
+    echo "Starting prometheus with tini init!"
+    tail -f /dev/null &
+    waitpid=$!
+
+    startprometheus()
+    {
+      (/bin/prometheus \
+      --web.external-url=http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-release \
+      --storage.tsdb.path=/prometheus \
+      --web.console.libraries=/etc/prometheus/console_libraries \
+      --web.console.templates=/etc/prometheus/consoles \
+      --config.file=/etc/prometheus/prometheus.yml \
+      --log.level=debug &)&
+    }
+
+    restartprometheus(){
+      startprometheus
+      wait $waitpid
+    }
+
+    trap 'restartprometheus' HUP
+
+    startprometheus
+    wait $waitpid
 
 ---
 apiVersion: apps/v1
@@ -774,13 +821,21 @@ spec:
         volumeMounts:
         - name: prometheus-executable
           mountPath: /prometheus-builder
+      - name: init
+        image: busybox
+        command: ["/scripts/fetchtini.sh"]
+        volumeMounts:
+        - name: executables
+          mountPath: /executables
+        - name: restarter-script
+          mountPath: /scripts
       containers:
       - name: prometheus
         image: quay.io/prometheus/busybox:latest
         imagePullPolicy: Always
         # The prometheus-builder takes a while to build
-        # so make sure to start it before the release deployment.
-        # Mark it ready only when prometheus is started.
+        # start prometheus-builder before the release deployment.
+        # Mark it ready only when local prometheus is started.
         # This way we have the least time difference in the scraped metrics.
         readinessProbe:
           tcpSocket:
@@ -804,6 +859,10 @@ spec:
           mountPath: /prometheus
         - name: prometheus-executable
           mountPath: /usr/bin
+        - name: restarter-script
+          mountPath: /scripts
+        - name: executables
+          mountPath: /executables
         ports:
         - name: prom-web
           containerPort: 9090
@@ -815,6 +874,8 @@ spec:
         configMap:
           name: prometheus-test-pr-restarter
           defaultMode: 0744
+      - name: executables
+        emptyDir: {}
       - name: instance-ssd
         hostPath:
           path: /mnt/disks/ssd0 #gke ssds
@@ -879,19 +940,16 @@ spec:
                 - prometheus
       securityContext:
         runAsUser: 0
-      containers:
-      - name: restarter
+      initContainers:
+      - name: init
         image: busybox
-        securityContext:
-          capabilities:
-            add:
-              - SYS_PTRACE
-        stdin: true
-        tty: true
-        imagePullPolicy: Always
+        command: ["/scripts/fetchtini.sh"]
         volumeMounts:
+        - name: executables
+          mountPath: /executables
         - name: restarter-script
           mountPath: /scripts
+      containers:
       - name: prometheus
         image: quay.io/prometheus/prometheus:{{ .RELEASE }}
         imagePullPolicy: Always
@@ -901,20 +959,29 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 2
           failureThreshold: 150
-          command: [ "/bin/prometheus" ]
-          args: [
-            "--web.external-url=http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-release",
-            "--storage.tsdb.path=/prometheus",
-            "--web.console.libraries=/etc/prometheus/console_libraries",
-            "--web.console.templates=/etc/prometheus/consoles",
-            "--config.file=/etc/prometheus/prometheus.yml",
-            "--log.level=debug"
-          ]
+        command: [ 
+        "/executables/tini",
+        "--",
+        "/scripts/start.sh"
+        ]
+        #command: [ "/bin/prometheus" ]
+        #args: [
+        #"--web.external-url=http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-release",
+        #"--storage.tsdb.path=/prometheus",
+        #"--web.console.libraries=/etc/prometheus/console_libraries",
+        #"--web.console.templates=/etc/prometheus/consoles",
+        #"--config.file=/etc/prometheus/prometheus.yml",
+        #"--log.level=debug"
+        #]
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus
         - name: instance-ssd
           mountPath: /prometheus
+        - name: restarter-script
+          mountPath: /scripts
+        - name: executables
+          mountPath: /executables
         ports:
         - name: prom-web
           containerPort: 9090
@@ -926,6 +993,8 @@ spec:
         configMap:
           name: prometheus-test-release-restarter
           defaultMode: 0744
+      - name: executables
+        emptyDir: {}
       - name: instance-ssd
         hostPath:
           # /mnt is where GKE keeps it's SSD

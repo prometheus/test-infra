@@ -4,18 +4,15 @@ import (
 	"context"
 	"fmt"
 	"log"
-	//"math/rand"
+	"math/rand"
 	"os"
 	"path/filepath"
-	//"strings"
 	"time"
 
-	//appsV1 "k8s.io/api/apps/v1"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/prombench/pkg/provider/k8s"
 	"gopkg.in/alecthomas/kingpin.v2"
-	//"k8s.io/apimachinery/pkg/runtime"
 )
 
 type restart struct {
@@ -54,8 +51,8 @@ func (s *restart) restart(*kingpin.ParseContext) error {
 			}
 		}
 
-		// wait 30 seconds before restarting
-		time.Sleep(time.Duration(30) * time.Second)
+		// wait 10 seconds before restarting (just)
+		time.Sleep(time.Duration(10) * time.Second)
 
 		for _, pod := range pods.Items {
 			_, err := s.k8sClient.ExecuteInPod(runcommand, pod.ObjectMeta.Name, "restarter", namespace)
@@ -65,8 +62,7 @@ func (s *restart) restart(*kingpin.ParseContext) error {
 		}
 
 		// Sleep for amount of time 10 >= n <= 30 mins
-		time.Sleep(time.Duration(5) * time.Minute)
-		//time.Sleep(time.Duration(rand.Intn(20) + 10) * time.Minute)
+		time.Sleep(time.Duration(rand.Intn(20) + 10) * time.Minute)
 	}
 }
 
