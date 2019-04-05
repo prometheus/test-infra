@@ -2,30 +2,38 @@
 
 PR_NUMBER=$1
 FLAGS="${@:2}"
-
-if [ -z "$PR_NUMBER" ]; then echo "ERROR::PR NUMBER is missing in argument" && exit 1; fi
-
 DIR="/go/src/github.com/prometheus/prometheus"
+VOLUME_DIR="/prometheus-builder" # from 3_prometheus-test.yaml
 
-printf "\n\n>> Cloning repository 'prometheus/prometheus' \n\n"
+if [ -z "$PR_NUMBER" ]; then
+    echo "ERROR::PR NUMBER is missing in argument"
+    exit 1;
+fi
 
-if ! git clone https://github.com/prometheus/prometheus.git $DIR; then printf "ERROR:: Cloning of repo 'prometheus/prometheus' failed" && exit 1; fi
+echo ">> Cloning repository prometheus/prometheus"
+if ! git clone https://github.com/prometheus/prometheus.git $DIR; then
+    echo "ERROR:: Cloning of repo prometheus/prometheus failed"
+    exit 1;
+fi
 
 cd $DIR || exit 1
 
-printf "\n\n>> Fetching Pull Request 'https://github.com/prometheus/prometheus/pull/%s' \n\n" "$PR_NUMBER"
-
-if ! git fetch origin pull/"$PR_NUMBER"/head:pr-branch; then printf "ERROR:: Fetching of PR %s failed" "$PR_NUMBER" && exit 1; fi
+echo ">> Fetching Pull Request prometheus/prometheus/pull/$PR_NUMBER"
+if ! git fetch origin pull/$PR_NUMBER/head:pr-branch; then
+    echo "ERROR:: Fetching of PR $PR_NUMBER failed"
+    exit 1;
+fi
 
 git checkout pr-branch
-printf "\n\n>> Creating prometheus binaries\n\n"
 
-if ! make build; then printf "ERROR:: Building of binaries failed" && exit 1; fi
+echo ">> Creating prometheus binaries"
+if ! make build; then
+    echo "ERROR:: Building of binaries failed"
+    exit 1;
+fi
 
-printf "\n\n>> Starting prometheus\n\n"
-./prometheus --config.file=/etc/prometheus/prometheus.yml $FLAGS \
-             --storage.tsdb.path=/prometheus \
-             --web.console.libraries=${DIR}/console_libraries \
-             --web.console.templates=${DIR}/consoles \
-             --web.external-url=http://prombench.prometheus.io/$PR_NUMBER/prometheus-pr \
-             --log.level=debug
+echo ">> Copy files to volume"
+cp prometheus               $VOLUME_DIR/prometheus
+cp promtool                 $VOLUME_DIR/promtool
+cp -r console_libraries/    $VOLUME_DIR
+cp -r consoles/             $VOLUME_DIR
