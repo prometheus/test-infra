@@ -744,9 +744,10 @@ spec:
       - name: prometheus
         image: docker.io/prom/busybox:latest
         imagePullPolicy: Always
-        # since prometheus-builder takes a while to build
-        # mark it ready only when prometheus is started to
-        # have least time difference in the scraped metrics.
+        # The prometheus-builder takes a while to build
+        # so make sure to start it before the release deployment.
+        # Mark it ready only when prometheus is started.
+        # This way we have the least time difference in the scraped metrics.
         readinessProbe:
           tcpSocket:
             port: 9090
