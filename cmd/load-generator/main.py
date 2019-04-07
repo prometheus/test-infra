@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import json
 import os
 import time
 import sys
@@ -11,48 +10,8 @@ from datetime import timedelta
 
 from prometheus_client import start_http_server, Histogram, Counter
 
-ca_cert_path = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-kube_token_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 namespace = ""
 max_404_errors = 30
-
-def deployment_path(url, depl):
-    return '%s/apis/apps/v1/namespaces/%s/deployments/%s' % (url, namespace, depl)
-
-def configmap_path(url, cm):
-    return '%s/api/v1/namespaces/%s/configmaps/%s' % (url, namespace, cm)
-
-class Scaler(object):
-    """
-    Scaler periodically scales a deployment down to a minimum number of
-    replicas and back up again.
-    """
-    def __init__(self, cfg, url, req_kwargs):
-        self.interval = int(cfg["intervalMinutes"]) * 60
-        self.deployment = cfg["name"]
-        self.low = cfg["low"]
-        self.high = cfg["high"]
-        self.url = url
-        self.req_kwargs = req_kwargs
-
-    def run(self):
-        while True:
-            print("scaling deployment %s to %d" % (self.deployment, self.low))
-            self.scale(self.low)
-            time.sleep(self.interval)
-
-            print("scaling deployment %s to %d" % (self.deployment, self.high))
-            self.scale(self.high)
-            time.sleep(self.interval)
-
-    def scale(self, n):
-        p = deployment_path(self.url, self.deployment)
-
-        resp = requests.get(p, **self.req_kwargs).json()
-        resp["spec"]["replicas"] = n
-
-        requests.put(p, data=json.dumps(resp), **self.req_kwargs)
-
 
 class Querier(object):
     """
@@ -149,42 +108,26 @@ def duration_seconds(s):
     raise "unknown duration %s" % s
 
 def main():
-    if len(sys.argv) < 4 or sys.argv[1] not in ["scaler", "querier"]:
+    if len(sys.argv) < 3:
         print("unexpected arguments")
-        print("usage: <load_generator> <scaler|querier> <namespace> <pr_number>")
+        print("usage: <load_generator> <namespace> <pr_number>")
         exit(2)
 
     global namespace
-    namespace = sys.argv[2]
-    pr_number = sys.argv[3]
-
-    host = os.environ.get('KUBERNETES_SERVICE_HOST')
-    port = os.environ.get('KUBERNETES_PORT_443_TCP_PORT')
-    url = 'https://%s:%s' % (host, port)
-
-    kube_token = open(kube_token_path, 'r').read()
-
-    req_kwargs = {
-        'headers': {'Content-type': 'application/json', 'Authorization': 'Bearer ' + kube_token},
-        'verify': ca_cert_path,
-    }
+    namespace = sys.argv[1]
+    pr_number = sys.argv[2]
 
     config = yaml.load(open("/etc/loadgen/config.yaml", 'r').read())
 
     print("loaded configuration")
 
-    if sys.argv[1] == "scaler":
-        Scaler(config["scaler"], url, req_kwargs).run()
-        return
+    for i,g in enumerate(config["querier"]["groups"]):
+        p = threading.Thread(target=Querier(i, "pr", pr_number, g).run)
+        p.start()
 
-    if sys.argv[1] == "querier":
-        for i,g in enumerate(config["querier"]["groups"]):
-            p = threading.Thread(target=Querier(i, "pr", pr_number, g).run)
-            p.start()
-
-        for i,g in enumerate(config["querier"]["groups"]):
-            p = threading.Thread(target=Querier(i, "release", pr_number, g).run)
-            p.start()
+    for i,g in enumerate(config["querier"]["groups"]):
+        p = threading.Thread(target=Querier(i, "release", pr_number, g).run)
+        p.start()
 
     start_http_server(8080)
     print("started HTTP server on 8080")
