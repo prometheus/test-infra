@@ -1,9 +1,8 @@
 #!/bin/bash
 
 PR_NUMBER=$1
-FLAGS="${@:2}"
+VOLUME_DIR=$2
 DIR="/go/src/github.com/prometheus/prometheus"
-VOLUME_DIR="/prometheus-builder" # from 3_prometheus-test.yaml
 
 if [ -z "$PR_NUMBER" ]; then
     echo "ERROR::PR NUMBER is missing in argument"
@@ -34,6 +33,5 @@ fi
 
 echo ">> Copy files to volume"
 cp prometheus               $VOLUME_DIR/prometheus
-cp promtool                 $VOLUME_DIR/promtool
 cp -r console_libraries/    $VOLUME_DIR
 cp -r consoles/             $VOLUME_DIR

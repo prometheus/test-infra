@@ -736,7 +736,10 @@ spec:
       initContainers:
       - name: prometheus-builder
         image: docker.io/prombench/prometheus-builder:2.0.1
-        args: ["{{ .PR_NUMBER }}"]
+        args: [
+          "{{ .PR_NUMBER }}",
+          "/prometheus-builder", # should be same as mountPath
+        ]
         volumeMounts:
         - name: prometheus-executable
           mountPath: /prometheus-builder
