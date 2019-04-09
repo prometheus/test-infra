@@ -1,7 +1,5 @@
 #!/bin/bash
 
-PR_NUMBER=$1
-VOLUME_DIR=$2
 DIR="/go/src/github.com/prometheus/prometheus"
 
 if [ -z "$PR_NUMBER" ]; then
