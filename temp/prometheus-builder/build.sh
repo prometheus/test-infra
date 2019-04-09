@@ -2,8 +2,8 @@
 
 DIR="/go/src/github.com/prometheus/prometheus"
 
-if [ -z "$PR_NUMBER" ]; then
-    echo "ERROR::PR NUMBER is missing in argument"
+if [[ -z $PR_NUMBER || -z $VOLUME_DIR ]]; then
+    echo "ERROR:: environment variables not set correctly"
     exit 1;
 fi
 
