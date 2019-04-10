@@ -4,7 +4,7 @@ GOLANG_IMG = golang:1.11
 PROMBENCH_DIR = /go/src/github.com/prometheus/prombench
 USERID = $(shell id -u ${USER})
 USERGROUP = $(shell id -g ${USER})
-DOCKER_CMD = docker run --rm \
+DOCKER_CMD = docker run --rm\
 			  -e GOPATH='/go' \
 			  -e GO111MODULE='on' \
 			  -v ${GOPATH}:/go \
@@ -42,7 +42,7 @@ nodepool_delete:
 
 build:
 	@$(DOCKER_CMD) go build ./cmd/prombench/
-	@sudo chown ${USERID}:${USERGROUP} prombench go.sum
+	@$(DOCKER_CMD) chown ${USERID}:${USERGROUP} ./prombench ./go.sum
 
 docker: build
 	@docker build -t $(DOCKER_TAG) .
