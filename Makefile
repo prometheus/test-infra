@@ -1,6 +1,6 @@
 PROMBENCH_CMD        = ./prombench
 DOCKER_TAG = docker.io/prombench/prombench:2.0.0
-GOLANG_IMG = golang:1.11
+GOLANG_IMG = golang:1.12
 PROMBENCH_DIR = /go/src/github.com/prometheus/prombench
 USERID = $(shell id -u ${USER})
 USERGROUP = $(shell id -g ${USER})
