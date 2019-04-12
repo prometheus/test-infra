@@ -746,7 +746,7 @@ spec:
           mountPath: /prometheus-builder
       containers:
       - name: prometheus
-        image: docker.io/prom/busybox:latest
+        image: quay.io/prometheus/busybox:latest
         imagePullPolicy: Always
         # The prometheus-builder takes a while to build
         # so make sure to start it before the release deployment.
@@ -762,6 +762,8 @@ spec:
         args: [
           "--web.external-url=http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-pr",
           "--storage.tsdb.path=/prometheus",
+          "--web.console.libraries=/usr/bin/console_libraries",
+          "--web.console.templates=/usr/bin/consoles",
           "--config.file=/etc/prometheus/prometheus.yml",
           "--log.level=debug"
         ]
