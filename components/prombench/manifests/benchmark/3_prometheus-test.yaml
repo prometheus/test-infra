@@ -733,12 +733,23 @@ spec:
                 - prometheus
       securityContext:
         runAsUser: 0
+      initContainers:
+      - name: prometheus-builder
+        image: docker.io/prombench/prometheus-builder:2.0.1
+        env:
+        - name: PR_NUMBER
+          value: "{{ .PR_NUMBER }}"
+        - name: VOLUME_DIR
+          value: "/prometheus-builder" # same as mountPath
+        volumeMounts:
+        - name: prometheus-executable
+          mountPath: /prometheus-builder
       containers:
       - name: prometheus
-        image: docker.io/prombench/prometheus-builder:2.0.0
+        image: quay.io/prometheus/busybox:latest
         imagePullPolicy: Always
-        # The prometheus-builder takes a while to build and run
-        # so make sure we start it before the release deployment.
+        # The prometheus-builder takes a while to build
+        # so make sure to start it before the release deployment.
         # Mark it ready only when prometheus is started.
         # This way we have the least time difference in the scraped metrics.
         readinessProbe:
@@ -747,12 +758,22 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 2
           failureThreshold: 30
-        args: ["{{ .PR_NUMBER }}"]
+        command: ["/usr/bin/prometheus"]
+        args: [
+          "--web.external-url=http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-pr",
+          "--storage.tsdb.path=/prometheus",
+          "--web.console.libraries=/usr/bin/console_libraries",
+          "--web.console.templates=/usr/bin/consoles",
+          "--config.file=/etc/prometheus/prometheus.yml",
+          "--log.level=debug"
+        ]
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus
         - name: instance-ssd
           mountPath: /prometheus
+        - name: prometheus-executable
+          mountPath: /usr/bin
         ports:
         - name: prom-web
           containerPort: 9090
@@ -762,9 +783,9 @@ spec:
           name: prometheus-test
       - name: instance-ssd
         hostPath:
-          # /mnt is where GKE keeps it's SSD
-          # don't change this if you want Prometheus to take advantage of these local SSDs
-          path: /mnt/disks/ssd0
+          path: /mnt/disks/ssd0 #gke ssds
+      - name: prometheus-executable
+        emptyDir: {}
       terminationGracePeriodSeconds: 300
       nodeSelector:
         cloud.google.com/gke-nodepool: prometheus-{{ .PR_NUMBER }}
