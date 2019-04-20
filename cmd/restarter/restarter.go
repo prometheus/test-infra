@@ -35,8 +35,10 @@ func killPrometheus(c chan string, wg sync.WaitGroup, pod *apiCoreV1.Pod, namesp
 	defer wg.Done()
 	command := "/scripts/killer.sh"
 
+	// maybe we should be checking pod.status.Conditions tYpe instead
 	if pod.Status.Phase != "Running" {
 		// cancel all goroutines in c
+		c = nil
 		log.Fatalf("All pods not ready")
 	}
 
@@ -55,7 +57,7 @@ func (s *restart) restart(*kingpin.ParseContext) error {
 
 	prNo := s.k8sClient.DeploymentVars["PR_NUMBER"]
 	namespace := "prombench-" + prNo
-	pods, err := s.k8sClient.FetchRunningPods(namespace, "app=prometheus")
+	podList, err := s.k8sClient.FetchRunningPods(namespace, "app=prometheus")
 
 	// if not exit so that the restarter is restarted
 
@@ -68,17 +70,19 @@ func (s *restart) restart(*kingpin.ParseContext) error {
 	}
 
 	podsToKill := make(chan string)
+	//podsToKill := make(chan string, 2)
 	//podsToStart := make(chan string)
 
 	for {
 		var wgKill sync.WaitGroup
 		var wgRestart sync.WaitGroup
 
-		for _, pod := range pods.Items {
+		for _, pod := range podList.Items {
 			wg.Add(1)
 			go killPrometheus(podsToKill, wgKill, pod, namespace)
 		}
-		close(podsToKill)
+		close(podsToKill) // do we kill a buffered channel, does that start togerter thing work
+		// with buffered channels
 		wgKill.Wait()
 		// trying to print podsToKill should panic unless I make it a buffered channel
 

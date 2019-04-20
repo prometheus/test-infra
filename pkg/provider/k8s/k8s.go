@@ -84,6 +84,8 @@ func New(ctx context.Context, config *clientcmdapi.Config) (*K8s, error) {
 }
 
 func (d *WebsocketRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
+
+	//header.append('Sec-WebSocket-Protocol: v4.channel.k8s.io')
 	conn, resp, err := d.Dialer.Dial(r.URL.String(), r.Header)
 	if err == nil {
 		defer conn.Close()
