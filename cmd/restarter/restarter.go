@@ -7,12 +7,13 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
-
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/prombench/pkg/provider/k8s"
 	"gopkg.in/alecthomas/kingpin.v2"
+	apiCoreV1 "k8s.io/api/core/v1"
 )
 
 type restart struct {
@@ -30,39 +31,66 @@ func new() *restart {
 	}
 }
 
+func killPrometheus(c chan string, wg sync.WaitGroup, pod *apiCoreV1.Pod, namespace string) {
+	defer wg.Done()
+	command := "/scripts/killer.sh"
+
+	if pod.Status.Phase != "Running" {
+		// cancel all goroutines in c
+		log.Fatalf("All pods not ready")
+	}
+
+	c <- pod.ObjectMeta.Name
+
+	resp, err := s.k8sClient.ExecuteInPod(command, pod.ObjectMeta.Name, "prometheus", namespace)
+	if err != nil {
+		// failed
+		// Q: should probably add a metric here?
+	}
+	// check response status code
+}
+
 func (s *restart) restart(*kingpin.ParseContext) error {
 	log.Printf("Starting Prombench-Restarter")
 
 	prNo := s.k8sClient.DeploymentVars["PR_NUMBER"]
 	namespace := "prombench-" + prNo
-	pods, err := s.k8sClient.FetchCurrentPods(namespace,"app=prometheus")
-	killcommand := `/scripts/killer.sh`
-	runcommand := `/scripts/restarter.sh`
+	pods, err := s.k8sClient.FetchRunningPods(namespace, "app=prometheus")
+
+	// if not exit so that the restarter is restarted
 
 	if err != nil {
-		log.Printf("Error fetching pods: %v", err)
+		log.Fatalf("Error fetching pods: %v", err)
 	}
 
+	if len(pods) != 2 {
+		log.Fatalf("All pods not ready")
+	}
+
+	podsToKill := make(chan string)
+	//podsToStart := make(chan string)
+
 	for {
-		for _, pod := range pods.Items {
-			_, err := s.k8sClient.ExecuteInPod(killcommand, pod.ObjectMeta.Name, "restarter", namespace)
-			if err != nil {
-				log.Printf("Error executing command: %v", err)
-			}
-		}
-
-		// wait 10 seconds before restarting (just)
-		time.Sleep(time.Duration(10) * time.Second)
+		var wgKill sync.WaitGroup
+		var wgRestart sync.WaitGroup
 
 		for _, pod := range pods.Items {
-			_, err := s.k8sClient.ExecuteInPod(runcommand, pod.ObjectMeta.Name, "restarter", namespace)
-			if err != nil {
-				log.Printf("Error executing command: %v", err)
-			}
+			wg.Add(1)
+			go killPrometheus(podsToKill, wgKill, pod, namespace)
 		}
+		close(podsToKill)
+		wgKill.Wait()
+		// trying to print podsToKill should panic unless I make it a buffered channel
 
-		// Sleep for amount of time 10 >= n <= 30 mins
-		time.Sleep(time.Duration(rand.Intn(20) + 10) * time.Minute)
+		// we need something to start the killing at the same time
+		// after that we need something that will tell us when the killing is done
+
+		//for _, pod := range pods.Items {
+		//	go killPrometheus(killingDone, pod, namespace)
+		//}
+
+		// Sleep for amount of time 10 >= n <= 30 mins, then restart both
+		time.Sleep(time.Duration(rand.Intn(20)+10) * time.Minute)
 	}
 }
 

@@ -26,9 +26,9 @@ import (
 
 	"github.com/prometheus/prombench/pkg/provider"
 
+	"github.com/gorilla/websocket"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-	"github.com/gorilla/websocket"
 )
 
 // Resource holds the resource objects after parsing deployment files.
@@ -78,7 +78,7 @@ func New(ctx context.Context, config *clientcmdapi.Config) (*K8s, error) {
 	return &K8s{
 		ctx:            ctx,
 		clt:            clientset,
-		config:			restConfig,
+		config:         restConfig,
 		DeploymentVars: make(map[string]string),
 	}, nil
 }
@@ -107,7 +107,7 @@ func (d *WebsocketRoundTripper) RoundTrip(r *http.Request) (*http.Response, erro
 	}
 }
 
-func (c *K8s) FetchCurrentPods(namespace, label string) (*apiCoreV1.PodList, error) {
+func (c *K8s) FetchRunningPods(namespace, label string) (*apiCoreV1.PodList, error) {
 	pods, err := c.clt.CoreV1().Pods(namespace).List(apiMetaV1.ListOptions{
 		LabelSelector: label,
 	})
@@ -123,18 +123,20 @@ func (c *K8s) ExecuteInPod(command, pod, container, namespace string) (*http.Res
 	u.Scheme = "wss"
 	u.Path = fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/exec", namespace, pod)
 	parameters := url.Values{}
-    parameters.Add("command", command)
-    parameters.Add("container", container)
-    parameters.Add("stdout", "true")
-    parameters.Add("stderr", "true")
-    u.RawQuery = parameters.Encode()
+	parameters.Add("command", command)
+	parameters.Add("container", container)
+	parameters.Add("stdout", "true")
+	parameters.Add("stderr", "true")
+	u.RawQuery = parameters.Encode()
 	req := &http.Request{
 		Method: http.MethodGet,
 		URL:    u,
 	}
 
 	tlsConfig, err := rest.TLSConfigFor(c.config)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 
 	dialer := &websocket.Dialer{
 		Proxy:           http.ProxyFromEnvironment,
@@ -143,10 +145,10 @@ func (c *K8s) ExecuteInPod(command, pod, container, namespace string) (*http.Res
 	rt := &WebsocketRoundTripper{
 		Dialer: dialer,
 	}
-	wrappedRoundTripper, err := rest.HTTPWrappersForConfig(c.config, rt)
+	wrappedRt, err := rest.HTTPWrappersForConfig(c.config, rt)
 
-	resp, err := wrappedRoundTripper.RoundTrip(req)
-	
+	resp, err := wrappedRt.RoundTrip(req)
+
 	if err != nil {
 		return nil, err
 	}

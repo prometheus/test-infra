@@ -10,6 +10,7 @@ rules:
   verbs: ["get", "list", "update"]
 ---
 kind: Role
+# TODO: check what is the minimum resource requirement I think pods/exec only should do
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: loadgen-restarter
