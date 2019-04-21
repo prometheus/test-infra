@@ -85,7 +85,7 @@ func New(ctx context.Context, config *clientcmdapi.Config) (*K8s, error) {
 
 func (d *WebsocketRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 
-	//header.append('Sec-WebSocket-Protocol: v4.channel.k8s.io')
+	r.Header.Set("Sec-WebSocket-Protocol", "v4.channel.k8s.io")
 	conn, resp, err := d.Dialer.Dial(r.URL.String(), r.Header)
 	if err == nil {
 		defer conn.Close()
@@ -100,9 +100,10 @@ func (d *WebsocketRoundTripper) RoundTrip(r *http.Request) (*http.Response, erro
 		_, body, err := conn.ReadMessage()
 		if err != nil {
 			if _, isClose := err.(*websocket.CloseError); isClose {
-				log.Printf("exec stdout: %v", stdout)
+				log.Printf("exec stdout: %v --\n", stdout)
 				return resp, nil
 			}
+			// maybe we can check for other error types, like the eof one
 			return nil, err
 		}
 		stdout = stdout + string(body)
@@ -129,6 +130,8 @@ func (c *K8s) ExecuteInPod(command, pod, container, namespace string) (*http.Res
 	parameters.Add("container", container)
 	parameters.Add("stdout", "true")
 	parameters.Add("stderr", "true")
+	parameters.Add("stdout", "false")
+	parameters.Add("stderr", "false")
 	u.RawQuery = parameters.Encode()
 	req := &http.Request{
 		Method: http.MethodGet,

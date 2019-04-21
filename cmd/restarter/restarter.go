@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"sync"
@@ -15,6 +14,15 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	apiCoreV1 "k8s.io/api/core/v1"
 )
+
+// TODO: can we make the filds internal?
+type operator struct {
+	Context context.Context
+	Cancel  context.CancelFunc
+	Blocker chan struct{}
+	Err     error // make it [] to hold errors for all the operations
+	Wg      sync.WaitGroup
+}
 
 type restart struct {
 	k8sClient *k8s.K8s
@@ -31,25 +39,64 @@ func new() *restart {
 	}
 }
 
-func killPrometheus(c chan string, wg sync.WaitGroup, pod *apiCoreV1.Pod, namespace string) {
-	defer wg.Done()
+func (s *restart) killPrometheus(o *operator, ready chan struct{}, pod apiCoreV1.Pod, namespace string) {
+	defer o.Wg.Done()
 	command := "/scripts/killer.sh"
+	container := "prometheus"
 
 	// maybe we should be checking pod.status.Conditions tYpe instead
-	if pod.Status.Phase != "Running" {
-		// cancel all goroutines in c
-		c = nil
-		log.Fatalf("All pods not ready")
+	//if pod.Status.Phase != "Running" {
+	//	o.Err = fmt.Errorf("All pods not ready for pod: %v", pod.ObjectMeta.Name)
+	//}
+
+	ready <- struct{}{} // ready to be blocked
+	log.Printf("blocking now %v\n", pod.ObjectMeta.Name)
+
+	select {
+	case <-o.Context.Done():
+		log.Printf("cancelling now %v\n", pod.ObjectMeta.Name)
+		return
+	case <-o.Blocker:
+		resp, err := s.k8sClient.ExecuteInPod(command, pod.ObjectMeta.Name, container, namespace)
+		log.Printf("Response: %v", resp)
+		if err != nil {
+			log.Println(err)
+			o.Err = fmt.Errorf("Kill command failed with: ", pod.ObjectMeta.Name)
+			// we can use pkg here
+		}
+		return
 	}
 
-	c <- pod.ObjectMeta.Name
+}
 
-	resp, err := s.k8sClient.ExecuteInPod(command, pod.ObjectMeta.Name, "prometheus", namespace)
-	if err != nil {
-		// failed
-		// Q: should probably add a metric here?
+func (s *restart) startPrometheus(o *operator, ready chan struct{}, pod apiCoreV1.Pod, namespace string) {
+	defer o.Wg.Done()
+	command := "/scripts/fail.sh"
+	//command := "/scripts/restarter.sh"
+	container := "prometheus"
+
+	// maybe we should be checking pod.status.Conditions tYpe instead
+	//if pod.Status.Phase != "Running" {
+	//	o.Err = fmt.Errorf("All pods not ready for pod: %v", pod.ObjectMeta.Name)
+	//}
+
+	ready <- struct{}{} // ready to be blocked
+	log.Printf("blocking now %v\n", pod.ObjectMeta.Name)
+
+	select {
+	case <-o.Context.Done():
+		log.Printf("cancelling now %v\n", pod.ObjectMeta.Name)
+		return
+	case <-o.Blocker:
+		resp, err := s.k8sClient.ExecuteInPod(command, pod.ObjectMeta.Name, container, namespace)
+		log.Printf("Response: %v", resp)
+		if err != nil {
+			log.Println(err)
+			o.Err = fmt.Errorf("Start command failed with: ", pod.ObjectMeta.Name)
+			// we can use pkg here
+		}
+		return
 	}
-	// check response status code
 }
 
 func (s *restart) restart(*kingpin.ParseContext) error {
@@ -57,44 +104,65 @@ func (s *restart) restart(*kingpin.ParseContext) error {
 
 	prNo := s.k8sClient.DeploymentVars["PR_NUMBER"]
 	namespace := "prombench-" + prNo
-	podList, err := s.k8sClient.FetchRunningPods(namespace, "app=prometheus")
+	ready := make(chan struct{})
+	restartCount := 0
 
-	// if not exit so that the restarter is restarted
+	podList, err := s.k8sClient.FetchRunningPods(namespace, "app=prometheus")
 
 	if err != nil {
 		log.Fatalf("Error fetching pods: %v", err)
 	}
-
-	if len(pods) != 2 {
+	if len(podList.Items) != 2 {
 		log.Fatalf("All pods not ready")
 	}
 
-	podsToKill := make(chan string)
-	//podsToKill := make(chan string, 2)
-	//podsToStart := make(chan string)
-
 	for {
-		var wgKill sync.WaitGroup
-		var wgRestart sync.WaitGroup
-
-		for _, pod := range podList.Items {
-			wg.Add(1)
-			go killPrometheus(podsToKill, wgKill, pod, namespace)
+		if restartCount != 0 {
+			time.Sleep(time.Duration(300) * time.Second)
 		}
-		close(podsToKill) // do we kill a buffered channel, does that start togerter thing work
-		// with buffered channels
-		wgKill.Wait()
-		// trying to print podsToKill should panic unless I make it a buffered channel
+		restartCount += 1 // maybe add a metric here
 
-		// we need something to start the killing at the same time
-		// after that we need something that will tell us when the killing is done
+		var killer, starter operator
+		killer.Blocker = make(chan struct{})
+		killer.Context, killer.Cancel = context.WithCancel(context.Background())
+		starter.Blocker = make(chan struct{})
+		starter.Context, starter.Cancel = context.WithCancel(context.Background())
 
-		//for _, pod := range pods.Items {
-		//	go killPrometheus(killingDone, pod, namespace)
-		//}
+		// kill prometheus
+		for _, pod := range podList.Items {
+			killer.Wg.Add(1)
+			go s.killPrometheus(&killer, ready, pod, namespace)
+			<-ready
+		}
+		if killer.Err != nil {
+			killer.Cancel()
+			log.Println(killer.Err)
+			continue
+		}
+		close(killer.Blocker)
+		killer.Wg.Wait()
+		if killer.Err != nil {
+			// wss error, http response err, unix return code err
+			log.Println(killer.Err)
+			// this means that one or both(after []error) had issues with killing
+		}
 
-		// Sleep for amount of time 10 >= n <= 30 mins, then restart both
-		time.Sleep(time.Duration(rand.Intn(20)+10) * time.Minute)
+		// start prometheus
+		for _, pod := range podList.Items {
+			starter.Wg.Add(1)
+			go s.startPrometheus(&starter, ready, pod, namespace)
+			<-ready
+		}
+		if starter.Err != nil {
+			starter.Cancel()
+			log.Println(starter.Err)
+			continue
+		}
+		close(starter.Blocker)
+		starter.Wg.Wait()
+		if starter.Err != nil {
+			log.Println(starter.Err)
+		}
 	}
 }
 
