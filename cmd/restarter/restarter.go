@@ -15,20 +15,20 @@ import (
 	podV1 "k8s.io/kubernetes/pkg/api/v1/pod"
 )
 
-// TODO: can we make the filds internal?
 type operator struct {
-	Context context.Context
-	Cancel  context.CancelFunc
-	Blocker chan struct{}
-	Err     error // make it [] to hold errors for all the operations
-	Wg      sync.WaitGroup
+	context  context.Context
+	cancel   context.CancelFunc
+	blocker  chan struct{}
+	readyErr []error
+	execErr  []error
+	wg       sync.WaitGroup
 }
 
 type restart struct {
 	k8sClient *k8s.K8s
 }
 
-func new() *restart {
+func newRestart() *restart {
 	k, err := k8s.New(context.Background(), nil)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error creating k8s client inside the k8s cluster"))
@@ -39,58 +39,80 @@ func new() *restart {
 	}
 }
 
-func (s *restart) killPrometheus(o *operator, ready chan struct{}, pod apiCoreV1.Pod, namespace string) {
-	log.Println("killPrometheus Running")
-	defer o.Wg.Done()
+func newOperator() *operator {
+	var o operator
+	o.blocker = make(chan struct{})
+	o.context, o.cancel = context.WithCancel(context.Background())
+	return &o
+}
+
+func (s *restart) killPrometheus(o *operator, ready chan struct{}, podName, namespace string) {
+	defer o.wg.Done()
 	command := "/scripts/killer.sh"
 	container := "prometheus"
-	cStatus := podV1.GetExistingContainerStatus(pod.Status.ContainerStatuses, container)
 
-	if !cStatus.Ready {
-		o.Err = fmt.Errorf("containers not ready for pod: %v", pod.ObjectMeta.Name)
+	// fetch latest pod status
+	podList, _ := s.k8sClient.FetchRunningPods(namespace, "", "metadata.name="+podName)
+	pod := podList.Items[0]
+
+	rPS := pod.Spec.Containers[0].ReadinessProbe.PeriodSeconds
+	rFT := pod.Spec.Containers[0].ReadinessProbe.FailureThreshold
+
+	if !podV1.IsPodReady(&pod) {
+		o.readyErr = append(o.readyErr, fmt.Errorf("prometheus container not ready for %v, won't kill", podName))
 	}
+	ready <- struct{}{}
 
-	ready <- struct{}{} // block
-
+	log.Printf("blocking killPrometheus for %v", podName)
 	select {
-	case <-o.Context.Done():
-		log.Printf("cancelling now %v\n", pod.ObjectMeta.Name)
+	case <-o.context.Done():
+		log.Printf("cancelling killPrometeus for %v", podName)
 		return
-	case <-o.Blocker:
-		resp, err := s.k8sClient.ExecuteInPod(command, pod.ObjectMeta.Name, container, namespace)
+	case <-o.blocker:
+		_, err := s.k8sClient.ExecuteInPod(command, podName, container, namespace)
 		if err != nil {
-			o.Err = fmt.Errorf("Kill command failed with: ", pod.ObjectMeta.Name)
-			// we can use pkg here
+			o.execErr = append(o.execErr, errors.Wrapf(err, "killPrometheus failed for %v", podName))
+			return
 		}
+		// sleep till k8s marks the pod as not ready
+		log.Printf("killPrometheus succcessful for %v : waiting: %vs", podName, rFT*rPS+rPS)
+		time.Sleep(time.Duration(rFT*rPS+rPS) * time.Second)
 		return
 	}
 
 }
 
-func (s *restart) startPrometheus(o *operator, ready chan struct{}, pod apiCoreV1.Pod, namespace string) {
-	log.Println("startPrometheus Running")
-	defer o.Wg.Done()
+func (s *restart) startPrometheus(o *operator, ready chan struct{}, podName, namespace string) {
+	defer o.wg.Done()
 	command := "/scripts/restarter.sh"
 	container := "prometheus"
-	cStatus := podV1.GetExistingContainerStatus(pod.Status.ContainerStatuses, container)
 
-	if cStatus.Ready {
-		o.Err = fmt.Errorf("containers is ready, do not restart if already ready: %v", pod.ObjectMeta.Name)
+	// fetch latest pod status
+	podList, _ := s.k8sClient.FetchRunningPods(namespace, "", "metadata.name="+podName)
+	pod := podList.Items[0]
+
+	rPS := pod.Spec.Containers[0].ReadinessProbe.PeriodSeconds
+	rST := pod.Spec.Containers[0].ReadinessProbe.SuccessThreshold
+
+	if podV1.IsPodReady(&pod) {
+		o.readyErr = append(o.readyErr, fmt.Errorf("prometheus container is already ready for %v, won't start", podName))
 	}
+	ready <- struct{}{}
 
-	ready <- struct{}{} // block
-	log.Printf("blocking now %v\n", pod.ObjectMeta.Name)
-
+	log.Printf("blocking startPrometheus for %v", podName)
 	select {
-	case <-o.Context.Done():
-		log.Printf("cancelling now %v\n", pod.ObjectMeta.Name)
+	case <-o.context.Done():
+		log.Printf("cancelling startPrometeus for %v", podName)
 		return
-	case <-o.Blocker:
-		resp, err := s.k8sClient.ExecuteInPod(command, pod.ObjectMeta.Name, container, namespace)
+	case <-o.blocker:
+		_, err := s.k8sClient.ExecuteInPod(command, podName, container, namespace)
 		if err != nil {
-			o.Err = fmt.Errorf("Start command failed with: %v", pod.ObjectMeta.Name)
-			// we can use pkg here
+			o.execErr = append(o.execErr, errors.Wrapf(err, "startPrometheus failed for %v", podName))
+			return
 		}
+		// sleep till k8s marks the pod as ready
+		log.Printf("startPrometheus succcessful for %v : waiting: %vs", podName, rST*rPS+rPS)
+		time.Sleep(time.Duration(rST*rPS+rPS) * time.Second)
 		return
 	}
 }
@@ -101,65 +123,79 @@ func (s *restart) restart(*kingpin.ParseContext) error {
 	prNo := s.k8sClient.DeploymentVars["PR_NUMBER"]
 	namespace := "prombench-" + prNo
 	ready := make(chan struct{})
-	restartCount := 0
 
 	for {
-		if restartCount != 0 {
-			time.Sleep(time.Duration(300) * time.Second)
-		}
-		restartCount += 1 // maybe add a metric here
+		log.Println("***** restarting prometheus ******")
 
-		var killer, starter operator
-		killer.Blocker = make(chan struct{})
-		killer.Context, killer.Cancel = context.WithCancel(context.Background())
-		starter.Blocker = make(chan struct{})
-		starter.Context, starter.Cancel = context.WithCancel(context.Background())
+		killer := newOperator()
+		starter := newOperator()
 
 		// get podList everytime because podName can change
 		podList, err := s.k8sClient.FetchRunningPods(namespace, "app=prometheus", "")
 		if err != nil {
-			log.Fatalf("Error fetching pods: %v", err)
+			log.Fatalf("error fetching pods, restarting restarter: %v", err)
 		}
+		// for we run 2 prometheus instances currently
 		if len(podList.Items) != 2 {
-			log.Fatalf("All pods not ready")
+			log.Fatalln("all pods not returned, restarting restarter")
+		}
+		// restart restarter if all pods are not in the same state
+		prevPodStatus := podV1.IsPodReady(&podList.Items[0])
+		for _, pod := range podList.Items[1:] {
+			if podV1.IsPodReady(&pod) != prevPodStatus {
+				log.Fatalln("all pods do not have the same status, restarting restarter")
+			}
+			prevPodStatus = podV1.IsPodReady(&pod)
 		}
 
 		// kill prometheus
 		for _, pod := range podList.Items {
-			killer.Wg.Add(1)
-			go s.killPrometheus(&killer, ready, pod, namespace)
+			killer.wg.Add(1)
+			go s.killPrometheus(killer, ready, pod.ObjectMeta.Name, namespace)
 			<-ready
 		}
-		if killer.Err != nil {
-			killer.Cancel()
-			log.Println(killer.Err)
-			continue
-			// instead of continuing we can try starting
+		if len(killer.readyErr) != 0 {
+			for _, e := range killer.readyErr {
+				log.Println(e)
+			}
+			killer.cancel()
+		} else {
+			close(killer.blocker)
 		}
-		close(killer.Blocker)
-		killer.Wg.Wait()
-		if killer.Err != nil {
-			// wss error, http response err, unix return code err
-			log.Println(killer.Err)
-			// this means that one or both(after []error) had issues with killing
+		killer.wg.Wait()
+		if len(killer.execErr) != 0 {
+			for _, e := range killer.execErr {
+				log.Println(e)
+			}
+			// maybe should add a metric here for alerts
+			// failing here means it was not able to kill one or more prometheus
 		}
 
 		// start prometheus
 		for _, pod := range podList.Items {
-			starter.Wg.Add(1)
-			go s.startPrometheus(&starter, ready, pod, namespace)
+			starter.wg.Add(1)
+			go s.startPrometheus(starter, ready, pod.ObjectMeta.Name, namespace)
 			<-ready
 		}
-		if starter.Err != nil {
-			starter.Cancel()
-			log.Println(starter.Err)
-			continue
+		if len(starter.readyErr) != 0 {
+			for _, e := range starter.readyErr {
+				log.Println(e)
+			}
+			starter.cancel()
+		} else {
+			close(starter.blocker)
 		}
-		close(starter.Blocker)
-		starter.Wg.Wait()
-		if starter.Err != nil {
-			log.Println(starter.Err)
+		starter.wg.Wait()
+		if len(starter.execErr) != 0 {
+			for _, e := range starter.execErr {
+				log.Println(e)
+			}
+			// maybe should add a metric here for alerts
+			// failing here means it was not able to start one or more prometheus
 		}
+
+		time.Sleep(time.Duration(2) * time.Minute)
+		// TODO: instead of sleeping for random/specified duration, use tsdb metrics
 	}
 }
 
@@ -168,7 +204,7 @@ func main() {
 	app := kingpin.New(filepath.Base(os.Args[0]), "The Prombench-Restarter tool")
 	app.HelpFlag.Short('h')
 
-	s := new()
+	s := newRestart()
 
 	k8sApp := app.Command("restart", "Restart a Kubernetes deployment object \nex: ./restarter restart").
 		Action(s.restart)

@@ -16,10 +16,10 @@ data:
     #!/bin/sh
     echo "Downloading tini init system"
 
-    # NOTE: we can move the tini download part to the prometheus-builder image
-    # and run prometheus-builder for both deployments
+    # we can move the tini download part to the prometheus-builder image
+    # then run prometheus-builder for both deployments
     # - the release deployment should only copy tini to the required directory
-    # - the pr deployment will work as is + copy tini to the required directory
+    # - the pr deployment will work same + copy tini to the required directory
 
     # this way we won't need to run this script from k8s and reduce number of
     # initContainers by 1 for pr deployment
@@ -255,7 +255,7 @@ spec:
             port: 9090
           initialDelaySeconds: 30
           periodSeconds: 2
-          failureThreshold: 150
+          failureThreshold: 30
         command: [ "/usr/bin/tini", "--", "/scripts/start.sh" ]
         env:
         - name: "PROM_BIN_PATH"

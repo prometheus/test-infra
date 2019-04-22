@@ -7,20 +7,18 @@ cluster:
   - name: prometheus-{{ .PR_NUMBER }}
     initialnodecount: 2
     config:
-      #machinetype: n1-highmem-16
-      machinetype: n1-standard-1
+      machinetype: n1-highmem-16
       imagetype: COS
-      disksizegb: 10
+      disksizegb: 100
       localssdcount: 1  #SSD is used to give fast-lookup to Prometheus servers being benchmarked
       labels:
         isolation: prometheus
   - name: nodes-{{ .PR_NUMBER }}
     initialnodecount: 1
     config:
-      #machinetype: n1-highcpu-32
-      machinetype: n1-standard-1
+      machinetype: n1-highcpu-32
       imagetype: COS
-      disksizegb: 10
+      disksizegb: 100
       localssdcount: 0  #use standard HDD. SSD not needed for fake-webservers.
       labels:
         isolation: none

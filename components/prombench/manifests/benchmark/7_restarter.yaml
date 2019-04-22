@@ -16,7 +16,7 @@ spec:
     spec:
       serviceAccountName: loadgen-restarter
       containers:
-      - name: prom-load-generator
+      - name: prom-load-generator-restarter
         image: docker.io/geekodour/restarter:1.0.0
         imagePullPolicy: Always
         args:

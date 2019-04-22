@@ -10,7 +10,6 @@ rules:
   verbs: ["get", "list", "update"]
 ---
 kind: Role
-# TODO: check what is the minimum resource requirement I think pods/exec only should do
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: loadgen-restarter
@@ -19,9 +18,8 @@ rules:
 - apiGroups: [""]
   resources:
   - pods
-  - deployments
   - pods/exec
-  verbs: ["create", "get", "list", "update"]
+  verbs: ["list", "get"]
 ---
 #need to give get/update access to loadgen-scaler
 apiVersion: rbac.authorization.k8s.io/v1
