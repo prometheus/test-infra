@@ -771,7 +771,6 @@ metadata:
     prometheus: test-pr-{{ .PR_NUMBER }}
 spec:
   replicas: 1
-  shareProcessNamespace: true
   selector:
     matchLabels:
       app: prometheus
@@ -784,7 +783,6 @@ spec:
         prometheus: test-pr-{{ .PR_NUMBER }}
     spec:
       serviceAccountName: prometheus
-      shareProcessNamespace: true
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -824,8 +822,8 @@ spec:
         image: quay.io/prometheus/busybox:latest
         imagePullPolicy: Always
         # The prometheus-builder takes a while to build
-        # start prometheus-builder before the release deployment.
-        # Mark it ready only when local prometheus is started.
+        # so make sure to start it before the release deployment.
+        # Mark it ready only when prometheus is started.
         # This way we have the least time difference in the scraped metrics.
         readinessProbe:
           tcpSocket:
@@ -901,7 +899,6 @@ metadata:
     prometheus: test-{{ normalise .RELEASE }}
 spec:
   replicas: 1
-  shareProcessNamespace: true
   selector:
     matchLabels:
       app: prometheus
@@ -914,7 +911,6 @@ spec:
         prometheus: test-{{ normalise .RELEASE }}
     spec:
       serviceAccountName: prometheus
-      shareProcessNamespace: true
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
