@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/prombench/pkg/provider/k8s"
 	"gopkg.in/alecthomas/kingpin.v2"
-	apiCoreV1 "k8s.io/api/core/v1"
+	podV1 "k8s.io/kubernetes/pkg/api/v1/pod"
 )
 
 // TODO: can we make the filds internal?
@@ -40,17 +40,17 @@ func new() *restart {
 }
 
 func (s *restart) killPrometheus(o *operator, ready chan struct{}, pod apiCoreV1.Pod, namespace string) {
+	log.Println("killPrometheus Running")
 	defer o.Wg.Done()
 	command := "/scripts/killer.sh"
 	container := "prometheus"
+	cStatus := podV1.GetExistingContainerStatus(pod.Status.ContainerStatuses, container)
 
-	// maybe we should be checking pod.status.Conditions tYpe instead
-	//if pod.Status.Phase != "Running" {
-	//	o.Err = fmt.Errorf("All pods not ready for pod: %v", pod.ObjectMeta.Name)
-	//}
+	if !cStatus.Ready {
+		o.Err = fmt.Errorf("containers not ready for pod: %v", pod.ObjectMeta.Name)
+	}
 
-	ready <- struct{}{} // ready to be blocked
-	log.Printf("blocking now %v\n", pod.ObjectMeta.Name)
+	ready <- struct{}{} // block
 
 	select {
 	case <-o.Context.Done():
@@ -58,9 +58,7 @@ func (s *restart) killPrometheus(o *operator, ready chan struct{}, pod apiCoreV1
 		return
 	case <-o.Blocker:
 		resp, err := s.k8sClient.ExecuteInPod(command, pod.ObjectMeta.Name, container, namespace)
-		log.Printf("Response: %v", resp)
 		if err != nil {
-			log.Println(err)
 			o.Err = fmt.Errorf("Kill command failed with: ", pod.ObjectMeta.Name)
 			// we can use pkg here
 		}
@@ -70,17 +68,17 @@ func (s *restart) killPrometheus(o *operator, ready chan struct{}, pod apiCoreV1
 }
 
 func (s *restart) startPrometheus(o *operator, ready chan struct{}, pod apiCoreV1.Pod, namespace string) {
+	log.Println("startPrometheus Running")
 	defer o.Wg.Done()
-	command := "/scripts/fail.sh"
-	//command := "/scripts/restarter.sh"
+	command := "/scripts/restarter.sh"
 	container := "prometheus"
+	cStatus := podV1.GetExistingContainerStatus(pod.Status.ContainerStatuses, container)
 
-	// maybe we should be checking pod.status.Conditions tYpe instead
-	//if pod.Status.Phase != "Running" {
-	//	o.Err = fmt.Errorf("All pods not ready for pod: %v", pod.ObjectMeta.Name)
-	//}
+	if cStatus.Ready {
+		o.Err = fmt.Errorf("containers is ready, do not restart if already ready: %v", pod.ObjectMeta.Name)
+	}
 
-	ready <- struct{}{} // ready to be blocked
+	ready <- struct{}{} // block
 	log.Printf("blocking now %v\n", pod.ObjectMeta.Name)
 
 	select {
@@ -89,10 +87,8 @@ func (s *restart) startPrometheus(o *operator, ready chan struct{}, pod apiCoreV
 		return
 	case <-o.Blocker:
 		resp, err := s.k8sClient.ExecuteInPod(command, pod.ObjectMeta.Name, container, namespace)
-		log.Printf("Response: %v", resp)
 		if err != nil {
-			log.Println(err)
-			o.Err = fmt.Errorf("Start command failed with: ", pod.ObjectMeta.Name)
+			o.Err = fmt.Errorf("Start command failed with: %v", pod.ObjectMeta.Name)
 			// we can use pkg here
 		}
 		return
@@ -107,15 +103,6 @@ func (s *restart) restart(*kingpin.ParseContext) error {
 	ready := make(chan struct{})
 	restartCount := 0
 
-	podList, err := s.k8sClient.FetchRunningPods(namespace, "app=prometheus")
-
-	if err != nil {
-		log.Fatalf("Error fetching pods: %v", err)
-	}
-	if len(podList.Items) != 2 {
-		log.Fatalf("All pods not ready")
-	}
-
 	for {
 		if restartCount != 0 {
 			time.Sleep(time.Duration(300) * time.Second)
@@ -128,6 +115,15 @@ func (s *restart) restart(*kingpin.ParseContext) error {
 		starter.Blocker = make(chan struct{})
 		starter.Context, starter.Cancel = context.WithCancel(context.Background())
 
+		// get podList everytime because podName can change
+		podList, err := s.k8sClient.FetchRunningPods(namespace, "app=prometheus", "")
+		if err != nil {
+			log.Fatalf("Error fetching pods: %v", err)
+		}
+		if len(podList.Items) != 2 {
+			log.Fatalf("All pods not ready")
+		}
+
 		// kill prometheus
 		for _, pod := range podList.Items {
 			killer.Wg.Add(1)
@@ -138,6 +134,7 @@ func (s *restart) restart(*kingpin.ParseContext) error {
 			killer.Cancel()
 			log.Println(killer.Err)
 			continue
+			// instead of continuing we can try starting
 		}
 		close(killer.Blocker)
 		killer.Wg.Wait()

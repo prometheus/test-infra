@@ -4,14 +4,13 @@ metadata:
   name: prometheus-test-restarter-scripts
   namespace: prombench-{{ .PR_NUMBER }}
 data:
-  fail.sh: |
-    #!/bin/sh
-    exit 1
   restarter.sh: |
     #!/bin/sh
+    echo "Restarting prometheus"
     kill -SIGHUP $(pidof start.sh)
   killer.sh: |
     #!/bin/sh
+    echo "Killing prometheus"
     kill -9 $(pidof prometheus)
   fetchtini.sh: |
     #!/bin/sh

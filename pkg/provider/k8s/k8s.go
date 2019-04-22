@@ -1,7 +1,9 @@
 package k8s
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -95,25 +97,39 @@ func (d *WebsocketRoundTripper) RoundTrip(r *http.Request) (*http.Response, erro
 		log.Printf("response: %v", resp)
 		return nil, err
 	}
-	stdout := ""
+
+	var v apiMetaV1.Status
+
 	for {
 		_, body, err := conn.ReadMessage()
 		if err != nil {
-			if _, isClose := err.(*websocket.CloseError); isClose {
-				log.Printf("exec stdout: %v --\n", stdout)
-				return resp, nil
-			}
-			// maybe we can check for other error types, like the eof one
 			return nil, err
+			// use pkg.errors
 		}
-		stdout = stdout + string(body)
+		// the first byte of the slices signifies std(in|out|err)
+		// see https://blog.openshift.com/executing-commands-in-pods-using-k8s-api/
+		// for v4.channel.k8s.io json it's "most probably" 3 (works so far)
+		// we don't care about any other output than the json
+		if body[0] == 3 {
+			dec := json.NewDecoder(bytes.NewReader(body[1:]))
+			if err := dec.Decode(&v); err != nil {
+				log.Printf("error in decoding")
+				return nil, err
+				// use pkg
+			}
+			log.Printf("%v", v)
+			return resp, nil
+			// modify resp value accordingly
+		}
 	}
 }
 
-func (c *K8s) FetchRunningPods(namespace, label string) (*apiCoreV1.PodList, error) {
-	pods, err := c.clt.CoreV1().Pods(namespace).List(apiMetaV1.ListOptions{
-		LabelSelector: label,
-	})
+func (c *K8s) FetchRunningPods(namespace, labels, fields string) (*apiCoreV1.PodList, error) {
+	selectors := apiMetaV1.ListOptions{
+		LabelSelector: labels,
+		FieldSelector: fields,
+	}
+	pods, err := c.clt.CoreV1().Pods(namespace).List(selectors)
 	if err != nil {
 		return nil, err
 	}
@@ -130,8 +146,8 @@ func (c *K8s) ExecuteInPod(command, pod, container, namespace string) (*http.Res
 	parameters.Add("container", container)
 	parameters.Add("stdout", "true")
 	parameters.Add("stderr", "true")
-	parameters.Add("stdout", "false")
-	parameters.Add("stderr", "false")
+	//parameters.Add("stdout", "false")
+	//parameters.Add("stderr", "false")
 	u.RawQuery = parameters.Encode()
 	req := &http.Request{
 		Method: http.MethodGet,
@@ -150,6 +166,10 @@ func (c *K8s) ExecuteInPod(command, pod, container, namespace string) (*http.Res
 	rt := &WebsocketRoundTripper{
 		Dialer: dialer,
 	}
+	// check if we can get the headers set
+	// if we can do that then we won't have to use the
+	// roundTripper, one less function
+
 	wrappedRt, err := rest.HTTPWrappersForConfig(c.config, rt)
 
 	resp, err := wrappedRt.RoundTrip(req)
