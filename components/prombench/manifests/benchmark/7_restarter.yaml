@@ -13,7 +13,6 @@ data:
       labels:
         app: prometheus
         prometheus: test-pr-{{ .PR_NUMBER }}
-        restart_counter: "0"
     spec:
       replicas: 1
       selector:
@@ -42,24 +41,29 @@ data:
             runAsUser: 0
           containers:
           - name: prometheus
-            image: docker.io/prombench/prometheus-builder:2.0.0
+            image: quay.io/prometheus/busybox:latest
             imagePullPolicy: Always
-            # The prometheus-builder takes a while to build and run
-            # so make sure we start it before the release deployment.
-            # Mark it ready only when prometheus is started.
-            # This way we have the least time difference in the scraped metrics.
-            readinessProbe:
-              tcpSocket:
-                port: 9090
-              initialDelaySeconds: 30
-              periodSeconds: 2
-              failureThreshold: 30
-            args: ["{{ .PR_NUMBER }}"]
+            command: [ "/usr/bin/tini", "--"]
+            args: [
+              "/usr/bin/prometheus",
+              "--web.external-url=http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-pr",
+              "--storage.tsdb.path=/prometheus",
+              "--web.console.libraries=/usr/bin/console_libraries",
+              "--web.console.templates=/usr/bin/consoles",
+              "--config.file=/etc/prometheus/prometheus.yml",
+              "--log.level=debug"
+            ]
+            lifecycle:
+              preStop:
+                exec:
+                  command: ["/bin/sh", "-c", "'kill -9 $(pidof prometheus)'"]
             volumeMounts:
             - name: config-volume
               mountPath: /etc/prometheus
             - name: instance-ssd
               mountPath: /prometheus
+            - name: executables
+              mountPath: /usr/bin
             ports:
             - name: prom-web
               containerPort: 9090
@@ -69,9 +73,11 @@ data:
               name: prometheus-test
           - name: instance-ssd
             hostPath:
-              # /mnt is where GKE keeps it's SSD
-              # don't change this if you want Prometheus to take advantage of these local SSDs
-              path: /mnt/disks/ssd0
+              path: /mnt/disks/ssd0 #gke ssds
+          - name: executables
+            persistentVolumeClaim:
+              claimName: prometeus-builder-volume
+              readOnly: true
           terminationGracePeriodSeconds: 300
           nodeSelector:
             cloud.google.com/gke-nodepool: prometheus-{{ .PR_NUMBER }}
@@ -85,7 +91,6 @@ data:
       labels:
         app: prometheus
         prometheus: test-{{ normalise .RELEASE }}
-        restart_counter: "0"
     spec:
       replicas: 1
       selector:
@@ -116,8 +121,9 @@ data:
           - name: prometheus
             image: quay.io/prometheus/prometheus:{{ .RELEASE }}
             imagePullPolicy: Always
-            command: [ "/bin/prometheus" ]
+            command: ["/usr/bin/tini", "--"]
             args: [
+              "/bin/prometheus",
               "--web.external-url=http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-release",
               "--storage.tsdb.path=/prometheus",
               "--web.console.libraries=/etc/prometheus/console_libraries",
@@ -125,11 +131,17 @@ data:
               "--config.file=/etc/prometheus/prometheus.yml",
               "--log.level=debug"
             ]
+            lifecycle:
+              preStop:
+                exec:
+                  command: ["/bin/sh", "-c", "'kill -9 $(pidof prometheus)'"]
             volumeMounts:
             - name: config-volume
               mountPath: /etc/prometheus
             - name: instance-ssd
               mountPath: /prometheus
+            - name: executables
+              mountPath: /usr/bin
             ports:
             - name: prom-web
               containerPort: 9090
@@ -139,13 +151,16 @@ data:
               name: prometheus-test
           - name: instance-ssd
             hostPath:
-              # /mnt is where GKE keeps it's SSD
-              # don't change this if you want Prometheus to take advantage of these local SSDs
-              path: /mnt/disks/ssd0
+              path: /mnt/disks/ssd0 #gke ssds
+          - name: executables
+            persistentVolumeClaim:
+              claimName: prometeus-builder-volume
+              readOnly: true
           terminationGracePeriodSeconds: 300
           nodeSelector:
             cloud.google.com/gke-nodepool: prometheus-{{ .PR_NUMBER }}
             isolation: prometheus
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -166,7 +181,7 @@ spec:
       serviceAccountName: loadgen-restarter
       containers:
       - name: prom-load-generator
-        image: docker.io/geekodour/restarter:1.0.0
+        image: docker.io/geekodour/restarter:graceperiod
         imagePullPolicy: Always
         args:
         - "restart"
@@ -175,7 +190,7 @@ spec:
         - "-f"
         - "/etc/restarter/prometheus_pr.yaml"
         - "-v"
-        - "PR_NUMBER:{{ .PR_NUMBER }}"        #Used to specify prometheus-test's namespace
+        - "PR_NUMBER:{{ .PR_NUMBER }}"
         volumeMounts:
         - name: prometheus-config-volume
           mountPath: /etc/restarter

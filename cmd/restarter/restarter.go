@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -22,7 +21,7 @@ type restart struct {
 	k8sClient *k8s.K8s
 }
 
-func new() *restart {
+func newRestart() *restart {
 	k, err := k8s.New(context.Background(), nil)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error creating k8s client inside the k8s cluster"))
@@ -33,16 +32,15 @@ func new() *restart {
 	}
 }
 
-func (s *restart) fetchResources(counter int) []k8s.Resource {
+func (s *restart) updateReplicas(replicas *int32) []k8s.Resource {
 	var k8sResource []k8s.Resource
-
 	for _, deployment := range s.k8sClient.GetResourses() {
 		k8sObjects := make([]runtime.Object, 0)
 
 		for _, resource := range deployment.Objects {
 			if kind := strings.ToLower(resource.GetObjectKind().GroupVersionKind().Kind); kind == "deployment" {
 				req := resource.(*appsV1.Deployment)
-				req.ObjectMeta.Labels["restart_counter"] = fmt.Sprintf("%v", counter)
+				req.Spec.Replicas = replicas
 				k8sObjects = append(k8sObjects, req.DeepCopyObject())
 			}
 		}
@@ -56,16 +54,29 @@ func (s *restart) fetchResources(counter int) []k8s.Resource {
 func (s *restart) restart(*kingpin.ParseContext) error {
 	log.Printf("Starting Prombench-Restarter")
 
-	reqResources := s.fetchResources(counter)
-	counter := 1
+	var (
+		off, on int32 = 0, 1
+	)
+
+	downPrometheus := s.updateReplicas(&off)
+	upPrometheueus := s.updateReplicas(&on)
+
+	// TODO
+	// a polling mechanism to see if there were any compaction failure in the
+	// last minute then trigger restart if true then sleep for a minute
 
 	for {
-		counter++
-		if err := s.k8sClient.ResourceApply(reqResources); err != nil {
-			fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error restarting deployment"))
+		log.Println("scaling to 0")
+		if err := s.k8sClient.ResourceApply(downPrometheus); err != nil {
+			fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error scaling down"))
 		}
 
-		time.Sleep((rand.Intn(20) + 10) * time.Minute)
+		log.Println("scaling to 1")
+		if err := s.k8sClient.ResourceApply(upPrometheueus); err != nil {
+			fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error scaling up"))
+		}
+
+		time.Sleep(time.Duration(3) * time.Minute)
 	}
 }
 
@@ -74,7 +85,7 @@ func main() {
 	app := kingpin.New(filepath.Base(os.Args[0]), "The Prombench-Restarter tool")
 	app.HelpFlag.Short('h')
 
-	s := new()
+	s := newRestart()
 
 	k8sApp := app.Command("restart", "Restart a Kubernetes deployment object \nex: ./restarter restart").
 		Action(s.k8sClient.DeploymentsParse).

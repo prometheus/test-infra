@@ -23,11 +23,20 @@ fi
 
 git checkout pr-branch
 
+# don't build promtool
+sed -i '/promtool/d' .promu.yml
+
 echo ">> Creating prometheus binaries"
 if ! make build; then
     echo "ERROR:: Building of binaries failed"
     exit 1;
 fi
+
+# download tini so that we can run prometheus as child of PID1
+echo ">> Downloading tini init system"
+wget -O $VOLUME_DIR/tini \
+https://github.com/krallin/tini/releases/download/v0.18.0/tini-static
+chmod +x $VOLUME_DIR/tini
 
 echo ">> Copy files to volume"
 cp prometheus               $VOLUME_DIR/prometheus
