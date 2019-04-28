@@ -794,7 +794,7 @@ spec:
         lifecycle:
           preStop:
             exec:
-              command: ["/bin/sh", "-c", "'kill -9 $(pidof prometheus)'"]
+              command: ["/bin/sh", "-c", "killall -9 prometheus"]
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus
@@ -890,7 +890,7 @@ spec:
         lifecycle:
           preStop:
             exec:
-              command: ["/bin/sh", "-c", "'kill -9 $(pidof prometheus)'"]
+              command: ["/bin/sh", "-c", "killall -9 prometheus"]
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus
