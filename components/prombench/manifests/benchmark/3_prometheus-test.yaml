@@ -753,6 +753,8 @@ metadata:
     prometheus: test-pr-{{ .PR_NUMBER }}
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: prometheus
@@ -763,6 +765,7 @@ spec:
       labels:
         app: prometheus
         prometheus: test-pr-{{ .PR_NUMBER }}
+        restart_count: "0"
     spec:
       serviceAccountName: prometheus
       affinity:
@@ -849,6 +852,8 @@ metadata:
     prometheus: test-{{ normalise .RELEASE }}
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: prometheus
@@ -859,6 +864,7 @@ spec:
       labels:
         app: prometheus
         prometheus: test-{{ normalise .RELEASE }}
+        restart_count: "0"
     spec:
       serviceAccountName: prometheus
       affinity:

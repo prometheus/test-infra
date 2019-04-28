@@ -32,7 +32,7 @@ func newRestart() *restart {
 	}
 }
 
-func (s *restart) updateReplicas(replicas *int32) []k8s.Resource {
+func (s *restart) updateReplicas(restartCounter int) []k8s.Resource {
 	var k8sResource []k8s.Resource
 	for _, deployment := range s.k8sClient.GetResourses() {
 		k8sObjects := make([]runtime.Object, 0)
@@ -40,7 +40,7 @@ func (s *restart) updateReplicas(replicas *int32) []k8s.Resource {
 		for _, resource := range deployment.Objects {
 			if kind := strings.ToLower(resource.GetObjectKind().GroupVersionKind().Kind); kind == "deployment" {
 				req := resource.(*appsV1.Deployment)
-				req.Spec.Replicas = replicas
+				req.Spec.Template.ObjectMeta.Labels["restart_count"] = fmt.Sprintf("%v", restartCounter)
 				k8sObjects = append(k8sObjects, req.DeepCopyObject())
 			}
 		}
@@ -54,26 +54,17 @@ func (s *restart) updateReplicas(replicas *int32) []k8s.Resource {
 func (s *restart) restart(*kingpin.ParseContext) error {
 	log.Printf("Starting Prombench-Restarter")
 
-	var (
-		off, on int32 = 0, 1
-	)
+	restartCounter := 0
 
-	downPrometheus := s.updateReplicas(&off)
-	upPrometheueus := s.updateReplicas(&on)
-
-	// TODO
+	// TODO:
 	// a polling mechanism to see if there were any compaction failure in the
 	// last minute then trigger restart if true then sleep for a minute
 
 	for {
-		log.Println("scaling to 0")
-		if err := s.k8sClient.ResourceApply(downPrometheus); err != nil {
-			fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error scaling down"))
-		}
-
-		log.Println("scaling to 1")
-		if err := s.k8sClient.ResourceApply(upPrometheueus); err != nil {
-			fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error scaling up"))
+		restartCounter++
+		updatedResources := s.updateReplicas(restartCounter)
+		if err := s.k8sClient.ResourceApply(updatedResources); err != nil {
+			fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error updating deployment"))
 		}
 
 		time.Sleep(time.Duration(3) * time.Minute)
