@@ -760,7 +760,7 @@ spec:
           failureThreshold: 30
         command: ["/usr/bin/prometheus"]
         args: [
-          "--web.external-url=http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-pr",
+          "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-pr",
           "--storage.tsdb.path=/prometheus",
           "--web.console.libraries=/usr/bin/console_libraries",
           "--web.console.templates=/usr/bin/consoles",
@@ -849,7 +849,7 @@ spec:
         imagePullPolicy: Always
         command: [ "/bin/prometheus" ]
         args: [
-          "--web.external-url=http://prombench.prometheus.io/{{ .PR_NUMBER }}/prometheus-release",
+          "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-release",
           "--storage.tsdb.path=/prometheus",
           "--web.console.libraries=/etc/prometheus/console_libraries",
           "--web.console.templates=/etc/prometheus/consoles",

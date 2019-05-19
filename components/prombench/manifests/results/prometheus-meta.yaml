@@ -19,7 +19,7 @@ data:
       scrape_interval: 5s
     scrape_configs:
     # prometheus-meta job is added separately because prometheus-meta has a
-    # web.external-url of INGRESS_IP/prometheus-meta/
+    # web.external-url of DOMAIN_NAME/prometheus-meta/
     - job_name: prometheus-meta
       metrics_path: /prometheus-meta/metrics
       static_configs:
@@ -132,7 +132,7 @@ spec:
         - "--config.file=/etc/prometheus/config/prometheus.yaml"
         - "--storage.tsdb.path=/data"
         - "--storage.tsdb.retention=90d"
-        - "--web.external-url=http://{{ .INGRESS_IP }}/prometheus-meta"
+        - "--web.external-url=http://{{ .DOMAIN_NAME }}/prometheus-meta"
         name: prometheus
         volumeMounts:
         - name: config-volume
