@@ -24,14 +24,14 @@ import (
 
 	"github.com/prometheus/prombench/pkg/provider"
 
-	apiserverextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	apiserverextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	apiServerExtensionsV1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiServerExtensionsClient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 func init() {
-	apiserverextensionsv1beta1.AddToScheme(scheme.Scheme)
+	apiServerExtensionsV1beta1.AddToScheme(scheme.Scheme)
 }
 
 // Resource holds the resource objects after parsing deployment files.
@@ -43,7 +43,7 @@ type Resource struct {
 // K8s holds the fields used to generate API reqeust from within a cluster.
 type K8s struct {
 	clt       *kubernetes.Clientset
-	apiextclt *apiserverextensionsclient.Clientset
+	apiextclt *apiServerExtensionsClient.Clientset
 	// DeploymentFiles files provided from the cli.
 	DeploymentFiles []string
 	// Vaiables to subtitude in the DeploymentFiles.
@@ -73,7 +73,7 @@ func New(ctx context.Context, config *clientcmdapi.Config) (*K8s, error) {
 		return nil, errors.Wrapf(err, "k8s client error")
 	}
 
-	apiextClientset, err := apiserverextensionsclient.NewForConfig(restConfig)
+	apiextClientset, err := apiServerExtensionsClient.NewForConfig(restConfig)
 	if err != nil {
 		return nil, errors.Wrapf(err, "k8s api extensions client error")
 	}
@@ -161,7 +161,7 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 			case "persistentvolumeclaim":
 				err = c.persistentVolumeClaimApply(resource)
 			case "customresourcedefinition":
-				err = c.customResourceDefinitionApply(resource)
+				err = c.customResourceApply(resource)
 			default:
 				err = fmt.Errorf("creating request for unimplimented resource type:%v", kind)
 			}
@@ -208,7 +208,7 @@ func (c *K8s) ResourceDelete(deployments []Resource) error {
 			case "persistentvolumeclaim":
 				err = c.persistentVolumeClaimDelete(resource)
 			case "customresourcedefinition":
-				err = c.customResourceDefinitionDelete(resource)
+				err = c.customResourceDelete(resource)
 			default:
 				err = fmt.Errorf("deleting request for unimplimented resource type:%v", kind)
 			}
@@ -433,8 +433,8 @@ func (c *K8s) deploymentApply(resource runtime.Object) error {
 		func() (bool, error) { return c.deploymentReady(resource) })
 }
 
-func (c *K8s) customResourceDefinitionApply(resource runtime.Object) error {
-	req := resource.(*apiserverextensionsv1beta1.CustomResourceDefinition)
+func (c *K8s) customResourceApply(resource runtime.Object) error {
+	req := resource.(*apiServerExtensionsV1beta1.CustomResourceDefinition)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	if len(req.Namespace) == 0 {
 		req.Namespace = "default"
@@ -475,7 +475,6 @@ func (c *K8s) customResourceDefinitionApply(resource runtime.Object) error {
 }
 
 func (c *K8s) ingressApply(resource runtime.Object) error {
-	// TODO(geekodour): maybe use Ingress from networking.k8s.io/v1beta1
 	req := resource.(*apiExtensionsV1beta1.Ingress)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	if len(req.Namespace) == 0 {
@@ -910,8 +909,8 @@ func (c *K8s) deploymentDelete(resource runtime.Object) error {
 	return nil
 }
 
-func (c *K8s) customResourceDefinitionDelete(resource runtime.Object) error {
-	req := resource.(*apiserverextensionsv1beta1.CustomResourceDefinition)
+func (c *K8s) customResourceDelete(resource runtime.Object) error {
+	req := resource.(*apiServerExtensionsV1beta1.CustomResourceDefinition)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	if len(req.Namespace) == 0 {
 		req.Namespace = "default"
