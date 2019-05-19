@@ -30,15 +30,15 @@ export AUTH_FILE=<path to service-account.json>
 
 - Set the following environment variables
 ```
-export GCLOUD_SERVICEACCOUNT_CLIENTID=<client-id present in service-account.json>
+export GCLOUD_SERVICEACCOUNT_CLIENTEMAIL=<client-email present in service-account.json>
 export GRAFANA_ADMIN_PASSWORD=password
 ```
-> The `GCLOUD_SERVICEACCOUNT_CLIENTID` is used to grant cluster-admin-rights to the service-account. This is needed to create RBAC roles on GKE.
+> The `GCLOUD_SERVICEACCOUNT_CLIENTEMAIL` is used to grant cluster-admin-rights to the service-account. This is needed to create RBAC roles on GKE.
 
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx) which will be used to access Prometheus-Meta & Grafana.
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID -v ZONE:$ZONE \
-    -v CLUSTER_NAME:$CLUSTER_NAME -v GCLOUD_SERVICEACCOUNT_CLIENTID:$GCLOUD_SERVICEACCOUNT_CLIENTID \
+    -v CLUSTER_NAME:$CLUSTER_NAME -v GCLOUD_SERVICEACCOUNT_CLIENTEMAIL:$GCLOUD_SERVICEACCOUNT_CLIENTEMAIL \
     -f components/prow/manifests/rbac.yaml -f components/prow/manifests/nginx-controller.yaml
 ```
 
