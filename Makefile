@@ -1,15 +1,15 @@
 PROMBENCH_CMD        = ./prombench
 DOCKER_TAG = docker.io/prombench/prombench:2.0.0
 GOLANG_IMG = golang:1.12
-PROMBENCH_DIR = /go/src/github.com/prometheus/prombench
 USERID = $(shell id -u ${USER})
 USERGROUP = $(shell id -g ${USER})
 DOCKER_CMD = docker run --rm \
 			  -e GOPATH='/go' \
 			  -e GO111MODULE='on' \
 			  -e GOCACHE='/tmp/.cache' \
+			  -v ${PWD}:/prombench \
 			  -v ${GOPATH}:/go \
-			  -w $(PROMBENCH_DIR) \
+			  -w /prombench \
 			  -u $(USERID):$(USERGROUP) \
 			  $(GOLANG_IMG)
 
