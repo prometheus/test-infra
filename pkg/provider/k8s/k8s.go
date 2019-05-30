@@ -42,8 +42,8 @@ type Resource struct {
 
 // K8s holds the fields used to generate API reqeust from within a cluster.
 type K8s struct {
-	clt       *kubernetes.Clientset
-	apiextclt *apiServerExtensionsClient.Clientset
+	clt          *kubernetes.Clientset
+	ApiExtClient *apiServerExtensionsClient.Clientset
 	// DeploymentFiles files provided from the cli.
 	DeploymentFiles []string
 	// Vaiables to subtitude in the DeploymentFiles.
@@ -73,7 +73,7 @@ func New(ctx context.Context, config *clientcmdapi.Config) (*K8s, error) {
 		return nil, errors.Wrapf(err, "k8s client error")
 	}
 
-	apiextClientset, err := apiServerExtensionsClient.NewForConfig(restConfig)
+	apiExtClientset, err := apiServerExtensionsClient.NewForConfig(restConfig)
 	if err != nil {
 		return nil, errors.Wrapf(err, "k8s api extensions client error")
 	}
@@ -81,7 +81,7 @@ func New(ctx context.Context, config *clientcmdapi.Config) (*K8s, error) {
 	return &K8s{
 		ctx:            ctx,
 		clt:            clientset,
-		apiextclt:      apiextClientset,
+		ApiExtClient:   apiExtClientset,
 		DeploymentVars: make(map[string]string),
 	}, nil
 }
@@ -442,7 +442,7 @@ func (c *K8s) customResourceApply(resource runtime.Object) error {
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1beta1":
-		client := c.apiextclt.ApiextensionsV1beta1().CustomResourceDefinitions()
+		client := c.ApiExtClient.ApiextensionsV1beta1().CustomResourceDefinitions()
 		list, err := client.List(apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
@@ -918,7 +918,7 @@ func (c *K8s) customResourceDelete(resource runtime.Object) error {
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1beta1":
-		client := c.apiextclt.ApiextensionsV1beta1().CustomResourceDefinitions()
+		client := c.ApiExtClient.ApiextensionsV1beta1().CustomResourceDefinitions()
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
