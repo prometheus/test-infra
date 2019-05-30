@@ -14,7 +14,7 @@ It is designed to support adding more k8s providers.
 Alternatively you can use the gcloud cli to create a service account:
 ```
 export PROJECT_ID=<google-cloud project-id>
-export SERVICE_ACCOUNT_NAME=<gcp-service-account-name>
+export SERVICE_ACCOUNT_NAME=<gce-service-account-name>
 
 gcloud iam service-accounts create ${SERVICE_ACCOUNT_NAME} \
   --display-name "prombench service account"
