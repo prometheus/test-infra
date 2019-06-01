@@ -226,6 +226,7 @@ data:
             - "PROJECT_ID={{ .PROJECT_ID }}"
             - "ZONE={{ .ZONE }}"
             - "CLUSTER_NAME={{ .CLUSTER_NAME }}"
+            - "DOMAIN_NAME={{ .DOMAIN_NAME }}"
             volumeMounts:
             - name: serviceaccount
               mountPath: /etc/serviceaccount/
