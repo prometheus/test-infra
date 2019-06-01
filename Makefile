@@ -28,7 +28,7 @@ nodepool_create:
 resource_apply:
 	$(PROMBENCH_CMD) gke resource apply -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
-		-v PR_NUMBER:${PR_NUMBER} -v RELEASE:${RELEASE} -v DOMAIN_NAME:prombench.prometheus.io \
+		-v PR_NUMBER:${PR_NUMBER} -v RELEASE:${RELEASE} -v DOMAIN_NAME:${DOMAIN_NAME} \
 		-f components/prombench/manifests/benchmark
 
 resource_delete:

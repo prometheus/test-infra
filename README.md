@@ -32,6 +32,7 @@ export AUTH_FILE=<path to service-account.json>
 ```
 export GCLOUD_SERVICEACCOUNT_CLIENTID=<client-id present in service-account.json>
 export GRAFANA_ADMIN_PASSWORD=password
+export DOMAIN_NAME=prombench.prometheus.io
 ```
 > The `GCLOUD_SERVICEACCOUNT_CLIENTID` is used to grant cluster-admin-rights to the service-account. This is needed to create RBAC roles on GKE.
 
@@ -40,11 +41,6 @@ export GRAFANA_ADMIN_PASSWORD=password
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID -v ZONE:$ZONE \
     -v CLUSTER_NAME:$CLUSTER_NAME -v GCLOUD_SERVICEACCOUNT_CLIENTID:$GCLOUD_SERVICEACCOUNT_CLIENTID \
     -f components/prow/manifests/rbac.yaml -f components/prow/manifests/nginx-controller.yaml
-```
-
-- Export the domain name to an environment variable
-```
-export DOMAIN_NAME=prombench.prometheus.io
 ```
 
 - Deploy Prometheus-meta & Grafana.
