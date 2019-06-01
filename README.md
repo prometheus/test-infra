@@ -11,33 +11,7 @@ It is designed to support adding more k8s providers.
 - Create a new project on Google Cloud.
 - Create a Service Account on GKE with role `Kubernetes Engine Service Agent` & `Kubernetes Engine Admin` and download the json file.
 
-Alternatively you can use the gcloud cli to create a service account:
-```
-export PROJECT_ID=<google-cloud project-id>
-export SERVICE_ACCOUNT_NAME=<gce-service-account-name>
-
-gcloud iam service-accounts create ${SERVICE_ACCOUNT_NAME} \
-  --display-name "prombench service account"
-```
-
-Add the `roles/container.admin` and `roles/iam.serviceAccountUser` roles to the GKE serviceAccount:
-
-```
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
-  --member="serviceAccount:${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com" \
-  --role='roles/container.admin'
-
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
-  --member="serviceAccount:${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com" \
-  --role='roles/iam.serviceAccountUser'
-```
-
-Get the serviceAccount key:
-```
-gcloud iam service-accounts keys create \
-  --iam-account "${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com" \
-  service-account.json
-```
+Alternatively you can use the gcloud cli to create a service account, make sure to add the [`roles/container.admin`](https://cloud.google.com/kubernetes-engine/docs/how-to/iam#kubernetes-engine-roles) and [`roles/iam.serviceAccountUser`](https://cloud.google.com/kubernetes-engine/docs/how-to/iam#service_account_user) roles to the GCE serviceAccount.
 
 - Set the following environment variables & deploy cluster.
 ```
