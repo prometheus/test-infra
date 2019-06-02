@@ -1,3 +1,5 @@
+include Makefile.common
+
 PROMBENCH_CMD        = ./prombench
 
 ifeq ($(AUTH_FILE),)
