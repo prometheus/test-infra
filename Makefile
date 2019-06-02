@@ -33,37 +33,37 @@ nodepool_delete:
 		-f manifests/prombench/nodepools.yaml
 
 .PHONY: docker-prombench-build docker-prombench-tag-latest docker-prombench-publish
-docker-prombench-build: DOCKER_IMAGE_TAG=prombench
+docker-prombench-build: DOCKER_IMAGE_NAME=prombench
 docker-prombench-build: DOCKERFILE_PATH=./
 docker-prombench-build: docker
-docker-prombench-tag-latest: DOCKER_IMAGE_TAG=prombench
+docker-prombench-tag-latest: DOCKER_IMAGE_NAME=prombench
 docker-prombench-tag-latest: docker-tag-latest
-docker-prombench-publish: DOCKER_IMAGE_TAG=prombench
+docker-prombench-publish: DOCKER_IMAGE_NAME=prombench
 docker-prombench-publish: docker-publish
 
 .PHONY: docker-fake-webserver-build docker-fake-webserver-tag-latest docker-fake-webserver-publish
-docker-fake-webserver-build: DOCKER_IMAGE_TAG=fake-webserver
+docker-fake-webserver-build: DOCKER_IMAGE_NAME=fake-webserver
 docker-fake-webserver-build: DOCKERFILE_PATH=./cmd/fake-webserver/
 docker-fake-webserver-build: docker
-docker-fake-webserver-tag-latest: DOCKER_IMAGE_TAG=fake-webserver
+docker-fake-webserver-tag-latest: DOCKER_IMAGE_NAME=fake-webserver
 docker-fake-webserver-tag-latest: docker-tag-latest
-docker-fake-webserver-publish: DOCKER_IMAGE_TAG=fake-webserver
+docker-fake-webserver-publish: DOCKER_IMAGE_NAME=fake-webserver
 docker-fake-webserver-publish: docker-publish
 
 .PHONY: docker-scaler-build docker-scaler-tag-latest docker-scaler-publish
-docker-scaler-build: DOCKER_IMAGE_TAG=scaler
+docker-scaler-build: DOCKER_IMAGE_NAME=scaler
 docker-scaler-build: DOCKERFILE_PATH=./cmd/scaler/
 docker-scaler-build: docker
-docker-scaler-tag-latest: DOCKER_IMAGE_TAG=scaler
+docker-scaler-tag-latest: DOCKER_IMAGE_NAME=scaler
 docker-scaler-tag-latest: docker-tag-latest
-docker-scaler-publish: DOCKER_IMAGE_TAG=scaler
+docker-scaler-publish: DOCKER_IMAGE_NAME=scaler
 docker-scaler-publish: docker-publish
 
 .PHONY: docker-prometheus-builder-build docker-prometheus-builder-tag-latest docker-prometheus-builder-publish
-docker-prometheus-builder-build: DOCKER_IMAGE_TAG=scaler
+docker-prometheus-builder-build: DOCKER_IMAGE_NAME=scaler
 docker-prometheus-builder-build: DOCKERFILE_PATH=./cmd/scaler/
 docker-prometheus-builder-build: docker
-docker-prometheus-builder-tag-latest: DOCKER_IMAGE_TAG=scaler
+docker-prometheus-builder-tag-latest: DOCKER_IMAGE_NAME=scaler
 docker-prometheus-builder-tag-latest: docker-tag-latest
-docker-prometheus-builder-publish: DOCKER_IMAGE_TAG=scaler
+docker-prometheus-builder-publish: DOCKER_IMAGE_NAME=scaler
 docker-prometheus-builder-publish: docker-publish
