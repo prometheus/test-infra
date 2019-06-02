@@ -30,15 +30,15 @@ export AUTH_FILE=<path to service-account.json>
 
 - Set the following environment variables
 ```
-export GCLOUD_SERVICEACCOUNT_CLIENTID=<client-id present in service-account.json>
+export GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL=<client-email present in service-account.json>
 export GRAFANA_ADMIN_PASSWORD=password
 ```
-> The `GCLOUD_SERVICEACCOUNT_CLIENTID` is used to grant cluster-admin-rights to the service-account. This is needed to create RBAC roles on GKE.
+> The `GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL` is used to grant cluster-admin-rights to the service-account. This is needed to create RBAC roles on GKE.
 
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx) which will be used to access Prometheus-Meta & Grafana.
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID -v ZONE:$ZONE \
-    -v CLUSTER_NAME:$CLUSTER_NAME -v GCLOUD_SERVICEACCOUNT_CLIENTID:$GCLOUD_SERVICEACCOUNT_CLIENTID \
+    -v CLUSTER_NAME:$CLUSTER_NAME -v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:$GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL \
     -f components/prow/manifests/rbac.yaml -f components/prow/manifests/nginx-controller.yaml
 ```
 
@@ -134,11 +134,10 @@ export OAUTH_TOKEN=***Replace with the generated token from github***
 
 - Deploy all internal prow components
 
-> Long term plans are to use the [prombench cli tool](cmd/prombench) to deploy and manage everything, but at the moment `CustomResourceDefinition` is WIP in the k8s golang client library. So we use `kubectl` to deploy CRD.
 ```
-// Generate auth config so we can use kubectl.
-gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE
-kubectl apply -f components/prow/manifests/prow_internals_1.yaml
+./prombench gke resource apply -a ${AUTH_FILE} -v PROJECT_ID:${PROJECT_ID} \
+    -v ZONE:${ZONE} -v CLUSTER_NAME:${CLUSTER_NAME} \
+    -f components/prow/manifests/prow_internals_1.yaml
 
 export GITHUB_ORG=prometheus
 export GITHUB_REPO=prometheus
