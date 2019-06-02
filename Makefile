@@ -60,10 +60,10 @@ docker-scaler-publish: DOCKER_IMAGE_NAME=scaler
 docker-scaler-publish: docker-publish
 
 .PHONY: docker-prometheus-builder-build docker-prometheus-builder-tag-latest docker-prometheus-builder-publish
-docker-prometheus-builder-build: DOCKER_IMAGE_NAME=scaler
-docker-prometheus-builder-build: DOCKERFILE_PATH=./cmd/scaler/
+docker-prometheus-builder-build: DOCKER_IMAGE_NAME=prometheus-builder
+docker-prometheus-builder-build: DOCKERFILE_PATH=./temp/prometheus-builder/
 docker-prometheus-builder-build: docker
-docker-prometheus-builder-tag-latest: DOCKER_IMAGE_NAME=scaler
+docker-prometheus-builder-tag-latest: DOCKER_IMAGE_NAME=prometheus-builder
 docker-prometheus-builder-tag-latest: docker-tag-latest
-docker-prometheus-builder-publish: DOCKER_IMAGE_NAME=scaler
+docker-prometheus-builder-publish: DOCKER_IMAGE_NAME=prometheus-builder
 docker-prometheus-builder-publish: docker-publish
