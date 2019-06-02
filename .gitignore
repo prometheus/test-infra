@@ -1,0 +1,9 @@
+*#
+/*.yaml
+*.exe
+tags
+
+prombench
+cmd/fake-webserver/fake-webserver
+cmd/scaler/scaler
+env*

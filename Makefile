@@ -1,22 +1,10 @@
 PROMBENCH_CMD        = ./prombench
-DOCKER_TAG = docker.io/prombench/prombench:2.0.1
-GOLANG_IMG = golang:1.12
-USERID = $(shell id -u ${USER})
-USERGROUP = $(shell id -g ${USER})
-DOCKER_CMD = docker run --rm \
-			  -e GOPATH='/go' \
-			  -e GO111MODULE='on' \
-			  -e GOCACHE='/tmp/.cache' \
-			  -v ${PWD}:/prombench \
-			  -v ${GOPATH}:/go \
-			  -w /prombench \
-			  -u $(USERID):$(USERGROUP) \
-			  $(GOLANG_IMG)
 
 ifeq ($(AUTH_FILE),)
 AUTH_FILE = "/etc/serviceaccount/service-account.json"
 endif
 
+.PHONY: deploy clean
 deploy: nodepool_create resource_apply
 clean: resource_delete nodepool_delete
 
@@ -42,11 +30,38 @@ nodepool_delete:
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
 		-f manifests/prombench/nodepools.yaml
 
-build:
-	@$(DOCKER_CMD) go build ./cmd/prombench/
+.PHONY: docker-prombench-build docker-prombench-tag-latest docker-prombench-publish
+docker-prombench-build: DOCKER_IMAGE_TAG=prombench
+docker-prombench-build: DOCKERFILE_PATH=./
+docker-prombench-build: docker
+docker-prombench-tag-latest: DOCKER_IMAGE_TAG=prombench
+docker-prombench-tag-latest: docker-tag-latest
+docker-prombench-publish: DOCKER_IMAGE_TAG=prombench
+docker-prombench-publish: docker-publish
 
-docker: build
-	@docker build -t $(DOCKER_TAG) .
-	@docker push $(DOCKER_TAG)
+.PHONY: docker-fake-webserver-build docker-fake-webserver-tag-latest docker-fake-webserver-publish
+docker-fake-webserver-build: DOCKER_IMAGE_TAG=fake-webserver
+docker-fake-webserver-build: DOCKERFILE_PATH=./cmd/fake-webserver/
+docker-fake-webserver-build: docker
+docker-fake-webserver-tag-latest: DOCKER_IMAGE_TAG=fake-webserver
+docker-fake-webserver-tag-latest: docker-tag-latest
+docker-fake-webserver-publish: DOCKER_IMAGE_TAG=fake-webserver
+docker-fake-webserver-publish: docker-publish
 
-.PHONY: deploy clean build docker
+.PHONY: docker-scaler-build docker-scaler-tag-latest docker-scaler-publish
+docker-scaler-build: DOCKER_IMAGE_TAG=scaler
+docker-scaler-build: DOCKERFILE_PATH=./cmd/scaler/
+docker-scaler-build: docker
+docker-scaler-tag-latest: DOCKER_IMAGE_TAG=scaler
+docker-scaler-tag-latest: docker-tag-latest
+docker-scaler-publish: DOCKER_IMAGE_TAG=scaler
+docker-scaler-publish: docker-publish
+
+.PHONY: docker-prometheus-builder-build docker-prometheus-builder-tag-latest docker-prometheus-builder-publish
+docker-prometheus-builder-build: DOCKER_IMAGE_TAG=scaler
+docker-prometheus-builder-build: DOCKERFILE_PATH=./cmd/scaler/
+docker-prometheus-builder-build: docker
+docker-prometheus-builder-tag-latest: DOCKER_IMAGE_TAG=scaler
+docker-prometheus-builder-tag-latest: docker-tag-latest
+docker-prometheus-builder-publish: DOCKER_IMAGE_TAG=scaler
+docker-prometheus-builder-publish: docker-publish
