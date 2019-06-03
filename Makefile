@@ -1,5 +1,5 @@
 PROMBENCH_CMD        = ./prombench
-DOCKER_TAG = docker.io/prombench/prombench:2.0.0
+DOCKER_TAG = docker.io/prombench/prombench:2.0.1
 GOLANG_IMG = golang:1.12
 USERID = $(shell id -u ${USER})
 USERGROUP = $(shell id -g ${USER})
