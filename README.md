@@ -32,6 +32,7 @@ export AUTH_FILE=<path to service-account.json>
 ```
 export GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL=<client-email present in service-account.json>
 export GRAFANA_ADMIN_PASSWORD=password
+export DOMAIN_NAME=prombench.prometheus.io
 ```
 > The `GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL` is used to grant cluster-admin-rights to the service-account. This is needed to create RBAC roles on GKE.
 
@@ -42,26 +43,17 @@ export GRAFANA_ADMIN_PASSWORD=password
     -f components/prow/manifests/rbac.yaml -f components/prow/manifests/nginx-controller.yaml
 ```
 
-- Export the nginx-ingress-controller IP address.
-```
-// Generate auth config so we can use kubectl.
-gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE --project=$PROJECT_ID
-
-kubectl get ingress ing -o go-template='{{ range .status.loadBalancer.ingress}}{{.ip}}{{ end }}'
-
-export INGRESS_IP=$(kubectl get ingress ing -o go-template='{{ range .status.loadBalancer.ingress}}{{.ip}}{{ end }}')
-```
-
 - Deploy Prometheus-meta & Grafana.
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
-    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v INGRESS_IP:$INGRESS_IP \
-    -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD -f components/prombench/manifests/results
+    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
+    -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
+    -f components/prombench/manifests/results
 ```
 
 - The services will be accessible at:
-  * Grafana :: http://<INGRESS_IP>/grafana
-  * Prometheus :: http://<INGRESS_IP>/prometheus-meta
+  * Grafana :: http://<DOMAIN_NAME>/grafana
+  * Prometheus :: http://<DOMAIN_NAME>/prometheus-meta
 
 ### Start a test
 ---
@@ -74,16 +66,16 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 
 - Create the nodepools for the k8s objects
 ```
-./prombench gke nodepool create -a ${AUTH_FILE} \
-    -v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
-    -v PR_NUMBER:${PR_NUMBER} -f components/prombench/nodepools.yaml
+./prombench gke nodepool create -a $AUTH_FILE \
+    -v ZONE:$ZONE -v PROJECT_ID:$PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
+    -v PR_NUMBER:$PR_NUMBER -f components/prombench/nodepools.yaml
 ```
 
 - Deploy the k8s objects
 ```
-./prombench gke resource apply -a ${AUTH_FILE} \
-    -v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
-    -v PR_NUMBER:${PR_NUMBER} -v RELEASE:${RELEASE} \
+./prombench gke resource apply -a $AUTH_FILE \
+    -v ZONE:$ZONE -v PROJECT_ID:$PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
+    -v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v DOMAIN_NAME:$DOMAIN_NAME \
     -f components/prombench/manifests/benchmark
 ```
 
@@ -125,7 +117,8 @@ export OAUTH_TOKEN=***Replace with the generated token from github***
   * oauth is used when sending requests to the GitHub api.
   * gke auth is used when scaling up and down the cluster.
 ```
-./prombench gke resource apply -a $AUTH_FILE -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME \
+./prombench gke resource apply -a $AUTH_FILE -v ZONE:$ZONE \
+    -v CLUSTER_NAME:$CLUSTER_NAME -v PROJECT_ID:$PROJECT_ID \
     -f components/prow/manifests/secrets.yaml \
     -v HMAC_TOKEN="$(printf $HMAC_TOKEN | base64 -w 0)" \
     -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
@@ -143,7 +136,7 @@ export GITHUB_ORG=prometheus
 export GITHUB_REPO=prometheus
 
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
-    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME \
+    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
     -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
     -f components/prow/manifests/prow_internals_2.yaml
 ```
