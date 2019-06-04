@@ -188,7 +188,7 @@ metadata:
 data:
   config.yaml: |
     plank:
-      job_url_template: 'http://prombench.prometheus.io/log?job={{"{{"}}.Spec.Job{{"}}"}}&id={{"{{"}}.Status.BuildID{{"}}"}}'
+      job_url_template: 'http://{{ .DOMAIN_NAME }}/log?job={{"{{"}}.Spec.Job{{"}}"}}&id={{"{{"}}.Status.BuildID{{"}}"}}'
       pod_pending_timeout: 60m
       default_decoration_config:
         timeout: 7200000000000 # 2h
@@ -226,6 +226,7 @@ data:
             - "PROJECT_ID={{ .PROJECT_ID }}"
             - "ZONE={{ .ZONE }}"
             - "CLUSTER_NAME={{ .CLUSTER_NAME }}"
+            - "DOMAIN_NAME={{ .DOMAIN_NAME }}"
             volumeMounts:
             - name: serviceaccount
               mountPath: /etc/serviceaccount/
