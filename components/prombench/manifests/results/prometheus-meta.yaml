@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: prometeus-meta
+  name: prometheus-meta
 spec:
   accessModes:
     - ReadWriteOnce
@@ -148,7 +148,7 @@ spec:
           name: prometheus-meta
       - name: data
         persistentVolumeClaim:
-          claimName: prometeus-meta
+          claimName: prometheus-meta
       terminationGracePeriodSeconds: 300
       nodeSelector:
         cloud.google.com/gke-nodepool: prow
