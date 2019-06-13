@@ -5,6 +5,7 @@ go 1.12
 require (
 	cloud.google.com/go v0.39.0
 	github.com/gogo/protobuf v1.2.1 // indirect
+	github.com/google/go-github/v26 v26.0.2 // indirect
 	github.com/google/gofuzz v1.0.0 // indirect
 	github.com/googleapis/gnostic v0.2.0 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
