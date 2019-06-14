@@ -91,3 +91,23 @@ spec:
   selector:
     app: grafana
     component: core
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-grafana
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    # rewrite-target is required for grafana to work properly in subpath
+    # TODO: remove after upgrading grafana : https://github.com/grafana/grafana/pull/17048
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: grafana
+          servicePort: grafana-web
+        path: /grafana(/|$)(.*)
