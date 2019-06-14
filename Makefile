@@ -36,7 +36,7 @@ nodepool_delete:
 
 .PHONY: docker-prombench-build docker-prombench-tag-latest docker-prombench-publish
 docker-prombench-build: DOCKER_IMAGE_NAME=prombench
-docker-prombench-build: DOCKERFILE_PATH=./
+docker-prombench-build: DOCKERFILE_PATH=./cmd/prombench/Dockerfile
 docker-prombench-build: docker
 docker-prombench-tag-latest: DOCKER_IMAGE_NAME=prombench
 docker-prombench-tag-latest: docker-tag-latest
@@ -45,7 +45,7 @@ docker-prombench-publish: docker-publish
 
 .PHONY: docker-fake-webserver-build docker-fake-webserver-tag-latest docker-fake-webserver-publish
 docker-fake-webserver-build: DOCKER_IMAGE_NAME=fake-webserver
-docker-fake-webserver-build: DOCKERFILE_PATH=./cmd/fake-webserver/
+docker-fake-webserver-build: DOCKERFILE_PATH=./cmd/fake-webserver/Dockerfile
 docker-fake-webserver-build: docker
 docker-fake-webserver-tag-latest: DOCKER_IMAGE_NAME=fake-webserver
 docker-fake-webserver-tag-latest: docker-tag-latest
@@ -54,7 +54,7 @@ docker-fake-webserver-publish: docker-publish
 
 .PHONY: docker-scaler-build docker-scaler-tag-latest docker-scaler-publish
 docker-scaler-build: DOCKER_IMAGE_NAME=scaler
-docker-scaler-build: DOCKERFILE_PATH=./cmd/scaler/
+docker-scaler-build: DOCKERFILE_PATH=./cmd/scaler/Dockerfile
 docker-scaler-build: docker
 docker-scaler-tag-latest: DOCKER_IMAGE_NAME=scaler
 docker-scaler-tag-latest: docker-tag-latest
@@ -63,7 +63,8 @@ docker-scaler-publish: docker-publish
 
 .PHONY: docker-prometheus-builder-build docker-prometheus-builder-tag-latest docker-prometheus-builder-publish
 docker-prometheus-builder-build: DOCKER_IMAGE_NAME=prometheus-builder
-docker-prometheus-builder-build: DOCKERFILE_PATH=./temp/prometheus-builder/
+docker-prometheus-builder-build: DOCKERFILE_PATH=./temp/prometheus-builder/Dockerfile
+docker-prometheus-builder-build: DOCKERBUILD_CONTEXT=./temp/prometheus-builder/
 docker-prometheus-builder-build: docker
 docker-prometheus-builder-tag-latest: DOCKER_IMAGE_NAME=prometheus-builder
 docker-prometheus-builder-tag-latest: docker-tag-latest
