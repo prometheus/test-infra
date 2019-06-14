@@ -9,8 +9,7 @@ It is designed to support adding more k8s providers.
 ### Create a k8s cluster
 ---
 - Create a new project on Google Cloud.
-
-- Create a Service Account on GKE with role `Kubernetes Engine Service Agent` & `Kubernetes Engine Admin` and download the json file.
+- Create a [Service Account](https://cloud.google.com/iam/docs/creating-managing-service-accounts) on GKE with role `Kubernetes Engine Service Agent` & `Kubernetes Engine Admin`. If using gcloud cli add the [`roles/container.admin`](https://cloud.google.com/kubernetes-engine/docs/how-to/iam#kubernetes-engine-roles) and [`roles/iam.serviceAccountUser`](https://cloud.google.com/kubernetes-engine/docs/how-to/iam#service_account_user) roles to the GCP serviceAccount and download the json file.
 
 - Set the following environment variables & deploy cluster.
 ```
