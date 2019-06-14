@@ -1,0 +1,30 @@
+#When Grafana starts, it will update/insert this datasource.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+data:
+  prometheus-datasource.yaml: |
+    apiVersion: 1
+
+    deleteDatasources:
+      - name: prometheus-meta
+        orgId: 1
+
+    datasources:
+    - name: prometheus-meta
+      type: prometheus
+      access: proxy
+      orgId: 1
+      url: http://{{ .DOMAIN_NAME }}/prometheus-meta/
+      isDefault: true
+      jsonData:
+         graphiteVersion: "1.1"
+         tlsAuth: false
+         tlsAuthWithCACert: false
+      secureJsonData:
+        tlsCACert: "..."
+        tlsClientCert: "..."
+        tlsClientKey: "..."
+      version: 1
+      editable: true

@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fake-webserver-config-for-scaler
+  namespace: prombench-{{ .PR_NUMBER }}
+data:
+  webserver.yaml: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: fake-webserver
+      namespace: prombench-{{ .PR_NUMBER }}
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: fake-webserver
+      template:
+        metadata:
+          namespace: prombench-{{ .PR_NUMBER }}
+          labels:
+            app: fake-webserver
+        spec:
+          containers:
+          - name: fake-webserver
+            image: docker.io/prombench/fake-webserver:2.0.0
+            ports:
+            - name: metrics1
+              containerPort: 8080
+            - name: metrics2
+              containerPort: 8081
+            - name: metrics3
+              containerPort: 8082
+            - name: metrics4
+              containerPort: 8083
+            - name: metrics5
+              containerPort: 8084
+          nodeSelector:
+            cloud.google.com/gke-nodepool: nodes-{{ .PR_NUMBER }}
+            isolation: none
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fake-webserver
+  namespace: prombench-{{ .PR_NUMBER }}  
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fake-webserver
+  template:
+    metadata:
+      namespace: prombench-{{ .PR_NUMBER }}
+      labels:
+        app: fake-webserver
+    spec:
+      containers:
+      - name: fake-webserver
+        image: docker.io/prombench/fake-webserver:2.0.0
+        ports:
+        - name: metrics1
+          containerPort: 8080
+        - name: metrics2
+          containerPort: 8081
+        - name: metrics3
+          containerPort: 8082
+        - name: metrics4
+          containerPort: 8083
+        - name: metrics5
+          containerPort: 8084
+      nodeSelector:
+        cloud.google.com/gke-nodepool: nodes-{{ .PR_NUMBER }}
+        isolation: none
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fake-webserver
+  namespace: prombench-{{ .PR_NUMBER }}
+  labels:
+    app: fake-webserver
+    monitored: "true"
+spec:
+  ports:
+  - name: metrics1
+    port: 8080
+    targetPort: metrics1
+  - name: metrics2
+    port: 8081
+    targetPort: metrics2
+  - name: metrics3
+    port: 8082
+    targetPort: metrics3
+  - name: metrics4
+    port: 8083
+    targetPort: metrics4
+  - name: metrics5
+    port: 8084
+    targetPort: metrics5
+  selector:
+    app: fake-webserver

@@ -1,6 +1,0 @@
-#A new namespace is created to differentiate the instances of prombench
-#A PR can just have 1 prombench-instance associated with it
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: prombench-{{ .PR_NUMBER }}

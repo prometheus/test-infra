@@ -19,7 +19,7 @@ export ZONE=us-east1-b
 export AUTH_FILE=<path to service-account.json>
 
 ./prombench gke cluster create -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
-    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -f components/prow/cluster.yaml
+    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -f manifests/cluster.yaml
 ```
 
 ### Deploy Prometheus-Meta & Grafana
@@ -39,15 +39,17 @@ export DOMAIN_NAME=prombench.prometheus.io
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID -v ZONE:$ZONE \
     -v CLUSTER_NAME:$CLUSTER_NAME -v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:$GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL \
-    -f components/prow/manifests/rbac.yaml -f components/prow/manifests/nginx-controller.yaml
+    -f manifests/cluster-wide
 ```
+
+This will be good time to set the A record for `<DOMAIN_NAME>` to the nginx-ingress-controller IP address. See [Deploy Prometheus-Meta & Grafana](#deploy-prometheus-meta--grafana-1).
 
 - Deploy Prometheus-meta & Grafana.
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
     -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
     -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
-    -f components/prombench/manifests/results
+    -f manifests/dashboard
 ```
 
 - The services will be accessible at:
@@ -67,7 +69,7 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 ```
 ./prombench gke nodepool create -a $AUTH_FILE \
     -v ZONE:$ZONE -v PROJECT_ID:$PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
-    -v PR_NUMBER:$PR_NUMBER -f components/prombench/nodepools.yaml
+    -v PR_NUMBER:$PR_NUMBER -f manifests/prombench/nodepools.yaml
 ```
 
 - Deploy the k8s objects
@@ -75,7 +77,7 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 ./prombench gke resource apply -a $AUTH_FILE \
     -v ZONE:$ZONE -v PROJECT_ID:$PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
     -v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v DOMAIN_NAME:$DOMAIN_NAME \
-    -f components/prombench/manifests/benchmark
+    -f manifests/prombench/benchmark
 ```
 
 ## Triggered tests by GitHub comments
@@ -118,26 +120,22 @@ export OAUTH_TOKEN=***Replace with the generated token from github***
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v ZONE:$ZONE \
     -v CLUSTER_NAME:$CLUSTER_NAME -v PROJECT_ID:$PROJECT_ID \
-    -f components/prow/manifests/secrets.yaml \
     -v HMAC_TOKEN="$(printf $HMAC_TOKEN | base64 -w 0)" \
     -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
-    -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)"
+    -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)" \
+    -f manifests/prow/secrets.yaml
 ```
 
 - Deploy all internal prow components
 
 ```
-./prombench gke resource apply -a ${AUTH_FILE} -v PROJECT_ID:${PROJECT_ID} \
-    -v ZONE:${ZONE} -v CLUSTER_NAME:${CLUSTER_NAME} \
-    -f components/prow/manifests/prow_internals_1.yaml
-
 export GITHUB_ORG=prometheus
 export GITHUB_REPO=prometheus
 
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
     -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
     -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
-    -f components/prow/manifests/prow_internals_2.yaml
+    -f manifests/prow/components
 ```
 
 ### Deploy Prometheus-Meta & Grafana

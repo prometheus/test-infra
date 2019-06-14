@@ -11,9 +11,8 @@ RUN \
 
 RUN mkdir -p /prombench/components/prombench/manifests
 
-COPY prombench /prombench/prombench
-COPY Makefile /prombench/Makefile
-COPY components/prombench/nodepools.yaml /prombench/components/prombench/nodepools.yaml
-COPY components/prombench/manifests/benchmark /prombench/components/prombench/manifests/benchmark
+COPY prombench /prombench
+COPY Makefile /Makefile
+COPY manifests/prombench /manifests/prombench
 
 WORKDIR /prombench
