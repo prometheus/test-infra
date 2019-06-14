@@ -495,3 +495,43 @@ spec:
           name: config
       nodeSelector:
         cloud.google.com/gke-nodepool: prow
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ing
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: deck
+          servicePort: http
+      - path: /pr
+        backend:
+          serviceName: deck
+          servicePort: http
+      - path: /command-help
+        backend:
+          serviceName: deck
+          servicePort: http
+      - path: /tide
+        backend:
+          serviceName: deck
+          servicePort: http
+      - path: /plugins
+        backend:
+          serviceName: deck
+          servicePort: http
+      - path: /log
+        backend:
+          serviceName: deck
+          servicePort: http
+      - path: /hook
+        backend:
+          serviceName: hook
+          servicePort: http
