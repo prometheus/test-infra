@@ -2,14 +2,6 @@
 
 This tool uses [k8s provider](../../pkg/provider/k8s) to scale a deployment up and down periodically, from within a k8s cluster.
 
-## Build
-The project uses [go modules](https://github.com/golang/go/wiki/Modules) so it requires go with support for modules.
-
-```
-go build scaler.go
-// reads go.mod from the project root and downloads all dependancies.
-```
-
 ## RBAC Roles
 The container running this tool should have the following RBAC configuration.
 ```
