@@ -91,3 +91,22 @@ spec:
   selector:
     app: grafana
     component: core
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-grafana
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    # see https://kubernetes.github.io/ingress-nginx/examples/rewrite/#rewrite-target
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: grafana
+          servicePort: grafana-web
+        path: /grafana(/|$)(.*)
