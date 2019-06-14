@@ -18,7 +18,7 @@ var writepath string
 func writeArgs(groups []string) {
 	for i, group := range groups[1:] {
 		data := []byte(group)
-		filename := fmt.Sprintf("ARG%d", i)
+		filename := fmt.Sprintf("ARG_%d", i)
 		err := ioutil.WriteFile(filepath.Join(writepath, filename), data, 0644)
 		if err != nil {
 			log.Fatalln(err)
