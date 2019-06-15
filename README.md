@@ -35,26 +35,14 @@ export DOMAIN_NAME=prombench.prometheus.io
 ```
 > The `GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL` is used to grant cluster-admin-rights to the service-account. This is needed to create RBAC roles on GKE.
 
-- Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx) which will be used to access Prometheus-Meta & Grafana.
+- Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta & Grafana.
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID -v ZONE:$ZONE \
-    -v CLUSTER_NAME:$CLUSTER_NAME -v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:$GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL \
+    -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
+    -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
+    -v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:$GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL \
     -f manifests/cluster-wide
 ```
-
-This will be good time to set the A record for `<DOMAIN_NAME>` to the nginx-ingress-controller IP address. See [Deploy Prometheus-Meta & Grafana](#deploy-prometheus-meta--grafana-1).
-
-- Deploy Prometheus-meta & Grafana.
-```
-./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
-    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
-    -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
-    -f manifests/dashboard
-```
-
-- The services will be accessible at:
-  * Grafana :: http://<DOMAIN_NAME>/grafana
-  * Prometheus :: http://<DOMAIN_NAME>/prometheus-meta
 
 ### Start a test
 ---
