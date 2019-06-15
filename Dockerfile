@@ -9,10 +9,8 @@ RUN \
         make \
 	&& rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /prombench/components/prombench/manifests
-
-COPY prombench /prombench
-COPY Makefile /Makefile
-COPY manifests/prombench /manifests/prombench
+COPY prombench /prombench/prombench
+COPY Makefile /prombench/Makefile
+COPY manifests/prombench /prombench/manifests/prombench
 
 WORKDIR /prombench
