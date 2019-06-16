@@ -33,7 +33,6 @@ export GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL=<client-email present in service-accou
 export GRAFANA_ADMIN_PASSWORD=password
 export DOMAIN_NAME=prombench.prometheus.io
 ```
-> The `GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL` is used to grant cluster-admin-rights to the service-account. This is needed to create RBAC roles on GKE.
 
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta & Grafana.
 ```
