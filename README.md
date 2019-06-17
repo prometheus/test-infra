@@ -5,13 +5,6 @@
 It runs with [Prow CI](https://github.com/kubernetes/test-infra/blob/master/prow/) on a [Google Kubernetes Engine Cluster](https://cloud.google.com/kubernetes-engine/).
 It is designed to support adding more k8s providers.
 
-## Overview of the manifest files
-The `/manifest` directory contains all the kubernetes manifest files.
-- `cluster.yaml` : This is used to create the GKE cluster.
-- `cluster-wide/` : These are the persistent k8s resources.
-- `prombench/` : These resources are created and destoryed for each prombench test.
-- `prow/` : Resources for deploying [prow](https://github.com/kubernetes/test-infra/tree/master/prow/), which helps in triggering the tests from GitHub.
-
 ## Setting up the test-infra
 ### Create a k8s cluster
 ---
@@ -38,7 +31,7 @@ export AUTH_FILE=<path to service-account.json>
 ```
 export GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL=<client-email present in service-account.json>
 export GRAFANA_ADMIN_PASSWORD=password
-export DOMAIN_NAME=prombench.prometheus.io
+export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom domain.
 ```
 
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta & Grafana.
@@ -47,14 +40,13 @@ export DOMAIN_NAME=prombench.prometheus.io
     -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
     -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
     -v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:$GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL \
-    -f manifests/cluster-wide
+    -f manifests/cluster-infra
 ```
-- Get the `nginx-ingress-controller IP address` from the logs of this command, alternatively you can get it from the GKE/Services tab.
-- Set the `A record` for `<DOMAIN_NAME>` to point to `nginx-ingress-controller IP address`, it can be any domain/subdomain.
+- The output will show the ingress IP which will be used to point the domain name to. Alternatively you can see it from the GKE/Services tab.
+- Set the `A record` for `<DOMAIN_NAME>` to point to `nginx-ingress-controller` IP address.
 - The services will be accessible at:
   * Grafana :: `http://<DOMAIN_NAME>/grafana`
   * Prometheus ::  `http://<DOMAIN_NAME>/prometheus-meta`
-  * Prow dashboard :: `http://<DOMAIN_NAME>` (once [deploying prow](#deploy-prow) is completed)
 
 ### Deploy Prow
 > This is used to monitor GitHub comments and starts new tests.
@@ -88,6 +80,8 @@ export GITHUB_REPO=prometheus
     -f manifests/prow/components
 ```
 
+* Prow dashboard will be accessible at :: `http://<DOMAIN_NAME>`
+
 ## Usage
 ### Start a benchmarking test manually
 ---
@@ -113,7 +107,7 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
     -f manifests/prombench/benchmark
 ```
 
-### Setting up GitHub API and webhook
+### Setting up GitHub API and webhook to trigger tests from comments.
 ---
 
 - Generate a GitHub auth token that will be used to authenticate when sending requests to the GitHub api.
