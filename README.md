@@ -5,7 +5,14 @@
 It runs with [Prow CI](https://github.com/kubernetes/test-infra/blob/master/prow/) on a [Google Kubernetes Engine Cluster](https://cloud.google.com/kubernetes-engine/).
 It is designed to support adding more k8s providers.
 
-## Run tests manually
+## Overview of the manifest files
+The `/manifest` directory contains all the kubernetes manifest files.
+- `cluster.yaml` : This is used to create the GKE cluster.
+- `cluster-wide/` : These are the persistent k8s resources.
+- `prombench/` : These resources are created and destoryed for each prombench test.
+- `prow/` : Resources for deploying [prow](https://github.com/kubernetes/test-infra/tree/master/prow/), which helps in triggering the tests from GitHub.
+
+## Setting up the test-infra
 ### Create a k8s cluster
 ---
 - Create a new project on Google Cloud.
@@ -42,63 +49,19 @@ export DOMAIN_NAME=prombench.prometheus.io
     -v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:$GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL \
     -f manifests/cluster-wide
 ```
-
-### Start a test
----
-
-- Set the following environment variables.
-```
-export RELEASE=<master or any prometheus release(ex: v2.3.0) >
-export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
-```
-
-- Create the nodepools for the k8s objects
-```
-./prombench gke nodepool create -a $AUTH_FILE \
-    -v ZONE:$ZONE -v PROJECT_ID:$PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
-    -v PR_NUMBER:$PR_NUMBER -f manifests/prombench/nodepools.yaml
-```
-
-- Deploy the k8s objects
-```
-./prombench gke resource apply -a $AUTH_FILE \
-    -v ZONE:$ZONE -v PROJECT_ID:$PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
-    -v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v DOMAIN_NAME:$DOMAIN_NAME \
-    -f manifests/prombench/benchmark
-```
-
-## Triggered tests by GitHub comments
-
-### Create a k8s cluster
----
-
-- Follow the steps mentioned in the [Create a k8s cluster](#create-a-k8s-cluster) in the manual setup.
-
-### Setup the GitHub API
----
-
-- Generate a GitHub auth token that will be used to authenticate when sending requests to the GitHub api.
-  * Login with the [Prombot account](https://github.com/prombot) and generate a [new auth token](https://github.com/settings/tokens).  
-  permissions:*public_repo, read:org, write:discussion*.
-
-- Set the following environment variables
-```
-export HMAC_TOKEN=$(openssl rand -hex 20)
-export OAUTH_TOKEN=***Replace with the generated token from github***
-```
-
-- Add a [github webhook](https://github.com/prometheus/prometheus/settings/hooks) where to send the events.
-  * Content Type: `json`
-  * Send:  `Issue comments,Pull requests`
-  * Secret: `echo $HMAC_TOKEN`
-  * Payload URL: `http://prombench.prometheus.io/hook`
-
-    * **Note:** The IP DNS record for `prombench.prometheus.io` will be added once we get it from the ingress deployment.
+- Get the `nginx-ingress-controller IP address` from the logs of this command, alternatively you can get it from the GKE/Services tab.
+- Set the `A record` for `<DOMAIN_NAME>` to point to `nginx-ingress-controller IP address`, it can be any domain/subdomain.
+- The services will be accessible at:
+  * Grafana :: `http://<DOMAIN_NAME>/grafana`
+  * Prometheus ::  `http://<DOMAIN_NAME>/prometheus-meta`
+  * Prow dashboard :: `http://<DOMAIN_NAME>` (once [deploying prow](#deploy-prow) is completed)
 
 ### Deploy Prow
 > This is used to monitor GitHub comments and starts new tests.
 
 ---
+
+- Follow [Setting GitHub API and webhook](#setting-up-github-api-and-webhook)
 
 - Add all required tokens as k8s secrets.
   * hmac is used when verifying requests from GitHub.
@@ -125,16 +88,50 @@ export GITHUB_REPO=prometheus
     -f manifests/prow/components
 ```
 
-### Deploy Prometheus-Meta & Grafana
+## Usage
+### Start a benchmarking test manually
 ---
-- Follow the steps mentioned in the [manual](#deploy-prometheus-meta--grafana) setup to deploy prometheus-meta & grafana.
 
-- Set the IP DNS record for `prombench.prometheus.io` to the nginx-ingress-controller IP address.
+- Set the following environment variables.
+```
+export RELEASE=<master or any prometheus release(ex: v2.3.0) >
+export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
+```
 
-- The services will be accessible at:
-  * Prow dashboard :: http://prombench.prometheus.io
-  * Grafana :: http://prombench.prometheus.io/grafana
-  * Prometheus ::  http://prombench.prometheus.io/prometheus-meta
+- Create the nodepools for the k8s objects
+```
+./prombench gke nodepool create -a $AUTH_FILE \
+    -v ZONE:$ZONE -v PROJECT_ID:$PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
+    -v PR_NUMBER:$PR_NUMBER -f manifests/prombench/nodepools.yaml
+```
+
+- Deploy the k8s objects
+```
+./prombench gke resource apply -a $AUTH_FILE \
+    -v ZONE:$ZONE -v PROJECT_ID:$PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
+    -v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v DOMAIN_NAME:$DOMAIN_NAME \
+    -f manifests/prombench/benchmark
+```
+
+### Setting up GitHub API and webhook
+---
+
+- Generate a GitHub auth token that will be used to authenticate when sending requests to the GitHub api.
+  * Login with the [Prombot account](https://github.com/prombot) and generate a [new auth token](https://github.com/settings/tokens).  
+  permissions:*public_repo, read:org, write:discussion*.
+
+- Set the following environment variables
+```
+export HMAC_TOKEN=$(openssl rand -hex 20)
+export OAUTH_TOKEN=***Replace with the generated token from github***
+```
+
+- Add a [github webhook](https://github.com/prometheus/prometheus/settings/hooks) where to send the events.
+  * Content Type: `json`
+  * Send:  `Issue comments,Pull requests`
+  * Secret: `echo $HMAC_TOKEN`
+  * Payload URL: `http://<DOMAIN_NAME>/hook`
+
 
 ### Trigger tests via a Github comment.
 ---
