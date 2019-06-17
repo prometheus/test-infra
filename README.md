@@ -5,6 +5,12 @@
 It runs with [Prow CI](https://github.com/kubernetes/test-infra/blob/master/prow/) on a [Google Kubernetes Engine Cluster](https://cloud.google.com/kubernetes-engine/).
 It is designed to support adding more k8s providers.
 
+## Overview of the manifest files
+The `/manifest` directory contains all the kubernetes manifest files.
+- `cluster-infra/` : These are the persistent cluster infrastructure resources.
+- `prombench/` : These resources are created and destoryed for each prombench test.
+- `prow/` : Resources for deploying [prow](https://github.com/kubernetes/test-infra/tree/master/prow/), which is used to trigger tests from GitHub comments.
+
 ## Setting up the test-infra
 ### Create a k8s cluster
 ---
