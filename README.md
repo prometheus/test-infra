@@ -19,7 +19,7 @@ export ZONE=us-east1-b
 export AUTH_FILE=<path to service-account.json>
 
 ./prombench gke cluster create -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
-    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -f manifests/cluster.yaml
+    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -f manifests/cluster-infra/0_cluster.yaml
 ```
 
 ### Deploy Prometheus-Meta & Grafana
