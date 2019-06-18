@@ -7,6 +7,7 @@ It is designed to support adding more k8s providers.
 
 ## Overview of the manifest files
 The `/manifest` directory contains all the kubernetes manifest files.
+- `cluster.yaml` : This is used to create the GKE cluster.
 - `cluster-infra/` : These are the persistent cluster infrastructure resources.
 - `prombench/` : These resources are created and destoryed for each prombench test.
 - `prow/` : Resources for deploying [prow](https://github.com/kubernetes/test-infra/tree/master/prow/), which is used to trigger tests from GitHub comments.
@@ -25,7 +26,7 @@ export ZONE=us-east1-b
 export AUTH_FILE=<path to service-account.json>
 
 ./prombench gke cluster create -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
-    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -f manifests/cluster-infra/0_cluster.yaml
+    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -f manifests/cluster.yaml
 ```
 
 ### Deploy Prometheus-Meta & Grafana
