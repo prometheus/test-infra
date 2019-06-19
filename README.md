@@ -5,7 +5,14 @@
 It runs with [Prow CI](https://github.com/kubernetes/test-infra/blob/master/prow/) on a [Google Kubernetes Engine Cluster](https://cloud.google.com/kubernetes-engine/).
 It is designed to support adding more k8s providers.
 
-## Run tests manually
+## Overview of the manifest files
+The `/manifest` directory contains all the kubernetes manifest files.
+- `cluster.yaml` : This is used to create the GKE cluster.
+- `cluster-infra/` : These are the persistent cluster infrastructure resources.
+- `prombench/` : These resources are created and destoryed for each prombench test.
+- `prow/` : Resources for deploying [prow](https://github.com/kubernetes/test-infra/tree/master/prow/), which is used to trigger tests from GitHub comments.
+
+## Setting up the test-infra
 ### Create a k8s cluster
 ---
 - Create a new project on Google Cloud.
@@ -19,7 +26,7 @@ export ZONE=us-east1-b
 export AUTH_FILE=<path to service-account.json>
 
 ./prombench gke cluster create -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
-    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -f components/prow/cluster.yaml
+    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -f manifests/cluster.yaml
 ```
 
 ### Deploy Prometheus-Meta & Grafana
@@ -31,30 +38,59 @@ export AUTH_FILE=<path to service-account.json>
 ```
 export GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL=<client-email present in service-account.json>
 export GRAFANA_ADMIN_PASSWORD=password
-export DOMAIN_NAME=prombench.prometheus.io
+export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom domain.
 ```
-> The `GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL` is used to grant cluster-admin-rights to the service-account. This is needed to create RBAC roles on GKE.
 
-- Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx) which will be used to access Prometheus-Meta & Grafana.
+- Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta & Grafana.
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID -v ZONE:$ZONE \
-    -v CLUSTER_NAME:$CLUSTER_NAME -v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:$GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL \
-    -f components/prow/manifests/rbac.yaml -f components/prow/manifests/nginx-controller.yaml
+    -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
+    -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
+    -v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:$GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL \
+    -f manifests/cluster-infra
+```
+- The output will show the ingress IP which will be used to point the domain name to. Alternatively you can see it from the GKE/Services tab.
+- Set the `A record` for `<DOMAIN_NAME>` to point to `nginx-ingress-controller` IP address.
+- The services will be accessible at:
+  * Grafana :: `http://<DOMAIN_NAME>/grafana`
+  * Prometheus ::  `http://<DOMAIN_NAME>/prometheus-meta`
+
+### Deploy Prow
+> This is used to monitor GitHub comments and starts new tests.
+
+---
+
+- Follow [Setting GitHub API and webhook](#setting-up-github-api-and-webhook)
+
+- Add all required tokens as k8s secrets.
+  * hmac is used when verifying requests from GitHub.
+  * oauth is used when sending requests to the GitHub api.
+  * gke auth is used when scaling up and down the cluster.
+```
+./prombench gke resource apply -a $AUTH_FILE -v ZONE:$ZONE \
+    -v CLUSTER_NAME:$CLUSTER_NAME -v PROJECT_ID:$PROJECT_ID \
+    -v HMAC_TOKEN="$(printf $HMAC_TOKEN | base64 -w 0)" \
+    -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
+    -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)" \
+    -f manifests/prow/secrets.yaml
 ```
 
-- Deploy Prometheus-meta & Grafana.
+- Deploy all internal prow components
+
 ```
+export GITHUB_ORG=prometheus
+export GITHUB_REPO=prometheus
+
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
     -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
-    -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
-    -f components/prombench/manifests/results
+    -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
+    -f manifests/prow/components
 ```
 
-- The services will be accessible at:
-  * Grafana :: http://<DOMAIN_NAME>/grafana
-  * Prometheus :: http://<DOMAIN_NAME>/prometheus-meta
+* Prow dashboard will be accessible at :: `http://<DOMAIN_NAME>`
 
-### Start a test
+## Usage
+### Start a benchmarking test manually
 ---
 
 - Set the following environment variables.
@@ -67,7 +103,7 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 ```
 ./prombench gke nodepool create -a $AUTH_FILE \
     -v ZONE:$ZONE -v PROJECT_ID:$PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
-    -v PR_NUMBER:$PR_NUMBER -f components/prombench/nodepools.yaml
+    -v PR_NUMBER:$PR_NUMBER -f manifests/prombench/nodepools.yaml
 ```
 
 - Deploy the k8s objects
@@ -75,17 +111,10 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 ./prombench gke resource apply -a $AUTH_FILE \
     -v ZONE:$ZONE -v PROJECT_ID:$PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
     -v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v DOMAIN_NAME:$DOMAIN_NAME \
-    -f components/prombench/manifests/benchmark
+    -f manifests/prombench/benchmark
 ```
 
-## Triggered tests by GitHub comments
-
-### Create a k8s cluster
----
-
-- Follow the steps mentioned in the [Create a k8s cluster](#create-a-k8s-cluster) in the manual setup.
-
-### Setup the GitHub API
+### Setting up GitHub API and webhook to trigger tests from comments.
 ---
 
 - Generate a GitHub auth token that will be used to authenticate when sending requests to the GitHub api.
@@ -102,54 +131,8 @@ export OAUTH_TOKEN=***Replace with the generated token from github***
   * Content Type: `json`
   * Send:  `Issue comments,Pull requests`
   * Secret: `echo $HMAC_TOKEN`
-  * Payload URL: `http://prombench.prometheus.io/hook`
+  * Payload URL: `http://<DOMAIN_NAME>/hook`
 
-    * **Note:** The IP DNS record for `prombench.prometheus.io` will be added once we get it from the ingress deployment.
-
-### Deploy Prow
-> This is used to monitor GitHub comments and starts new tests.
-
----
-
-- Add all required tokens as k8s secrets.
-  * hmac is used when verifying requests from GitHub.
-  * oauth is used when sending requests to the GitHub api.
-  * gke auth is used when scaling up and down the cluster.
-```
-./prombench gke resource apply -a $AUTH_FILE -v ZONE:$ZONE \
-    -v CLUSTER_NAME:$CLUSTER_NAME -v PROJECT_ID:$PROJECT_ID \
-    -f components/prow/manifests/secrets.yaml \
-    -v HMAC_TOKEN="$(printf $HMAC_TOKEN | base64 -w 0)" \
-    -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
-    -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)"
-```
-
-- Deploy all internal prow components
-
-```
-./prombench gke resource apply -a ${AUTH_FILE} -v PROJECT_ID:${PROJECT_ID} \
-    -v ZONE:${ZONE} -v CLUSTER_NAME:${CLUSTER_NAME} \
-    -f components/prow/manifests/prow_internals_1.yaml
-
-export GITHUB_ORG=prometheus
-export GITHUB_REPO=prometheus
-
-./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
-    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
-    -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
-    -f components/prow/manifests/prow_internals_2.yaml
-```
-
-### Deploy Prometheus-Meta & Grafana
----
-- Follow the steps mentioned in the [manual](#deploy-prometheus-meta--grafana) setup to deploy prometheus-meta & grafana.
-
-- Set the IP DNS record for `prombench.prometheus.io` to the nginx-ingress-controller IP address.
-
-- The services will be accessible at:
-  * Prow dashboard :: http://prombench.prometheus.io
-  * Grafana :: http://prombench.prometheus.io/grafana
-  * Prometheus ::  http://prombench.prometheus.io/prometheus-meta
 
 ### Trigger tests via a Github comment.
 ---
