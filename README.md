@@ -60,7 +60,7 @@ export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom dom
 
 ---
 
-- Follow [Setting GitHub API and webhook](#setting-up-github-api-and-webhook)
+- Follow [Setting GitHub API and webhook](#setting-up-github-api-and-webhook-to-trigger-tests-from-comments)
 
 - Add all required tokens as k8s secrets.
   * hmac is used when verifying requests from GitHub.
