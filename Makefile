@@ -42,6 +42,30 @@ nodepool_delete:
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
 		-f manifests/prombench/nodepools.yaml
 
+cluster_create:
+	$(PROMBENCH_CMD) gke cluster create -a ${AUTH_FILE} \
+		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
+		-f manifests/cluster.yaml
+
+cluster_delete: clusterinfra_resource_delete
+	$(PROMBENCH_CMD) gke cluster delete -a ${AUTH_FILE} \
+		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
+		-f manifests/cluster.yaml
+
+clusterinfra_resource_apply:
+	$(PROMBENCH_CMD) gke resource apply -a ${AUTH_FILE} \
+		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
+		-v DOMAIN_NAME:${DOMAIN_NAME} -v GRAFANA_ADMIN_PASSWORD:${GRAFANA_ADMIN_PASSWORD} \
+		-v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:${GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL} \
+		-f manifests/cluster-infra
+
+clusterinfra_resource_delete:
+	$(PROMBENCH_CMD) gke resource delete -a ${AUTH_FILE} \
+		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
+		-v DOMAIN_NAME:${DOMAIN_NAME} -v GRAFANA_ADMIN_PASSWORD:${GRAFANA_ADMIN_PASSWORD} \
+		-v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:${GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL} \
+		-f manifests/cluster-infra
+
 build:
 	@$(DOCKER_CMD) go build ./cmd/prombench/
 
@@ -49,4 +73,4 @@ docker: build
 	@docker build -t $(DOCKER_TAG) .
 	@docker push $(DOCKER_TAG)
 
-.PHONY: deploy clean build docker
+.PHONY: deploy clean build docker clusterinfra_resource_apply clusterinfra_resource_delete
