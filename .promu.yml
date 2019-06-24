@@ -1,0 +1,15 @@
+go:
+    # Whenever the Go version is updated here, .travis.yml and
+    # .circle/config.yml should also be updated if in use.
+    version: 1.12
+repository:
+    path: github.com/prometheus/prombench
+build:
+    binaries:
+        - name: prombench
+          path: ./cmd/prombench
+        - name: scaler
+          path: ./cmd/scaler
+        - name: fake-webserver
+          path: ./cmd/fake-webserver
+    flags: -a

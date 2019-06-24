@@ -143,3 +143,9 @@ A Prometheus maintainer can comment as follows to benchmark a PR:
 - `/benchmark 2.4.0` (Any release version can be added here. Don't prepend `v` to the release version here. The benchmark plugin in Prow will prepend it.)
 
 To cancel benchmarking, a mantainer should comment `/benchmark cancel`.
+
+## Buliding from source
+To build Prombench and related tools from source you need to have a working Go environment with version 1.12 or greater installed. Prombench uses promu for building the binaries.
+```
+make build
+```
