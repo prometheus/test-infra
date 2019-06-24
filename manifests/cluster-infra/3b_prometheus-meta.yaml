@@ -18,14 +18,6 @@ data:
     global:
       scrape_interval: 5s
     scrape_configs:
-    # prometheus-meta job is added separately because prometheus-meta has a
-    # web.external-url of DOMAIN_NAME/prometheus-meta/
-    - job_name: prometheus-meta
-      metrics_path: /prometheus-meta/metrics
-      static_configs:
-        - targets: ['localhost:9090']
-          labels:
-            prometheus: 'meta'
 
     - job_name: kubelet
       scheme: https
@@ -67,18 +59,19 @@ data:
         target_label: __metrics_path__
         replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
 
-    # Scrapes the endpoint lists for the main Prometheus endpoints in all namespaces
     - job_name: endpoints
       tls_config:
         ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         insecure_skip_verify: true
       bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+
       kubernetes_sd_configs:
       - role: endpoints
+
       relabel_configs:
       - action: keep
         source_labels: [__meta_kubernetes_service_label_app]
-        regex: prometheus|node-exporter|loadgen-querier
+        regex: prometheus|prometheus-meta|node-exporter|loadgen-querier
       - action: replace
         source_labels: [__meta_kubernetes_service_label_app]
         target_label: job
@@ -86,11 +79,14 @@ data:
         source_labels: [__meta_kubernetes_namespace]
         target_label: namespace
       - action: replace
-        source_labels: [__meta_kubernetes_pod_label_node]
-        target_label: node
-      - action: replace
         source_labels: [__meta_kubernetes_service_label_prometheus]
         target_label: prometheus
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_label_node]
+        target_label: node
       - action: replace
         source_labels: [__meta_kubernetes_namespace,__meta_kubernetes_service_label_prometheus]
         regex: prombench-(\d+);test-pr-\d+
@@ -102,8 +98,11 @@ data:
         target_label: __metrics_path__
         replacement: /${1}/prometheus-release/metrics
       - action: replace
-        source_labels: [__meta_kubernetes_pod_node_name]
-        target_label: nodeName
+        source_labels: [__meta_kubernetes_namespace,__meta_kubernetes_service_label_prometheus]
+        regex: default;meta
+        target_label: __metrics_path__
+        replacement: /prometheus-meta/metrics
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -127,11 +126,12 @@ spec:
       securityContext:
         runAsUser: 0
       containers:
-      - image: quay.io/prometheus/prometheus:v2.3.0
+      - image: quay.io/prometheus/prometheus:v2.10.0
         args:
         - "--config.file=/etc/prometheus/config/prometheus.yaml"
         - "--storage.tsdb.path=/data"
         - "--storage.tsdb.retention=90d"
+        - "--web.enable-lifecycle"
         - "--web.external-url=http://{{ .DOMAIN_NAME }}/prometheus-meta"
         name: prometheus
         volumeMounts:
