@@ -1,3 +1,5 @@
+# NOTE: building this requires it to have the build context of the repository root
+
 FROM debian:sid
 LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com>"
 
