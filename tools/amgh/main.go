@@ -79,7 +79,7 @@ func handleWebhook(rw http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	app := kingpin.New(filepath.Base(os.Args[0]), "amghrcvr - alertmanager github reciever")
+	app := kingpin.New(filepath.Base(os.Args[0]), "amgh - alertmanager github reciever")
 	app.Flag("authfile", "path to github oauth token file").Default("/etc/github").StringVar(&authfile)
 	app.Flag("org", "default org/owner").Required().StringVar(&defaultOwner)
 	app.Flag("repo", "default repo").Required().StringVar(&defaultRepo)
@@ -100,7 +100,7 @@ func main() {
 	log.Println("GitHub client successfully setup.")
 
 	// start webhook server
-	log.Printf("Started amghrcvr %v/%v as defaults.", defaultOwner, defaultRepo)
+	log.Printf("Started amgh %v/%v as defaults.", defaultOwner, defaultRepo)
 	http.HandleFunc("/hook", handleWebhook)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 
