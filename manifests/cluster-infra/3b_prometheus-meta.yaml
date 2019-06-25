@@ -95,6 +95,11 @@ data:
         source_labels: [__meta_kubernetes_namespace]
         target_label: namespace
       - action: replace
+        source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_label_app]
+        regex: prombench-(\d+);node-exporter
+        target_label: prno
+        replacement: $1
+      - action: replace
         source_labels: [__meta_kubernetes_service_label_prometheus]
         target_label: prometheus
       - action: replace

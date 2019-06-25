@@ -86,12 +86,11 @@ func main() {
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
+	// setup ghClient
 	oauth2token, err := ioutil.ReadFile(authfile)
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	// setup ghClient
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: string(oauth2token)},
 	)
