@@ -23,9 +23,9 @@ data:
         for: 2m
         labels:
           severity: average
-          prNum: '{{ $labels.prNum }}'
+          prNum: '{{"{{"}} $labels.prNum {{"}}"}}'
         annotations:
-          description: `Benchmark tests are running for {{ $value }} days on {{ $labels.instance }}.`
+          description: 'Benchmark tests are running for {{"{{"}} $value {{"}}"}} days on {{"{{"}} $labels.node {{"}}"}}}}.'
           summary: 'Reminder about running benchmark tests.'
 ---
 apiVersion: v1
