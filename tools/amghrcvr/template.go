@@ -73,14 +73,14 @@ func getTargetOwner(msg *notify.WebhookMessage) string {
 	return defaultOwner
 }
 
-// getTargetPR returns the "prno" label
+// getTargetPR returns the "prNum" label
 func getTargetPR(msg *notify.WebhookMessage) (int, error) {
-	if prNo, ok := msg.CommonLabels["prno"]; ok {
-		i, err := strconv.Atoi(prNo)
+	if prNum, ok := msg.CommonLabels["prNum"]; ok {
+		i, err := strconv.Atoi(prNum)
 		if err != nil {
 			return 0, err
 		}
 		return i, nil
 	}
-	return 0, errors.New("prno label not found")
+	return 0, errors.New("prNum label not found")
 }
