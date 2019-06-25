@@ -9,7 +9,7 @@ spec:
     requests:
       storage: 1000Gi  # If you change this make sure to update the prometheus meta disk retention settings.
 ---
-apiversion: v1
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: alert-rules
@@ -19,13 +19,13 @@ data:
     - name: gke-related
       rules:
       - alert: upfortoolong
-        expr: up == 0
+        expr: (time() - node_boot_time_seconds{namespace=~"prombench-[0-9]+",job="node-exporter"})/(60*60*24) > 3
         for: 2m
         labels:
           severity: average
         annotations:
-          description: ''
-          summary: ''
+          description: 'up for too long'
+          summary: 'up for too long'
 ---
 apiVersion: v1
 kind: ConfigMap
