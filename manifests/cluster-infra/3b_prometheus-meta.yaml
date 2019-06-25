@@ -18,14 +18,15 @@ data:
     groups:
     - name: gke-related
       rules:
-      - alert: upfortoolong
+      - alert: benchmarkTestsRunning
         expr: (time() - node_boot_time_seconds{namespace=~"prombench-[0-9]+",job="node-exporter"})/(60*60*24) > 3
         for: 2m
         labels:
           severity: average
+          prNum: '{{ $labels.prNum }}'
         annotations:
-          description: 'up for too long'
-          summary: 'up for too long'
+          description: `Benchmark tests are running for {{ $value }} days on {{ $labels.instance }}.`
+          summary: 'Reminder about running benchmark tests.'
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -119,7 +120,7 @@ data:
       - action: replace
         source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_label_app]
         regex: prombench-(\d+);node-exporter
-        target_label: prno
+        target_label: prNum
         replacement: $1
       - action: replace
         source_labels: [__meta_kubernetes_service_label_prometheus]
