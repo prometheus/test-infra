@@ -24,6 +24,8 @@ data:
         labels:
           severity: average
           prNum: '{{"{{"}} $labels.prNum {{"}}"}}'
+          owner: testpromorg
+          repo: prombench
         annotations:
           description: 'Benchmark tests are running for {{"{{"}} $value {{"}}"}} days on {{"{{"}} $labels.node {{"}}"}}}}.'
           summary: 'Reminder about running benchmark tests.'
