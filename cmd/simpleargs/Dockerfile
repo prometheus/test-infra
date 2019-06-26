@@ -1,17 +1,20 @@
 FROM golang:alpine AS builder
 
-RUN apk update && apk add --no-cache git 
-# WORKDIR $GOPATH/src/mypackage/myapp/
+RUN apk update && apk add --no-cache git \
+    ca-certificates
+
+ENV GO111MODULE=on
+
+WORKDIR /app
 COPY main.go .
 
-RUN go get -d -v
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /go/bin/sargs
-
-FROM alpine:latest as certs
-RUN apk --update add ca-certificates
+RUN CGO_ENABLED=0 GOOS=linux go build -o /go/bin/commentMonitor
 
 FROM scratch
-COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --from=builder /go/bin/sargs /sargs
-ENTRYPOINT ["/sargs"]
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=builder /go/bin/commentMonitor /commentMonitor
+ENTRYPOINT ["/commentMonitor"]

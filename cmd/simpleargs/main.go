@@ -2,130 +2,112 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v26/github"
+	"golang.org/x/oauth2"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
+const prombenchURL = "http://prombench.prometheus.io"
 
 var regex string
-var eventfile string
-var writepath string
+var input string
+var output string
+var owner string
+var repo string
+var prnumber int
+var releaseVersion string
 
-type roundTripper struct {
-	accessToken string
-}
 
-func (rt roundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
-	r.Header.Set("Authorization", fmt.Sprintf("token %s", rt.accessToken))
-	return http.DefaultTransport.RoundTrip(r)
-}
-func writeArgs(groups []string) {
-	for i, group := range groups[1:] {
-		data := []byte(group)
+
+func writeArgs(arglist []string) {
+	for i, arg := range arglist[1:] {
+		data := []byte(arg)
 		filename := fmt.Sprintf("ARG_%d", i)
-		log.Printf("In write args")
-		err := ioutil.WriteFile(filepath.Join(writepath, filename), data, 0644)
-		log.Printf(filepath.Join(writepath, filename))
+		err := ioutil.WriteFile(filepath.Join(output, filename), data, 0644)
+		log.Printf(filepath.Join(output, filename))
 		if err != nil {
 			log.Fatalln(err)
 		}
 	}
 }
 
-func writeArg(groups string, filetype string) {
-	data := []byte(groups)
-	filename := fmt.Sprintf("ARG_%s", filetype)
-	log.Printf("In write arg")
-	err := ioutil.WriteFile(filepath.Join(writepath, filename), data, 0644)
-	log.Printf(filepath.Join(writepath, filename))
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
+
 
 func main() {
 	app := kingpin.New(filepath.Base(os.Args[0]), "simpleargs github comment extract")
-	app.Flag("eventfile", "path to event.json").Default("/github/workflow/event.json").StringVar(&eventfile)
-	app.Flag("writepath", "path to write args to").Default("/github/home").StringVar(&writepath)
+	app.Flag("input", "path to event.json").Default("/github/workflow/event.json").StringVar(&input)
+	app.Flag("output", "path to write args to").Default("/github/home").StringVar(&output)
 	app.Arg("regex", "Regex pattern to match").Required().StringVar(&regex)
 	kingpin.MustParse(app.Parse(os.Args[1:]))
-	log.Printf("After flag declaration")
-	var err error
 
 	//Github client for posting comments
 	token := os.Getenv("GITHUB_TOKEN")
-	http.DefaultClient.Transport = roundTripper{token}
-	client := github.NewClient(http.DefaultClient)
-
-	//Decoding and saving service account authentication file
-	paths := os.Getenv("HOME")
-	paths = paths + "/auth.json"
-	output, err := os.Create(paths)
-	if err != nil {
-		panic(err)
-	}
-	defer output.Close()
-	strings := os.Getenv("AUTH_FILE")
-	decoder, err := base64.StdEncoding.DecodeString(strings)
-	if err != nil {
-		panic(err)
-	}
-	if _, err := output.Write(decoder); err != nil {
-		panic(err)
-	}
-	fmt.Println("storing base64 decoded auth file")
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+	client := github.NewClient(tc)
 
 	//Reading event.json
-	os.MkdirAll(writepath, os.ModePerm)
-	data, err := ioutil.ReadFile(eventfile)
+	os.MkdirAll(output, os.ModePerm)
+	data, err := ioutil.ReadFile(input)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Printf("after reading event.json")
 
 	//Parsing event.json
 	event, err := github.ParseWebHook("issue_comment", data)
 	if err != nil {
 		log.Fatalln("could not parse = %v\n", err)
 	}
-	log.Printf("Parsing event.json")
 
 	//Checking author association and saving args to file
 	switch e := event.(type) {
 	case *github.IssueCommentEvent:
 		if (*e.GetComment().AuthorAssociation != "COLLABORATOR") && (*e.GetComment().AuthorAssociation != "MEMBER") {
-			log.Printf("author is not a member or collaborator")
+			log.Printf("Author is not a member or collaborator")
 			os.Exit(78)
 		} else {
-			log.Printf("author is member or collaborator")
+			log.Printf("Author is member or collaborator")
 
-			owner := *e.GetRepo().Owner.Login
-			repo := *e.GetRepo().Name
-			number := *e.GetIssue().Number
-			log.Printf(owner)
-			log.Printf(repo)
-			log.Printf("%d", number)
-			writeArg(strconv.Itoa(number), "pr") //writing PR number to file
-
+			owner = *e.GetRepo().Owner.Login
+			repo = *e.GetRepo().Name
+			prnumber = *e.GetIssue().Number
+			
 			argRe := regexp.MustCompile(regex)
 			if argRe.MatchString(*e.GetComment().Body) {
 				groups := argRe.FindStringSubmatch(*e.GetComment().Body)
-				log.Printf("%v+", groups)
+				groups = append(groups, strconv.Itoa(prnumber))
 				writeArgs(groups) //writing version to file
-				log.Printf("regex comment")
-
+				fmt.Println(groups[1])
+				releaseVersion = groups[1]
 				//Posting benchmark start comment
-				issueComment := &github.IssueComment{Body: github.String("Benchmarking is starting")}
-				issueComment, _, err = client.Issues.CreateComment(context.Background(), owner, repo, number, issueComment)
+				comment := fmt.Sprintf(`Welcome to Prometheus Benchmarking Tool.
+
+The two prometheus versions that will be compared are _**pr-%d**_ and _**%s**_
+
+The logs can be viewed at the links provided in the GitHub check blocks at the end of this conversation
+
+After successfull deployment, the benchmarking metrics can be viewed at :
+- [prometheus-meta](%s/prometheus-meta) - label **{namespace="prombench-%d"}**
+- [grafana](%s/grafana) - template-variable **"pr-number" : %d**
+
+The Prometheus servers being benchmarked can be viewed at :
+- PR - [prombench.prometheus.io/%d/prometheus-pr](%s/%d/prometheus-pr)
+- %s - [prombench.prometheus.io/%d/prometheus-release](%s/%d/prometheus-release)
+
+To stop the benchmark process comment **/benchmark cancel** .`, prnumber, releaseVersion, prombenchURL, prnumber, prombenchURL, prnumber, prnumber, prombenchURL, prnumber, releaseVersion, prnumber, prombenchURL, prnumber)
+				
+				issueComment := &github.IssueComment{Body: github.String(comment)}
+				issueComment, _, err := client.Issues.CreateComment(context.Background(), owner, repo, prnumber, issueComment)
 				if err != nil {
 					fmt.Printf("%v+", err)
 				}
