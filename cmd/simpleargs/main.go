@@ -24,8 +24,6 @@ var repo string
 var prnumber int
 var releaseVersion string
 
-
-
 func writeArgs(arglist []string) {
 	for i, arg := range arglist[1:] {
 		data := []byte(arg)
@@ -38,6 +36,29 @@ func writeArgs(arglist []string) {
 	}
 }
 
+func memberValidation(authorAssociation string) error {
+
+	if (authorAssociation != "COLLABORATOR") && (authorAssociation != "MEMBER") {
+		return fmt.Errorf("Not a member or collaborator")
+	} 
+	return nil
+}
+
+func regexValidation(regex string,comment string) ([]string, error) {
+	argRe := regexp.MustCompile(regex)
+	if argRe.MatchString(comment) {
+		arglist := argRe.FindStringSubmatch(comment)
+		return arglist, nil
+	} else {
+		return make([]string,0),fmt.Errorf("Invalid command")
+	}
+}
+
+func postComment(client *github.Client, comment string) error {
+	issueComment := &github.IssueComment{Body: github.String(comment)}
+	issueComment, _, err := client.Issues.CreateComment(context.Background(), owner, repo, prnumber, issueComment)
+	return err
+}
 
 
 func main() {
@@ -68,29 +89,33 @@ func main() {
 	if err != nil {
 		log.Fatalln("could not parse = %v\n", err)
 	}
-
+	
 	//Checking author association and saving args to file
 	switch e := event.(type) {
 	case *github.IssueCommentEvent:
-		if (*e.GetComment().AuthorAssociation != "COLLABORATOR") && (*e.GetComment().AuthorAssociation != "MEMBER") {
+		err := memberValidation(*e.GetComment().AuthorAssociation) //check author association
+		if err != nil {
 			log.Printf("Author is not a member or collaborator")
 			os.Exit(78)
-		} else {
-			log.Printf("Author is member or collaborator")
+		} 
+		log.Printf("Author is member or collaborator")
+		
+		arglist, err := regexValidation(regex, *e.GetComment().Body) //Validate comment 
+		if err != nil{
+			log.Printf("Matching command not found")
+			os.Exit(78)
+		}
 
-			owner = *e.GetRepo().Owner.Login
-			repo = *e.GetRepo().Name
-			prnumber = *e.GetIssue().Number
-			
-			argRe := regexp.MustCompile(regex)
-			if argRe.MatchString(*e.GetComment().Body) {
-				groups := argRe.FindStringSubmatch(*e.GetComment().Body)
-				groups = append(groups, strconv.Itoa(prnumber))
-				writeArgs(groups) //writing version to file
-				fmt.Println(groups[1])
-				releaseVersion = groups[1]
-				//Posting benchmark start comment
-				comment := fmt.Sprintf(`Welcome to Prometheus Benchmarking Tool.
+		owner = *e.GetRepo().Owner.Login  //Get parameters
+		repo = *e.GetRepo().Name
+		prnumber = *e.GetIssue().Number
+		releaseVersion = arglist[1]
+		
+		arglist = append(arglist, strconv.Itoa(prnumber))
+		writeArgs(arglist) //Save args to file(releaseVersion in ARG_0, prnumber in ARG_1)
+
+		//Posting benchmark start comment
+		comment := fmt.Sprintf(`Welcome to Prometheus Benchmarking Tool.
 
 The two prometheus versions that will be compared are _**pr-%d**_ and _**%s**_
 
@@ -105,18 +130,11 @@ The Prometheus servers being benchmarked can be viewed at :
 - %s - [prombench.prometheus.io/%d/prometheus-release](%s/%d/prometheus-release)
 
 To stop the benchmark process comment **/benchmark cancel** .`, prnumber, releaseVersion, prombenchURL, prnumber, prombenchURL, prnumber, prnumber, prombenchURL, prnumber, releaseVersion, prnumber, prombenchURL, prnumber)
-				
-				issueComment := &github.IssueComment{Body: github.String(comment)}
-				issueComment, _, err := client.Issues.CreateComment(context.Background(), owner, repo, prnumber, issueComment)
-				if err != nil {
-					fmt.Printf("%v+", err)
-				}
-
-			} else {
-				log.Printf("matching command not found")
-				os.Exit(78)
-			}
+		err = postComment(client, comment)
+		if err != nil {
+			fmt.Printf("%v+", err)
 		}
+
 	default:
 		log.Fatalln("simpleargs only supports issue_comment event")
 	}
