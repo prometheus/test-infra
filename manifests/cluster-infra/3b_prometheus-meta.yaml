@@ -1,3 +1,5 @@
+#Need to set the storage.tsdb.retention.size flag in prometheus-meta deployment.
+#80% of the pvc storage
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -130,7 +132,7 @@ spec:
         args:
         - "--config.file=/etc/prometheus/config/prometheus.yaml"
         - "--storage.tsdb.path=/data"
-        - "--storage.tsdb.retention=90d"
+        - "--storage.tsdb.retention.size=800GB"  #set to 80% of the storage available
         - "--web.enable-lifecycle"
         - "--web.external-url=http://{{ .DOMAIN_NAME }}/prometheus-meta"
         name: prometheus
