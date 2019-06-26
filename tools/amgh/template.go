@@ -12,6 +12,7 @@ import (
 )
 
 const alertMD = `
+## Alertname: {{ index .Data.GroupLabels "alertname" }}
 Alertmanager URL: {{.Data.ExternalURL}}
 {{range .Data.Alerts}}
   * {{.Status}} {{.GeneratorURL}}
@@ -28,20 +29,13 @@ Alertmanager URL: {{.Data.ExternalURL}}
     - {{$key}} = {{$value -}}
   {{end}}
 {{end}}
-
-TODO: add graph url from annotations.
 `
 
 var alertTemplate = template.Must(template.New("alert").Parse(alertMD))
 
-// id returns the alert id
-func id(msg *notify.WebhookMessage) string {
+// alertID returns the alert id.
+func alertID(msg *notify.WebhookMessage) string {
 	return fmt.Sprintf("0x%x", msg.GroupKey)
-}
-
-// formatTitle constructs an issue title from a webhook message.
-func formatTitle(msg *notify.WebhookMessage) string {
-	return fmt.Sprintf("%s", msg.Data.GroupLabels["alertname"])
 }
 
 // formatIssueBody constructs an issue body from a webhook message.
@@ -49,31 +43,13 @@ func formatIssueBody(msg *notify.WebhookMessage) (string, error) {
 	var buf bytes.Buffer
 	err := alertTemplate.Execute(&buf, msg)
 	if err != nil {
-		log.Printf("Error executing template: %s", err)
+		log.Printf("error executing template: %s", err)
 		return "", err
 	}
-	s := buf.String()
-	// do we need the alert id in the comment? i dont think so
-	return fmt.Sprintf("<!-- ID: %s -->\n%s", id(msg), s), nil
+	return buf.String(), nil
 }
 
-// getTargetRepo returns the "repo" label if exists else returns defaultRepo
-func getTargetRepo(msg *notify.WebhookMessage) string {
-	if repo, ok := msg.CommonLabels["repo"]; ok {
-		return repo
-	}
-	return defaultRepo
-}
-
-// getTargetOwner returns the "owner" label if exists else returns defaultOrg
-func getTargetOwner(msg *notify.WebhookMessage) string {
-	if owner, ok := msg.CommonLabels["owner"]; ok {
-		return owner
-	}
-	return defaultOwner
-}
-
-// getTargetPR returns the "prNum" label
+// getTargetPR returns the "prNum" label.
 func getTargetPR(msg *notify.WebhookMessage) (int, error) {
 	if prNum, ok := msg.CommonLabels["prNum"]; ok {
 		i, err := strconv.Atoi(prNum)
@@ -83,4 +59,20 @@ func getTargetPR(msg *notify.WebhookMessage) (int, error) {
 		return i, nil
 	}
 	return 0, errors.New("prNum label not found")
+}
+
+// getTargetRepo returns the "repo" label if exists else returns defaultRepo.
+func (g ghWebhookReciever) getTargetRepo(msg *notify.WebhookMessage) string {
+	if repo, ok := msg.CommonLabels["repo"]; ok {
+		return repo
+	}
+	return g.cfg.defaultRepo
+}
+
+// getTargetOwner returns the "owner" label if exists else returns defaultOwner.
+func (g ghWebhookReciever) getTargetOwner(msg *notify.WebhookMessage) string {
+	if owner, ok := msg.CommonLabels["owner"]; ok {
+		return owner
+	}
+	return g.cfg.defaultOwner
 }
