@@ -130,7 +130,7 @@ spec:
         args:
         - "--config.file=/etc/prometheus/config/prometheus.yaml"
         - "--storage.tsdb.path=/data"
-        - "--storage.tsdb.retention.size=500GB"  
+        - "--storage.tsdb.retention.size=500GB"  # 50% of the total storage available.
         - "--web.enable-lifecycle"
         - "--web.external-url=http://{{ .DOMAIN_NAME }}/prometheus-meta"
         name: prometheus
