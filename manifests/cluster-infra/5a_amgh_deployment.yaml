@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: amgh
+  labels:
+    app: amgh
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: amgh
+  template:
+    metadata:
+      labels:
+        app: amgh
+    spec:
+      containers:
+      - name: amgh
+        image: docker.io/prombenchgeekodour/amgh:0.0.1
+        args:
+        - "--org=testpromorg"
+        - "--repo=prometheus"
+        volumeMounts:
+        - name: oauth
+          mountPath: /etc/github
+          readOnly: true
+        ports:
+        - name: amgh-webhook
+          containerPort: 8080
+      volumes:
+      - name: oauth
+        secret:
+          secretName: oauth-token
+      terminationGracePeriodSeconds: 300
+      nodeSelector:
+        cloud.google.com/gke-nodepool: prow
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: amgh
+  labels:
+    app: amgh
+spec:
+  type: NodePort
+  ports:
+  - name: amgh-webhook
+    port: 80
+    targetPort: amgh-webhook
+  selector:
+    app: amgh
