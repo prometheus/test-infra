@@ -19,13 +19,15 @@ data:
     - name: gke-related
       rules:
       - alert: benchmarkTestsRunning
-        expr: (time() - node_boot_time_seconds{namespace=~"prombench-[0-9]+",job="node-exporter"})/(60*60*24) > 3
+        #expr: (time() - node_boot_time_seconds{namespace=~"prombench-[0-9]+",job="node-exporter"})/(60*60*24) > 3
+        expr: (time() - node_boot_time_seconds{namespace=~"prombench-[0-9]+",job="node-exporter"})/60 > 2
         for: 2m
         labels:
           severity: average
-          prNum: '{{"{{"}} $labels.prNum {{"}}"}}'
+          #prNum: '{{"{{"}} $labels.prNum {{"}}"}}'
+          prNum: '1'
           owner: testpromorg
-          repo: prombench
+          repo: prometheus
         annotations:
           description: 'Benchmark tests are running for {{"{{"}} $value {{"}}"}} days on {{"{{"}} $labels.node {{"}}"}}}}.'
           summary: 'Reminder about running benchmark tests.'

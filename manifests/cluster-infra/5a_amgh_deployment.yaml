@@ -42,7 +42,7 @@ metadata:
   labels:
     app: amgh
 spec:
-  type: NodePort
+  type: ClusterIP
   ports:
   - name: amgh-webhook
     port: 80
