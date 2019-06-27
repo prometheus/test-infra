@@ -61,6 +61,7 @@ func main() {
 	app.Flag("input", "path to event.json").Default("/github/workflow/event.json").StringVar(&input)
 	app.Flag("output", "path to write args to").Default("/github/home").StringVar(&output)
 	app.Arg("regex", "Regex pattern to match").Required().StringVar(&regex)
+	app.HelpFlag.Short('h')
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	// Github client for posting comments.

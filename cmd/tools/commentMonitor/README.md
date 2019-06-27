@@ -1,7 +1,7 @@
 # commentMonitor
-A simple cli intended to be used with GitHub Actions, it takes a [RE2 flavour regex](https://github.com/google/re2/wiki/Syntax) as the argument and compares it to the body of the `issue_comment`, if matches it writes the matching groups to `/github/home/simpleargs`, otherwise it exits with [error code 78.](https://developer.github.com/actions/creating-github-actions/accessing-the-runtime-environment/#exit-codes-and-statuses)
+A simple cli intended to be used with GitHub Actions, it takes a [RE2 flavour regex](https://github.com/google/re2/wiki/Syntax) as the argument and compares it to the body of the `issue_comment`, if matches it writes the matching groups to `/github/home`, otherwise it exits with [error code 78.](https://developer.github.com/actions/creating-github-actions/accessing-the-runtime-environment/#exit-codes-and-statuses)
 
-The matches can be found inside `/github/home/simpleargs` in the form `ARG0`, `ARG1` and so on.
+The matches can be found inside `/github/home` in the form `ARG0`, `ARG1` and so on.
 
 > `/github` is the where GitHub mounts a shared filesystem to be accessed by multiple actions.
 
