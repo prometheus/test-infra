@@ -112,7 +112,7 @@ func main() {
 	cfg := ghWebhookRecieverConfig{}
 
 	app := kingpin.New(filepath.Base(os.Args[0]), "alertmanager github webhook reciever")
-	app.Flag("authfile", "path to github oauth token file").Default("/etc/github").StringVar(&cfg.authfile)
+	app.Flag("authfile", "path to github oauth token file").Default("/etc/github/oauth").StringVar(&cfg.authfile)
 	app.Flag("org", "default org/owner").Required().StringVar(&cfg.defaultOwner)
 	app.Flag("repo", "default repo").Required().StringVar(&cfg.defaultRepo)
 	app.Flag("port", "port number to run the server in").Default("8080").StringVar(&cfg.portNo)

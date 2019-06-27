@@ -5,4 +5,4 @@ LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com
 
 COPY amgh /bin/amgh
 
-CMD /bin/amgh
+ENTRYPOINT ["/bin/amgh"]
