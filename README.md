@@ -34,12 +34,15 @@ export AUTH_FILE=<path to service-account.json>
 
 ---
 
-- Follow [Getting GitHub OAuth API token](#getting-github-oauth-api-token)
+- Generate a GitHub auth token that will be used to authenticate when sending requests to the GitHub API.
+  * Login with the [Prombot account](https://github.com/prombot) and generate a [new auth token](https://github.com/settings/tokens).
+  * With permissions: `public_repo`, `read:org`, `write:discussion`.
 - Set the following environment variables
 ```
 export GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL=<client-email present in service-account.json>
 export GRAFANA_ADMIN_PASSWORD=password
 export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom domain.
+export OAUTH_TOKEN=***Replace with the generated token from github***
 ```
 
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta & Grafana.
@@ -61,12 +64,19 @@ export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom dom
 > This is used to monitor GitHub comments and starts new tests.
 
 ---
+- Set the following environment variables
+```
+export HMAC_TOKEN=$(openssl rand -hex 20)
+```
 
-- Follow [Setting up GitHub webhook](#setting-up-github-webhook-to-trigger-tests-from-comments)
+- Add a [github webhook](https://github.com/prometheus/prometheus/settings/hooks) to the repository where to send the events from.
+  * Content Type: `json`
+  * Send:  `Issue comments,Pull requests`
+  * Secret: `echo $HMAC_TOKEN`
+  * Payload URL: `http://<DOMAIN_NAME>/hook`
 
 - Add all required tokens as k8s secrets.
   * hmac is used when verifying requests from GitHub.
-  * oauth is used when sending requests to the GitHub api.
   * gke auth is used when scaling up and down the cluster.
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v ZONE:$ZONE \
@@ -124,27 +134,6 @@ A Prometheus maintainer can comment as follows to benchmark a PR:
 - `/benchmark 2.4.0` (Any release version can be added here. Don't prepend `v` to the release version here. The benchmark plugin in Prow will prepend it.)
 
 To cancel benchmarking, a mantainer should comment `/benchmark cancel`.
-
-## GitHub related
-### Getting GitHub OAuth API token
-- Generate a GitHub auth token that will be used to authenticate when sending requests to the GitHub api.
-  * Login with the [Prombot account](https://github.com/prombot) and generate a [new auth token](https://github.com/settings/tokens).
-  permissions:*public_repo, read:org, write:discussion*.
-```
-export OAUTH_TOKEN=***Replace with the generated token from github***
-```
-
-### Setting up GitHub webhook to trigger tests from comments.
-- Set the following environment variables
-```
-export HMAC_TOKEN=$(openssl rand -hex 20)
-```
-
-- Add a [github webhook](https://github.com/prometheus/prometheus/settings/hooks) where to send the events.
-  * Content Type: `json`
-  * Send:  `Issue comments,Pull requests`
-  * Secret: `echo $HMAC_TOKEN`
-  * Payload URL: `http://<DOMAIN_NAME>/hook`
 
 ## Buliding from source
 To build Prombench and related tools from source you need to have a working Go environment with version 1.12 or greater installed. Prombench uses promu for building the binaries.
