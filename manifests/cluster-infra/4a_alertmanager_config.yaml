@@ -17,7 +17,7 @@ data:
       routes:
       - receiver: amgh-bridge
         match:
-          service: node-exporter
+          job: node-exporter
 
     receivers:
     - name: amgh-bridge
