@@ -19,6 +19,8 @@ spec:
       - image: quay.io/prometheus/alertmanager:v0.17.0
         args:
         - "--web.external-url=http://{{ .DOMAIN_NAME }}/alertmanager"
+        - "--config.file=/etc/alertmanager/alertmanager.yml"
+        - "--storage.path=/alertmanager"
         name: alertmanager
         volumeMounts:
         - name: config

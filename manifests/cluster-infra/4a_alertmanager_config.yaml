@@ -12,6 +12,7 @@ data:
       group_wait: 1m
       group_interval: 5m
       repeat_interval: 4h
+      receiver: amgh-bridge
 
       routes:
       - receiver: amgh-bridge
