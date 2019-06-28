@@ -45,9 +45,8 @@ func regexValidation(regex string, comment string) ([]string, error) {
 	if argRe.MatchString(comment) {
 		arglist := argRe.FindStringSubmatch(comment)
 		return arglist, nil
-	} else {
-		return []string{}, fmt.Errorf("invalid command")
 	}
+	return []string{}, fmt.Errorf("invalid command")
 }
 
 func postComment(client *github.Client, owner string, repo string, prnumber int, comment string) error {
