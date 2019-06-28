@@ -16,7 +16,7 @@ jobs:
     - checkout
     - run: make promu
     - run:
-        command: make style unused build
+        command: make style unused vet build
         environment:
           # Run garbage collection more aggresively to avoid getting OOMed during the lint phase.
           GOGC: "20"
