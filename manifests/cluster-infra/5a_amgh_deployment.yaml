@@ -18,7 +18,7 @@ spec:
       - name: amgh
         image: docker.io/prombenchgeekodour/amgh:0.0.1
         args:
-        - "--org=testpromorg"
+        - "--org=prometheus"
         - "--repo=prometheus"
         volumeMounts:
         - name: oauth
