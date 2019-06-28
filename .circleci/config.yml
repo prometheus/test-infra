@@ -1,0 +1,41 @@
+---
+version: 2.1
+
+executors:
+  # Whenever the Go version is updated here, .travis.yml and .promu.yml
+  # should also be updated.
+  golang:
+    docker:
+    - image: circleci/golang:1.12
+
+jobs:
+  test:
+    executor: golang
+    steps:
+    - checkout
+    - run: make promu
+    - run:
+        command: make style unused vet build
+        environment:
+          # Run garbage collection more aggresively to avoid getting OOMed during the lint phase.
+          GOGC: "20"
+    - run: git diff --exit-code
+    - store_artifacts:
+        path: prombench
+        destination: /build/prombench
+    - store_artifacts:
+        path: scaler
+        destination: /build/scaler
+    - store_artifacts:
+        path: fake-webserver
+        destination: /build/fake-webserver
+    - run: rm -v prombench scaler fake-webserver
+
+workflows:
+  version: 2
+  prombench:
+    jobs:
+    - test:
+        filters:
+          tags:
+            only: /.*/

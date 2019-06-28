@@ -12,4 +12,8 @@ build:
           path: ./cmd/scaler
         - name: fake-webserver
           path: ./cmd/fake-webserver
-    flags: -a
+    flags: -a -tags netgo
+
+crossbuild:
+    platforms:
+        - linux/amd64
