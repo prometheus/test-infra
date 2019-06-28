@@ -107,6 +107,7 @@ func main() {
 		repo := *e.GetRepo().Name
 		prnumber := *e.GetIssue().Number
 		releaseVersion := arglist[1]
+		benchmarkLabel := []string{"benchmark"}
 
 		arglist = append(arglist, strconv.Itoa(prnumber))
 		// Save args to file. Stores releaseVersion in ARG_0 and prnumber in ARG_1.
@@ -130,6 +131,11 @@ The Prometheus servers being benchmarked can be viewed at :
 To stop the benchmark process comment **/benchmark cancel** .`, prnumber, releaseVersion, prombenchURL, prnumber, prombenchURL, prnumber, prnumber, prombenchURL, prnumber, releaseVersion, prnumber, prombenchURL, prnumber)
 
 		if err := postComment(client, owner, repo, prnumber, comment); err != nil {
+			log.Printf("%v+", err)
+		}
+
+		// Setting benchmark label.
+		if _, _, err := client.Issues.AddLabelsToIssue(context.Background(), owner, repo, prnumber, benchmarkLabel); err != nil {
 			log.Printf("%v+", err)
 		}
 
