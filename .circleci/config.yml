@@ -32,30 +32,11 @@ jobs:
         destination: /build/fake-webserver
     - run: rm -v prombench scaler fake-webserver
 
-  build:
-    machine: true
-
-    steps:
-    - checkout
-    - run: make promu
-    - run: promu crossbuild -v
-    - persist_to_workspace:
-        root: .
-        paths:
-        - .build
-    - store_artifacts:
-        path: .build
-        destination: /build
-
 workflows:
   version: 2
-  prometheus:
+  prombench:
     jobs:
     - test:
-        filters:
-          tags:
-            only: /.*/
-    - build:
         filters:
           tags:
             only: /.*/
