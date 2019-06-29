@@ -106,7 +106,8 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/rewrite-target: /$2
     # rewrite-target is required for grafana to work properly in subpath
-    # TODO: remove after upgrading grafana : https://github.com/grafana/grafana/pull/17048
+    # TODO: remove rewrite-target after upgrading grafana to 6.3
+    # https://github.com/grafana/grafana/pull/17048
 spec:
   rules:
   - http:
