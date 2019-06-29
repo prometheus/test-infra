@@ -18,6 +18,8 @@ spec:
         component: core
     spec:
       serviceAccountName: prometheus
+      securityContext:
+        runAsUser: 472
       containers:
       - image: grafana/grafana:6.2.5
         name: grafana-core
@@ -27,6 +29,7 @@ spec:
             value: "/opt/grafana-provision"
           - name: GF_SERVER_ROOT_URL
             value: "http://{{ .DOMAIN_NAME }}/grafana"
+            # check if we can use service name here^
           - name: GF_AUTH_ANONYMOUS_ENABLED
             value: "true"
           - name: GF_AUTH_ANONYMOUS_ORG_NAME
@@ -41,7 +44,7 @@ spec:
           timeoutSeconds: 1
         volumeMounts:
         - name: grafana-persistent-storage
-          mountPath: /var
+          mountPath: /var/lib/grafana
         - name: grafana-datasources
           mountPath: /opt/grafana-provision/datasources
         - name: grafana-dashboard-provision
@@ -72,6 +75,7 @@ spec:
       - name: grafana-dashboard-prow
         configMap:
           name: grafana-dashboard-prow
+      # add https://grafana.com/docs/installation/docker/#reading-secrets-from-files-support-for-docker-secrets
       nodeSelector:
         cloud.google.com/gke-nodepool: prow
 ---
