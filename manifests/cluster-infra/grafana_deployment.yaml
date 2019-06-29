@@ -29,13 +29,13 @@ spec:
             value: "/opt/grafana-provision"
           - name: GF_SERVER_ROOT_URL
             value: "http://{{ .DOMAIN_NAME }}/grafana"
-            # check if we can use service name here^
           - name: GF_AUTH_ANONYMOUS_ENABLED
             value: "true"
           - name: GF_AUTH_ANONYMOUS_ORG_NAME
             value: "Main Org."
           - name: GF_SECURITY_ADMIN_PASSWORD
             value: "{{ .GRAFANA_ADMIN_PASSWORD }}"
+          # TODO: https://grafana.com/docs/installation/docker/#reading-secrets-from-files-support-for-docker-secrets
         readinessProbe:
           httpGet:
             path: /login
@@ -75,7 +75,6 @@ spec:
       - name: grafana-dashboard-prow
         configMap:
           name: grafana-dashboard-prow
-      # add https://grafana.com/docs/installation/docker/#reading-secrets-from-files-support-for-docker-secrets
       nodeSelector:
         cloud.google.com/gke-nodepool: prow
 ---
