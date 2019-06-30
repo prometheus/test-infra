@@ -17,22 +17,12 @@ import (
 
 const prombenchURL = "http://prombench.prometheus.io"
 
-var regex string
-var input string
-var output string
-
-func writeArgs(arglist []string) {
-	for i, arg := range arglist[1:] {
-		data := []byte(arg)
-		filename := fmt.Sprintf("ARG_%d", i)
-		err := ioutil.WriteFile(filepath.Join(output, filename), data, 0644)
-		log.Printf(filepath.Join(output, filename))
-		if err != nil {
-			log.Fatalln(err)
-		}
-	}
+func newClient(token string) *github.Client {
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+	tc := oauth2.NewClient(context.Background(), ts)
+	clt := github.NewClient(tc)
+	return clt
 }
-
 func memberValidation(authorAssociation string) error {
 	if (authorAssociation != "COLLABORATOR") && (authorAssociation != "MEMBER") {
 		return fmt.Errorf("not a member or collaborator")
@@ -49,32 +39,38 @@ func regexValidation(regex string, comment string) ([]string, error) {
 	return []string{}, fmt.Errorf("invalid command")
 }
 
+func writeArgs(args []string, output string) {
+	for i, arg := range args[1:] {
+		data := []byte(arg)
+		filename := fmt.Sprintf("ARG_%d", i)
+		err := ioutil.WriteFile(filepath.Join(output, filename), data, 0644)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		log.Printf(filepath.Join(output, filename))
+	}
+}
+
 func postComment(client *github.Client, owner string, repo string, prnumber int, comment string) error {
 	issueComment := &github.IssueComment{Body: github.String(comment)}
-	issueComment, _, err := client.Issues.CreateComment(context.Background(), owner, repo, prnumber, issueComment)
+	_, _, err := client.Issues.CreateComment(context.Background(), owner, repo, prnumber, issueComment)
 	return err
 }
 
 func main() {
-	app := kingpin.New(filepath.Base(os.Args[0]), "simpleargs github comment extract")
-	app.Flag("input", "path to event.json").Default("/github/workflow/event.json").StringVar(&input)
-	app.Flag("output", "path to write args to").Default("/github/home").StringVar(&output)
-	app.Arg("regex", "Regex pattern to match").Required().StringVar(&regex)
+	app := kingpin.New(filepath.Base(os.Args[0]), "commentMonitor github comment extract")
+	input := app.Flag("input", "path to event.json").Default("/github/workflow/event.json").String()
+	output := app.Flag("output", "path to write args to").Default("/github/home").String()
+	regex := app.Arg("regex", "Regex pattern to match").Required().String()
 	app.HelpFlag.Short('h')
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	// Github client for posting comments.
-	token := os.Getenv("GITHUB_TOKEN")
-	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-	client := github.NewClient(tc)
-
 	// Reading event.json.
-	os.MkdirAll(output, os.ModePerm)
-	data, err := ioutil.ReadFile(input)
+	err := os.MkdirAll(*output, os.ModePerm)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	data, err := ioutil.ReadFile(*input)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -82,35 +78,34 @@ func main() {
 	// Parsing event.json.
 	event, err := github.ParseWebHook("issue_comment", data)
 	if err != nil {
-		log.Fatalln("could not parse = %v\n", err)
+		log.Fatalln(err)
 	}
 
 	switch e := event.(type) {
 	case *github.IssueCommentEvent:
 		// Check author association.
 		if err := memberValidation(*e.GetComment().AuthorAssociation); err != nil {
-			log.Printf("Author is not a member or collaborator")
+			log.Printf("author is not a member or collaborator")
 			os.Exit(78)
 		}
-		log.Printf("Author is member or collaborator")
+		log.Printf("author is member or collaborator")
 
 		// Validate comment.
-		arglist, err := regexValidation(regex, *e.GetComment().Body)
+		args, err := regexValidation(*regex, *e.GetComment().Body)
 		if err != nil {
-			log.Printf("Matching command not found")
+			log.Printf("matching command not found")
 			os.Exit(78)
 		}
 
 		// Get parameters.
+		releaseVersion := args[1]
 		owner := *e.GetRepo().Owner.Login
 		repo := *e.GetRepo().Name
 		prnumber := *e.GetIssue().Number
-		releaseVersion := arglist[1]
-		benchmarkLabel := []string{"benchmark"}
 
-		arglist = append(arglist, strconv.Itoa(prnumber))
 		// Save args to file. Stores releaseVersion in ARG_0 and prnumber in ARG_1.
-		writeArgs(arglist)
+		args = append(args, strconv.Itoa(prnumber))
+		writeArgs(args, *output)
 
 		// Posting benchmark start comment.
 		comment := fmt.Sprintf(`Welcome to Prometheus Benchmarking Tool.
@@ -129,13 +124,17 @@ The Prometheus servers being benchmarked can be viewed at :
 
 To stop the benchmark process comment **/benchmark cancel** .`, prnumber, releaseVersion, prombenchURL, prnumber, prombenchURL, prnumber, prnumber, prombenchURL, prnumber, releaseVersion, prnumber, prombenchURL, prnumber)
 
-		if err := postComment(client, owner, repo, prnumber, comment); err != nil {
-			log.Printf("%v+", err)
+		// Github client for posting comments.
+		clt := newClient(os.Getenv("GITHUB_TOKEN"))
+
+		if err := postComment(clt, owner, repo, prnumber, comment); err != nil {
+			log.Fatalln(err)
 		}
 
 		// Setting benchmark label.
-		if _, _, err := client.Issues.AddLabelsToIssue(context.Background(), owner, repo, prnumber, benchmarkLabel); err != nil {
-			log.Printf("%v+", err)
+		benchmarkLabel := []string{"benchmark"}
+		if _, _, err := clt.Issues.AddLabelsToIssue(context.Background(), owner, repo, prnumber, benchmarkLabel); err != nil {
+			log.Fatalln(err)
 		}
 
 	default:
