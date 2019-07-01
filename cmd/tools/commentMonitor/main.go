@@ -17,53 +17,12 @@ import (
 
 const prombenchURL = "http://prombench.prometheus.io"
 
-func newClient(token string) *github.Client {
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
-	tc := oauth2.NewClient(context.Background(), ts)
-	clt := github.NewClient(tc)
-	return clt
-}
-func memberValidation(authorAssociation string) error {
-	if (authorAssociation != "COLLABORATOR") && (authorAssociation != "MEMBER") {
-		return fmt.Errorf("not a member or collaborator")
-	}
-	return nil
-}
-
-func regexValidation(regex string, comment string) ([]string, error) {
-	argRe := regexp.MustCompile(regex)
-	if argRe.MatchString(comment) {
-		arglist := argRe.FindStringSubmatch(comment)
-		return arglist, nil
-	}
-	return []string{}, fmt.Errorf("invalid command")
-}
-
-func writeArgs(args []string, output string) {
-	for i, arg := range args[1:] {
-		data := []byte(arg)
-		filename := fmt.Sprintf("ARG_%v", i)
-		err := ioutil.WriteFile(filepath.Join(output, filename), data, 0644)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		log.Printf(filepath.Join(output, filename))
-	}
-}
-
-func postComment(client *github.Client, owner string, repo string, prnumber int, comment string) error {
-	issueComment := &github.IssueComment{Body: github.String(comment)}
-	_, _, err := client.Issues.CreateComment(context.Background(), owner, repo, prnumber, issueComment)
-	return err
-}
-
 func main() {
 	app := kingpin.New(filepath.Base(os.Args[0]), "commentMonitor github comment extract")
 	app.HelpFlag.Short('h')
 	input := app.Flag("input", "path to event.json").Short('i').Default("/github/workflow/event.json").String()
 	output := app.Flag("output", "path to write args to").Short('o').Default("/github/home").String()
 	regex := app.Arg("regex", "Regex pattern to match").Required().String()
-
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	// Reading event.json.
@@ -141,4 +100,44 @@ To stop the benchmark process comment **/benchmark cancel** .`, prnumber, releas
 	default:
 		log.Fatalln("simpleargs only supports issue_comment event")
 	}
+}
+
+func newClient(token string) *github.Client {
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+	tc := oauth2.NewClient(context.Background(), ts)
+	clt := github.NewClient(tc)
+	return clt
+}
+func memberValidation(authorAssociation string) error {
+	if (authorAssociation != "COLLABORATOR") && (authorAssociation != "MEMBER") {
+		return fmt.Errorf("not a member or collaborator")
+	}
+	return nil
+}
+
+func regexValidation(regex string, comment string) ([]string, error) {
+	argRe := regexp.MustCompile(regex)
+	if argRe.MatchString(comment) {
+		arglist := argRe.FindStringSubmatch(comment)
+		return arglist, nil
+	}
+	return []string{}, fmt.Errorf("invalid command")
+}
+
+func writeArgs(args []string, output string) {
+	for i, arg := range args[1:] {
+		data := []byte(arg)
+		filename := fmt.Sprintf("ARG_%v", i)
+		err := ioutil.WriteFile(filepath.Join(output, filename), data, 0644)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		log.Printf(filepath.Join(output, filename))
+	}
+}
+
+func postComment(client *github.Client, owner string, repo string, prnumber int, comment string) error {
+	issueComment := &github.IssueComment{Body: github.String(comment)}
+	_, _, err := client.Issues.CreateComment(context.Background(), owner, repo, prnumber, issueComment)
+	return err
 }
