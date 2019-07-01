@@ -42,7 +42,7 @@ func regexValidation(regex string, comment string) ([]string, error) {
 func writeArgs(args []string, output string) {
 	for i, arg := range args[1:] {
 		data := []byte(arg)
-		filename := fmt.Sprintf("ARG_%d", i)
+		filename := fmt.Sprintf("ARG_%v", i)
 		err := ioutil.WriteFile(filepath.Join(output, filename), data, 0644)
 		if err != nil {
 			log.Fatalln(err)
@@ -111,17 +111,17 @@ func main() {
 		// Posting benchmark start comment.
 		comment := fmt.Sprintf(`Welcome to Prometheus Benchmarking Tool.
 
-The two prometheus versions that will be compared are _**pr-%d**_ and _**%s**_
+The two prometheus versions that will be compared are _**pr-%v**_ and _**%v**_
 
 The logs can be viewed at the links provided in the GitHub check blocks at the end of this conversation
 
 After successfull deployment, the benchmarking metrics can be viewed at :
-- [prometheus-meta](%s/prometheus-meta) - label **{namespace="prombench-%d"}**
-- [grafana](%s/grafana) - template-variable **"pr-number" : %d**
+- [prometheus-meta](%v/prometheus-meta) - label **{namespace="prombench-%v"}**
+- [grafana](%v/grafana) - template-variable **"pr-number" : %v**
 
 The Prometheus servers being benchmarked can be viewed at :
-- PR - [prombench.prometheus.io/%d/prometheus-pr](%s/%d/prometheus-pr)
-- %s - [prombench.prometheus.io/%d/prometheus-release](%s/%d/prometheus-release)
+- PR - [prombench.prometheus.io/%v/prometheus-pr](%v/%v/prometheus-pr)
+- %v - [prombench.prometheus.io/%v/prometheus-release](%v/%v/prometheus-release)
 
 To stop the benchmark process comment **/benchmark cancel** .`, prnumber, releaseVersion, prombenchURL, prnumber, prombenchURL, prnumber, prnumber, prombenchURL, prnumber, releaseVersion, prnumber, prombenchURL, prnumber)
 
