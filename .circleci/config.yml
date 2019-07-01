@@ -1,6 +1,9 @@
 ---
 version: 2.1
 
+orbs:
+  prometheus: prometheus/prometheus@0.1.0
+
 executors:
   # Whenever the Go version is updated here, .travis.yml and .promu.yml
   # should also be updated.
@@ -12,24 +15,22 @@ jobs:
   test:
     executor: golang
     steps:
-    - checkout
-    - run: make promu
+    - prometheus/setup_environment
     - run:
         command: make style unused vet build
         environment:
-          # Run garbage collection more aggresively to avoid getting OOMed during the lint phase.
-          GOGC: "20"
+          # By default Go uses GOMAXPROCS but a Circle CI executor has many
+          # cores (> 30) while the CPU and RAM resources are throttled. If we
+          # don't limit this to the number of allocated cores, the job is
+          # likely to get OOMed and killed.
+          GOOPTS: "-p 2"
     - run: git diff --exit-code
-    - store_artifacts:
-        path: prombench
-        destination: /build/prombench
-    - store_artifacts:
-        path: scaler
-        destination: /build/scaler
-    - store_artifacts:
-        path: fake-webserver
-        destination: /build/fake-webserver
-    - run: rm -v prombench scaler fake-webserver
+    - prometheus/store_artifact:
+        file: prombench
+    - prometheus/store_artifact:
+        file: scaler
+    - prometheus/store_artifact:
+        file: fake-webserver
 
 workflows:
   version: 2
