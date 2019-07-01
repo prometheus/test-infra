@@ -59,10 +59,11 @@ func postComment(client *github.Client, owner string, repo string, prnumber int,
 
 func main() {
 	app := kingpin.New(filepath.Base(os.Args[0]), "commentMonitor github comment extract")
-	input := app.Flag("input", "path to event.json").Default("/github/workflow/event.json").String()
-	output := app.Flag("output", "path to write args to").Default("/github/home").String()
-	regex := app.Arg("regex", "Regex pattern to match").Required().String()
 	app.HelpFlag.Short('h')
+	input := app.Flag("input", "path to event.json").Short('i').Default("/github/workflow/event.json").String()
+	output := app.Flag("output", "path to write args to").Short('o').Default("/github/home").String()
+	regex := app.Arg("regex", "Regex pattern to match").Required().String()
+
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	// Reading event.json.
