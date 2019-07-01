@@ -35,7 +35,6 @@ spec:
             value: "Main Org."
           - name: GF_SECURITY_ADMIN_PASSWORD
             value: "{{ .GRAFANA_ADMIN_PASSWORD }}"
-          # TODO: https://grafana.com/docs/installation/docker/#reading-secrets-from-files-support-for-docker-secrets
         readinessProbe:
           httpGet:
             path: /login
