@@ -15,8 +15,6 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-const prombenchURL = "http://prombench.prometheus.io"
-
 func main() {
 	app := kingpin.New(filepath.Base(os.Args[0]), "commentMonitor github comment extract\n ./commentMonitor -i /path/event.json -o /path \"^myregex$\"")
 	app.HelpFlag.Short('h')
@@ -59,6 +57,7 @@ func main() {
 
 		// Get parameters.
 		releaseVersion := args[1]
+		prombenchURL := os.Getenv("DOMAIN_NAME")
 		owner := *e.GetRepo().Owner.Login
 		repo := *e.GetRepo().Name
 		prnumber := *e.GetIssue().Number
