@@ -213,8 +213,9 @@ spec:
           mountPath: /etc/prometheus/config
         - name: alert-rules
           mountPath: /etc/prometheus/alerts
-        - name: data
+        - name: storage
           mountPath: /data
+          subPath: prometheus-data
         ports:
         - name: prom-web
           containerPort: 9090
@@ -225,7 +226,7 @@ spec:
       - name: alert-rules
         configMap:
           name: alert-rules
-      - name: data
+      - name: storage
         persistentVolumeClaim:
           claimName: prometheus-meta
       terminationGracePeriodSeconds: 300

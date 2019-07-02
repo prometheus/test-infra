@@ -27,6 +27,7 @@ spec:
           mountPath: /etc/alertmanager/
         - name: storage
           mountPath: /alertmanager
+          subPath: alertmanager-data
         ports:
         - name: am-web
           containerPort: 9093
@@ -35,7 +36,8 @@ spec:
         configMap:
           name: alertmanager-config
       - name: storage
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: prometheus-meta
       terminationGracePeriodSeconds: 300
       nodeSelector:
         cloud.google.com/gke-nodepool: prow
