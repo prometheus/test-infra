@@ -18,7 +18,7 @@ import (
 const prombenchURL = "http://prombench.prometheus.io"
 
 func main() {
-	app := kingpin.New(filepath.Base(os.Args[0]), "commentMonitor github comment extract")
+	app := kingpin.New(filepath.Base(os.Args[0]), "commentMonitor github comment extract\n ./commentMonitor -i /path/event.json -o /path \"^myregex$\"")
 	app.HelpFlag.Short('h')
 	input := app.Flag("input", "path to event.json").Short('i').Default("/github/workflow/event.json").String()
 	output := app.Flag("output", "path to write args to").Short('o').Default("/github/home").String()
@@ -108,6 +108,7 @@ func newClient(token string) *github.Client {
 	clt := github.NewClient(tc)
 	return clt
 }
+
 func memberValidation(authorAssociation string) error {
 	if (authorAssociation != "COLLABORATOR") && (authorAssociation != "MEMBER") {
 		return fmt.Errorf("not a member or collaborator")
