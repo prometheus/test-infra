@@ -1,9 +1,7 @@
-DOCKER_REPO             ?= prombench
-
 include Makefile.common
 
 PROMBENCH_CMD        = ./prombench
-
+DOCKER_IMAGE_NAME	?= "prombench"
 ifeq ($(AUTH_FILE),)
 AUTH_FILE = "/etc/serviceaccount/service-account.json"
 endif
