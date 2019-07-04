@@ -38,15 +38,20 @@ jobs:
     - run: docker run --privileged linuxkit/binfmt:v0.6
     - attach_workspace:
         at: .
-    - run:
-        command: |
-          make docker 
-          docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
-          make docker-publish 
-        environment:
-          DOCKER_IMAGE_TAG: "1"
-          DOCKER_REPO: "niki1905"
-          DOCKER_IMAGE_NAME: "prombench"
+    - prometheus/publish_images:
+        login_variable: "$DOCKER_USER"
+        organization: "prombench"
+        password_variable: "$DOCKER_PASS"
+        registry: docker.io
+    # - run:
+    #     command: |
+    #       make docker 
+    #       docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+    #       make docker-publish 
+    #     environment:
+    #       DOCKER_IMAGE_TAG: "1"
+    #       DOCKER_REPO: "niki1905"
+    #       DOCKER_IMAGE_NAME: "prombench"
 
 workflows:
   version: 2
