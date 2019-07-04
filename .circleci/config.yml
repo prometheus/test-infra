@@ -41,7 +41,7 @@ jobs:
     - run:
         command: |
           make docker 
-          docker login -u "$DOCKER_USER" --password-stdin "$DOCKER_PASS"
+          docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
           make docker-publish 
         environment:
           DOCKER_IMAGE_TAG: "1"
