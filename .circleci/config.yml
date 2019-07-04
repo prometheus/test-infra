@@ -39,9 +39,9 @@ jobs:
     - attach_workspace:
         at: .
     - prometheus/publish_images:
-        login_variable: "$DOCKER_USER"
+        login_variable: DOCKER_USER
         organization: "prombench"
-        password_variable: "$DOCKER_PASS"
+        password_variable: DOCKER_PASS
         registry: docker.io
     # - run:
     #     command: |
