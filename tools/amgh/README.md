@@ -1,8 +1,8 @@
-# amgh - Alertmanager GitHub Reciever
+# amgh - Alertmanager GitHub Receiver
 
 A simple webhook server that can be added as a webhook reciver in alertmanager config.
 
-It listens at the `/hook` endpoint and on port `:8080` by default.
+It listens at the `/hook` endpoint on port `:8080` by default.
 
 ### Features
 - Posts comments on Github PRs/issues based on the `prNum` label of alerts.

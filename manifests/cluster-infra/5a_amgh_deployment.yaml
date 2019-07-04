@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: amgh
-        image: docker.io/prombenchgeekodour/amgh:0.0.1
+        image: docker.io/prombench/amgh:0.0.1
         args:
         - "--org=prometheus"
         - "--repo=prometheus"

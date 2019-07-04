@@ -1,3 +1,16 @@
+// Copyright 2019 The Prometheus Authors
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
 import (
@@ -62,7 +75,7 @@ func getTargetPR(msg *notify.WebhookMessage) (int, error) {
 }
 
 // getTargetRepo returns the "repo" label if exists else returns defaultRepo.
-func (g ghWebhookReciever) getTargetRepo(msg *notify.WebhookMessage) string {
+func (g ghWebhookReceiver) getTargetRepo(msg *notify.WebhookMessage) string {
 	if repo, ok := msg.CommonLabels["repo"]; ok {
 		return repo
 	}
@@ -70,7 +83,7 @@ func (g ghWebhookReciever) getTargetRepo(msg *notify.WebhookMessage) string {
 }
 
 // getTargetOwner returns the "owner" label if exists else returns defaultOwner.
-func (g ghWebhookReciever) getTargetOwner(msg *notify.WebhookMessage) string {
+func (g ghWebhookReceiver) getTargetOwner(msg *notify.WebhookMessage) string {
 	if owner, ok := msg.CommonLabels["owner"]; ok {
 		return owner
 	}
