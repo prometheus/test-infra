@@ -40,9 +40,9 @@ jobs:
         at: .
     - run:
         command: |
-          make docker DOCKER_IMAGE_TAG=1 DOCKER_REPO=niki1905 DOCKER_IMAGE_NAME=asdf
-          docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
-          make docker-publish DOCKER_IMAGE_TAG="$CIRCLE_TAG" DOCKER_REPO=niki1905
+          make docker DOCKER_IMAGE_TAG="$DOCKER_IMAGE_TAG" DOCKER_REPO="$DOCKER_REPO" DOCKER_IMAGE_NAME="$DOCKER_IMAGE_NAME"
+          docker login -u "$DOCKER_USER" --password-stdin "$DOCKER_PASS"
+          make docker-publish DOCKER_IMAGE_TAG="$DOCKER_IMAGE_TAG" DOCKER_REPO="$DOCKER_REPO" DOCKER_IMAGE_NAME="$DOCKER_IMAGE_NAME"
         environment:
           DOCKER_IMAGE_TAG: "$CIRCLE_TAG"
           DOCKER_REPO: "$DOCKER_USER"
