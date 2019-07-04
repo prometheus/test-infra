@@ -13,11 +13,8 @@ data:
       group_interval: 5m
       repeat_interval: 4h
       receiver: amgh-bridge
-
-      routes:
-      - receiver: amgh-bridge
-        match:
-          job: node-exporter
+      match:
+        job: node-exporter
 
     receivers:
     - name: amgh-bridge

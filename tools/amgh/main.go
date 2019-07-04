@@ -1,3 +1,16 @@
+// Copyright 2019 The Prometheus Authors
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
 import (
@@ -16,20 +29,39 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-type ghWebhookRecieverConfig struct {
+type ghWebhookReceiverConfig struct {
 	authfile     string
 	defaultOwner string
 	defaultRepo  string
 	portNo       string
 }
 
-type ghWebhookReciever struct {
+type ghWebhookReceiver struct {
 	ghClient *github.Client
-	cfg      ghWebhookRecieverConfig
+	cfg      ghWebhookReceiverConfig
 }
 
 type ghWebhookHandler struct {
-	client *ghWebhookReciever
+	client *ghWebhookReceiver
+}
+
+func main() {
+	cfg := ghWebhookReceiverConfig{}
+
+	app := kingpin.New(filepath.Base(os.Args[0]), "alertmanager github webhook receiver")
+	app.Flag("authfile", "path to github oauth token file").Default("/etc/github/oauth").StringVar(&cfg.authfile)
+	app.Flag("org", "default org/owner").Required().StringVar(&cfg.defaultOwner)
+	app.Flag("repo", "default repo").Required().StringVar(&cfg.defaultRepo)
+	app.Flag("port", "port number to run the server in").Default("8080").StringVar(&cfg.portNo)
+
+	kingpin.MustParse(app.Parse(os.Args[1:]))
+
+	client, err := newGhWebhookReceiver(cfg)
+	if err != nil {
+		log.Fatalf("failed to create GitHub Webhook Receiver client: %v", err)
+	}
+
+	serveWebhook(client)
 }
 
 func (hl ghWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +93,7 @@ func (hl ghWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func newGhWebhookReciever(cfg ghWebhookRecieverConfig) (*ghWebhookReciever, error) {
+func newGhWebhookReceiver(cfg ghWebhookReceiverConfig) (*ghWebhookReceiver, error) {
 	oauth2token, err := ioutil.ReadFile(cfg.authfile)
 	if err != nil {
 		return nil, err
@@ -71,14 +103,14 @@ func newGhWebhookReciever(cfg ghWebhookRecieverConfig) (*ghWebhookReciever, erro
 	)
 	ctx := context.Background()
 	tc := oauth2.NewClient(ctx, ts)
-	return &ghWebhookReciever{
+	return &ghWebhookReceiver{
 		ghClient: github.NewClient(tc),
 		cfg:      cfg,
 	}, nil
 }
 
 // processAlert formats and posts the comment to github and returns nil if successful.
-func (g ghWebhookReciever) processAlert(ctx context.Context, msg *notify.WebhookMessage) error {
+func (g ghWebhookReceiver) processAlert(ctx context.Context, msg *notify.WebhookMessage) error {
 
 	msgBody, err := formatIssueBody(msg)
 	if err != nil {
@@ -100,29 +132,10 @@ func (g ghWebhookReciever) processAlert(ctx context.Context, msg *notify.Webhook
 	return nil
 }
 
-func serveWebhook(client *ghWebhookReciever) {
+func serveWebhook(client *ghWebhookReceiver) {
 	hl := ghWebhookHandler{client}
 	http.Handle("/hook", hl)
 	log.Printf("finished setting up gh client. starting amgh with %v/%v as defaults",
 		client.cfg.defaultOwner, client.cfg.defaultRepo)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", client.cfg.portNo), nil))
-}
-
-func main() {
-	cfg := ghWebhookRecieverConfig{}
-
-	app := kingpin.New(filepath.Base(os.Args[0]), "alertmanager github webhook reciever")
-	app.Flag("authfile", "path to github oauth token file").Default("/etc/github/oauth").StringVar(&cfg.authfile)
-	app.Flag("org", "default org/owner").Required().StringVar(&cfg.defaultOwner)
-	app.Flag("repo", "default repo").Required().StringVar(&cfg.defaultRepo)
-	app.Flag("port", "port number to run the server in").Default("8080").StringVar(&cfg.portNo)
-
-	kingpin.MustParse(app.Parse(os.Args[1:]))
-
-	client, err := newGhWebhookReciever(cfg)
-	if err != nil {
-		log.Fatalf("failed to create GitHub Webhook Reciever client: %v", err)
-	}
-
-	serveWebhook(client)
 }

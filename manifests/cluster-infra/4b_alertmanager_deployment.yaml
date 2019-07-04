@@ -20,6 +20,7 @@ spec:
         args:
         - "--web.external-url=http://{{ .DOMAIN_NAME }}/alertmanager"
         - "--config.file=/etc/alertmanager/alertmanager.yml"
+        - "--cluster.listen-address="
         - "--storage.path=/alertmanager"
         name: alertmanager
         volumeMounts:
