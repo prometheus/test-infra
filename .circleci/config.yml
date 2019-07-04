@@ -33,11 +33,12 @@ jobs:
     - prometheus/store_artifact:
         file: fake-webserver
     - run: ls
-    - prometheus/publish_images:
-        login_variable: DOCKER_USER
-        organization: prombench
-        password_variable: DOCKER_PASS
-        registry: docker.io
+    - run:
+        command: make docker DOCKER_IMAGE_TAG=1 DOCKER_REPO=niki1905 DOCKER_IMAGE_NAME=asdf
+        environment:
+          DOCKER_IMAGE_TAG: "$CIRCLE_TAG"
+          DOCKER_REPO: "$DOCKER_USER"
+          DOCKER_IMAGE_NAME: "prombench"
 
 workflows:
   version: 2
