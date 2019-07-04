@@ -39,7 +39,10 @@ jobs:
     - attach_workspace:
         at: .
     - run:
-        command: make docker DOCKER_IMAGE_TAG=1 DOCKER_REPO=niki1905 DOCKER_IMAGE_NAME=asdf
+        command: |
+          make docker DOCKER_IMAGE_TAG=1 DOCKER_REPO=niki1905 DOCKER_IMAGE_NAME=asdf
+          docker login -u "$DOCKER_USER" -p $DOCKER_PASS
+          make docker-publish DOCKER_IMAGE_TAG="$CIRCLE_TAG" DOCKER_REPO=niki1905
         environment:
           DOCKER_IMAGE_TAG: "$CIRCLE_TAG"
           DOCKER_REPO: "$DOCKER_USER"
