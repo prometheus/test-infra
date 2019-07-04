@@ -25,12 +25,19 @@ jobs:
           # likely to get OOMed and killed.
           GOOPTS: "-p 2"
     - run: git diff --exit-code
-    - prometheus/store_artifact:
-        file: prombench
+    - store_artifacts:
+        destination: /build/prombench
+        path: prombench
     - prometheus/store_artifact:
         file: scaler
     - prometheus/store_artifact:
         file: fake-webserver
+    - prometheus/setup_build_environment
+    - prometheus/publish_images:
+        login_variable: DOCKER_LOGIN
+        organization: "prombench"
+        password_variable: DOCKER_PASSWORD
+        registry: docker.io
 
 workflows:
   version: 2
