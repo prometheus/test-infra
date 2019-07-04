@@ -43,6 +43,8 @@ jobs:
         organization: "prombench"
         password_variable: DOCKER_PASS
         registry: docker.io
+        environment:
+          DOCKER_IMAGE_NAME: "prombench"
     # - run:
     #     command: |
     #       make docker 
