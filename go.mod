@@ -14,6 +14,7 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/alertmanager v0.17.0
 	github.com/prometheus/client_golang v0.9.3
+	github.com/prometheus/common v0.4.0
 	github.com/spf13/pflag v1.0.3 // indirect
 	google.golang.org/api v0.5.0
 	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421
