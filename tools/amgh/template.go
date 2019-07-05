@@ -17,31 +17,32 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"html/template"
 	"log"
 	"strconv"
+	"text/template"
 
 	"github.com/prometheus/alertmanager/notify"
 )
 
 const alertMD = `
-### 🔔 {{ index .Data.GroupLabels "alertname" }}:{{ index .Data.GroupLabels "namespace" }}
+### {{ index .Data.GroupLabels "alertname" }}:{{ index .Data.GroupLabels "namespace" }} [{{len .Data.Alerts}}]
+
 Alertmanager URL: {{.Data.ExternalURL}}
+
 ---
 {{range .Data.Alerts}}
-  * {{.Status}} {{.GeneratorURL}}
-  {{if .Labels}}
-    Labels:
-  {{- end}}
-  {{range $key, $value := .Labels}}
-    - {{$key}} = {{$value -}}
-  {{end}}
-  {{if .Annotations}}
-    Annotations:
-  {{- end}}
-  {{range $key, $value := .Annotations}}
-    - {{$key}} = {{$value -}}
-  {{end}}
+##### {{if eq .Status "firing"}} 🔥 {{ else }} ✅ {{end}} {{.Status}} | [prometheus explorer]({{.GeneratorURL}})
+
+{{if .Labels}} **Labels:** {{- end}}
+
+{{range $key, $_ := .Labels}} {{ $key }} | {{- end }}
+{{range $_, $_ := .Labels}} --- | {{- end }}
+{{range $_, $value := .Labels}} {{ $value }} | {{- end }}
+
+{{if .Annotations}} **Annotations:** {{- end}}
+{{range $key, $value := .Annotations}}
+- **{{$key}}** : {{$value -}}
+{{end}}
 {{end}}
 `
 
@@ -52,8 +53,8 @@ func alertID(msg *notify.WebhookMessage) string {
 	return fmt.Sprintf("0x%x", msg.GroupKey)
 }
 
-// formatIssueBody constructs an issue body from a webhook message.
-func formatIssueBody(msg *notify.WebhookMessage) (string, error) {
+// formatIssueCommentBody constructs an issue body from a webhook message.
+func formatIssueCommentBody(msg *notify.WebhookMessage) (string, error) {
 	var buf bytes.Buffer
 	err := alertTemplate.Execute(&buf, msg)
 	if err != nil {
