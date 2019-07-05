@@ -112,7 +112,7 @@ func newGhWebhookReceiver(cfg ghWebhookReceiverConfig) (*ghWebhookReceiver, erro
 // processAlert formats and posts the comment to github and returns nil if successful.
 func (g ghWebhookReceiver) processAlert(ctx context.Context, msg *notify.WebhookMessage) error {
 
-	msgBody, err := formatIssueBody(msg)
+	msgBody, err := formatIssueCommentBody(msg)
 	if err != nil {
 		return err
 	}

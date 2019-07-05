@@ -14,7 +14,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"testing"
 	"time"
@@ -25,7 +24,10 @@ import (
 )
 
 func TestFormatIssueCommentBody(t *testing.T) {
-	cl := template.KV{"testLabel": "labelData"}
+	cl := template.KV{
+		"testLabel":  "labelData",
+		"testLabel2": "labelData",
+	}
 	ca := template.KV{"testAnn": "annData"}
 	alert1 := template.Alert{
 		Status:       string(model.AlertFiring),
@@ -33,7 +35,7 @@ func TestFormatIssueCommentBody(t *testing.T) {
 		Annotations:  ca,
 		StartsAt:     time.Time{},
 		EndsAt:       time.Time{},
-		GeneratorURL: "http://prometheus.io",
+		GeneratorURL: "http://www.prom.io?foo=bar&baz=qux",
 	}
 	alerts := template.Alerts{
 		alert1,
@@ -46,7 +48,7 @@ func TestFormatIssueCommentBody(t *testing.T) {
 		GroupLabels:       gl,
 		CommonLabels:      cl,
 		CommonAnnotations: ca,
-		ExternalURL:       "http://somepath.com",
+		ExternalURL:       "http://alertmanager.com",
 	}
 
 	msg := &notify.WebhookMessage{
@@ -54,9 +56,32 @@ func TestFormatIssueCommentBody(t *testing.T) {
 		Data:     data,
 		GroupKey: "group_key",
 	}
-	body, err := formatIssueBody(msg)
+	body, err := formatIssueCommentBody(msg)
 	if err != nil {
-		log.Fatalln("s")
+		log.Fatalf("%v", err)
 	}
-	fmt.Printf("%v\n", body)
+	output := `
+### fixAlert:default [1]
+
+Alertmanager URL: http://alertmanager.com
+
+---
+
+#####  🔥  firing | [prometheus explorer](http://www.prom.io?foo=bar&baz=qux)
+
+ **Labels:**
+
+ testLabel | testLabel2 |
+ --- | --- |
+ labelData | labelData |
+
+ **Annotations:**
+
+- **testAnn** : annData
+
+`
+	if body != output {
+		t.Errorf("Output did not match.\ngot:\n%#v\nwant:\n%#v", body, output)
+	}
+
 }
