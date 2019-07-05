@@ -25,8 +25,9 @@ import (
 )
 
 const alertMD = `
-## Alertname: {{ index .Data.GroupLabels "alertname" }}
+### 🔔 {{ index .Data.GroupLabels "alertname" }}:{{ index .Data.GroupLabels "namespace" }}
 Alertmanager URL: {{.Data.ExternalURL}}
+---
 {{range .Data.Alerts}}
   * {{.Status}} {{.GeneratorURL}}
   {{if .Labels}}
