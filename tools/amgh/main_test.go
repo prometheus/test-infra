@@ -27,6 +27,7 @@ func TestFormatIssueCommentBody(t *testing.T) {
 	cl := template.KV{
 		"testLabel":  "labelData",
 		"testLabel2": "labelData",
+		"node":       "testNodeName",
 	}
 	ca := template.KV{"testAnn": "annData"}
 	alert1 := template.Alert{
@@ -67,19 +68,20 @@ Alertmanager URL: http://alertmanager.com
 
 ---
 
-#####  🔥  firing | [prometheus explorer](http://www.prom.io?foo=bar&baz=qux)
+<details>
+<summary> 🔥  firing | testNodeName</summary>
+
+**Explore Alert:** [prometheus explorer](http://www.prom.io?foo=bar&baz=qux)
 
  **Labels:**
 
- testLabel | testLabel2 |
- --- | --- |
- labelData | labelData |
+ node | testLabel | testLabel2 |
+ --- | --- | --- |
+ testNodeName | labelData | labelData |
 
  **Annotations:**
 
-- **testAnn** : annData
-
-`
+- **testAnn** : annData</details>`
 	if body != output {
 		t.Errorf("Output did not match.\ngot:\n%#v\nwant:\n%#v", body, output)
 	}
