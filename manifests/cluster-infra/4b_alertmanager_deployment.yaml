@@ -11,7 +11,7 @@ data:
       group_by: ['alertname', 'namespace']
       group_wait: 1m
       group_interval: 5m
-      repeat_interval: 4h
+      repeat_interval: 2d
       receiver: amgh-bridge
 
     receivers:
