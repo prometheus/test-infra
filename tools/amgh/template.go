@@ -31,7 +31,10 @@ Alertmanager URL: {{.Data.ExternalURL}}
 
 ---
 {{range .Data.Alerts}}
-##### {{if eq .Status "firing"}} 🔥 {{ else }} ✅ {{end}} {{.Status}} | [prometheus explorer]({{.GeneratorURL}})
+<details>
+<summary> {{if eq .Status "firing"}}🔥 {{ else }} ✅ {{end}} {{.Status}} | {{index .Labels "node"}}</summary>
+
+**Explore Alert:** [prometheus explorer]({{.GeneratorURL}})
 
 {{if .Labels}} **Labels:** {{- end}}
 
@@ -42,9 +45,7 @@ Alertmanager URL: {{.Data.ExternalURL}}
 {{if .Annotations}} **Annotations:** {{- end}}
 {{range $key, $value := .Annotations}}
 - **{{$key}}** : {{$value -}}
-{{end}}
-{{end}}
-`
+</details>{{end}}{{end}}`
 
 var alertTemplate = template.Must(template.New("alert").Parse(alertMD))
 
