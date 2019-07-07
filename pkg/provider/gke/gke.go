@@ -426,6 +426,28 @@ func (c *GKE) nodePoolRunning(zone, projectID, clusterID, poolName string) (bool
 	return false, nil
 }
 
+// NodePoolCheck checks if nodepools exists and returns error code if exists
+func (c *GKE) NodePoolCheck(*kingpin.ParseContext) error {
+	reqC := &containerpb.CreateClusterRequest{}
+
+	for _, deployment := range c.gkeResources {
+		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
+			log.Fatalf("error parsing the cluster deployment file %s:%v", deployment.FileName, err)
+		}
+
+		for _, node := range reqC.Cluster.NodePools {
+			b, err := c.nodePoolRunning(reqC.Zone, reqC.ProjectId, reqC.Cluster.Name, node.Name)
+			if err != nil {
+				log.Fatalln("error fetching nodePool info")
+			}
+			if b == true {
+				log.Fatalln("nodepool exists")
+			}
+		}
+	}
+	return nil
+}
+
 // NewK8sProvider sets the k8s provider used for deploying k8s manifests.
 func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 	projectID, ok := c.DeploymentVars["PROJECT_ID"]

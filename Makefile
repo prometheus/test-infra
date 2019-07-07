@@ -35,3 +35,9 @@ nodepool_delete:
 	$(PROMBENCH_CMD) gke nodepool delete -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
 		-f manifests/prombench/nodepools.yaml
+
+nodepool_check:
+	$(PROMBENCH_CMD) gke nodepool check -a ${AUTH_FILE} \
+		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} \
+		-v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
+		-f manifests/prombench/nodepools.yaml

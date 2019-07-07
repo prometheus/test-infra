@@ -47,6 +47,8 @@ func main() {
 		Action(g.NodePoolCreate)
 	k8sGKENodePool.Command("delete", "gke nodepool delete -a service-account.json -f FileOrFolder").
 		Action(g.NodePoolDelete)
+	k8sGKENodePool.Command("check", "gke nodepool check -a service-account.json -f FileOrFolder").
+		Action(g.NodePoolCheck)
 
 	// K8s resource operations.
 	k8sGKEResource := k8sGKE.Command("resource", `Apply and delete different k8s resources - deployments, services, config maps etc.Required variables -v PROJECT_ID, -v ZONE: -west1-b -v CLUSTER_NAME`).
