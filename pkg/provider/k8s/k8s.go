@@ -1241,7 +1241,7 @@ func (c *K8s) statefulSetReady(resource runtime.Object) (bool, error) {
 
 		res, err := client.Get(req.Name, apiMetaV1.GetOptions{})
 		if err != nil {
-			return false, errors.Wrapf(err, "Checking Deployment resource:'%v' status failed err:%v", req.Name, err)
+			return false, errors.Wrapf(err, "Checking StatefulSet resource:'%v' status failed err:%v", req.Name, err)
 		}
 
 		replicas := int32(1)
