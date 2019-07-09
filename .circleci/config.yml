@@ -24,6 +24,7 @@ jobs:
           # don't limit this to the number of allocated cores, the job is
           # likely to get OOMed and killed.
           GOOPTS: "-p 2"
+          DOCKER_IMAGE_NAME: "prombench"
     - run: git diff --exit-code
     - store_artifacts:
         destination: /build/prombench
@@ -44,9 +45,9 @@ workflows:
   prombench:
     jobs:
     - test:
-        pre-steps:
-          - environment:
-              DOCKER_IMAGE_NAME: "prombench" 
+        # pre-steps:
+        #   - environment:
+        #       DOCKER_IMAGE_NAME: "prombench" 
         filters:
           tags:
             only: /.*/
