@@ -1,5 +1,5 @@
 DOCKER_REPO             ?= prombench
-DOCKER_IMAGE_NAME		?= prombench
+#DOCKER_IMAGE_NAME		?= prombench
 
 include Makefile.common
 

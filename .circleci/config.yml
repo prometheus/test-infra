@@ -34,9 +34,9 @@ jobs:
         file: fake-webserver
     - prometheus/setup_build_environment
     - prometheus/publish_images:
-        login_variable: DOCKER_LOGIN
-        organization: "prombench"
-        password_variable: DOCKER_PASSWORD
+        login_variable: DOCKER_USER
+        organization: "niki1905"
+        password_variable: DOCKER_PASS
         registry: docker.io
 
 workflows:
@@ -44,6 +44,9 @@ workflows:
   prombench:
     jobs:
     - test:
+        pre-steps:
+          - environment:
+              DOCKER_IMAGE_NAME: "prombench" 
         filters:
           tags:
             only: /.*/
