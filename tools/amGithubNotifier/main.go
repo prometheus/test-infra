@@ -135,7 +135,7 @@ func (g ghWebhookReceiver) processAlert(ctx context.Context, msg *notify.Webhook
 func serveWebhook(client *ghWebhookReceiver) {
 	hl := ghWebhookHandler{client}
 	http.Handle("/hook", hl)
-	log.Printf("finished setting up gh client. starting amgh with %v/%v as defaults",
+	log.Printf("finished setting up gh client. starting amGithubNotifier with %v/%v as defaults",
 		client.cfg.defaultOwner, client.cfg.defaultRepo)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", client.cfg.portNo), nil))
 }

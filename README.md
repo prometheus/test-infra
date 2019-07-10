@@ -29,8 +29,8 @@ export AUTH_FILE=<path to service-account.json>
     -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -f manifests/cluster.yaml
 ```
 
-### Deploy Prometheus-Meta & Grafana
-> This is used for collecting and displaying the test results.
+### Deploy monitoring infra
+> This is used for collecting, monitoring and displaying the test results
 
 ---
 
@@ -45,7 +45,7 @@ export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom dom
 export OAUTH_TOKEN=<generated token from github>
 ```
 
-- Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta & Grafana.
+- Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Grafana, Alertmanager & amGithubNotifier.
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID -v ZONE:$ZONE \
     -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \

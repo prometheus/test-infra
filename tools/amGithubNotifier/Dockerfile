@@ -3,6 +3,6 @@ ARG OS="linux"
 FROM quay.io/prometheus/busybox-${OS}-${ARCH}:latest
 LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com>"
 
-COPY amgh /bin/amgh
+COPY amGithubNotifier /bin/amGithubNotifier
 
-ENTRYPOINT ["/bin/amgh"]
+ENTRYPOINT ["/bin/amGithubNotifier"]

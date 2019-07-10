@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: amgh
+  name: amGithubNotifier
   labels:
-    app: amgh
+    app: amGithubNotifier
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: amgh
+      app: amGithubNotifier
   template:
     metadata:
       labels:
-        app: amgh
+        app: amGithubNotifier
     spec:
       containers:
-      - name: amgh
-        image: docker.io/prombench/amgh:0.0.1
+      - name: amGithubNotifier
+        image: docker.io/prombench/amGithubNotifier:0.0.1
         args:
         - "--org=prometheus"
         - "--repo=prometheus"
@@ -25,7 +25,7 @@ spec:
           mountPath: /etc/github
           readOnly: true
         ports:
-        - name: amgh-webhook
+        - name: amGithubNotifier-webhook
           containerPort: 8080
       volumes:
       - name: oauth
@@ -38,14 +38,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: amgh
+  name: amGithubNotifier
   labels:
-    app: amgh
+    app: amGithubNotifier
 spec:
   type: ClusterIP
   ports:
-  - name: amgh-webhook
+  - name: amGithubNotifier-webhook
     port: 80
-    targetPort: amgh-webhook
+    targetPort: amGithubNotifier-webhook
   selector:
-    app: amgh
+    app: amGithubNotifier
