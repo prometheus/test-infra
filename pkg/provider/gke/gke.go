@@ -61,7 +61,22 @@ type GKE struct {
 func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	// Set the auth env variable needed to the gke client.
 	if c.AuthFile != "" {
-		os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", c.AuthFile)
+		fmt.Printf(c.AuthFile)
+		content, err := ioutil.ReadFile(c.AuthFile)
+		if err != nil {
+			log.Fatalf("couldn't read auth file: %v", err)
+		}
+		content, err = base64.StdEncoding.DecodeString(string(content))
+		if err != nil {
+			log.Printf("Not base64 encoded`")
+			os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", c.AuthFile)
+		} else {
+			err = ioutil.WriteFile(c.AuthFile, content, 0644)
+			if err != nil {
+				log.Fatalf("couldn't write auth file")
+			}
+			os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", c.AuthFile)
+		}
 	} else if c.AuthFile = os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"); c.AuthFile == "" {
 		log.Fatal("GOOGLE_APPLICATION_CREDENTIALS env is empty. Please run with -a key.json or run `export GOOGLE_APPLICATION_CREDENTIALS=key.json`")
 	}
