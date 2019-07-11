@@ -61,9 +61,11 @@ func main() {
 		owner := *e.GetRepo().Owner.Login
 		repo := *e.GetRepo().Name
 		prnumber := *e.GetIssue().Number
+		githubSHA := os.Getenv("GITHUB_SHA")
 
 		// Save args to file. Stores releaseVersion in ARG_0 and prnumber in ARG_1.
 		args = append(args, strconv.Itoa(prnumber))
+		args = append(args, githubSHA)
 		writeArgs(args, *output)
 
 		// Posting benchmark start comment.
