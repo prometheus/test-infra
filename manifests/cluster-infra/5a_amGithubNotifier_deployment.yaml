@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: amGithubNotifier-templates
+data:
+  default: |
+    ### {{ index .Data.GroupLabels "alertname" }}:{{ index .Data.GroupLabels "namespace" }} [{{len .Data.Alerts}}]
+    
+    Alertmanager URL: {{.Data.ExternalURL}}
+    
+    ---
+    {{range .Data.Alerts}}
+    <details>
+    <summary> {{if eq .Status "firing"}}🔥 {{ else }} ✅ {{end}} {{.Status}} | {{index .Labels "node"}}</summary>
+    
+    **Explore Alert:** [prometheus explorer]({{.GeneratorURL}})
+    
+    {{if .Labels}} **Labels:** {{- end}}
+    
+    {{range $key, $_ := .Labels}} {{ $key }} | {{- end }}
+    {{range $_, $_ := .Labels}} --- | {{- end }}
+    {{range $_, $value := .Labels}} {{ $value }} | {{- end }}
+    
+    {{if .Annotations}} **Annotations:** {{- end}}
+    {{range $key, $value := .Annotations}}
+    - **{{$key}}** : {{$value -}}
+    </details>{{end}}{{end}}
+
+  benchmarkTestsRunning: |
+    Alertmanager URL: {{.Data.ExternalURL}}
+
+    Benchmark running for more than three days. Please consider stopping the benchmark
+    or silencing this alert.
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: amGithubNotifier
+  labels:
+    app: amGithubNotifier
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: amGithubNotifier
+  template:
+    metadata:
+      labels:
+        app: amGithubNotifier
+    spec:
+      containers:
+      - name: amGithubNotifier
+        image: docker.io/prombench/amGithubNotifier:0.0.1
+        args:
+        - "--org=prometheus"
+        - "--repo=prometheus"
+        - "--template-dir-path=/etc/amGithubNotifier/templates"
+        volumeMounts:
+        - name: oauth
+          mountPath: /etc/github
+          readOnly: true
+        - name: templates
+          mountPath: /etc/amGithubNotifier/templates
+        ports:
+        - name: amGithubNotifier-webhook
+          containerPort: 8080
+      volumes:
+      - name: oauth
+        secret:
+          secretName: oauth-token
+      - name: templates
+        configMap:
+          name: amGithubNotifier-templates
+      terminationGracePeriodSeconds: 300
+      nodeSelector:
+        cloud.google.com/gke-nodepool: prow
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: amGithubNotifier
+  labels:
+    app: amGithubNotifier
+spec:
+  type: ClusterIP
+  ports:
+  - name: amGithubNotifier-webhook
+    port: 80
+    targetPort: amGithubNotifier-webhook
+  selector:
+    app: amGithubNotifier

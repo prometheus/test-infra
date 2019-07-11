@@ -30,15 +30,23 @@ import (
 )
 
 type ghWebhookReceiverConfig struct {
-	authfile     string
-	defaultOwner string
-	defaultRepo  string
-	portNo       string
+	authfile        string
+	defaultOwner    string
+	defaultRepo     string
+	templateDirPath string
+	portNo          string
+}
+
+type alertTemplate struct {
+	alertName      string
+	templateString string
 }
 
 type ghWebhookReceiver struct {
-	ghClient *github.Client
-	cfg      ghWebhookReceiverConfig
+	ghClient        *github.Client
+	defaultTemplate alertTemplate
+	alertTemplates  []alertTemplate
+	cfg             ghWebhookReceiverConfig
 }
 
 type ghWebhookHandler struct {
@@ -53,6 +61,7 @@ func main() {
 	app.Flag("org", "default org/owner").Required().StringVar(&cfg.defaultOwner)
 	app.Flag("repo", "default repo").Required().StringVar(&cfg.defaultRepo)
 	app.Flag("port", "port number to run the server in").Default("8080").StringVar(&cfg.portNo)
+	app.Flag("template-dir-path", "directory path to alert templates").Required().StringVar(&cfg.templateDirPath)
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
@@ -94,6 +103,37 @@ func (hl ghWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func newGhWebhookReceiver(cfg ghWebhookReceiverConfig) (*ghWebhookReceiver, error) {
+
+	// add templates
+	var alertTemplates []alertTemplate
+	var defaultTemplate alertTemplate
+	templateFiles, err := ioutil.ReadDir(cfg.templateDirPath)
+	if err != nil {
+		log.Fatalf("error reading template dir path: %v\n", err)
+	}
+	for _, templateFile := range templateFiles {
+		template, err := ioutil.ReadFile(filepath.Join(cfg.templateDirPath, templateFile.Name()))
+		if err != nil {
+			log.Fatalf("error loading template file: %v\n", err)
+		}
+		if templateFile.Name() == "default" {
+			defaultTemplate = alertTemplate{
+				alertName:      "default",
+				templateString: string(template),
+			}
+		} else {
+			alertTemplates = append(alertTemplates, alertTemplate{
+				alertName:      templateFile.Name(),
+				templateString: string(template),
+			})
+		}
+	}
+
+	if defaultTemplate.templateString == "" {
+		log.Fatalf("default template not found, %v should have a default template named 'default'", cfg.templateDirPath)
+	}
+
+	// add github token
 	oauth2token, err := ioutil.ReadFile(cfg.authfile)
 	if err != nil {
 		return nil, err
@@ -103,16 +143,20 @@ func newGhWebhookReceiver(cfg ghWebhookReceiverConfig) (*ghWebhookReceiver, erro
 	)
 	ctx := context.Background()
 	tc := oauth2.NewClient(ctx, ts)
+
 	return &ghWebhookReceiver{
-		ghClient: github.NewClient(tc),
-		cfg:      cfg,
+		ghClient:        github.NewClient(tc),
+		cfg:             cfg,
+		defaultTemplate: defaultTemplate,
+		alertTemplates:  alertTemplates,
 	}, nil
 }
 
 // processAlert formats and posts the comment to github and returns nil if successful.
 func (g ghWebhookReceiver) processAlert(ctx context.Context, msg *notify.WebhookMessage) error {
 
-	msgBody, err := formatIssueCommentBody(msg)
+	selectedTemplate := g.selectTemplate(msg)
+	msgBody, err := formatIssueCommentBody(msg, selectedTemplate)
 	if err != nil {
 		return err
 	}
