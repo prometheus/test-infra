@@ -1,3 +1,4 @@
+# NOTE: THIS DOES NOT WORK RIGHT NOW
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -51,7 +52,7 @@ spec:
     spec:
       containers:
       - name: amGithubNotifier
-        image: docker.io/prombench/amGithubNotifier:0.0.1
+        image: docker.io/prombench/amgithubnotifier:0.0.1
         args:
         - "--org=prometheus"
         - "--repo=prometheus"
