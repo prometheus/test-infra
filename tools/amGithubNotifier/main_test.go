@@ -24,6 +24,33 @@ import (
 )
 
 func TestFormatIssueCommentBody(t *testing.T) {
+	const testTemplateString = `
+### {{ index .Data.GroupLabels "alertname" }}:{{ index .Data.GroupLabels "namespace" }} [{{len .Data.Alerts}}]
+
+Alertmanager URL: {{.Data.ExternalURL}}
+
+---
+{{range .Data.Alerts}}
+<details>
+<summary> {{if eq .Status "firing"}}🔥 {{ else }} ✅ {{end}} {{.Status}} | {{index .Labels "node"}}</summary>
+
+**Explore Alert:** [prometheus explorer]({{.GeneratorURL}})
+
+{{if .Labels}} **Labels:** {{- end}}
+
+{{range $key, $_ := .Labels}} {{ $key }} | {{- end }}
+{{range $_, $_ := .Labels}} --- | {{- end }}
+{{range $_, $value := .Labels}} {{ $value }} | {{- end }}
+
+{{if .Annotations}} **Annotations:** {{- end}}
+{{range $key, $value := .Annotations}}
+- **{{$key}}** : {{$value -}}
+</details>{{end}}{{end}}`
+	testAlertTemplate := alertTemplate{
+		alertName:      "testTemplate",
+		templateString: testTemplateString,
+	}
+
 	cl := template.KV{
 		"testLabel":  "labelData",
 		"testLabel2": "labelData",
@@ -57,7 +84,7 @@ func TestFormatIssueCommentBody(t *testing.T) {
 		Data:     data,
 		GroupKey: "group_key",
 	}
-	body, err := formatIssueCommentBody(msg)
+	body, err := formatIssueCommentBody(msg, testAlertTemplate)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}

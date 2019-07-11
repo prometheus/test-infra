@@ -29,6 +29,16 @@ groups:
       description: ''
       summary: ''
 ```
+
+### Adding default and custom templates
+amGithubNotifier assumes that the alerts sent by the [alertmanager](https://github.com/prometheus/alertmanager) will have the `alertname` label in the `grouplabels`.
+
+The required `--template-dir-path` flag should be used to specify the path to the templates directory.
+
+The default template should be named `default`. If there's no `default` file in the templates directory it will error out.
+
+If there's a requirement of a custom template for a perticular alert, you can put a file with the same name as of the `alertname` label and then amGithubNotifier will use that template instead of the `default` one.
+
 Usage:
 ```
 ./amGithubNotifier --help

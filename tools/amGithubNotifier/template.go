@@ -24,40 +24,16 @@ import (
 	"github.com/prometheus/alertmanager/notify"
 )
 
-const alertMD = `
-### {{ index .Data.GroupLabels "alertname" }}:{{ index .Data.GroupLabels "namespace" }} [{{len .Data.Alerts}}]
-
-Alertmanager URL: {{.Data.ExternalURL}}
-
----
-{{range .Data.Alerts}}
-<details>
-<summary> {{if eq .Status "firing"}}🔥 {{ else }} ✅ {{end}} {{.Status}} | {{index .Labels "node"}}</summary>
-
-**Explore Alert:** [prometheus explorer]({{.GeneratorURL}})
-
-{{if .Labels}} **Labels:** {{- end}}
-
-{{range $key, $_ := .Labels}} {{ $key }} | {{- end }}
-{{range $_, $_ := .Labels}} --- | {{- end }}
-{{range $_, $value := .Labels}} {{ $value }} | {{- end }}
-
-{{if .Annotations}} **Annotations:** {{- end}}
-{{range $key, $value := .Annotations}}
-- **{{$key}}** : {{$value -}}
-</details>{{end}}{{end}}`
-
-var alertTemplate = template.Must(template.New("alert").Parse(alertMD))
-
 // alertID returns the alert id.
 func alertID(msg *notify.WebhookMessage) string {
 	return fmt.Sprintf("0x%x", msg.GroupKey)
 }
 
 // formatIssueCommentBody constructs an issue body from a webhook message.
-func formatIssueCommentBody(msg *notify.WebhookMessage) (string, error) {
+func formatIssueCommentBody(msg *notify.WebhookMessage, tmpl alertTemplate) (string, error) {
 	var buf bytes.Buffer
-	err := alertTemplate.Execute(&buf, msg)
+	parsedTemplate := template.Must(template.New(tmpl.alertName).Parse(tmpl.templateString))
+	err := parsedTemplate.Execute(&buf, msg)
 	if err != nil {
 		log.Printf("error executing template: %s", err)
 		return "", err
@@ -91,4 +67,15 @@ func (g ghWebhookReceiver) getTargetOwner(msg *notify.WebhookMessage) string {
 		return owner
 	}
 	return g.cfg.defaultOwner
+}
+
+// selectTemplate returns the alertTemplate to use
+func (g ghWebhookReceiver) selectTemplate(msg *notify.WebhookMessage) alertTemplate {
+	alertname := msg.Data.GroupLabels["alertname"]
+	for _, alertTmpl := range g.alertTemplates {
+		if alertTmpl.alertName == alertname {
+			return alertTmpl
+		}
+	}
+	return g.defaultTemplate
 }
