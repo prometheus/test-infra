@@ -14,6 +14,7 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v0.9.3
 	github.com/spf13/pflag v1.0.3 // indirect
+	google.golang.org/api v0.5.0
 	google.golang.org/genproto v0.0.0-20190516172635-bb713bdc0e52
 	google.golang.org/grpc v1.19.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
