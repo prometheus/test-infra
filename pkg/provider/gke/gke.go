@@ -74,6 +74,9 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	if content, err := ioutil.ReadFile(c.Auth); err == nil {
 		c.Auth = string(content)
 	}
+	if decoded, err := base64.StdEncoding.DecodeString(c.Auth); err == nil {
+		c.Auth = string(decoded)
+	}
 	opts := option.WithCredentialsJSON([]byte(c.Auth))
 
 	cl, err := gke.NewClusterManagerClient(context.Background(), opts)

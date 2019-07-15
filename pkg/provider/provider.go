@@ -80,6 +80,18 @@ func DeploymentsParse(deploymentFiles []string, deploymentVars map[string]string
 		}
 	}
 
+	for k, v := range deploymentVars {
+		_, err := os.Stat(v)
+		if err == nil && v != "prombench" {
+			val, e := ioutil.ReadFile(v)
+			fmt.Printf(string(val))
+			if e != nil {
+				log.Fatalf("couldn't read var file")
+			}
+			deploymentVars[k] = string(val)
+		}
+	}
+
 	deploymentObjects := make([]Resource, 0)
 	for _, name := range fileList {
 		content, err := applyTemplateVars(name, deploymentVars)
