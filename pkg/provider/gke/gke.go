@@ -21,6 +21,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	yamlGo "gopkg.in/yaml.v2"
 
+	"google.golang.org/api/option"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -38,8 +39,11 @@ type Resource = provider.Resource
 
 // GKE holds the fields used to generate an API request.
 type GKE struct {
-	// The auth file used to authenticate the cli.
-	AuthFile string
+	// The auth used to authenticate the cli.
+	// Can be a file path or an env variable that includes the json data.
+	Auth string
+	// The project id for all requests.
+	ProjectID string
 	// The gke client used when performing GKE requests.
 	clientGKE *gke.ClusterManagerClient
 	// The k8s provider used when we work with the manifest files.
@@ -60,28 +64,22 @@ type GKE struct {
 // NewGKEClient sets the GKE client used when performing GKE requests.
 func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	// Set the auth env variable needed to the gke client.
-	if c.AuthFile != "" {
-		fmt.Printf(c.AuthFile)
-		content, err := ioutil.ReadFile(c.AuthFile)
-		if err != nil {
-			log.Fatalf("couldn't read auth file: %v", err)
-		}
-		content, err = base64.StdEncoding.DecodeString(string(content))
-		if err != nil {
-			log.Printf("********Not base64 encoded`")
-			os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", c.AuthFile)
-		} else {
-			log.Printf("*******base64 encoded\n")
-			err = ioutil.WriteFile(c.AuthFile, content, 0644)
-			if err != nil {
-				log.Fatalf("couldn't write auth file")
-			}
-			os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", c.AuthFile)
-		}
-	} else if c.AuthFile = os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"); c.AuthFile == "" {
-		log.Fatal("GOOGLE_APPLICATION_CREDENTIALS env is empty. Please run with -a key.json or run `export GOOGLE_APPLICATION_CREDENTIALS=key.json`")
+	if c.Auth != "" {
+	} else if c.Auth = os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"); c.Auth == "" {
+		log.Fatal("no auth provided! Need to either set the auth flag or the GOOGLE_APPLICATION_CREDENTIALS env variable")
 	}
-	cl, err := gke.NewClusterManagerClient(context.Background())
+
+	// When the auth variable points to a file
+	// put the file content in the variable.
+	if content, err := ioutil.ReadFile(c.Auth); err == nil {
+		c.Auth = string(content)
+	}
+	if decoded, err := base64.StdEncoding.DecodeString(c.Auth); err == nil {
+		c.Auth = string(decoded)
+	}
+	opts := option.WithCredentialsJSON([]byte(c.Auth))
+
+	cl, err := gke.NewClusterManagerClient(context.Background(), opts)
 	if err != nil {
 		log.Fatalf("Could not create the client: %v", err)
 	}
@@ -93,22 +91,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 // GKEDeploymentsParse parses the cluster/nodepool deployment files and saves the result as bytes grouped by the filename.
 // Any variables passed to the cli will be replaced in the resources files following the golang text template format.
 func (c *GKE) GKEDeploymentsParse(*kingpin.ParseContext) error {
-	// When the PROJECT_ID is not provided from the cli read it from the auth file.
-	if v, ok := c.DeploymentVars["PROJECT_ID"]; !ok || v == "" {
-		content, err := ioutil.ReadFile(c.AuthFile)
-		if err != nil {
-			log.Fatalf("Couldn't read auth file: %v", err)
-		}
-		d := make(map[string]interface{})
-		if err := json.Unmarshal(content, &d); err != nil {
-			log.Fatalf("Couldn't parse auth file: %v", err)
-		}
-		v, ok := d["project_id"].(string)
-		if !ok {
-			log.Fatal("Couldn't get project id from the auth file")
-		}
-		c.DeploymentVars["PROJECT_ID"] = v
-	}
+	c.setProjectID()
 
 	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
 	if err != nil {
@@ -122,22 +105,7 @@ func (c *GKE) GKEDeploymentsParse(*kingpin.ParseContext) error {
 // K8SDeploymentsParse parses the k8s objects deployment files and saves the result as k8s objects grouped by the filename.
 // Any variables passed to the cli will be replaced in the resources files following the golang text template format.
 func (c *GKE) K8SDeploymentsParse(*kingpin.ParseContext) error {
-	// When the PROJECT_ID is not provided from the cli read it from the auth file.
-	if v, ok := c.DeploymentVars["PROJECT_ID"]; !ok || v == "" {
-		content, err := ioutil.ReadFile(c.AuthFile)
-		if err != nil {
-			log.Fatalf("Couldn't read auth file: %v", err)
-		}
-		d := make(map[string]interface{})
-		if err := json.Unmarshal(content, &d); err != nil {
-			log.Fatalf("Couldn't parse auth file: %v", err)
-		}
-		v, ok := d["project_id"].(string)
-		if !ok {
-			log.Fatal("Couldn't get project id from the auth file")
-		}
-		c.DeploymentVars["PROJECT_ID"] = v
-	}
+	c.setProjectID()
 
 	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
 	if err != nil {
@@ -169,6 +137,21 @@ func (c *GKE) K8SDeploymentsParse(*kingpin.ParseContext) error {
 		}
 	}
 	return nil
+}
+
+// setProjectID either from the cli arg or read it from the auth data.
+func (c *GKE) setProjectID() {
+	if v, ok := c.DeploymentVars["PROJECT_ID"]; !ok || v == "" {
+		d := make(map[string]interface{})
+		if err := json.Unmarshal([]byte(c.Auth), &d); err != nil {
+			log.Fatalf("Couldn't parse auth file: %v", err)
+		}
+		v, ok := d["project_id"].(string)
+		if !ok {
+			log.Fatal("Couldn't get project id from the auth file")
+		}
+		c.DeploymentVars["PROJECT_ID"] = v
+	}
 }
 
 // ClusterCreate create a new cluster or applies changes to an existing cluster.

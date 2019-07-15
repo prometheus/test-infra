@@ -79,22 +79,19 @@ func DeploymentsParse(deploymentFiles []string, deploymentVars map[string]string
 			fileList = append(fileList, name)
 		}
 	}
+
 	for k, v := range deploymentVars {
 		_, err := os.Stat(v)
-		fmt.Printf("%v %v", k, v)
 		if err == nil && v != "prombench" {
-			log.Printf("file exists")
 			val, e := ioutil.ReadFile(v)
 			fmt.Printf(string(val))
 			if e != nil {
 				log.Fatalf("couldn't read var file")
 			}
 			deploymentVars[k] = string(val)
-		} else {
-			log.Printf("file doesn't exist and command line variable and not stored in file")
 		}
 	}
-	fmt.Printf("%v+", deploymentVars)
+
 	deploymentObjects := make([]Resource, 0)
 	for _, name := range fileList {
 		content, err := applyTemplateVars(name, deploymentVars)
