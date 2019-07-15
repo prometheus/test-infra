@@ -13,6 +13,16 @@ RUN \
 
 COPY prombench /prombench/prombench
 COPY Makefile /prombench/Makefile
+COPY Makefile.common /prombench/Makefile.common
 COPY manifests/prombench /prombench/manifests/prombench
+COPY encode.txt /prombench/encode.txt
+COPY encoded.txt /prombench/encoded.txt
+# RUN echo $HOME
+# RUN echo $CLUSTER_NAME
+#RUN echo $AUTH_FILE | base64 -d > /prombench/auth.json
 
 WORKDIR /prombench
+ENTRYPOINT [ "make", "-C","/prombench/","deploy"]
+#CMD echo $GITHUB_SHA
+#CMD echo $AUTH_FILE | base64 -di > /prombench/auth.json
+#CMD make deploy

@@ -68,9 +68,10 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 		}
 		content, err = base64.StdEncoding.DecodeString(string(content))
 		if err != nil {
-			log.Printf("Not base64 encoded`")
+			log.Printf("********Not base64 encoded`")
 			os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", c.AuthFile)
 		} else {
+			log.Printf("*******base64 encoded\n")
 			err = ioutil.WriteFile(c.AuthFile, content, 0644)
 			if err != nil {
 				log.Fatalf("couldn't write auth file")
