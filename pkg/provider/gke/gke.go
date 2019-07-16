@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 
 	gke "cloud.google.com/go/container/apiv1"
@@ -74,6 +75,20 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	if content, err := ioutil.ReadFile(c.Auth); err == nil {
 		c.Auth = string(content)
 	}
+
+	// Check is auth data is base64 encoded and decode.
+	encoded, err := regexp.MatchString("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$", c.Auth)
+	if err != nil {
+		return err
+	}
+	if encoded {
+		auth, err := base64.StdEncoding.DecodeString(c.Auth)
+		if err != nil {
+			return err
+		}
+		c.Auth = string(auth)
+	}
+
 	opts := option.WithCredentialsJSON([]byte(c.Auth))
 
 	cl, err := gke.NewClusterManagerClient(context.Background(), opts)
