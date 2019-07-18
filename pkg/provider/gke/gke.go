@@ -25,7 +25,7 @@ import (
 	"google.golang.org/api/option"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
@@ -470,9 +470,7 @@ func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 	authInfo.AuthProvider = &clientcmdapi.AuthProviderConfig{
 		Name: "gcp",
 		Config: map[string]string{
-			"cmd-args":   "config config-helper --format=json",
-			"expiry-key": "{.credential.token_expiry}",
-			"token-key":  "{.credential.access_token}",
+			gcp.TokenFromString: c.Auth,
 		},
 	}
 
@@ -484,7 +482,7 @@ func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 
 	c.k8sProvider, err = k8sProvider.New(c.ctx, config)
 	if err != nil {
-		log.Fatal("k8s provider error", err)
+		log.Fatal("k8s provider error:", err)
 	}
 	return nil
 }
