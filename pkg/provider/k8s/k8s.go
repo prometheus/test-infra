@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
 	appsV1 "k8s.io/api/apps/v1"
+	batchV1 "k8s.io/api/batch/v1"
 	apiCoreV1 "k8s.io/api/core/v1"
 	apiExtensionsV1beta1 "k8s.io/api/extensions/v1beta1"
 	rbac "k8s.io/api/rbac/v1"
@@ -164,6 +165,8 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 				err = c.customResourceApply(resource)
 			case "statefulset":
 				err = c.statefulSetApply(resource)
+			case "job":
+				err = c.jobApply(resource)
 			default:
 				err = fmt.Errorf("creating request for unimplimented resource type:%v", kind)
 			}
@@ -213,6 +216,8 @@ func (c *K8s) ResourceDelete(deployments []Resource) error {
 				err = c.customResourceDelete(resource)
 			case "statefulset":
 				err = c.statefulSetDelete(resource)
+			case "job":
+				err = c.jobDelete(resource)
 			default:
 				err = fmt.Errorf("deleting request for unimplimented resource type:%v", kind)
 			}
@@ -451,7 +456,6 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
-
 		var exists bool
 		for _, l := range list.Items {
 			if l.Name == req.Name {
@@ -480,6 +484,50 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 		fmt.Sprintf("applying statefulSet:%v", req.Name),
 		provider.GlobalRetryCount,
 		func() (bool, error) { return c.statefulSetReady(resource) })
+}
+
+func (c *K8s) jobApply(resource runtime.Object) error {
+	req := resource.(*batchV1.Job)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
+
+	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
+	case "v1":
+		client := c.clt.BatchV1().Jobs(req.Namespace)
+		list, err := client.List(apiMetaV1.ListOptions{})
+		if err != nil {
+			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
+		}
+		var exists bool
+		for _, l := range list.Items {
+			if l.Name == req.Name {
+				exists = true
+				break
+			}
+		}
+
+		if exists {
+			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+				_, err := client.Update(req)
+				return err
+			}); err != nil {
+				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
+			}
+			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+			return nil
+		} else if _, err := client.Create(req); err != nil {
+			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
+		}
+		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
+	default:
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
+	}
+	return provider.RetryUntilTrue(
+		fmt.Sprintf("applying job:%v", req.Name),
+		provider.GlobalRetryCount,
+		func() (bool, error) { return c.jobReady(resource) })
 }
 
 func (c *K8s) customResourceApply(resource runtime.Object) error {
@@ -979,6 +1027,27 @@ func (c *K8s) statefulSetDelete(resource runtime.Object) error {
 	return nil
 }
 
+func (c *K8s) jobDelete(resource runtime.Object) error {
+	req := resource.(*batchV1.Job)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
+
+	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
+	case "v1":
+		client := c.clt.BatchV1().Jobs(req.Namespace)
+		delPolicy := apiMetaV1.DeletePropagationForeground
+		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
+		}
+		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
+	default:
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
+	}
+	return nil
+}
+
 func (c *K8s) customResourceDelete(resource runtime.Object) error {
 	req := resource.(*apiServerExtensionsV1beta1.CustomResourceDefinition)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
@@ -1249,6 +1318,34 @@ func (c *K8s) statefulSetReady(resource runtime.Object) (bool, error) {
 			replicas = *req.Spec.Replicas
 		}
 		if res.Status.CurrentReplicas == replicas {
+			return true, nil
+		}
+		return false, nil
+	default:
+		return false, fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
+	}
+}
+
+func (c *K8s) jobReady(resource runtime.Object) (bool, error) {
+	req := resource.(*batchV1.Job)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
+
+	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
+	case "v1":
+		client := c.clt.BatchV1().Jobs(req.Namespace)
+
+		res, err := client.Get(req.Name, apiMetaV1.GetOptions{})
+		if err != nil {
+			return false, errors.Wrapf(err, "Checking Job resource:'%v' status failed err:%v", req.Name, err)
+		}
+
+		// current jobReady only works for non-parallel jobs
+		// https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/#parallel-jobs
+		succeeded := int32(1)
+		if res.Status.Succeeded == succeeded {
 			return true, nil
 		}
 		return false, nil
