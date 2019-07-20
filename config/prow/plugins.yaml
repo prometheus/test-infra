@@ -12,4 +12,3 @@ config_updater:
       name: grafana-dashboard-provision
     config/grafana/dashboards/*.json:
       name: grafana-dashboards
-      gzip: true
