@@ -162,6 +162,8 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 				err = c.persistentVolumeClaimApply(resource)
 			case "customresourcedefinition":
 				err = c.customResourceApply(resource)
+			case "statefulset":
+				err = c.statefulSetApply(resource)
 			default:
 				err = fmt.Errorf("creating request for unimplimented resource type:%v", kind)
 			}
@@ -209,6 +211,8 @@ func (c *K8s) ResourceDelete(deployments []Resource) error {
 				err = c.persistentVolumeClaimDelete(resource)
 			case "customresourcedefinition":
 				err = c.customResourceDelete(resource)
+			case "statefulset":
+				err = c.statefulSetDelete(resource)
 			default:
 				err = fmt.Errorf("deleting request for unimplimented resource type:%v", kind)
 			}
@@ -431,6 +435,51 @@ func (c *K8s) deploymentApply(resource runtime.Object) error {
 		fmt.Sprintf("applying deployment:%v", req.Name),
 		provider.GlobalRetryCount,
 		func() (bool, error) { return c.deploymentReady(resource) })
+}
+
+func (c *K8s) statefulSetApply(resource runtime.Object) error {
+	req := resource.(*appsV1.StatefulSet)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
+
+	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
+	case "v1":
+		client := c.clt.AppsV1().StatefulSets(req.Namespace)
+		list, err := client.List(apiMetaV1.ListOptions{})
+		if err != nil {
+			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
+		}
+
+		var exists bool
+		for _, l := range list.Items {
+			if l.Name == req.Name {
+				exists = true
+				break
+			}
+		}
+
+		if exists {
+			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+				_, err := client.Update(req)
+				return err
+			}); err != nil {
+				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
+			}
+			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+			return nil
+		} else if _, err := client.Create(req); err != nil {
+			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
+		}
+		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
+	default:
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
+	}
+	return provider.RetryUntilTrue(
+		fmt.Sprintf("applying statefulSet:%v", req.Name),
+		provider.GlobalRetryCount,
+		func() (bool, error) { return c.statefulSetReady(resource) })
 }
 
 func (c *K8s) customResourceApply(resource runtime.Object) error {
@@ -909,6 +958,27 @@ func (c *K8s) deploymentDelete(resource runtime.Object) error {
 	return nil
 }
 
+func (c *K8s) statefulSetDelete(resource runtime.Object) error {
+	req := resource.(*appsV1.StatefulSet)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
+
+	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
+	case "v1":
+		client := c.clt.AppsV1().StatefulSets(req.Namespace)
+		delPolicy := apiMetaV1.DeletePropagationForeground
+		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
+		}
+		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
+	default:
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
+	}
+	return nil
+}
+
 func (c *K8s) customResourceDelete(resource runtime.Object) error {
 	req := resource.(*apiServerExtensionsV1beta1.CustomResourceDefinition)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
@@ -1150,6 +1220,35 @@ func (c *K8s) deploymentReady(resource runtime.Object) (bool, error) {
 			replicas = *req.Spec.Replicas
 		}
 		if res.Status.AvailableReplicas == replicas {
+			return true, nil
+		}
+		return false, nil
+	default:
+		return false, fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
+	}
+}
+
+func (c *K8s) statefulSetReady(resource runtime.Object) (bool, error) {
+	req := resource.(*appsV1.StatefulSet)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+	if len(req.Namespace) == 0 {
+		req.Namespace = "default"
+	}
+
+	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
+	case "v1":
+		client := c.clt.AppsV1().StatefulSets(req.Namespace)
+
+		res, err := client.Get(req.Name, apiMetaV1.GetOptions{})
+		if err != nil {
+			return false, errors.Wrapf(err, "Checking StatefulSet resource:'%v' status failed err:%v", req.Name, err)
+		}
+
+		replicas := int32(1)
+		if req.Spec.Replicas != nil {
+			replicas = *req.Spec.Replicas
+		}
+		if res.Status.CurrentReplicas == replicas {
 			return true, nil
 		}
 		return false, nil
