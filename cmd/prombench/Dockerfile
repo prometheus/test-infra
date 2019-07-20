@@ -13,6 +13,7 @@ RUN \
 
 COPY prombench /prombench/prombench
 COPY Makefile /prombench/Makefile
+COPY Makefile.common /prombench/Makefile.common
 COPY manifests/prombench /prombench/manifests/prombench
 
 WORKDIR /prombench
