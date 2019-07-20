@@ -1,0 +1,25 @@
+#When Grafana starts, it will update/insert this datasource.
+apiVersion: 1
+
+deleteDatasources:
+  - name: prometheus-meta
+    orgId: 1
+
+datasources:
+- name: prometheus-meta
+  type: prometheus
+  access: proxy
+  orgId: 1
+  url: http://prometheus-meta/prometheus-meta/
+  # https://github.com/prometheus/prombench/pull/214#discussion_r298966228
+  isDefault: true
+  jsonData:
+     graphiteVersion: "1.1"
+     tlsAuth: false
+     tlsAuthWithCACert: false
+  secureJsonData:
+    tlsCACert: "..."
+    tlsClientCert: "..."
+    tlsClientKey: "..."
+  version: 1
+  editable: true

@@ -4,3 +4,13 @@ config_updater:
       name: prow-config
     config/prow/plugins.yaml:
       name: prow-config
+    config/prometheus-meta/prometheus.yaml:
+      name: prometheus-meta
+    config/grafana/prometheus-dashboard.yaml:
+      name: grafana-dashboard-provision
+    config/grafana/prometheus-datasource.yaml:
+      name: grafana-datasources
+    config/grafana/bench-nodes.json:
+      name: grafana-dashboard-bench
+    config/grafana/prow-nodes.json:
+      name: grafana-dashboard-prow
