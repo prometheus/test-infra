@@ -1,0 +1,6 @@
+config_updater:
+  maps:
+    config/prow/config.yaml:
+      name: prow-config
+    config/prow/plugins.yaml:
+      name: prow-config

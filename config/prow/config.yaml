@@ -1,0 +1,3 @@
+prowjob_namespace: default
+pod_namespace: default
+log_level: debug

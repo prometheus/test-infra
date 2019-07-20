@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: "config-bootstrapper"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: "config-bootstrapper"
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - create
+      - get
+      - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: "config-bootstrapper"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: "config-bootstrapper"
+subjects:
+- kind: ServiceAccount
+  name: "config-bootstrapper"

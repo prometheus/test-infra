@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: config-bootstrapper
+spec:
+  ttlSecondsAfterFinished: 100
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: config-bootstrapper
+      initContainers:
+      - name: "clone-prombench"
+        imagePullPolicy: Always
+        image: alpine/git
+        args:
+        - clone
+        - https://github.com/prometheus/prombench.git
+        - /prombench
+        volumeMounts:
+        - mountPath: /prombench
+          name: cloned-prombench
+      containers:
+      - name: "config-bootstrapper"
+        imagePullPolicy: Always
+        image: gcr.io/k8s-prow/config-bootstrapper:v20190608-493ef838c
+        args:
+        - --dry-run=false
+        - --source-path=/prombench
+        - --config-path=/prombench/config/prow/config.yaml
+        - --plugin-config=/prombench/config/prow/plugins.yaml
+        volumeMounts:
+        - mountPath: /prombench
+          name: cloned-prombench
+      volumes:
+      - name: cloned-prombench
+        emptyDir: {}
+      nodeSelector:
+        cloud.google.com/gke-nodepool: prow
