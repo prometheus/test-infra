@@ -1346,8 +1346,8 @@ func (c *K8s) jobReady(resource runtime.Object) (bool, error) {
 		// https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/#parallel-jobs
 		succeeded := int32(1)
 		if res.Status.Succeeded == succeeded {
-		  return true, nil
-        }
+			return true, nil
+		}
 		return false, nil
 	default:
 		return false, fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
