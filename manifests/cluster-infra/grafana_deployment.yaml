@@ -48,7 +48,7 @@ spec:
           mountPath: /opt/grafana-provision/dashboards
         # dashboards json are saved in the path mentioned in grafana-dashboard-provision
         - name: grafana-dashboards
-          mountPath: /var/lib/grafana/dashboards
+          mountPath: /grafana-dashboards
         ports:
         - name: grafana-web
           containerPort: 3000
