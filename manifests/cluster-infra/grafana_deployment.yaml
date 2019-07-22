@@ -29,6 +29,8 @@ spec:
             value: "/opt/grafana-provision"
           - name: GF_SERVER_ROOT_URL
             value: "http://{{ .DOMAIN_NAME }}/grafana"
+          - name: GF_SERVER_SERVE_FROM_SUB_PATH
+            value: "true"
           - name: GF_AUTH_ANONYMOUS_ENABLED
             value: "true"
           - name: GF_AUTH_ANONYMOUS_ORG_NAME
@@ -109,4 +111,4 @@ spec:
       - backend:
           serviceName: grafana
           servicePort: grafana-web
-        path: /
+        path: /grafana
