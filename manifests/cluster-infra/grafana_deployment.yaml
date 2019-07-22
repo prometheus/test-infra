@@ -45,15 +45,10 @@ spec:
         - name: grafana-datasources
           mountPath: /opt/grafana-provision/datasources
         - name: grafana-dashboard-provision
-          mountPath: /opt/grafana-provision/dashboards/prometheus-dashboard.yaml
-          subPath: prometheus-dashboard.yaml
+          mountPath: /opt/grafana-provision/dashboards
         #dashboards json are saved in the path mentioned in grafana-dashboard-provision
-        - name: grafana-dashboard-bench
-          mountPath: /opt/grafana-provision/dashboards/bench-nodes.json
-          subPath: bench-nodes.json
-        - name: grafana-dashboard-prow
-          mountPath: /opt/grafana-provision/dashboards/prow-nodes.json
-          subPath: prow-nodes.json
+        - name: grafana-dashboards
+          mountPath: /grafana-dashboards
         ports:
         - name: grafana-web
           containerPort: 3000
@@ -66,12 +61,9 @@ spec:
       - name: grafana-dashboard-provision
         configMap:
           name: grafana-dashboard-provision
-      - name: grafana-dashboard-bench
+      - name: grafana-dashboards
         configMap:
-          name: grafana-dashboard-bench
-      - name: grafana-dashboard-prow
-        configMap:
-          name: grafana-dashboard-prow
+          name: grafana-dashboards
       nodeSelector:
         cloud.google.com/gke-nodepool: prow
 ---

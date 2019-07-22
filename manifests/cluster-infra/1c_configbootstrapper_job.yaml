@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cb-config
+data:
+  config.yaml: |
+    prowjob_namespace: default
+  plugins.yaml: |
+    config_updater:
+      maps:
+        config/prometheus-meta/prometheus.yaml:
+          name: prometheus-meta
+        config/grafana/prometheus-datasource.yaml:
+          name: grafana-datasources
+        config/grafana/prometheus-dashboard.yaml:
+          name: grafana-dashboard-provision
+        config/grafana/dashboards/*.json:
+          name: grafana-dashboards
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: config-bootstrapper
+spec:
+  ttlSecondsAfterFinished: 100
+  template:
+    spec:
+      serviceAccountName: config-bootstrapper
+      restartPolicy: Never
+      initContainers:
+      - name: "clone-prombench"
+        imagePullPolicy: Always
+        image: alpine/git
+        args:
+        - clone
+        - https://github.com/prometheus/prombench.git
+        - /prombench
+        volumeMounts:
+        - mountPath: /prombench
+          name: cloned-prombench
+      containers:
+      - name: "config-bootstrapper"
+        imagePullPolicy: Always
+        image: gcr.io/k8s-prow/config-bootstrapper:v20190608-493ef838c
+        args:
+        - --dry-run=false
+        - --source-path=/prombench
+        - --config-path=/cb-config/config.yaml
+        - --plugin-config=/cb-config/plugins.yaml
+        volumeMounts:
+        - mountPath: /prombench
+          name: cloned-prombench
+        - mountPath: /cb-config
+          name: cb-config
+      volumes:
+      - name: cloned-prombench
+        emptyDir: {}
+      - name: cb-config
+        configMap:
+          name: cb-config
+      nodeSelector:
+        cloud.google.com/gke-nodepool: prow
