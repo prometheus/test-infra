@@ -8,8 +8,6 @@ data:
   plugins.yaml: |
     config_updater:
       maps:
-        config/prometheus-meta/prometheus.yaml:
-          name: prometheus-meta
         config/grafana/prometheus-datasource.yaml:
           name: grafana-datasources
         config/grafana/prometheus-dashboard.yaml:
