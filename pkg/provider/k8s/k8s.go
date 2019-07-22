@@ -1326,6 +1326,8 @@ func (c *K8s) statefulSetReady(resource runtime.Object) (bool, error) {
 	}
 }
 
+// Current jobReady function is only tested with non-parallel k8s jobs.
+// https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/#parallel-jobs
 func (c *K8s) jobReady(resource runtime.Object) (bool, error) {
 	req := resource.(*batchV1.Job)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
@@ -1342,8 +1344,6 @@ func (c *K8s) jobReady(resource runtime.Object) (bool, error) {
 			return false, errors.Wrapf(err, "Checking Job resource:'%v' status failed err:%v", req.Name, err)
 		}
 
-		// current jobReady only works for non-parallel jobs
-		// https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/#parallel-jobs
 		succeeded := int32(1)
 		if res.Status.Succeeded == succeeded {
 			return true, nil
