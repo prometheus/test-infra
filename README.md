@@ -148,6 +148,29 @@ A Prometheus maintainer can comment as follows to benchmark a PR:
 
 To cancel benchmarking, a mantainer should comment `/benchmark cancel`.
 
+### Testing and applying changes to `ConfigMaps` manually
+---
+> **Note:** Prombench does not support [`--from-file`](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#create-configmaps-from-files) like `kubectl`
+
+`ConfigMaps` in the prombench infra are created in one of two ways,
+1) Using `ConfigMap` manifest files
+2) Using `config-bootstrapper` to create `ConfigMaps` from files (used when it's better to have configs in their native formats)
+
+`config-bootstrapper` can be run locally or inside the kubernetes cluster, when not running inside a k8s cluster it will use the `KUBECONFIG` env var so this works with any k8s environment [minikube](https://kubernetes.io/docs/setup/learning-environment/minikube/)/[kind](https://github.com/kubernetes-sigs/kind)/gke etc.
+
+To test/modify `ConfigMaps` created with `config-bootstrapper` just map the `ConfigMap` name to the filepath in [`/config/prow/plugins.yaml`](/config/prow/plugins.yaml), then set the `KUBECONFIG` env var, if you're using GKE you can use:
+
+```
+$ gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE --project=$PROJECT_ID
+```
+
+To apply the changes:
+```
+$ ./hack/config-bootstrapper.sh
+```
+
+> When deploying Prombench, it will automatically clone `prometheus/prombench` and apply all configmaps listed in `/configs/prow/plugins.yaml`
+
 ## Buliding from source
 To build Prombench and related tools from source you need to have a working Go environment with version 1.12 or greater installed. Prombench uses promu for building the binaries.
 ```

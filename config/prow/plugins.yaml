@@ -1,0 +1,8 @@
+config_updater:
+  maps:
+    config/grafana/grafana_datasource.yaml:
+      name: grafana-datasources
+    config/grafana/grafana_dashboard_provision.yaml:
+      name: grafana-dashboard-provision
+    config/grafana/dashboards/*.json:
+      name: grafana-dashboards
