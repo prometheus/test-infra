@@ -77,7 +77,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: kube-state-metrics
-namespace: kube-system
+  namespace: kube-system
 
 ---
 apiVersion: apps/v1

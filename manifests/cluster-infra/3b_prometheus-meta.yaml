@@ -51,7 +51,7 @@ data:
         regex: __meta_kubernetes_service_label_(.+)
         replacement: $1
         action: labelmap
-      - source_labels: [__meta_kubernetes_service_label_app]
+      - source_labels: [__meta_kubernetes_service_label_k8s_app]
         separator: ;
         regex: kube-state-metrics
         replacement: $1
