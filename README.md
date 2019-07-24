@@ -168,7 +168,7 @@ $ gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE --project
 
 After making changes to the configs run the following to apply the changes:
 ```
-$ ./hack/config-bootstrapper.sh
+$ make apply_configbootstrapper
 ```
 
 > **Note:** The prow deployment mentioned in this document does not use any configuration from `/config/prow`. It is only used by the `config-bootstrapper`
