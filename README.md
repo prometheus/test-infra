@@ -163,7 +163,7 @@ When deploying Prombench, it will automatically clone [`prometheus/prombench`](h
 To test/modify `ConfigMaps` created with `config-bootstrapper` just map the `ConfigMap` name to the filepath in [`/config/prow/plugins.yaml`](/config/prow/plugins.yaml), then set the `KUBECONFIG` env var, if you're using GKE you can use:
 
 ```
-$ gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE --project=$PROJECT_ID
+$ gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE --project=$PROJECT_ID && kubectl cluster-info
 ```
 
 After making changes to the configs run the following to apply the changes:
