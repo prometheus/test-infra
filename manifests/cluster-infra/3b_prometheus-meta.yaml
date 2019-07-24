@@ -39,6 +39,24 @@ data:
         target_label: __metrics_path__
         replacement: /api/v1/nodes/${1}/proxy/metrics
 
+    - job_name: kube-state-metrics
+      honor_timestamps: true
+      scheme: http
+
+      kubernetes_sd_configs:
+      - role: service
+
+      relabel_configs:
+      - separator: ;
+        regex: __meta_kubernetes_service_label_(.+)
+        replacement: $1
+        action: labelmap
+      - source_labels: [__meta_kubernetes_service_label_app]
+        separator: ;
+        regex: kube-state-metrics
+        replacement: $1
+        action: keep
+
     - job_name: cadvisor
       scheme: https
       tls_config:
