@@ -3,11 +3,11 @@ kind: Job
 metadata:
   name: config-bootstrapper
 spec:
-  ttlSecondsAfterFinished: 100
   template:
     spec:
       serviceAccountName: config-bootstrapper
       restartPolicy: Never
+      activeDeadlineSeconds: 100
       initContainers:
       - name: "clone-prombench"
         imagePullPolicy: Always
