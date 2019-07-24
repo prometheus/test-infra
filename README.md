@@ -150,7 +150,9 @@ To cancel benchmarking, a mantainer should comment `/benchmark cancel`.
 
 ### Testing and applying changes to `ConfigMaps` manually
 ---
-> **Note:** Prombench does not support [`--from-file`](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#create-configmaps-from-files) like `kubectl`
+
+When deploying Prombench, it will automatically clone [`prometheus/prombench`](https://github.com/prometheus/prombench) and apply all configmaps listed in `/configs/prow/plugins.yaml`. The following section describes how to use `config-bootstrapper` for making local changes.
+
 
 `ConfigMaps` in the prombench infra are created in one of two ways,
 1) Using `ConfigMap` manifest files
@@ -164,12 +166,12 @@ To test/modify `ConfigMaps` created with `config-bootstrapper` just map the `Con
 $ gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE --project=$PROJECT_ID
 ```
 
-To apply the changes:
+After making changes to the configs run the following to apply the changes:
 ```
 $ ./hack/config-bootstrapper.sh
 ```
 
-> When deploying Prombench, it will automatically clone `prometheus/prombench` and apply all configmaps listed in `/configs/prow/plugins.yaml`
+> **Note:** The prow deployment mentioned in this document does not use any configuration from `/config/prow`. It is only used by the `config-bootstrapper`
 
 ## Buliding from source
 To build Prombench and related tools from source you need to have a working Go environment with version 1.12 or greater installed. Prombench uses promu for building the binaries.
