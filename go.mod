@@ -4,17 +4,17 @@ go 1.12
 
 require (
 	cloud.google.com/go v0.39.0
+	github.com/cespare/xxhash v1.1.0 // indirect
+	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/google/go-github/v26 v26.0.6
 	github.com/google/gofuzz v1.0.0 // indirect
 	github.com/googleapis/gnostic v0.2.0 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
-	github.com/json-iterator/go v1.1.6 // indirect
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.1 // indirect
+	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/pkg/errors v0.8.1
-	github.com/prometheus/alertmanager v0.17.0
-	github.com/prometheus/client_golang v0.9.3
-	github.com/prometheus/common v0.4.0
+	github.com/prometheus/alertmanager v0.18.0
+	github.com/prometheus/client_golang v1.0.0
+	github.com/prometheus/common v0.4.1
 	github.com/spf13/pflag v1.0.3 // indirect
 	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421
 	google.golang.org/api v0.5.0

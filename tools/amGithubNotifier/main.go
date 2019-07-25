@@ -24,7 +24,9 @@ import (
 	"path/filepath"
 
 	"github.com/google/go-github/v26/github"
-	"github.com/prometheus/alertmanager/notify"
+	//"github.com/prometheus/alertmanager/notify"
+	"github.com/prometheus/alertmanager/notify/webhook"
+	//"github.com/prometheus/alertmanager/notify"
 	"golang.org/x/oauth2"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -80,14 +82,14 @@ func (hl ghWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg := &notify.WebhookMessage{}
+	msg := &webhook.Message{}
 	ctx := r.Context()
 
 	// Decode the webhook request.
-	err := json.NewDecoder(r.Body).Decode(&msg)
+	err := json.NewDecoder(r.Body).Decode(msg)
 	if err != nil {
 		log.Println("failed to decode webhook data")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -153,7 +155,7 @@ func newGhWebhookReceiver(cfg ghWebhookReceiverConfig) (*ghWebhookReceiver, erro
 }
 
 // processAlert formats and posts the comment to github and returns nil if successful.
-func (g ghWebhookReceiver) processAlert(ctx context.Context, msg *notify.WebhookMessage) error {
+func (g ghWebhookReceiver) processAlert(ctx context.Context, msg *webhook.Message) error {
 
 	selectedTemplate := g.selectTemplate(msg)
 	msgBody, err := formatIssueCommentBody(msg, selectedTemplate)
@@ -169,11 +171,8 @@ func (g ghWebhookReceiver) processAlert(ctx context.Context, msg *notify.Webhook
 
 	_, _, err = g.ghClient.Issues.CreateComment(ctx,
 		g.getTargetOwner(msg), g.getTargetRepo(msg), prNum, &issueComment)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func serveWebhook(client *ghWebhookReceiver) {
