@@ -1,13 +1,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: amGithubNotifier-templates
+  name: amgithubnotifier-templates
 data:
   default: |
-    Alertmanager URL: {{ "{{" }} .Data.ExternalURL {{ "}}" }}
-    ---
-    {{ "{{" }} index .Data.Alerts[0].Annotations "description" {{ "}}" }}
-
+    this is the default alert template
   benchmarkTestsRunning: |
     Benchmark running for more than three days. Please consider stopping the benchmark
     or silencing this alert.
@@ -16,34 +13,34 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: amGithubNotifier
+  name: amgithubnotifier
   labels:
-    app: amGithubNotifier
+    app: amgithubnotifier
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: amGithubNotifier
+      app: amgithubnotifier
   template:
     metadata:
       labels:
-        app: amGithubNotifier
+        app: amgithubnotifier
     spec:
       containers:
-      - name: amGithubNotifier
+      - name: amgithubnotifier
         image: docker.io/prombench/amgithubnotifier:0.0.1
         args:
-        - "--org=prometheus"
-        - "--repo=prometheus"
-        - "--template-dir-path=/etc/amGithubNotifier/templates"
+        - "--org={{ .GITHUB_ORG }}"
+        - "--repo={{ .GITHUB_REPO }}"
+        - "--template-dir-path=/etc/amgithubnotifier/templates"
         volumeMounts:
         - name: oauth
           mountPath: /etc/github
           readOnly: true
         - name: templates
-          mountPath: /etc/amGithubNotifier/templates
+          mountPath: /etc/amgithubnotifier/templates
         ports:
-        - name: amGithubNotifier-webhook
+        - name: amgithubnotifier-webhook
           containerPort: 8080
       volumes:
       - name: oauth
@@ -51,7 +48,7 @@ spec:
           secretName: oauth-token
       - name: templates
         configMap:
-          name: amGithubNotifier-templates
+          name: amgithubnotifier-templates
       terminationGracePeriodSeconds: 300
       nodeSelector:
         cloud.google.com/gke-nodepool: prow
@@ -59,14 +56,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: amGithubNotifier
+  name: amgithubnotifier
   labels:
-    app: amGithubNotifier
+    app: amgithubnotifier
 spec:
   type: ClusterIP
   ports:
-  - name: amGithubNotifier-webhook
+  - name: amgithubnotifier-webhook
     port: 80
-    targetPort: amGithubNotifier-webhook
+    targetPort: amgithubnotifier-webhook
   selector:
-    app: amGithubNotifier
+    app: amgithubnotifier

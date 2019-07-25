@@ -12,13 +12,13 @@ data:
       group_wait: 1m
       group_interval: 5m
       repeat_interval: 2d
-      receiver: amGithubNotifier-bridge
+      receiver: amgithubnotifier-bridge
 
     receivers:
-    - name: amGithubNotifier-bridge
+    - name: amgithubnotifier-bridge
       webhook_configs:
       - send_resolved: false
-        url: 'http://amGithubNotifier/hook'
+        url: 'http://amgithubnotifier/hook'
 
 apiVersion: apps/v1
 kind: Deployment
