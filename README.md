@@ -43,6 +43,8 @@ export GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL=<client-email present in service-accou
 export GRAFANA_ADMIN_PASSWORD=password
 export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom domain.
 export OAUTH_TOKEN=<generated token from github>
+export GITHUB_ORG=prometheus
+export GITHUB_REPO=prometheus
 ```
 
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Grafana, Alertmanager & Github Notifier.
@@ -52,6 +54,7 @@ export OAUTH_TOKEN=<generated token from github>
     -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
     -v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:$GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL \
     -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
+    -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
     -f manifests/cluster-infra
 ```
 - The output will show the ingress IP which will be used to point the domain name to. Alternatively you can see it from the GKE/Services tab.
@@ -90,9 +93,6 @@ export HMAC_TOKEN=$(openssl rand -hex 20)
 - Deploy all internal prow components
 
 ```
-export GITHUB_ORG=prometheus
-export GITHUB_REPO=prometheus
-
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
     -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
     -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \

@@ -23,8 +23,8 @@ data:
         labels:
           severity: info
           prNum: '{{"{{"}} $labels.prNum {{"}}"}}'
-          owner: prometheus
-          repo: prometheus
+          owner: {{ .GITHUB_ORG }}
+          repo: {{ .GITHUB_REPO }}
         annotations:
           description: 'Benchmark tests are running for {{"{{"}} $value {{"}}"}} days on {{"{{"}} $labels.node {{"}}"}}.'
           summary: 'Reminder about running benchmark tests.'

@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/prometheus/alertmanager/notify"
+	"github.com/prometheus/alertmanager/notify/webhook"
 	"github.com/prometheus/alertmanager/template"
 	"github.com/prometheus/common/model"
 )
@@ -79,7 +79,7 @@ Alertmanager URL: {{.Data.ExternalURL}}
 		ExternalURL:       "http://alertmanager.com",
 	}
 
-	msg := &notify.WebhookMessage{
+	msg := &webhook.Message{
 		Version:  "4",
 		Data:     data,
 		GroupKey: "group_key",
