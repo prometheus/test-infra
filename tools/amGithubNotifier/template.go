@@ -21,16 +21,16 @@ import (
 	"strconv"
 	"text/template"
 
-	"github.com/prometheus/alertmanager/notify"
+	"github.com/prometheus/alertmanager/notify/webhook"
 )
 
 // alertID returns the alert id.
-func alertID(msg *notify.WebhookMessage) string {
+func alertID(msg *webhook.Message) string {
 	return fmt.Sprintf("0x%x", msg.GroupKey)
 }
 
 // formatIssueCommentBody constructs an issue body from a webhook message.
-func formatIssueCommentBody(msg *notify.WebhookMessage, tmpl alertTemplate) (string, error) {
+func formatIssueCommentBody(msg *webhook.Message, tmpl alertTemplate) (string, error) {
 	var buf bytes.Buffer
 	parsedTemplate := template.Must(template.New(tmpl.alertName).Parse(tmpl.templateString))
 	err := parsedTemplate.Execute(&buf, msg)
@@ -42,7 +42,7 @@ func formatIssueCommentBody(msg *notify.WebhookMessage, tmpl alertTemplate) (str
 }
 
 // getTargetPR returns the "prNum" label.
-func getTargetPR(msg *notify.WebhookMessage) (int, error) {
+func getTargetPR(msg *webhook.Message) (int, error) {
 	if prNum, ok := msg.CommonLabels["prNum"]; ok {
 		i, err := strconv.Atoi(prNum)
 		if err != nil {
@@ -54,7 +54,7 @@ func getTargetPR(msg *notify.WebhookMessage) (int, error) {
 }
 
 // getTargetRepo returns the "repo" label if exists else returns defaultRepo.
-func (g ghWebhookReceiver) getTargetRepo(msg *notify.WebhookMessage) string {
+func (g ghWebhookReceiver) getTargetRepo(msg *webhook.Message) string {
 	if repo, ok := msg.CommonLabels["repo"]; ok {
 		return repo
 	}
@@ -62,7 +62,7 @@ func (g ghWebhookReceiver) getTargetRepo(msg *notify.WebhookMessage) string {
 }
 
 // getTargetOwner returns the "owner" label if exists else returns defaultOwner.
-func (g ghWebhookReceiver) getTargetOwner(msg *notify.WebhookMessage) string {
+func (g ghWebhookReceiver) getTargetOwner(msg *webhook.Message) string {
 	if owner, ok := msg.CommonLabels["owner"]; ok {
 		return owner
 	}
@@ -70,7 +70,7 @@ func (g ghWebhookReceiver) getTargetOwner(msg *notify.WebhookMessage) string {
 }
 
 // selectTemplate returns the alertTemplate to use
-func (g ghWebhookReceiver) selectTemplate(msg *notify.WebhookMessage) alertTemplate {
+func (g ghWebhookReceiver) selectTemplate(msg *webhook.Message) alertTemplate {
 	alertname := msg.Data.GroupLabels["alertname"]
 	for _, alertTmpl := range g.alertTemplates {
 		if alertTmpl.alertName == alertname {

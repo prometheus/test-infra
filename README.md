@@ -48,7 +48,7 @@ export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom dom
 export OAUTH_TOKEN=<generated token from github>
 ```
 
-- Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Grafana, Alertmanager & amGithubNotifier.
+- Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Grafana, Alertmanager & Github Notifier.
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID -v ZONE:$ZONE \
     -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
