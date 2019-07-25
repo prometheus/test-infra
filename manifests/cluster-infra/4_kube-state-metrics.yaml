@@ -3,7 +3,6 @@ kind: ServiceAccount
 metadata:
   name: kube-state-metrics
   namespace: kube-system
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -101,6 +100,8 @@ spec:
       containers:
       - name: kube-state-metrics
         image: quay.io/coreos/kube-state-metrics:v1.7.1
+        args:
+        - "--collectors=namespaces"
         ports:
         - name: http-metrics
           containerPort: 8080

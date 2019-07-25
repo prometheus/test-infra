@@ -42,10 +42,8 @@ data:
     - job_name: kube-state-metrics
       honor_timestamps: true
       scheme: http
-
       kubernetes_sd_configs:
       - role: service
-
       relabel_configs:
       - separator: ;
         regex: __meta_kubernetes_service_label_(.+)
