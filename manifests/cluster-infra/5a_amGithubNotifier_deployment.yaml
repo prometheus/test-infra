@@ -1,35 +1,14 @@
-# NOTE: THIS DOES NOT WORK RIGHT NOW
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: amGithubNotifier-templates
 data:
   default: |
-    ### {{ index .Data.GroupLabels "alertname" }}:{{ index .Data.GroupLabels "namespace" }} [{{len .Data.Alerts}}]
-    
-    Alertmanager URL: {{.Data.ExternalURL}}
-    
+    Alertmanager URL: {{ "{{" }} .Data.ExternalURL {{ "}}" }}
     ---
-    {{range .Data.Alerts}}
-    <details>
-    <summary> {{if eq .Status "firing"}}🔥 {{ else }} ✅ {{end}} {{.Status}} | {{index .Labels "node"}}</summary>
-    
-    **Explore Alert:** [prometheus explorer]({{.GeneratorURL}})
-    
-    {{if .Labels}} **Labels:** {{- end}}
-    
-    {{range $key, $_ := .Labels}} {{ $key }} | {{- end }}
-    {{range $_, $_ := .Labels}} --- | {{- end }}
-    {{range $_, $value := .Labels}} {{ $value }} | {{- end }}
-    
-    {{if .Annotations}} **Annotations:** {{- end}}
-    {{range $key, $value := .Annotations}}
-    - **{{$key}}** : {{$value -}}
-    </details>{{end}}{{end}}
+    {{ "{{" }} index .Data.Alerts[0].Annotations "description" {{ "}}" }}
 
   benchmarkTestsRunning: |
-    Alertmanager URL: {{.Data.ExternalURL}}
-
     Benchmark running for more than three days. Please consider stopping the benchmark
     or silencing this alert.
 
