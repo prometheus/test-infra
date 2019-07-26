@@ -40,7 +40,7 @@ spec:
         - name: templates
           mountPath: /etc/amgithubnotifier/templates
         ports:
-        - name: amgithubnotifier-webhook
+        - name: amgithubnotifier
           containerPort: 8080
       volumes:
       - name: oauth
@@ -62,8 +62,8 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-  - name: amgithubnotifier-webhook
+  - name: amgithubnotifier
     port: 80
-    targetPort: amgithubnotifier-webhook
+    targetPort: amgithubnotifier
   selector:
     app: amgithubnotifier

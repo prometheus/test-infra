@@ -19,7 +19,7 @@ data:
       webhook_configs:
       - send_resolved: false
         url: 'http://amgithubnotifier/hook'
-
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
