@@ -4,7 +4,7 @@ metadata:
   name: amgithubnotifier-templates
 data:
   default: |
-    this is the default alert template
+    'Alertmanager URL: {{ "{{" }} .Data.ExternalURL {{ "}}" }}'
   benchmarkTestsRunning: |
     Benchmark running for more than three days. Please consider stopping the benchmark
     or silencing this alert.
@@ -37,7 +37,7 @@ spec:
         - name: oauth
           mountPath: /etc/github
           readOnly: true
-        - name: templates
+        - name: amgithubnotifier-templates
           mountPath: /etc/amgithubnotifier/templates
         ports:
         - name: amgh-port
@@ -46,7 +46,7 @@ spec:
       - name: oauth
         secret:
           secretName: oauth-token
-      - name: templates
+      - name: amgithubnotifier-templates
         configMap:
           name: amgithubnotifier-templates
       terminationGracePeriodSeconds: 300
