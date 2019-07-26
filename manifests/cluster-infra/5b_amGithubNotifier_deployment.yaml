@@ -4,8 +4,12 @@ metadata:
   name: amgithubnotifier-templates
 data:
   default: |
-    'Alertmanager URL: {{ "{{" }} .Data.ExternalURL {{ "}}" }}'
-    This is the default template that is currently not in use
+    Alertmanager URL: {{ "{{" }} .Data.ExternalURL {{ "}}" }}
+    {{ "{{" }} range .Data.Alerts {{ "}}" }}
+    {{ "{{" }} range $key, $value := .Annotations {{ "}}" }}
+    - **{{ "{{" }} $key {{ "}}" }}** : {{ "{{" }} $value -{{ "}}" }}
+    {{ "{{" }} end {{ "}}" }}
+    {{ "{{" }} end {{ "}}" }}
   benchmarkTestsRunning: |
     Prombench benchmark tests running are running for a long time.
     Please consider stopping the benchmark if no longer needed.
