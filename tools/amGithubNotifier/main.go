@@ -24,9 +24,7 @@ import (
 	"path/filepath"
 
 	"github.com/google/go-github/v26/github"
-	//"github.com/prometheus/alertmanager/notify"
 	"github.com/prometheus/alertmanager/notify/webhook"
-	//"github.com/prometheus/alertmanager/notify"
 	"golang.org/x/oauth2"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
