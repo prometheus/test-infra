@@ -112,20 +112,25 @@ func newGhWebhookReceiver(cfg ghWebhookReceiverConfig) (*ghWebhookReceiver, erro
 		log.Fatalf("error reading template dir path: %v\n", err)
 	}
 	for _, templateFile := range templateFiles {
-		template, err := ioutil.ReadFile(filepath.Join(cfg.templateDirPath, templateFile.Name()))
-		if err != nil {
-			log.Fatalf("error loading template file: %v\n", err)
-		}
-		if templateFile.Name() == "default" {
-			defaultTemplate = alertTemplate{
-				alertName:      "default",
-				templateString: string(template),
+		if !templateFile.IsDir() {
+			template, err := ioutil.ReadFile(filepath.Join(cfg.templateDirPath, templateFile.Name()))
+			if err != nil {
+				if templateFile.Mode()&os.ModeSymlink == os.ModeSymlink {
+					continue
+				}
+				log.Fatalf("error loading template file: %v\n", err)
 			}
-		} else {
-			alertTemplates = append(alertTemplates, alertTemplate{
-				alertName:      templateFile.Name(),
-				templateString: string(template),
-			})
+			if templateFile.Name() == "default" {
+				defaultTemplate = alertTemplate{
+					alertName:      "default",
+					templateString: string(template),
+				}
+			} else {
+				alertTemplates = append(alertTemplates, alertTemplate{
+					alertName:      templateFile.Name(),
+					templateString: string(template),
+				})
+			}
 		}
 	}
 
