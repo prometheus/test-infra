@@ -115,6 +115,7 @@ func newGhWebhookReceiver(cfg ghWebhookReceiverConfig) (*ghWebhookReceiver, erro
 		if !templateFile.IsDir() {
 			template, err := ioutil.ReadFile(filepath.Join(cfg.templateDirPath, templateFile.Name()))
 			if err != nil {
+				// continue if symlink to directory
 				if templateFile.Mode()&os.ModeSymlink == os.ModeSymlink {
 					continue
 				}
