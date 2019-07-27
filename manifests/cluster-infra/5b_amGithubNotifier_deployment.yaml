@@ -6,13 +6,8 @@ data:
   default: |
     Alertmanager URL: {{ "{{" }} .Data.ExternalURL {{ "}}" }}
     {{ "{{" }} range .Data.Alerts {{ "}}" }}
-    {{ "{{" }} range $key, $value := .Annotations {{ "}}" }}
-    - **{{ "{{" }} $key {{ "}}" }}** : {{ "{{" }} $value -{{ "}}" }}
+      {{ "{{" }} index (index .Annotations 0) "description" {{ "}}" }}
     {{ "{{" }} end {{ "}}" }}
-    {{ "{{" }} end {{ "}}" }}
-  benchmarkTestsRunning: |
-    Prombench benchmark tests running are running for a long time.
-    Please consider stopping the benchmark if no longer needed.
 
 ---
 apiVersion: apps/v1
