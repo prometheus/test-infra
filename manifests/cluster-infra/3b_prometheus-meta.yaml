@@ -19,7 +19,7 @@ data:
     - name: gke-related
       rules:
       - alert: benchmarkTestsRunning
-        expr: (time() - node_boot_time_seconds{namespace=~"prombench-[0-9]+",job="node-exporter"})/(60*60*24) > 3
+        expr: (time() - node_boot_time_seconds{namespace=~"prombench-[0-9]+",job="node-exporter",node=~"test-pr-[0-9]+"})/(60*60*24) > 3
         labels:
           severity: info
           prNum: '{{"{{"}} $labels.prNum {{"}}"}}'
@@ -27,7 +27,6 @@ data:
           repo: {{ .GITHUB_REPO }}
         annotations:
           description: 'Benchmark tests are running for {{"{{"}} $value {{"}}"}} days on {{"{{"}} $labels.node {{"}}"}}.'
-          summary: 'Reminder about running benchmark tests.'
 ---
 apiVersion: v1
 kind: ConfigMap

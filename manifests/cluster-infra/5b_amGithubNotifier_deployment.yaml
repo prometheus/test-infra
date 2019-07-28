@@ -6,7 +6,7 @@ data:
   default: |
     Alertmanager URL: {{ "{{" }} .Data.ExternalURL {{ "}}" }}
     {{ "{{" }} range .Data.Alerts {{ "}}" }}
-      {{ "{{" }} index (index .Annotations 0) "description" {{ "}}" }}
+      {{ "{{" }} index .Annotations "description" {{ "}}" }}
     {{ "{{" }} end {{ "}}" }}
 
 ---
