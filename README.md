@@ -24,10 +24,13 @@ export PROJECT_ID=<google-cloud project-id>
 export CLUSTER_NAME=prombench
 export ZONE=us-east1-b
 export AUTH_FILE=<path to service-account.json>
+export GOOGLE_APPLICATION_CREDENTIALS=$AUTH_FILE
 
 ./prombench gke cluster create -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
     -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -f manifests/cluster.yaml
 ```
+
+> `GOOGLE_APPLICATION_CREDENTIALS` is needed for the k8s provider after [#222](https://github.com/prometheus/prombench/pull/222), long term plan is to remove this env var and pass the value of the file directly to the k8s provider.
 
 ### Deploy Prometheus-Meta & Grafana
 > This is used for collecting and displaying the test results.
