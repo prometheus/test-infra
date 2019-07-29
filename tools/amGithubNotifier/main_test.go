@@ -14,6 +14,8 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"testing"
 	"time"
@@ -24,49 +26,35 @@ import (
 )
 
 func TestFormatIssueCommentBody(t *testing.T) {
-	const testTemplateString = `
-### {{ index .Data.GroupLabels "alertname" }}:{{ index .Data.GroupLabels "namespace" }} [{{len .Data.Alerts}}]
+	var alerts template.Alerts
 
-Alertmanager URL: {{.Data.ExternalURL}}
-
----
-{{range .Data.Alerts}}
-<details>
-<summary> {{if eq .Status "firing"}}🔥 {{ else }} ✅ {{end}} {{.Status}} | {{index .Labels "node"}}</summary>
-
-**Explore Alert:** [prometheus explorer]({{.GeneratorURL}})
-
-{{if .Labels}} **Labels:** {{- end}}
-
-{{range $key, $_ := .Labels}} {{ $key }} | {{- end }}
-{{range $_, $_ := .Labels}} --- | {{- end }}
-{{range $_, $value := .Labels}} {{ $value }} | {{- end }}
-
-{{if .Annotations}} **Annotations:** {{- end}}
-{{range $key, $value := .Annotations}}
-- **{{$key}}** : {{$value -}}
-</details>{{end}}{{end}}`
-	testAlertTemplate := alertTemplate{
-		alertName:      "testTemplate",
-		templateString: testTemplateString,
+	for i := 1; i <= 3; i++ {
+		l := template.KV{
+			"alertname":  "brokesomething",
+			"prNum":      "1",
+			"otherLabel": "foo",
+		}
+		a := template.KV{
+			"description": fmt.Sprintf("This is some alert for pr %v", i),
+			"otherAnn":    "foo",
+		}
+		alert := template.Alert{
+			Status:       string(model.AlertFiring),
+			Labels:       l,
+			Annotations:  a,
+			StartsAt:     time.Time{},
+			EndsAt:       time.Time{},
+			GeneratorURL: "http://prometheus.io?foo=bar&baz=qux",
+		}
+		alerts = append(alerts, alert)
 	}
 
 	cl := template.KV{
-		"testLabel":  "labelData",
-		"testLabel2": "labelData",
-		"node":       "testNodeName",
+		"alertname":  "brokesomething",
+		"otherLabel": "foo",
 	}
-	ca := template.KV{"testAnn": "annData"}
-	alert1 := template.Alert{
-		Status:       string(model.AlertFiring),
-		Labels:       cl,
-		Annotations:  ca,
-		StartsAt:     time.Time{},
-		EndsAt:       time.Time{},
-		GeneratorURL: "http://www.prom.io?foo=bar&baz=qux",
-	}
-	alerts := template.Alerts{
-		alert1,
+	ca := template.KV{
+		"otherAnn": "foo",
 	}
 	gl := template.KV{"alertname": "fixAlert", "namespace": "default"}
 	data := &template.Data{
@@ -84,33 +72,28 @@ Alertmanager URL: {{.Data.ExternalURL}}
 		Data:     data,
 		GroupKey: "group_key",
 	}
-	body, err := formatIssueCommentBody(msg, testAlertTemplate)
+
+	ctx := context.Background()
+	cfg := ghWebhookReceiverConfig{dryRun: true}
+	client, err := newGhWebhookReceiver(cfg)
 	if err != nil {
-		log.Fatalf("%v", err)
+		t.Errorf("could not create github client")
 	}
-	output := `
-### fixAlert:default [1]
 
-Alertmanager URL: http://alertmanager.com
-
----
-
-<details>
-<summary> 🔥  firing | testNodeName</summary>
-
-**Explore Alert:** [prometheus explorer](http://www.prom.io?foo=bar&baz=qux)
-
- **Labels:**
-
- node | testLabel | testLabel2 |
- --- | --- | --- |
- testNodeName | labelData | labelData |
-
- **Annotations:**
-
-- **testAnn** : annData</details>`
-	if body != output {
-		t.Errorf("Output did not match.\ngot:\n%#v\nwant:\n%#v", body, output)
+	alertcomments, err := client.processAlerts(ctx, msg)
+	if err != nil {
+		log.Printf("failed to handle alert: %v: %v", alertID(msg), err)
+		return
+	}
+	output := []string{
+		"This is some alert for pr 1",
+		"This is some alert for pr 2",
+		"This is some alert for pr 3",
+	}
+	for i, c := range alertcomments {
+		if output[i] != c {
+			t.Errorf("Output did not match.\ngot:\n%#v\nwant:\n%#v", c, output[i])
+		}
 	}
 
 }

@@ -25,28 +25,22 @@ import (
 
 	"github.com/google/go-github/v26/github"
 	"github.com/prometheus/alertmanager/notify/webhook"
+	"github.com/prometheus/alertmanager/template"
 	"golang.org/x/oauth2"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 type ghWebhookReceiverConfig struct {
-	authFile        string
-	defaultOwner    string
-	defaultRepo     string
-	templateDirPath string
-	portNo          string
-}
-
-type alertTemplate struct {
-	alertName      string
-	templateString string
+	authFile     string
+	defaultOwner string
+	defaultRepo  string
+	portNo       string
+	dryRun       bool
 }
 
 type ghWebhookReceiver struct {
-	ghClient        *github.Client
-	defaultTemplate alertTemplate
-	alertTemplates  []alertTemplate
-	cfg             ghWebhookReceiverConfig
+	ghClient *github.Client
+	cfg      ghWebhookReceiverConfig
 }
 
 type ghWebhookHandler struct {
@@ -61,7 +55,7 @@ func main() {
 	app.Flag("org", "default org/owner").Required().StringVar(&cfg.defaultOwner)
 	app.Flag("repo", "default repo").Required().StringVar(&cfg.defaultRepo)
 	app.Flag("port", "port number to run the server in").Default("8080").StringVar(&cfg.portNo)
-	app.Flag("template-dir-path", "directory path to alert templates").Required().StringVar(&cfg.templateDirPath)
+	app.Flag("dryrun", "dry run for github api").BoolVar(&cfg.dryRun)
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
@@ -93,7 +87,7 @@ func (hl ghWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Handle the webhook message.
 	log.Printf("handling alert: %v", alertID(msg))
-	if err := hl.client.processAlert(ctx, msg); err != nil {
+	if _, err := hl.client.processAlerts(ctx, msg); err != nil {
 		log.Printf("failed to handle alert: %v: %v", alertID(msg), err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -104,39 +98,11 @@ func (hl ghWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func newGhWebhookReceiver(cfg ghWebhookReceiverConfig) (*ghWebhookReceiver, error) {
 
-	// add templates
-	var alertTemplates []alertTemplate
-	var defaultTemplate alertTemplate
-	templateFiles, err := ioutil.ReadDir(cfg.templateDirPath)
-	if err != nil {
-		log.Fatalf("error reading template dir path: %v\n", err)
-	}
-	for _, templateFile := range templateFiles {
-		if !templateFile.IsDir() {
-			template, err := ioutil.ReadFile(filepath.Join(cfg.templateDirPath, templateFile.Name()))
-			if err != nil {
-				// continue if symlink to directory
-				if templateFile.Mode()&os.ModeSymlink == os.ModeSymlink {
-					continue
-				}
-				log.Fatalf("error loading template file: %v\n", err)
-			}
-			if templateFile.Name() == "default" {
-				defaultTemplate = alertTemplate{
-					alertName:      "default",
-					templateString: string(template),
-				}
-			} else {
-				alertTemplates = append(alertTemplates, alertTemplate{
-					alertName:      templateFile.Name(),
-					templateString: string(template),
-				})
-			}
-		}
-	}
-
-	if defaultTemplate.templateString == "" {
-		log.Fatalf("default template not found, %v should have a default template named 'default'", cfg.templateDirPath)
+	if cfg.dryRun {
+		return &ghWebhookReceiver{
+			ghClient: github.NewClient(nil),
+			cfg:      cfg,
+		}, nil
 	}
 
 	// add github token
@@ -151,32 +117,46 @@ func newGhWebhookReceiver(cfg ghWebhookReceiverConfig) (*ghWebhookReceiver, erro
 	tc := oauth2.NewClient(ctx, ts)
 
 	return &ghWebhookReceiver{
-		ghClient:        github.NewClient(tc),
-		cfg:             cfg,
-		defaultTemplate: defaultTemplate,
-		alertTemplates:  alertTemplates,
+		ghClient: github.NewClient(tc),
+		cfg:      cfg,
 	}, nil
 }
 
-// processAlert formats and posts the comment to github and returns nil if successful.
-func (g ghWebhookReceiver) processAlert(ctx context.Context, msg *webhook.Message) error {
-
-	selectedTemplate := g.selectTemplate(msg)
-	msgBody, err := formatIssueCommentBody(msg, selectedTemplate)
+// processAlert formats and posts the alert to github
+func (g ghWebhookReceiver) processAlert(ctx context.Context, alert template.Alert) (string, error) {
+	msgBody, err := formatIssueCommentBody(alert)
 	if err != nil {
-		return err
+		return "", err
 	}
 	issueComment := github.IssueComment{Body: &msgBody}
 
-	prNum, err := getTargetPR(msg)
+	prNum, err := getTargetPR(alert)
 	if err != nil {
-		return err
+		return "", err
 	}
 
+	if g.cfg.dryRun {
+		return msgBody, err
+	}
 	_, _, err = g.ghClient.Issues.CreateComment(ctx,
-		g.getTargetOwner(msg), g.getTargetRepo(msg), prNum, &issueComment)
+		g.getTargetOwner(alert), g.getTargetRepo(alert), prNum, &issueComment)
 
-	return err
+	return msgBody, err
+}
+
+func (g ghWebhookReceiver) processAlerts(ctx context.Context, msg *webhook.Message) ([]string, error) {
+
+	var alertcomments []string
+
+	// each alert will have its own comment
+	for _, a := range msg.Alerts {
+		alertcomment, err := g.processAlert(ctx, a)
+		if err != nil {
+			return nil, err
+		}
+		alertcomments = append(alertcomments, alertcomment)
+	}
+	return alertcomments, nil
 }
 
 func serveWebhook(client *ghWebhookReceiver) {

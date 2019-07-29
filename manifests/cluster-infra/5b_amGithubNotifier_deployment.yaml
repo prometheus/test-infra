@@ -1,15 +1,3 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: amgithubnotifier-templates
-data:
-  default: |
-    Alertmanager URL: {{ "{{" }} .Data.ExternalURL {{ "}}" }}
-    {{ "{{" }} range .Data.Alerts {{ "}}" }}
-      {{ "{{" }} index .Annotations "description" {{ "}}" }}
-    {{ "{{" }} end {{ "}}" }}
-
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -32,13 +20,10 @@ spec:
         args:
         - "--org={{ .GITHUB_ORG }}"
         - "--repo={{ .GITHUB_REPO }}"
-        - "--template-dir-path=/etc/amgithubnotifier/templates"
         volumeMounts:
         - name: oauth
           mountPath: /etc/github
           readOnly: true
-        - name: amgithubnotifier-templates
-          mountPath: /etc/amgithubnotifier/templates
         ports:
         - name: amgh-port
           containerPort: 8080
@@ -46,9 +31,6 @@ spec:
       - name: oauth
         secret:
           secretName: oauth-token
-      - name: amgithubnotifier-templates
-        configMap:
-          name: amgithubnotifier-templates
       terminationGracePeriodSeconds: 300
       nodeSelector:
         cloud.google.com/gke-nodepool: prow
