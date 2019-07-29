@@ -426,7 +426,7 @@ func (c *GKE) nodePoolRunning(zone, projectID, clusterID, poolName string) (bool
 	return false, nil
 }
 
-// NodePoolCheck checks if nodepools exists and returns error code if exists
+// NodePoolCheck returns an error if the nodepool exists.
 func (c *GKE) NodePoolCheck(*kingpin.ParseContext) error {
 	reqC := &containerpb.CreateClusterRequest{}
 
