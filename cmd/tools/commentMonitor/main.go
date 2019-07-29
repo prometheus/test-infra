@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
@@ -9,6 +10,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
+	"text/template"
 
 	"github.com/google/go-github/v26/github"
 	"golang.org/x/oauth2"
@@ -16,10 +19,12 @@ import (
 )
 
 func main() {
-	app := kingpin.New(filepath.Base(os.Args[0]), "commentMonitor github comment extract\n ./commentMonitor -i /path/event.json -o /path \"^myregex$\"")
+	app := kingpin.New(filepath.Base(os.Args[0]), "commentMonitor github comment extract\n ./commentMonitor -i /path/event.json -o /path \"^myregex$\"\nExample of comment template environment variable: COMMENT_TEMPLATE=\"The benchmark is starting. Your Github token is {{ index . \\\"GITHUB_TOKEN\\\" }}.\"")
 	app.HelpFlag.Short('h')
 	input := app.Flag("input", "path to event.json").Short('i').Default("/github/workflow/event.json").String()
 	output := app.Flag("output", "path to write args to").Short('o').Default("/github/home").String()
+	verifyUser := app.Flag("verify-user", "If set to true, a check, on whether the comment creator is a collaborator or a member of the group, will be executed.").Default("true").Bool()
+	templateEnvVar := app.Flag("template-var", "Name of the environment variable that contains comment template.").Short('t').Default("COMMENT_TEMPLATE").String()
 	regex := app.Arg("regex", "Regex pattern to match").Required().String()
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
@@ -41,12 +46,25 @@ func main() {
 
 	switch e := event.(type) {
 	case *github.IssueCommentEvent:
+
+		owner := *e.GetRepo().Owner.Login
+		repo := *e.GetRepo().Name
+		prnumber := *e.GetIssue().Number
+
+		// Github client for posting comments.
+		clt := newClient(os.Getenv("GITHUB_TOKEN"))
+
 		// Check author association.
-		if err := memberValidation(*e.GetComment().AuthorAssociation); err != nil {
-			log.Printf("author is not a member or collaborator")
-			os.Exit(78)
+		if *verifyUser {
+			if err := memberValidation(*e.GetComment().AuthorAssociation); err != nil {
+				log.Printf("author is not a member or collaborator")
+				if err := postComment(clt, owner, repo, prnumber, fmt.Sprintf("Error: %s is not a group member nor a collaborator and cannot execute benchmarks.", *e.Sender.Login)); err != nil {
+					log.Fatalln(err)
+				}
+				os.Exit(78)
+			}
+			log.Printf("author is member or collaborator")
 		}
-		log.Printf("author is member or collaborator")
 
 		// Validate comment.
 		args, err := regexValidation(*regex, *e.GetComment().Body)
@@ -55,38 +73,23 @@ func main() {
 			os.Exit(78)
 		}
 
-		// Get parameters.
-		releaseVersion := args[1]
-		prombenchURL := os.Getenv("DOMAIN_NAME")
-		owner := *e.GetRepo().Owner.Login
-		repo := *e.GetRepo().Name
-		prnumber := *e.GetIssue().Number
-
 		// Save args to file. Stores releaseVersion in ARG_0 and prnumber in ARG_1.
 		args = append(args, strconv.Itoa(prnumber))
 		writeArgs(args, *output)
 
-		// Posting benchmark start comment.
-		comment := fmt.Sprintf(`Welcome to Prometheus Benchmarking Tool.
+		envVars := make(map[string]string)
+		for _, e := range os.Environ() {
+			tmp := strings.Split(e, "=")
+			envVars[tmp[0]] = tmp[1]
+		}
 
-The two prometheus versions that will be compared are _**pr-%v**_ and _**%v**_
+		var buf bytes.Buffer
+		commentTemplate := template.Must(template.New("Comment").Parse(os.Getenv(*templateEnvVar)))
+		if err := commentTemplate.Execute(&buf, envVars); err != nil {
+			log.Fatalln(err)
+		}
 
-The logs can be viewed at the links provided in the GitHub check blocks at the end of this conversation
-
-After successfull deployment, the benchmarking metrics can be viewed at :
-- [prometheus-meta](%v/prometheus-meta) - label **{namespace="prombench-%v"}**
-- [grafana](%v/grafana) - template-variable **"pr-number" : %v**
-
-The Prometheus servers being benchmarked can be viewed at :
-- PR - [prombench.prometheus.io/%v/prometheus-pr](%v/%v/prometheus-pr)
-- %v - [prombench.prometheus.io/%v/prometheus-release](%v/%v/prometheus-release)
-
-To stop the benchmark process comment **/benchmark cancel** .`, prnumber, releaseVersion, prombenchURL, prnumber, prombenchURL, prnumber, prnumber, prombenchURL, prnumber, releaseVersion, prnumber, prombenchURL, prnumber)
-
-		// Github client for posting comments.
-		clt := newClient(os.Getenv("GITHUB_TOKEN"))
-
-		if err := postComment(clt, owner, repo, prnumber, comment); err != nil {
+		if err := postComment(clt, owner, repo, prnumber, buf.String()); err != nil {
 			log.Fatalln(err)
 		}
 
@@ -129,6 +132,12 @@ func writeArgs(args []string, output string) {
 		data := []byte(arg)
 		filename := fmt.Sprintf("ARG_%v", i)
 		err := ioutil.WriteFile(filepath.Join(output, filename), data, 0644)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		// `args` are exported as environment variables so that they
+		// can be used in the comment template.
+		err = os.Setenv(filename, string(data))
 		if err != nil {
 			log.Fatalln(err)
 		}
