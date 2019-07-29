@@ -46,7 +46,7 @@ spec:
         - "/bin/sh"
         - "-c"
         args:
-        - "make deploy && echo 'deploy succeeded, now sleeping' && sleep infinity"
+        - "make deploy && echo 'deploy succeeded, now sleeping' && while sleep 86400; do :; done"
         env:
           - name: PROJECT_ID
             value: "{{ .PROJECT_ID }}"
