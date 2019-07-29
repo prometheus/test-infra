@@ -1,12 +1,8 @@
 # amGithubNotifier - Alertmanager GitHub Webhook Receiver
 
-A simple webhook server that can be added as a webhook receiver in alertmanager config.
+A simple bridge for receiving Alertmanager alerts and posting comments to github.
 
 It listens at the `/hook` endpoint on port `:8080` by default.
-
-### Features
-- Posts comments on Github PRs/issues based on the `prNum` label of alerts.
-- Optionally specify `owner` and `repo` as alert labels which override the command line flags for individual alerts.
 
 ## Usage
 

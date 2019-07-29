@@ -19,14 +19,14 @@ data:
     - name: gke-related
       rules:
       - alert: benchmarkTestsRunning
-        expr: (time() - node_boot_time_seconds{namespace=~"prombench-[0-9]+",job="node-exporter",node=~"test-pr-[0-9]+"})/(60*60*24) > 3
+        expr: floor((time() - node_boot_time_seconds{namespace=~"prombench-[0-9]+",job="node-exporter",node=~"test-pr-[0-9]+"})/(60*60*24)) >= 3
         labels:
           severity: info
           prNum: '{{"{{"}} $labels.prNum {{"}}"}}'
           owner: {{ .GITHUB_ORG }}
           repo: {{ .GITHUB_REPO }}
         annotations:
-          description: 'Benchmark tests are running for {{"{{"}} $value {{"}}"}} days on {{"{{"}} $labels.node {{"}}"}}.'
+          description: 'Benchmark tests are running for {{"{{"}} $value {{"}}"}} days! If this is intended ignore this message otherwise you can cancel it by commenting: `/benchmark cancel`'
 ---
 apiVersion: v1
 kind: ConfigMap
