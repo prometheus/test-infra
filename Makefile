@@ -5,7 +5,7 @@ include Makefile.common
 PROMBENCH_CMD        = ./prombench
 
 ifeq ($(AUTH_FILE),)
-AUTH_FILE = "/etc/serviceaccount/service-account.json"
+AUTH_FILE = /etc/serviceaccount/service-account.json
 endif
 
 export GOOGLE_APPLICATION_CREDENTIALS=$(AUTH_FILE)
