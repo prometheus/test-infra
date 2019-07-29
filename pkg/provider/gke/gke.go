@@ -440,7 +440,7 @@ func (c *GKE) NodePoolCheck(*kingpin.ParseContext) error {
 			if err != nil {
 				log.Fatalln("error fetching nodePool info")
 			}
-			if b == true {
+			if b {
 				log.Fatalln("nodepool exists")
 			}
 		}
