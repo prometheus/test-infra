@@ -30,7 +30,7 @@ import (
 )
 
 type ghWebhookReceiverConfig struct {
-	authfile        string
+	authFile        string
 	defaultOwner    string
 	defaultRepo     string
 	templateDirPath string
@@ -57,7 +57,7 @@ func main() {
 	cfg := ghWebhookReceiverConfig{}
 
 	app := kingpin.New(filepath.Base(os.Args[0]), "alertmanager github webhook receiver")
-	app.Flag("authfile", "path to github oauth token file").Default("/etc/github/oauth").StringVar(&cfg.authfile)
+	app.Flag("authfile", "path to github oauth token file").Default("/etc/github/oauth").StringVar(&cfg.authFile)
 	app.Flag("org", "default org/owner").Required().StringVar(&cfg.defaultOwner)
 	app.Flag("repo", "default repo").Required().StringVar(&cfg.defaultRepo)
 	app.Flag("port", "port number to run the server in").Default("8080").StringVar(&cfg.portNo)
@@ -140,7 +140,7 @@ func newGhWebhookReceiver(cfg ghWebhookReceiverConfig) (*ghWebhookReceiver, erro
 	}
 
 	// add github token
-	oauth2token, err := ioutil.ReadFile(cfg.authfile)
+	oauth2token, err := ioutil.ReadFile(cfg.authFile)
 	if err != nil {
 		return nil, err
 	}
