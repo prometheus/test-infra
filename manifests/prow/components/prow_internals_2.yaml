@@ -219,9 +219,8 @@ data:
           containers:
           - image: docker.io/prombench/prombench:2.0.1
             imagePullPolicy: Always
-            command:
-            - "make"
             args:
+            - "make"
             - "deploy"
             - "PROJECT_ID={{ .PROJECT_ID }}"
             - "ZONE={{ .ZONE }}"
@@ -246,9 +245,8 @@ data:
           containers:
           - image: docker.io/prombench/prombench:2.0.1
             imagePullPolicy: Always
-            command:
-            - "make"
             args:
+            - "make"
             - "clean"
             - "PROJECT_ID={{ .PROJECT_ID }}"
             - "ZONE={{ .ZONE }}"
