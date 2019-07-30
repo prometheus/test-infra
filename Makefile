@@ -3,6 +3,7 @@ DOCKER_REPO             ?= prombench
 include Makefile.common
 
 PROMBENCH_CMD        = ./prombench
+PROMBENCH_DIR        ?= .
 
 ifeq ($(AUTH_FILE),)
 AUTH_FILE = /etc/serviceaccount/service-account.json
@@ -20,38 +21,38 @@ start_ss:
 	$(PROMBENCH_CMD) gke resource apply -a ${AUTH_FILE} -v PROJECT_ID:${PROJECT_ID} \
 		-v ZONE:${ZONE} -v CLUSTER_NAME:${CLUSTER_NAME} -v DOMAIN_NAME:${DOMAIN_NAME} \
 		-v PR_NUMBER:${PR_NUMBER} -v RELEASE:${RELEASE} -v LAST_COMMIT:${GITHUB_SHA} \
-		-f manifests/prombench/prombenchTest_ss.yaml
+		-f $(PROMBENCH_DIR)/manifests/prombench/prombenchTest_ss.yaml
 
 stop_ss:
 	$(PROMBENCH_CMD) gke resource delete -a ${AUTH_FILE} -v PROJECT_ID:${PROJECT_ID} \
 		-v ZONE:${ZONE} -v CLUSTER_NAME:${CLUSTER_NAME} -v DOMAIN_NAME:${DOMAIN_NAME} \
 		-v PR_NUMBER:${PR_NUMBER} -v RELEASE:${RELEASE} -v LAST_COMMIT:${GITHUB_SHA} \
-		-f manifests/prombench/prombenchTest_ss.yaml
+		-f $(PROMBENCH_DIR)/manifests/prombench/prombenchTest_ss.yaml
 
 nodepool_create:
 	$(PROMBENCH_CMD) gke nodepool create -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
-		-f manifests/prombench/nodepools.yaml
+		-f $(PROMBENCH_DIR)/manifests/prombench/nodepools.yaml
 
 resource_apply:
 	$(PROMBENCH_CMD) gke resource apply -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
 		-v PR_NUMBER:${PR_NUMBER} -v RELEASE:${RELEASE} -v DOMAIN_NAME:${DOMAIN_NAME} \
-		-f manifests/prombench/benchmark
+		-f $(PROMBENCH_DIR)/manifests/prombench/benchmark
 
 resource_delete:
 	$(PROMBENCH_CMD) gke resource delete -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
-		-f manifests/prombench/benchmark/1a_namespace.yaml \
-        -f manifests/prombench/benchmark/1c_cluster-role-binding.yaml
+		-f $(PROMBENCH_DIR)/manifests/prombench/benchmark/1a_namespace.yaml \
+        -f $(PROMBENCH_DIR)/manifests/prombench/benchmark/1c_cluster-role-binding.yaml
 
 nodepool_delete:
 	$(PROMBENCH_CMD) gke nodepool delete -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
-		-f manifests/prombench/nodepools.yaml
+		-f $(PROMBENCH_DIR)/manifests/prombench/nodepools.yaml
 
 nodepool_check:
 	$(PROMBENCH_CMD) gke nodepool check -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} \
 		-v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
-		-f manifests/prombench/nodepools.yaml
+		-f $(PROMBENCH_DIR)/manifests/prombench/nodepools.yaml

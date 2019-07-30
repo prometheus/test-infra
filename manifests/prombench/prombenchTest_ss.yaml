@@ -38,6 +38,16 @@ spec:
             value: "{{ .RELEASE }}"
           - name: PR_NUMBER
             value: "{{ .PR_NUMBER }}"
+      - name: clone-prombench
+        image: docker.io/alpine/git
+        imagePullPolicy: Always
+        args:
+        - "clone"
+        - "https://github.com/prometheus/prombench.git"
+        - "/cloned-prombench"
+        volumeMounts:
+        - name: clone-prombench
+          mountPath: /cloned-prombench
       containers:
       - name: prombench-test-{{ .PR_NUMBER }}
         image: docker.io/prombench/prombench:2.0.1
@@ -60,6 +70,8 @@ spec:
             value: "{{ .PR_NUMBER }}"
           - name: DOMAIN_NAME
             value: "{{ .DOMAIN_NAME }}"
+          - name: PROMBENCH_DIR
+            value: "/cloned-prombench"
         lifecycle:
           preStop:
             exec:
@@ -71,10 +83,14 @@ spec:
         - name: serviceaccount
           mountPath: /etc/serviceaccount/
           readOnly: true
+        - name: clone-prombench
+          mountPath: /cloned-prombench
       volumes:
         - name: serviceaccount
           secret:
             secretName: service-account
+        - name: clone-prombench
+          emptyDir: {}
       terminationGracePeriodSeconds: 900 # 15 mins
       nodeSelector:
         cloud.google.com/gke-nodepool: prow

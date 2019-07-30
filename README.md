@@ -116,6 +116,8 @@ export GITHUB_SHA=<anything would work, but ideally should be the SHA of the las
 ```
 
 - Start the prombench test as a StatefulSet
+
+The following will use manifest files from the [`prometheus/prombench`](https://github.com/prometheus/prombench) repo.
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
 	-v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
@@ -123,6 +125,33 @@ export GITHUB_SHA=<anything would work, but ideally should be the SHA of the las
 	-f manifests/prombench/prombenchTest_ss.yaml
 ```
 
+Instead if you want to test local changes to manifest files,
+```
+make deploy
+```
+
+
+### Setting up GitHub API and webhook to trigger tests from comments.
+---
+
+- Generate a GitHub auth token that will be used to authenticate when sending requests to the GitHub api.
+  * Login with the [Prombot account](https://github.com/prombot) and generate a [new auth token](https://github.com/settings/tokens).  
+  permissions:*public_repo, read:org, write:discussion*.
+
+- Set the following environment variables
+```
+export HMAC_TOKEN=$(openssl rand -hex 20)
+export OAUTH_TOKEN=***Replace with the generated token from github***
+```
+
+- Add a [github webhook](https://github.com/prometheus/prometheus/settings/hooks) where to send the events.
+  * Content Type: `json`
+  * Send:  `Issue comments,Pull requests`
+  * Secret: `echo $HMAC_TOKEN`
+  * Payload URL: `http://<DOMAIN_NAME>/hook`
+
+
+>>>>>>> get manifest files by cloning prombench
 ### Trigger tests via a Github comment.
 ---
 
