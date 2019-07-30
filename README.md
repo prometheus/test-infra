@@ -112,14 +112,14 @@ export PROMBENCH_REPO=https://github.com/prometheus/prombench
 ```
 export RELEASE=<master or any prometheus release(ex: v2.3.0) >
 export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
-export PULL_PULL_SHA=<anything would work, but ideally should be the GITHUB_SHA>
+export GITHUB_SHA=<anything would work, but ideally should be the SHA of the last commit>
 ```
 
 - Start the prombench test as a StatefulSet
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
 	-v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
-	-v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v LAST_COMMIT:$PULL_PULL_SHA \
+	-v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v LAST_COMMIT:$GITHUB_SHA \
 	-f manifests/prombench/prombenchTest_ss.yaml
 ```
 
