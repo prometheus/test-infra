@@ -48,6 +48,26 @@ type ghWebhookHandler struct {
 }
 
 func main() {
+	/*
+		Example `alerts.rules.yml`:
+		```
+		groups:
+		- name: groupname
+		  rules:
+		  - alert: alertname
+		    expr: up == 0
+		    for: 2m
+		    labels:
+		      severity: average
+		      prNum: '{{ $labels.prNum }}'
+		      owner: prometheus (optional)
+		      repo: prometheus (optional)
+		    annotations:
+		      description: 'description of the alert'
+		```
+		Example command to start amGithubNotifier:
+		./amGithubNotifier --org=prometheus --repo=prometheus --port=8080
+	*/
 	cfg := ghWebhookReceiverConfig{}
 
 	app := kingpin.New(filepath.Base(os.Args[0]), "alertmanager github webhook receiver")
