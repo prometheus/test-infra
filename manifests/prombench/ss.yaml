@@ -43,6 +43,8 @@ spec:
         imagePullPolicy: Always
         args:
         - "clone"
+        - --single-branch
+        - --
         - "https://github.com/{{ .GITHUB_ORG }}/prombench.git"
         - "/cloned-prombench"
         volumeMounts:
