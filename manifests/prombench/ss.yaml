@@ -46,7 +46,7 @@ spec:
         - --single-branch
         - --
         - "https://github.com/{{ .GITHUB_ORG }}/prombench.git"
-        - "/cloned-prombench"
+        - "/cloned-prombench/prombench"
         volumeMounts:
         - name: clone-prombench
           mountPath: /cloned-prombench
@@ -73,7 +73,7 @@ spec:
           - name: DOMAIN_NAME
             value: "{{ .DOMAIN_NAME }}"
           - name: PROMBENCH_DIR
-            value: "/cloned-prombench"
+            value: "/cloned-prombench/prombench"
         lifecycle:
           preStop:
             exec:
