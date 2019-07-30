@@ -120,9 +120,10 @@ export GITHUB_SHA=<anything would work, but ideally should be the SHA of the las
 The following will use manifest files from the [`prometheus/prombench`](https://github.com/prometheus/prombench) repo.
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
-	-v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
-	-v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v LAST_COMMIT:$GITHUB_SHA \
-	-f manifests/prombench/ss.yaml
+    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
+    -v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v LAST_COMMIT:$GITHUB_SHA \
+    -v GITHUB_ORG:$GITHUB_ORG \
+    -f manifests/prombench/ss.yaml
 ```
 
 Instead if you want to test local changes to manifest files,
