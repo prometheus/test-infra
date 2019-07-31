@@ -19,9 +19,7 @@ spec:
       - name: check-no-nodepool-exist
         image: docker.io/prombench/prombench:2.0.1
         imagePullPolicy: Always
-        command:
-        - "/bin/sh"
-        - "-c"
+        args:
         - "until make nodepool_check; do echo waiting for nodepools to be deleted; sleep 10; done;"
         volumeMounts:
         - name: serviceaccount
@@ -38,25 +36,10 @@ spec:
             value: "{{ .RELEASE }}"
           - name: PR_NUMBER
             value: "{{ .PR_NUMBER }}"
-      - name: clone-prombench
-        image: docker.io/alpine/git
-        imagePullPolicy: Always
-        args:
-        - "clone"
-        - --single-branch
-        - --
-        - "https://github.com/{{ .GITHUB_ORG }}/prombench.git"
-        - "/cloned-prombench/prombench"
-        volumeMounts:
-        - name: clone-prombench
-          mountPath: /cloned-prombench
       containers:
       - name: prombench-test-{{ .PR_NUMBER }}
         image: docker.io/prombench/prombench:2.0.1
         imagePullPolicy: Always
-        command:
-        - "/bin/sh"
-        - "-c"
         args:
         - "make deploy && echo 'deploy succeeded, now sleeping' && while sleep 86400; do :; done"
         env:
@@ -85,14 +68,10 @@ spec:
         - name: serviceaccount
           mountPath: /etc/serviceaccount/
           readOnly: true
-        - name: clone-prombench
-          mountPath: /cloned-prombench
       volumes:
         - name: serviceaccount
           secret:
             secretName: service-account
-        - name: clone-prombench
-          emptyDir: {}
       terminationGracePeriodSeconds: 900 # 15 mins
       nodeSelector:
         cloud.google.com/gke-nodepool: prow
