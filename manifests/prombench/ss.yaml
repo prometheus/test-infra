@@ -20,8 +20,6 @@ spec:
         image: docker.io/prombench/prombench:2.0.1
         imagePullPolicy: Always
         args:
-        - "/bin/sh"
-        - "-c"
         - "until make nodepool_check; do echo waiting for nodepools to be deleted; sleep 10; done;"
         volumeMounts:
         - name: serviceaccount
@@ -43,8 +41,6 @@ spec:
         image: docker.io/prombench/prombench:2.0.1
         imagePullPolicy: Always
         args:
-        - "/bin/sh"
-        - "-c"
         - "make deploy && echo 'deploy succeeded, now sleeping' && while sleep 86400; do :; done"
         env:
           - name: PROJECT_ID
@@ -59,15 +55,12 @@ spec:
             value: "{{ .PR_NUMBER }}"
           - name: DOMAIN_NAME
             value: "{{ .DOMAIN_NAME }}"
-          - name: PROMBENCH_DIR
-            value: "/cloned-prombench/prombench"
         lifecycle:
           preStop:
             exec:
               command:
-              - "/bin/sh"
-              - "-c"
-              - "make clean"
+              - "make"
+              - "clean"
         volumeMounts:
         - name: serviceaccount
           mountPath: /etc/serviceaccount/
