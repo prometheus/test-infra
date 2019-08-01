@@ -14,7 +14,7 @@ endif
 
 .PHONY: deploy clean
 deploy: nodepool_create resource_apply
-clean: resource_delete nodepool_delete
+clean: nodepool_delete resource_delete
 
 start_ss:
 	$(PROMBENCH_CMD) gke resource apply -a ${AUTH_FILE} -v PROJECT_ID:${PROJECT_ID} \
