@@ -65,6 +65,10 @@ spec:
               command:
               - "make"
               - "clean"
+              - "&&"
+              - "killall make"
+              - "&&"
+              - "killall sleep"
         volumeMounts:
         - name: serviceaccount
           mountPath: /etc/serviceaccount/
