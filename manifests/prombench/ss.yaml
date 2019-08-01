@@ -36,6 +36,8 @@ spec:
             value: "{{ .RELEASE }}"
           - name: PR_NUMBER
             value: "{{ .PR_NUMBER }}"
+          - name: PROMBENCH_REPO
+            value: "https://github.com/prometheus/prombench.git"
       containers:
       - name: prombench-test-{{ .PR_NUMBER }}
         image: docker.io/prombench/prombench:2.0.1
@@ -55,6 +57,8 @@ spec:
             value: "{{ .PR_NUMBER }}"
           - name: DOMAIN_NAME
             value: "{{ .DOMAIN_NAME }}"
+          - name: PROMBENCH_REPO
+            value: "https://github.com/prometheus/prombench.git"
         lifecycle:
           preStop:
             exec:
