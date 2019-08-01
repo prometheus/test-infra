@@ -63,10 +63,9 @@ spec:
           preStop:
             exec:
               command:
-              - "make"
-              - "clean"
-              - ";"
-              - "kill -9 -1"
+              - "/bin/sh"
+              - "-c"
+              - "make clean ; kill -9 -1"
         volumeMounts:
         - name: serviceaccount
           mountPath: /etc/serviceaccount/
