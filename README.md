@@ -122,7 +122,6 @@ The following will use manifest files from the [`prometheus/prombench`](https://
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
     -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
     -v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v LAST_COMMIT:$GITHUB_SHA \
-    -v GITHUB_ORG:$GITHUB_ORG \
     -f manifests/prombench/ss.yaml
 ```
 
