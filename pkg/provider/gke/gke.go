@@ -426,9 +426,11 @@ func (c *GKE) nodePoolRunning(zone, projectID, clusterID, poolName string) (bool
 	return false, nil
 }
 
-// NodePoolCheck returns an error if the nodepool exists.
+// NodePoolCheck returns an error if all the nodepools do not exist.
 func (c *GKE) NodePoolCheck(*kingpin.ParseContext) error {
 	reqC := &containerpb.CreateClusterRequest{}
+
+	exists := true
 
 	for _, deployment := range c.gkeResources {
 		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
@@ -436,16 +438,19 @@ func (c *GKE) NodePoolCheck(*kingpin.ParseContext) error {
 		}
 
 		for _, node := range reqC.Cluster.NodePools {
-			b, err := c.nodePoolRunning(reqC.Zone, reqC.ProjectId, reqC.Cluster.Name, node.Name)
+			isRunning, err := c.nodePoolRunning(reqC.Zone, reqC.ProjectId, reqC.Cluster.Name, node.Name)
 			if err != nil {
 				log.Fatalln("error fetching nodePool info")
 			}
-			if b {
-				log.Fatalln("nodepool exists")
-			}
+			exists = exists && isRunning
 		}
 	}
-	return nil
+
+	if exists {
+		return nil
+	}
+
+	return errors.Errorf("nodepools exists")
 }
 
 // NewK8sProvider sets the k8s provider used for deploying k8s manifests.
