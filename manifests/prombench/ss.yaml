@@ -65,7 +65,7 @@ spec:
               command:
               - "/bin/sh"
               - "-c"
-              - "while make nodepool_check; do echo waiting for nodepools to be deleted; sleep 10; done; make clean; kill -9 -1"
+              - "while make nodepool_check; do echo waiting for nodepools to be created; sleep 10; done; make clean; kill -9 -1"
         volumeMounts:
         - name: serviceaccount
           mountPath: /etc/serviceaccount/
