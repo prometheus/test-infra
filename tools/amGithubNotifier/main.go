@@ -65,12 +65,11 @@ func main() {
 		    annotations:
 		      description: 'description of the alert'
 		```
-		Example command to start amGithubNotifier:
-		./amGithubNotifier --org=prometheus --repo=prometheus --port=8080
 	*/
 	cfg := ghWebhookReceiverConfig{}
 
-	app := kingpin.New(filepath.Base(os.Args[0]), "alertmanager github webhook receiver")
+	app := kingpin.New(filepath.Base(os.Args[0]), `alertmanager github webhook receiver
+	Example: ./amGithubNotifier --org=prometheus --repo=prometheus --port=8080`)
 	app.Flag("authfile", "path to github oauth token file").Default("/etc/github/oauth").StringVar(&cfg.authFile)
 	app.Flag("org", "default org/owner").Required().StringVar(&cfg.defaultOwner)
 	app.Flag("repo", "default repo").Required().StringVar(&cfg.defaultRepo)
