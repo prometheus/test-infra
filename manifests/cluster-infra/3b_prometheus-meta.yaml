@@ -19,7 +19,7 @@ data:
     - name: gke-related
       rules:
       - alert: benchmarkTestsRunning
-        expr: floor((time() - node_boot_time_seconds{namespace=~"prombench-[0-9]+",job="node-exporter",node=~"test-pr-[0-9]+"})/(60*60*24)) >= 3
+        expr: floor((time() - kube_namespace_created{namespace=~"prombench-[0-9]+"})/(60*60*24)) >= 3
         labels:
           severity: info
           prNum: '{{"{{"}} $labels.prNum {{"}}"}}'
@@ -100,6 +100,12 @@ data:
         regex: kube-state-metrics
         replacement: $1
         action: keep
+      metric_relabel_configs:
+      - action: replace
+        source_labels: [__name__, namespace]
+        regex: kube_namespace_created;prombench-(\d+)
+        target_label: prNum
+        replacement: $1
 
     - job_name: cadvisor
       scheme: https
@@ -140,11 +146,6 @@ data:
       - action: replace
         source_labels: [__meta_kubernetes_namespace]
         target_label: namespace
-      - action: replace
-        source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_label_app]
-        regex: prombench-(\d+);node-exporter
-        target_label: prNum
-        replacement: $1
       - action: replace
         source_labels: [__meta_kubernetes_service_label_prometheus]
         target_label: prometheus
