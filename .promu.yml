@@ -12,8 +12,6 @@ build:
           path: ./cmd/scaler
         - name: fake-webserver
           path: ./cmd/fake-webserver
-        - name: amGithubNotifier
-          path: ./tools/amGithubNotifier
     flags: -a -tags netgo
 
 crossbuild:
