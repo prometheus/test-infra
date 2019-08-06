@@ -94,8 +94,8 @@ spec:
             - name: config
               mountPath: /etc/loki
             - name: storage
-              mountPath: "/data"
-              subPath: loki
+              mountPath: /data
+              subPath: loki-data
           ports:
             - name: http-metrics
               containerPort: 3100
