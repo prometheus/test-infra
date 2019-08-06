@@ -42,6 +42,7 @@ resource_apply:
 		-v PR_NUMBER:${PR_NUMBER} -v RELEASE:${RELEASE} -v DOMAIN_NAME:${DOMAIN_NAME} \
 		-f manifests/prombench/benchmark
 
+# NOTE: required because namespace and cluster-role are not part of the created nodepools
 resource_delete:
 	$(PROMBENCH_CMD) gke resource delete -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
