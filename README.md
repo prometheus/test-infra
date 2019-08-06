@@ -112,20 +112,37 @@ export PROMBENCH_REPO=https://github.com/prometheus/prombench
 ```
 export RELEASE=<master or any prometheus release(ex: v2.3.0) >
 export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
-export GITHUB_SHA=<anything would work, but ideally should be the SHA of the last commit>
+export PROMBENCH_REPO=https://github.com/prometheus/prombench
+export GITHUB_SHA="<the statefull set triggers a re-deploy when this is different so if there are any changes to a PR just need to change this and re-run the following command again>"
 ```
 
 - Start the prombench test as a StatefulSet
 
-The following will use manifest files from the [`prometheus/prombench`](https://github.com/prometheus/prombench) repo.
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
     -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
     -v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v LAST_COMMIT:$GITHUB_SHA \
-    -f manifests/prombench/ss.yaml
+    -v PROMBENCH_REPO:$PROMBENCH_REPO \
+    -f manifests/prombench/stateful-set.yaml
+```
+or
+```
+make start_ss
 ```
 
 Instead if you want to test local changes to manifest files,
+
+```
+./prombench gke nodepool create -a $AUTH_FILE \
+    -v ZONE:$ZONE -v PROJECT_ID:$PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
+    -v PR_NUMBER:$PR_NUMBER -f manifests/prombench/nodepools.yaml
+
+./prombench gke resource apply -a $AUTH_FILE \
+    -v ZONE:$ZONE -v PROJECT_ID:$PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
+    -v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v DOMAIN_NAME:$DOMAIN_NAME \
+    -f manifests/prombench/benchmark
+```
+or
 ```
 make deploy
 ```
