@@ -8,4 +8,4 @@ cp /usr/bin/prombench $PROMBENCH_DIR/
 
 cd $PROMBENCH_DIR
 # execute arguments passed to the image
-$*
+$@
