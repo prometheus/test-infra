@@ -16,11 +16,11 @@ spec:
         last_commit: {{ .LAST_COMMIT }}
     spec:
       initContainers:
-      - name: check-no-nodepool-exist
+      - name: check-all-nodepools-deleted
         image: docker.io/prombench/prombench:2.0.1
         imagePullPolicy: Always
         args:
-        - "while make nodepool_check; do echo waiting for nodepools to be deleted; sleep 10; done;"
+        - "until make all_nodepools_deleted; do echo waiting for nodepools to be deleted; sleep 10; done;"
         volumeMounts:
         - name: serviceaccount
           mountPath: /etc/serviceaccount/
@@ -65,7 +65,7 @@ spec:
               command:
               - "/bin/sh"
               - "-c"
-              - "until make nodepool_check; do echo waiting for nodepools to be created; sleep 10; done; make clean; kill -9 -1"
+              - "until make all_nodepools_running; do echo waiting for nodepools to be created; sleep 10; done; make clean; kill -9 -1"
         volumeMounts:
         - name: serviceaccount
           mountPath: /etc/serviceaccount/
