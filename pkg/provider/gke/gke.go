@@ -43,9 +43,6 @@ type GKE struct {
 	// The auth used to authenticate the cli.
 	// Can be a file path or an env variable that includes the json data.
 	Auth string
-	// file path that includes the json data.
-	// TODO Remove when the k8s client supports an auth config option in NewDefaultClientConfig.
-	AuthFilePath string
 	// The project id for all requests.
 	ProjectID string
 	// The gke client used when performing GKE requests.
@@ -73,13 +70,24 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 		log.Fatal("no auth provided! Need to either set the auth flag or the GOOGLE_APPLICATION_CREDENTIALS env variable")
 	}
 
-	// Needed by NewK8sProvider.
-	c.AuthFilePath = c.Auth
-
 	// When the auth variable points to a file
 	// put the file content in the variable.
 	if content, err := ioutil.ReadFile(c.Auth); err == nil {
+		// Set the auth env variable needed to the k8s client.
+		// The client looks for this special variable name and it is the only way to set the auth for now.
+		// TODO Remove when the client supports an auth config option in NewDefaultClientConfig.
+		os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", c.Auth)
 		c.Auth = string(content)
+	} else {
+		saFile, err := ioutil.TempFile("", "service-account")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer saFile.Close()
+		if _, err := saFile.Write([]byte(c.Auth)); err != nil {
+			log.Fatal(err)
+		}
+		os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", saFile.Name())
 	}
 
 	// Check is auth data is base64 encoded and decode.
@@ -446,10 +454,6 @@ func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 	if !ok {
 		return fmt.Errorf("missing required CLUSTER_NAME variable")
 	}
-
-	// The k8s client looks for `GOOGLE_APPLICATION_CREDENTIALS`.
-	// It is the only way to set the auth for now.
-	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", c.AuthFilePath)
 
 	// Get the authentication certificate for the cluster using the GKE client.
 	req := &containerpb.GetClusterRequest{

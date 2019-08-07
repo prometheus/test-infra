@@ -74,6 +74,7 @@ export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom dom
     -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)" \
     -f manifests/prow/secrets.yaml
 ```
+> Note: Use `-v GKE_AUTH="$(echo $AUTH_FILE | base64 -w 0)"` if you're passing the data directly into `$AUTH_FILE`
 
 - Deploy all internal prow components
 
