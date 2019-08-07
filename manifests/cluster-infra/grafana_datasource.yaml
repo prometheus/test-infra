@@ -30,7 +30,7 @@ data:
       editable: true
     - name: loki
       type: loki
-      access: server
+      access: proxy
       orgId: 1
       url: http://loki:3100
       isDefault: false
