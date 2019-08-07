@@ -441,6 +441,9 @@ func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 		return fmt.Errorf("missing required CLUSTER_NAME variable")
 	}
 
+	// Set GOOGLE_APPLICATION_CREDENTIALS
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", c.Auth)
+
 	// Get the authentication certificate for the cluster using the GKE client.
 	req := &containerpb.GetClusterRequest{
 		ProjectId: projectID,
