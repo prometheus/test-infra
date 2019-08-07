@@ -66,6 +66,7 @@ type GKE struct {
 func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	// Set the auth env variable needed to the gke client.
 	if c.Auth != "" {
+		os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", c.Auth)
 	} else if c.Auth = os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"); c.Auth == "" {
 		log.Fatal("no auth provided! Need to either set the auth flag or the GOOGLE_APPLICATION_CREDENTIALS env variable")
 	}
@@ -440,9 +441,6 @@ func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 	if !ok {
 		return fmt.Errorf("missing required CLUSTER_NAME variable")
 	}
-
-	// Set GOOGLE_APPLICATION_CREDENTIALS
-	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", c.Auth)
 
 	// Get the authentication certificate for the cluster using the GKE client.
 	req := &containerpb.GetClusterRequest{
