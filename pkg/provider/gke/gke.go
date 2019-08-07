@@ -73,7 +73,21 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	// When the auth variable points to a file
 	// put the file content in the variable.
 	if content, err := ioutil.ReadFile(c.Auth); err == nil {
+		// Set the auth env variable needed to the k8s client.
+		// The client looks for this special variable name and it is the only way to set the auth for now.
+		// TODO Remove when the client supports an auth config option in NewDefaultClientConfig.
+		os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", c.Auth)
 		c.Auth = string(content)
+	} else {
+		saFile, err := ioutil.TempFile("", "service-account")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer saFile.Close()
+		if _, err := saFile.Write([]byte(c.Auth)); err != nil {
+			log.Fatal(err)
+		}
+		os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", saFile.Name())
 	}
 
 	// Check is auth data is base64 encoded and decode.
