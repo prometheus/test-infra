@@ -29,7 +29,7 @@ subjects:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: promtail
+  name: promtail-clusterrole
   labels:
     app: promtail
 rules:
@@ -50,6 +50,7 @@ metadata:
     app: promtail
 subjects:
   - kind: ServiceAccount
+    namespace: default
     name: promtail
 roleRef:
   kind: ClusterRole

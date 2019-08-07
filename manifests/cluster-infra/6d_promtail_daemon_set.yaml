@@ -292,6 +292,12 @@ spec:
               mountPath: /etc/promtail
             - name: run
               mountPath: /run/promtail
+            - name: docker
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+            - name: pods
+              mountPath: /var/log/pods
+              readOnly: true
           env:
           - name: HOSTNAME
             valueFrom:
