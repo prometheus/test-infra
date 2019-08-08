@@ -79,6 +79,20 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 		os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", c.Auth)
 		c.Auth = string(content)
 	} else {
+		// Check if auth data is base64 encoded and decode it.
+		encoded, err := regexp.MatchString("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$", c.Auth)
+		if err != nil {
+			return err
+		}
+		if encoded {
+			auth, err := base64.StdEncoding.DecodeString(c.Auth)
+			if err != nil {
+				return err
+			}
+			c.Auth = string(auth)
+		}
+
+		// Create tempory file to store the credentials.
 		saFile, err := ioutil.TempFile("", "service-account")
 		if err != nil {
 			log.Fatal(err)
@@ -88,19 +102,6 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 			log.Fatal(err)
 		}
 		os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", saFile.Name())
-	}
-
-	// Check is auth data is base64 encoded and decode.
-	encoded, err := regexp.MatchString("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$", c.Auth)
-	if err != nil {
-		return err
-	}
-	if encoded {
-		auth, err := base64.StdEncoding.DecodeString(c.Auth)
-		if err != nil {
-			return err
-		}
-		c.Auth = string(auth)
 	}
 
 	opts := option.WithCredentialsJSON([]byte(c.Auth))
