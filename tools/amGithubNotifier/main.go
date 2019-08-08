@@ -65,6 +65,7 @@ func main() {
 			  description: 'description of the alert'
 		```
 	*/
+	log.SetFlags(log.Ltime | log.Lshortfile)
 	cfg := ghWebhookReceiverConfig{}
 
 	app := kingpin.New(filepath.Base(os.Args[0]), `alertmanager github webhook receiver
