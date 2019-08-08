@@ -31,11 +31,11 @@ import (
 )
 
 type ghWebhookReceiverConfig struct {
-	authFile     string
-	defaultOwner string
-	defaultRepo  string
-	portNo       string
-	dryRun       bool
+	authFile string
+	org      string
+	repo     string
+	portNo   string
+	dryRun   bool
 }
 
 type ghWebhookReceiver struct {
@@ -56,14 +56,13 @@ func main() {
 		  rules:
 		  - alert: alertname
 		    expr: up == 0
-		    for: 2m
 		    labels:
-		      severity: average
+		      severity: info
 		      prNum: '{{ $labels.prNum }}'
-		      owner: prometheus (optional)
-		      repo: prometheus (optional)
+		      org: prometheus
+		      repo: prombench
 		    annotations:
-		      description: 'description of the alert'
+			  description: 'description of the alert'
 		```
 	*/
 	cfg := ghWebhookReceiverConfig{}
@@ -72,12 +71,12 @@ func main() {
 	Example: ./amGithubNotifier --org=prometheus --repo=prometheus --port=8080
 
 	Note: All alerts sent to amGithubNotifier must have the prNum label and description
-	annotation, owner and repo labels are optional but will take precedence over cli args
+	annotation, org and repo labels are optional but will take precedence over cli args
 	if provided.
 	`)
 	app.Flag("authfile", "path to github oauth token file").Default("/etc/github/oauth").StringVar(&cfg.authFile)
-	app.Flag("org", "default org/owner").Required().StringVar(&cfg.defaultOwner)
-	app.Flag("repo", "default repo").Required().StringVar(&cfg.defaultRepo)
+	app.Flag("org", "name of the org").Required().StringVar(&cfg.org)
+	app.Flag("repo", "name of the repo").Required().StringVar(&cfg.repo)
 	app.Flag("port", "port number to run the server in").Default("8080").StringVar(&cfg.portNo)
 	app.Flag("dryrun", "dry run for github api").BoolVar(&cfg.dryRun)
 
@@ -163,7 +162,7 @@ func (g ghWebhookReceiver) processAlert(ctx context.Context, alert template.Aler
 		return msgBody, err
 	}
 	_, _, err = g.ghClient.Issues.CreateComment(ctx,
-		g.getTargetOwner(alert), g.getTargetRepo(alert), prNum, &issueComment)
+		g.getTargetOrg(alert), g.getTargetRepo(alert), prNum, &issueComment)
 
 	return msgBody, err
 }
@@ -186,7 +185,7 @@ func (g ghWebhookReceiver) processAlerts(ctx context.Context, msg *webhook.Messa
 func serveWebhook(client *ghWebhookReceiver) {
 	hl := ghWebhookHandler{client}
 	http.Handle("/hook", hl)
-	log.Printf("finished setting up gh client. starting amGithubNotifier with %v/%v as defaults",
-		client.cfg.defaultOwner, client.cfg.defaultRepo)
+	log.Printf("finished setting up gh client. starting amGithubNotifier with %v/%v",
+		client.cfg.org, client.cfg.repo)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", client.cfg.portNo), nil))
 }

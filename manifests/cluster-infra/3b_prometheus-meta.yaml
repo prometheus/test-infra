@@ -23,7 +23,7 @@ data:
         labels:
           severity: info
           prNum: '{{"{{"}} $labels.prNum {{"}}"}}'
-          owner: {{ .GITHUB_ORG }}
+          org: {{ .GITHUB_ORG }}
           repo: {{ .GITHUB_REPO }}
         annotations:
           description: 'Benchmark tests are running for {{"{{"}} $value {{"}}"}} days! If this is intended ignore this message otherwise you can cancel it by commenting: `/benchmark cancel`'

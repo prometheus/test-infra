@@ -47,18 +47,18 @@ func getTargetPR(alert template.Alert) (int, error) {
 	return 0, errors.New("prNum label not found")
 }
 
-// getTargetRepo returns the "repo" label if exists else returns defaultRepo.
+// getTargetRepo returns the "repo" label if exists else returns ghWebhookReceiverConfig.repo
 func (g ghWebhookReceiver) getTargetRepo(alert template.Alert) string {
 	if repo, ok := alert.Labels["repo"]; ok {
 		return repo
 	}
-	return g.cfg.defaultRepo
+	return g.cfg.repo
 }
 
-// getTargetOwner returns the "owner" label if exists else returns defaultOwner.
-func (g ghWebhookReceiver) getTargetOwner(alert template.Alert) string {
-	if owner, ok := alert.Labels["owner"]; ok {
-		return owner
+// getTargetOrg returns the "org" label if exists else returns ghWebhookReceiverConfig.org
+func (g ghWebhookReceiver) getTargetOrg(alert template.Alert) string {
+	if org, ok := alert.Labels["org"]; ok {
+		return org
 	}
-	return g.cfg.defaultOwner
+	return g.cfg.org
 }

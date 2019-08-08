@@ -6,7 +6,7 @@ By default it listens at `/hook` on port `:8080`.
 
 ## Usage
 
-> Note: All alerts sent to amGithubNotifier must have the `prNum` label and `description` annotation, `owner` and `repo` labels are optional but will take precedence over cli args if provided.
+> Note: All alerts sent to amGithubNotifier must have the `prNum` label and `description` annotation, `org` and `repo` labels are optional but will take precedence over cli args if provided.
 
 Example `alerts.rules.yml`:
 ```yaml
@@ -15,11 +15,10 @@ groups:
   rules:
   - alert: alertname
     expr: up == 0
-    for: 2m
     labels:
-      severity: average
+      severity: info
       prNum: '{{ $labels.prNum }}'
-      owner: prometheus
+      org: prometheus
       repo: prombench
     annotations:
       description: 'description of the alert'
