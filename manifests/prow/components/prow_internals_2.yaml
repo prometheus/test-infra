@@ -217,7 +217,7 @@ data:
         agent: kubernetes
         spec:
           containers:
-          - image: docker.io/prombench/prombench:2.0.1
+          - image: docker.io/prombench/prombench:2.0.2
             imagePullPolicy: Always
             args:
             - "make"
@@ -250,7 +250,7 @@ data:
         agent: kubernetes
         spec:
           containers:
-          - image: docker.io/prombench/prombench:2.0.1
+          - image: docker.io/prombench/prombench:2.0.2
             imagePullPolicy: Always
             args:
             - "make"
