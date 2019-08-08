@@ -7,18 +7,18 @@ It is designed to support adding more k8s providers.
 
 ## Overview of the manifest files
 The `/manifest` directory contains all the kubernetes manifest files.
-- `cluster.yaml` : This is used to create the GKE cluster.
-- `cluster-infra/` : These are the persistent cluster infrastructure resources.
+- `cluster.yaml` : This is used to create the Main Node.
+- `cluster-infra/` : These are the persistent components of the Main Node.
 - `prombench/` : These resources are created and destoryed for each prombench test.
 - `prow/` : Resources for deploying [prow](https://github.com/kubernetes/test-infra/tree/master/prow/), which is used to trigger tests from GitHub comments.
 
-## Setting up the test-infra
-### Create a k8s cluster
+## Setup prombench
+### Create the Main Node
 ---
 - Create a new project on Google Cloud.
 - Create a [Service Account](https://cloud.google.com/iam/docs/creating-managing-service-accounts) on GKE with role `Kubernetes Engine Service Agent` & `Kubernetes Engine Admin`. If using gcloud cli add the [`roles/container.admin`](https://cloud.google.com/kubernetes-engine/docs/how-to/iam#kubernetes-engine-roles) and [`roles/iam.serviceAccountUser`](https://cloud.google.com/kubernetes-engine/docs/how-to/iam#service_account_user) roles to the GCP serviceAccount and download the json file.
 
-- Set the following environment variables & deploy cluster.
+- Set the following environment variables and deploy the cluster.
 ```
 export PROJECT_ID=<google-cloud project-id>
 export CLUSTER_NAME=prombench
@@ -29,12 +29,12 @@ export AUTH_FILE=<path to service-account.json>
     -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -f manifests/cluster.yaml
 ```
 
-### Deploy monitoring infra
-> This is used for collecting, monitoring and displaying the test results
+### Deploy monitoring components
+> Collecting, monitoring and displaying the test results
 
 ---
 
-- Generate a GitHub auth token that will be used to authenticate when sending requests to the GitHub API.
+- [Optional] If used with the Github integration generate a GitHub auth token.
   * Login with the [Prombot account](https://github.com/prombot) and generate a [new auth token](https://github.com/settings/tokens).
   * With permissions: `public_repo`, `read:org`, `write:discussion`.
 - Set the following environment variables
@@ -42,7 +42,7 @@ export AUTH_FILE=<path to service-account.json>
 export GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL=<client-email present in service-account.json>
 export GRAFANA_ADMIN_PASSWORD=password
 export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom domain.
-export OAUTH_TOKEN=<generated token from github>
+export OAUTH_TOKEN=<generated token from github or set to an empty string " ">
 export GITHUB_ORG=prometheus
 export GITHUB_REPO=prometheus
 ```
@@ -64,10 +64,9 @@ export GITHUB_REPO=prometheus
   * Prometheus ::  `http://<DOMAIN_NAME>/prometheus-meta`
 
 ### Deploy Prow
-> This is used to monitor GitHub comments and starts new tests.
+> Github integration - monitoring GitHub comments to starts new tests.
 
 ---
-- Set the following environment variables
 ```
 export HMAC_TOKEN=$(openssl rand -hex 20)
 ```

@@ -2,11 +2,11 @@
 
 A simple bridge for receiving Alertmanager alerts and posting comments to github.
 
-It listens at the `/hook` endpoint on port `:8080` by default.
+By default it listens at `/hook` on port `:8080`.
 
 ## Usage
 
-> Note: All alerts sent to amGithubNotifier must have the `prNum` label and `description` annotation, `owner` and `repo` labels are optional.
+> Note: All alerts sent to amGithubNotifier must have the `prNum` label and `description` annotation, `owner` and `repo` labels are optional but will take precedence over cli args if provided.
 
 Example `alerts.rules.yml`:
 ```yaml
@@ -26,7 +26,7 @@ groups:
 ```
 
 
-#### Usage:
+#### Usage and examples:
 ```
 ./amGithubNotifier --help
 ```
