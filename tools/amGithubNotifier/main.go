@@ -91,7 +91,10 @@ func main() {
 	http.Handle("/hook", hl)
 	log.Printf("finished setting up gh client. starting amGithubNotifier with %v/%v",
 		client.cfg.org, client.cfg.repo)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", client.cfg.portNo), nil))
+	err = http.ListenAndServe(fmt.Sprintf(":%v", client.cfg.portNo), nil)
+	if err != nil {
+		log.Fatal("amGithubNotifier exited unexpectedly")
+	}
 }
 
 func (hl ghWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
