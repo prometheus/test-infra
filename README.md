@@ -168,7 +168,6 @@ export OAUTH_TOKEN=***Replace with the generated token from github***
   * Payload URL: `http://<DOMAIN_NAME>/hook`
 
 
->>>>>>> get manifest files by cloning prombench
 ### Trigger tests via a Github comment.
 ---
 
