@@ -69,7 +69,12 @@ func main() {
 	cfg := ghWebhookReceiverConfig{}
 
 	app := kingpin.New(filepath.Base(os.Args[0]), `alertmanager github webhook receiver
-	Example: ./amGithubNotifier --org=prometheus --repo=prometheus --port=8080`)
+	Example: ./amGithubNotifier --org=prometheus --repo=prometheus --port=8080
+
+	Note: All alerts sent to amGithubNotifier must have the prNum label and description
+	annotation, owner and repo labels are optional but will take precedence over cli args
+	if provided.
+	`)
 	app.Flag("authfile", "path to github oauth token file").Default("/etc/github/oauth").StringVar(&cfg.authFile)
 	app.Flag("org", "default org/owner").Required().StringVar(&cfg.defaultOwner)
 	app.Flag("repo", "default repo").Required().StringVar(&cfg.defaultRepo)
@@ -124,7 +129,7 @@ func newGhWebhookReceiver(cfg ghWebhookReceiverConfig) (*ghWebhookReceiver, erro
 		}, nil
 	}
 
-	// add github token
+	// Add github token.
 	oauth2token, err := ioutil.ReadFile(cfg.authFile)
 	if err != nil {
 		return nil, err
@@ -141,7 +146,7 @@ func newGhWebhookReceiver(cfg ghWebhookReceiverConfig) (*ghWebhookReceiver, erro
 	}, nil
 }
 
-// processAlert formats and posts the alert to github
+// processAlert formats and posts the alert to GitHub.
 func (g ghWebhookReceiver) processAlert(ctx context.Context, alert template.Alert) (string, error) {
 	msgBody, err := formatIssueCommentBody(alert)
 	if err != nil {
@@ -167,7 +172,7 @@ func (g ghWebhookReceiver) processAlerts(ctx context.Context, msg *webhook.Messa
 
 	var alertcomments []string
 
-	// each alert will have its own comment
+	// Each alert will have its own comment.
 	for _, a := range msg.Alerts {
 		alertcomment, err := g.processAlert(ctx, a)
 		if err != nil {
