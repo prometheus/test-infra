@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+
+    route:
+      group_by: ['alertname', 'namespace']
+      group_wait: 1m
+      group_interval: 5m
+      repeat_interval: 2d
+      receiver: amgithubnotifier-bridge
+
+    receivers:
+    - name: amgithubnotifier-bridge
+      webhook_configs:
+      - send_resolved: false
+        url: 'http://amgithubnotifier/hook'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  labels:
+    app: alertmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+    spec:
+      serviceAccountName: prometheus
+      containers:
+      - image: quay.io/prometheus/alertmanager:v0.17.0
+        args:
+        - "--web.external-url=http://{{ .DOMAIN_NAME }}/alertmanager"
+        - "--config.file=/etc/alertmanager/alertmanager.yml"
+        - "--cluster.listen-address="
+        - "--storage.path=/alertmanager"
+        name: alertmanager
+        volumeMounts:
+        - name: config
+          mountPath: /etc/alertmanager/
+        - name: storage
+          mountPath: /alertmanager
+          subPath: alertmanager-data
+        ports:
+        - name: am-web
+          containerPort: 9093
+      volumes:
+      - name: config
+        configMap:
+          name: alertmanager-config
+      - name: storage
+        persistentVolumeClaim:
+          claimName: prometheus-meta
+      terminationGracePeriodSeconds: 300
+      nodeSelector:
+        cloud.google.com/gke-nodepool: prow
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  labels:
+    app: alertmanager
+spec:
+  type: NodePort
+  ports:
+  - name: am-web
+    port: 80
+    targetPort: am-web
+  selector:
+    app: alertmanager

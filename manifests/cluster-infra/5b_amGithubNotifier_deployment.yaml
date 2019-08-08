@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: amgithubnotifier
+  labels:
+    app: amgithubnotifier
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: amgithubnotifier
+  template:
+    metadata:
+      labels:
+        app: amgithubnotifier
+    spec:
+      containers:
+      - name: amgithubnotifier
+        image: docker.io/prombench/amgithubnotifier:0.0.1
+        args:
+        - "--org={{ .GITHUB_ORG }}"
+        - "--repo={{ .GITHUB_REPO }}"
+        volumeMounts:
+        - name: oauth
+          mountPath: /etc/github
+          readOnly: true
+        ports:
+        - name: amgh-port
+          containerPort: 8080
+      volumes:
+      - name: oauth
+        secret:
+          secretName: oauth-token
+      terminationGracePeriodSeconds: 300
+      nodeSelector:
+        cloud.google.com/gke-nodepool: prow
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: amgithubnotifier
+  labels:
+    app: amgithubnotifier
+spec:
+  type: ClusterIP
+  ports:
+  - name: amgh-port
+    port: 80
+    targetPort: amgh-port
+  selector:
+    app: amgithubnotifier
