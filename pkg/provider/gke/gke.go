@@ -84,7 +84,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	if encoded {
 		auth, err := base64.StdEncoding.DecodeString(c.Auth)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "could not decode auth data")
 		}
 		c.Auth = string(auth)
 	}
@@ -92,11 +92,11 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	// Create tempory file to store the credentials.
 	saFile, err := ioutil.TempFile("", "service-account")
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not create temp file")
 	}
 	defer saFile.Close()
 	if _, err := saFile.Write([]byte(c.Auth)); err != nil {
-		return err
+		return errors.Wrap(err, "could not write to temp file")
 	}
 	// Set the auth env variable needed to the k8s client.
 	// The client looks for this special variable name and it is the only way to set the auth for now.
@@ -107,7 +107,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 
 	cl, err := gke.NewClusterManagerClient(context.Background(), opts)
 	if err != nil {
-		return errors.Errorf("Could not create the gke client: %v", err)
+		return errors.Wrap(err, "could not create the gke client")
 	}
 	c.clientGKE = cl
 	c.ctx = context.Background()
