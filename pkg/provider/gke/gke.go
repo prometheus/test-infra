@@ -67,7 +67,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	// Set the auth env variable needed to the gke client.
 	if c.Auth != "" {
 	} else if c.Auth = os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"); c.Auth == "" {
-		log.Fatal("no auth provided! Need to either set the auth flag or the GOOGLE_APPLICATION_CREDENTIALS env variable")
+		return errors.Errorf("no auth provided! Need to either set the auth flag or the GOOGLE_APPLICATION_CREDENTIALS env variable")
 	}
 
 	// When the auth variable points to a file
@@ -92,11 +92,11 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	// Create tempory file to store the credentials.
 	saFile, err := ioutil.TempFile("", "service-account")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer saFile.Close()
 	if _, err := saFile.Write([]byte(c.Auth)); err != nil {
-		log.Fatal(err)
+		return err
 	}
 	// Set the auth env variable needed to the k8s client.
 	// The client looks for this special variable name and it is the only way to set the auth for now.
@@ -107,7 +107,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 
 	cl, err := gke.NewClusterManagerClient(context.Background(), opts)
 	if err != nil {
-		log.Fatalf("Could not create the client: %v", err)
+		return errors.Errorf("Could not create the gke client: %v", err)
 	}
 	c.clientGKE = cl
 	c.ctx = context.Background()
