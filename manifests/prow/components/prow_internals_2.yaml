@@ -222,10 +222,17 @@ data:
             args:
             - "make"
             - "deploy"
-            - "PROJECT_ID={{ .PROJECT_ID }}"
-            - "ZONE={{ .ZONE }}"
-            - "CLUSTER_NAME={{ .CLUSTER_NAME }}"
-            - "DOMAIN_NAME={{ .DOMAIN_NAME }}"
+            env:
+            - name: PROJECT_ID
+              value: {{ .PROJECT_ID }}
+            - name: ZONE
+              value: {{ .ZONE }}
+            - name: CLUSTER_NAME
+              value: {{ .CLUSTER_NAME }}
+            - name: DOMAIN_NAME
+              value: {{ .DOMAIN_NAME }}
+            - name: PROMBENCH_REPO
+              value: {{ .PROMBENCH_REPO }}
             volumeMounts:
             - name: serviceaccount
               mountPath: /etc/serviceaccount/
@@ -248,9 +255,15 @@ data:
             args:
             - "make"
             - "clean"
-            - "PROJECT_ID={{ .PROJECT_ID }}"
-            - "ZONE={{ .ZONE }}"
-            - "CLUSTER_NAME={{ .CLUSTER_NAME }}"
+            env:
+            - name: PROJECT_ID
+              value: {{ .PROJECT_ID }}
+            - name: ZONE
+              value: {{ .ZONE }}
+            - name: CLUSTER_NAME
+              value: {{ .CLUSTER_NAME }}
+            - name: PROMBENCH_REPO
+              value: {{ .PROMBENCH_REPO }}
             volumeMounts:
             - name: serviceaccount
               mountPath: /etc/serviceaccount/
