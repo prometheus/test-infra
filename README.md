@@ -13,6 +13,10 @@ The `/manifest` directory contains all the kubernetes manifest files.
 - `prow/` : Resources for deploying [prow](https://github.com/kubernetes/test-infra/tree/master/prow/), which is used to trigger tests from GitHub comments.
 
 ## Setup prombench
+1. [Create the main node](#create-the-main-node)
+2. [Deploy monitoring components](#deploy-monitoring-components)
+3. [Deploy prow](#deploy-prow) or [Deploy GitHub Actions](#deploy-github-actions)
+
 ### Create the Main Node
 ---
 - Create a new project on Google Cloud.
@@ -103,6 +107,9 @@ export PROMBENCH_REPO=https://github.com/prometheus/prombench
 ```
 
 * Prow dashboard will be accessible at :: `http://<DOMAIN_NAME>`
+
+### Deploy GitHub Actions
+asas
 
 ## Usage
 ### Start a benchmarking test manually
