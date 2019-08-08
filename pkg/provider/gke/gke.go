@@ -67,30 +67,16 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	// Set the auth env variable needed to the gke client.
 	if c.Auth != "" {
 	} else if c.Auth = os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"); c.Auth == "" {
-		log.Fatal("no auth provided! Need to either set the auth flag or the GOOGLE_APPLICATION_CREDENTIALS env variable")
+		return errors.Errorf("no auth provided! Need to either set the auth flag or the GOOGLE_APPLICATION_CREDENTIALS env variable")
 	}
 
 	// When the auth variable points to a file
 	// put the file content in the variable.
 	if content, err := ioutil.ReadFile(c.Auth); err == nil {
-		// Set the auth env variable needed to the k8s client.
-		// The client looks for this special variable name and it is the only way to set the auth for now.
-		// TODO Remove when the client supports an auth config option in NewDefaultClientConfig.
-		os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", c.Auth)
 		c.Auth = string(content)
-	} else {
-		saFile, err := ioutil.TempFile("", "service-account")
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer saFile.Close()
-		if _, err := saFile.Write([]byte(c.Auth)); err != nil {
-			log.Fatal(err)
-		}
-		os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", saFile.Name())
 	}
 
-	// Check is auth data is base64 encoded and decode.
+	// Check if auth data is base64 encoded and decode it.
 	encoded, err := regexp.MatchString("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$", c.Auth)
 	if err != nil {
 		return err
@@ -98,16 +84,30 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	if encoded {
 		auth, err := base64.StdEncoding.DecodeString(c.Auth)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "could not decode auth data")
 		}
 		c.Auth = string(auth)
 	}
+
+	// Create tempory file to store the credentials.
+	saFile, err := ioutil.TempFile("", "service-account")
+	if err != nil {
+		return errors.Wrap(err, "could not create temp file")
+	}
+	defer saFile.Close()
+	if _, err := saFile.Write([]byte(c.Auth)); err != nil {
+		return errors.Wrap(err, "could not write to temp file")
+	}
+	// Set the auth env variable needed to the k8s client.
+	// The client looks for this special variable name and it is the only way to set the auth for now.
+	// TODO: Remove when the client supports an auth config option in NewDefaultClientConfig.
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", saFile.Name())
 
 	opts := option.WithCredentialsJSON([]byte(c.Auth))
 
 	cl, err := gke.NewClusterManagerClient(context.Background(), opts)
 	if err != nil {
-		log.Fatalf("Could not create the client: %v", err)
+		return errors.Wrap(err, "could not create the gke client")
 	}
 	c.clientGKE = cl
 	c.ctx = context.Background()
