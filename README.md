@@ -9,7 +9,7 @@ It is designed to support adding more k8s providers.
 The `/manifest` directory contains all the kubernetes manifest files.
 - `cluster.yaml` : This is used to create the Main Node.
 - `cluster-infra/` : These are the persistent components of the Main Node.
-- `prombench/` : These resources are created and destoryed for each prombench test.
+- `prombench/` : These resources are created and destroyed for each prombench test.
 - `prow/` : Resources for deploying [prow](https://github.com/kubernetes/test-infra/tree/master/prow/), which is used to trigger tests from GitHub comments.
 
 ## Setup prombench
@@ -37,11 +37,10 @@ export AUTH_FILE=<path to service-account.json>
 - [Optional] If used with the Github integration generate a GitHub auth token.
   * Login with the [Prombot account](https://github.com/prombot) and generate a [new auth token](https://github.com/settings/tokens).
   * With permissions: `public_repo`, `read:org`, `write:discussion`.
-- Set the following environment variables
 ```
 export GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL=<client-email present in service-account.json>
 export GRAFANA_ADMIN_PASSWORD=password
-export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom domain.
+export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom domain or an empty string when not used with the Github integration.
 export OAUTH_TOKEN=<generated token from github or set to an empty string " ">
 export GITHUB_ORG=prometheus
 export GITHUB_REPO=prometheus
