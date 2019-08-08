@@ -87,13 +87,17 @@ func main() {
 		log.Fatalf("failed to create GitHub Webhook Receiver client: %v", err)
 	}
 
-	serveWebhook(client)
+	hl := ghWebhookHandler{client}
+	http.Handle("/hook", hl)
+	log.Printf("finished setting up gh client. starting amGithubNotifier with %v/%v",
+		client.cfg.org, client.cfg.repo)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", client.cfg.portNo), nil))
 }
 
 func (hl ghWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		log.Printf("unsupported request method: %v: %v", r.Method, r.RemoteAddr)
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -180,12 +184,4 @@ func (g ghWebhookReceiver) processAlerts(ctx context.Context, msg *webhook.Messa
 		alertcomments = append(alertcomments, alertcomment)
 	}
 	return alertcomments, nil
-}
-
-func serveWebhook(client *ghWebhookReceiver) {
-	hl := ghWebhookHandler{client}
-	http.Handle("/hook", hl)
-	log.Printf("finished setting up gh client. starting amGithubNotifier with %v/%v",
-		client.cfg.org, client.cfg.repo)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", client.cfg.portNo), nil))
 }

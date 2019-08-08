@@ -26,7 +26,9 @@ data:
           org: {{ .GITHUB_ORG }}
           repo: {{ .GITHUB_REPO }}
         annotations:
-          description: 'Benchmark tests are running for {{"{{"}} $value {{"}}"}} days! If this is intended ignore this message otherwise you can cancel it by commenting: `/benchmark cancel`'
+          description: |
+          Benchmark tests are running for {{"{{"}} $value {{"}}"}} days!
+          If this is intended ignore this message otherwise you can cancel it by commenting: `/benchmark cancel`
 ---
 apiVersion: v1
 kind: ConfigMap
