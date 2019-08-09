@@ -90,6 +90,9 @@ spec:
             - name: pods
               mountPath: /var/log/pods
               readOnly: true
+            - name: docker
+              mountPath: /var/lib/docker/containers
+              readOnly: true
           env:
           - name: HOSTNAME
             valueFrom:
@@ -123,6 +126,9 @@ spec:
         - name: run
           hostPath:
             path: /run/promtail
+        - name: docker
+          hostPath:
+            path: /var/lib/docker/containers
         - name: pods
           hostPath:
             path: /var/log/pods
