@@ -11,7 +11,7 @@ workflow "Cancel benchmark" {
 }
 
 action "start_benchmark_validate" {
-  uses = "docker://niki1905/cmon2:latest"
+  uses = "docker://prombench/comment-monitor:latest"
   args = ["(?mi)^/benchmark\\s*(master|[0-9]+\\.[0-9]+\\.[0-9]+\\S*)?\\s*$"]
   secrets = ["GITHUB_TOKEN"]
   env = {
@@ -20,7 +20,7 @@ action "start_benchmark_validate" {
 }
 
 action "cancel_benchmark_validate" {
-  uses = "docker://niki1905/cmon2:latest"
+  uses = "docker://prombench/comment-monitor:latest"
   args = ["(?mi)^/benchmark\\s+cancel\\s*$"]
   secrets = ["GITHUB_TOKEN"]
   env = {
