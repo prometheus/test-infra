@@ -440,7 +440,7 @@ func (c *GKE) nodePoolRunning(zone, projectID, clusterID, poolName string) (bool
 	return false, nil
 }
 
-// AllNodepoolsRunning returns nil if all nodepools are running, otherwise it returns an error.
+// AllNodepoolsRunning returns an error if at least one node pool is not running.
 func (c *GKE) AllNodepoolsRunning(*kingpin.ParseContext) error {
 	reqC := &containerpb.CreateClusterRequest{}
 
@@ -463,7 +463,7 @@ func (c *GKE) AllNodepoolsRunning(*kingpin.ParseContext) error {
 	return nil
 }
 
-// AllNodepoolsDeleted returns nil if all nodepools are deleted, otherwise it returns an error.
+// AllNodepoolsDeleted returns an error if at least one nodepool is not deleted.
 func (c *GKE) AllNodepoolsDeleted(*kingpin.ParseContext) error {
 	reqC := &containerpb.CreateClusterRequest{}
 
