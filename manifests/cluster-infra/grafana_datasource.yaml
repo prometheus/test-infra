@@ -28,7 +28,7 @@ data:
         tlsClientKey: "..."
       version: 1
       editable: true
-    - name: loki
+    - name: loki-meta
       type: loki
       access: proxy
       orgId: 1
