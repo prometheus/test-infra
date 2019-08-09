@@ -408,7 +408,7 @@ func (c *GKE) nodePoolDeleted(req *containerpb.DeleteNodePoolRequest) (bool, err
 	return false, nil
 }
 
-// nodePoolRunning checks whether a nodepool has been created.
+// nodePoolRunning checks whether a nodepool has been created and is running.
 func (c *GKE) nodePoolRunning(zone, projectID, clusterID, poolName string) (bool, error) {
 	req := &containerpb.GetNodePoolRequest{
 		ProjectId:  projectID,
@@ -438,6 +438,52 @@ func (c *GKE) nodePoolRunning(zone, projectID, clusterID, poolName string) (bool
 
 	log.Printf("Current cluster node pool '%v' status:%v , %v", rep.Name, rep.Status, rep.StatusMessage)
 	return false, nil
+}
+
+// AllNodepoolsRunning returns an error if at least one node pool is not running.
+func (c *GKE) AllNodepoolsRunning(*kingpin.ParseContext) error {
+	reqC := &containerpb.CreateClusterRequest{}
+
+	for _, deployment := range c.gkeResources {
+		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
+			return errors.Errorf("error parsing the cluster deployment file %s:%v", deployment.FileName, err)
+		}
+
+		for _, node := range reqC.Cluster.NodePools {
+			isRunning, err := c.nodePoolRunning(reqC.Zone, reqC.ProjectId, reqC.Cluster.Name, node.Name)
+			if err != nil {
+				return errors.New("error fetching nodePool info")
+			}
+			if !isRunning {
+				return errors.Errorf("nodepool not running name: %v", node.Name)
+			}
+		}
+	}
+
+	return nil
+}
+
+// AllNodepoolsDeleted returns an error if at least one nodepool is not deleted.
+func (c *GKE) AllNodepoolsDeleted(*kingpin.ParseContext) error {
+	reqC := &containerpb.CreateClusterRequest{}
+
+	for _, deployment := range c.gkeResources {
+		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
+			return errors.Errorf("error parsing the cluster deployment file %s:%v", deployment.FileName, err)
+		}
+
+		for _, node := range reqC.Cluster.NodePools {
+			isRunning, err := c.nodePoolRunning(reqC.Zone, reqC.ProjectId, reqC.Cluster.Name, node.Name)
+			if err != nil {
+				return errors.New("error fetching nodePool info")
+			}
+			if isRunning {
+				return errors.Errorf("nodepool running name: %v", node.Name)
+			}
+		}
+	}
+
+	return nil
 }
 
 // NewK8sProvider sets the k8s provider used for deploying k8s manifests.
