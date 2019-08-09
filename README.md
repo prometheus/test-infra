@@ -2,7 +2,7 @@
 
 ![Prombench Design](design.svg)
 
-It runs with [Prow CI](https://github.com/kubernetes/test-infra/blob/master/prow/) on a [Google Kubernetes Engine Cluster](https://cloud.google.com/kubernetes-engine/).
+It runs with [Github Actions](https://github.com/features/actions) on a [Google Kubernetes Engine Cluster](https://cloud.google.com/kubernetes-engine/).
 It is designed to support adding more k8s providers.
 
 ## Overview of the manifest files
@@ -105,12 +105,17 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 ### Trigger tests via a Github comment.
 ---
 
-A Prometheus maintainer can comment as follows to benchmark a PR:
+Starting a prombench test:
 - `/benchmark` (benchmark PR with the master branch.)
 - `/benchmark master`
 - `/benchmark 2.4.0` (Any release version can be added here. Don't prepend `v` to the release version here. The benchmark plugin in Prow will prepend it.)
 
-To cancel benchmarking, a mantainer should comment `/benchmark cancel`.
+Restarting a prombench test:
+- To restart a test, comment `/benchmark` again on the PR. If the hash of the last commit is changed, the test will be restarted.
+
+Stopping a prombench test:
+- To cancel benchmarking, a mantainer should comment `/benchmark cancel`.
+
 
 ## Buliding from source
 To build Prombench and related tools from source you need to have a working Go environment with version 1.12 or greater installed. Prombench uses promu for building the binaries.

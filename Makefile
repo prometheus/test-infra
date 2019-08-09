@@ -8,11 +8,6 @@ ifeq ($(AUTH_FILE),)
 AUTH_FILE = /etc/serviceaccount/service-account.json
 endif
 
-# TODO : remove after removing prow components
-ifdef PULL_PULL_SHA
-GITHUB_SHA = $(PULL_PULL_SHA)
-endif
-
 .PHONY: deploy clean
 deploy: nodepool_create resource_apply
 clean: nodepool_delete resource_delete
