@@ -109,7 +109,7 @@ export PROMBENCH_REPO=https://github.com/prometheus/prombench
 * Prow dashboard will be accessible at :: `http://<DOMAIN_NAME>`
 
 ### Deploy GitHub Actions
-> This section assumes you already have the `main.workflow` file placed to `.github` in the repository from where you want to use prombench from.
+> This section assumes you already have the `main.workflow` file placed to `.github` in the repository from where you want to use prombench from. You can find an example of `main.workflow` in the [`/examples`](examples) directory.
 
 Copy and paste the output of the following to the `AUTH_FILE` secrent in the Github Actions workflow.
 ```
