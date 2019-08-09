@@ -23,7 +23,14 @@ groups:
     annotations:
       description: 'description of the alert'
 ```
-
+#### Creating Docker images
+```
+docker build .
+```
+if building from repository root:
+```
+$ make docker DOCKERFILE_PATH=tools/amGithubNotifier/Dockerfile DOCKER_IMAGE_NAME=amgithubnotifier DOCKER_IMAGE_TAG=0.0.1 DOCKERBUILD_CONTEXT=tools/amGithubNotifier
+```
 
 #### Usage and examples:
 ```
