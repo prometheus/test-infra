@@ -13,6 +13,10 @@ The `/manifest` directory contains all the kubernetes manifest files.
 - `prow/` : Resources for deploying [prow](https://github.com/kubernetes/test-infra/tree/master/prow/), which is used to trigger tests from GitHub comments.
 
 ## Setup prombench
+1. [Create the main node](#create-the-main-node)
+2. [Deploy monitoring components](#deploy-monitoring-components)
+3. [Deploy prow](#deploy-prow) or [Deploy GitHub Actions](#deploy-github-actions)
+
 ### Create the Main Node
 ---
 - Create a new project on Google Cloud.
@@ -101,6 +105,16 @@ export PROMBENCH_REPO=https://github.com/prometheus/prombench.git
 ```
 
 * Prow dashboard will be accessible at :: `http://<DOMAIN_NAME>`
+
+### Deploy GitHub Actions
+This section assumes you already have the `main.workflow` file placed to the `.github` directory in the repository from where you want to use prombench from. You can find an example of `main.workflow` in the [`/examples`](examples) directory.
+
+Copy and paste the output of the following to the `AUTH_FILE` secret in the Github Actions workflow.
+```
+cat $AUTH_FILE | base64 -w 0
+```
+
+Follow [Triggering tests via Github comments](#trigger-tests-via-a-github-comment)
 
 ## Usage
 ### Start a benchmarking test manually
