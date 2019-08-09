@@ -10,7 +10,6 @@ The `/manifest` directory contains all the kubernetes manifest files.
 - `cluster.yaml` : This is used to create the Main Node.
 - `cluster-infra/` : These are the persistent components of the Main Node.
 - `prombench/` : These resources are created and destroyed for each prombench test.
-- `prow/` : Resources for deploying [prow](https://github.com/kubernetes/test-infra/tree/master/prow/), which is used to trigger tests from GitHub comments.
 
 ## Setup prombench
 1. [Create the main node](#create-the-main-node)
