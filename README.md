@@ -109,7 +109,14 @@ export PROMBENCH_REPO=https://github.com/prometheus/prombench
 * Prow dashboard will be accessible at :: `http://<DOMAIN_NAME>`
 
 ### Deploy GitHub Actions
-asas
+> This section assumes you already have the `main.workflow` file placed to `.github` in the repository from where you want to use prombench from.
+
+Copy and paste the output of the following to the `AUTH_FILE` secrent in the Github Actions workflow.
+```
+cat $AUTH_FILE | base64 -w 0
+```
+
+Follow [Triggering tests via Github comments](#trigger-tests-via-a-github-comment)
 
 ## Usage
 ### Start a benchmarking test manually
