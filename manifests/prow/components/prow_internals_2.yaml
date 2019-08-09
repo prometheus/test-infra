@@ -262,8 +262,6 @@ data:
               value: {{ .ZONE }}
             - name: CLUSTER_NAME
               value: {{ .CLUSTER_NAME }}
-            - name: DOMAIN_NAME
-              value: {{ .DOMAIN_NAME }}
             - name: PROMBENCH_REPO
               value: {{ .PROMBENCH_REPO }}
             volumeMounts:

@@ -60,7 +60,6 @@ action "cancel_benchmark" {
     PROJECT_ID="prombench-example",
     CLUSTER_NAME="prombench",
     ZONE="us-central1-a",
-    DOMAIN_NAME="http://prombench.prometheus.io"
     PROMBENCH_REPO="https://github.com/prometheus/prombench.git"
 	}
 }
