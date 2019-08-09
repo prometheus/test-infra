@@ -91,9 +91,7 @@ export HMAC_TOKEN=$(openssl rand -hex 20)
 - Deploy all internal prow components
 
 ```
-export GITHUB_ORG=prometheus
-export GITHUB_REPO=prometheus
-export PROMBENCH_REPO=https://github.com/prometheus/prombench
+export PROMBENCH_REPO=https://github.com/prometheus/prombench.git
 
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
     -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \

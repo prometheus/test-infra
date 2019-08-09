@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: prombench-test-{{ .PR_NUMBER }}
+  labels:
+    app: prombench-test-{{ .PR_NUMBER }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prombench-test-{{ .PR_NUMBER }}
+  template:
+    metadata:
+      labels:
+        app: prombench-test-{{ .PR_NUMBER }}
+        last_commit: {{ .LAST_COMMIT }}
+    spec:
+      initContainers:
+      - name: check-all-nodepools-deleted
+        image: docker.io/prombench/prombench:2.0.2
+        imagePullPolicy: Always
+        args:
+        # wait until all_nodepools_deleted returns a success code then exit
+        - "until make all_nodepools_deleted; do echo waiting for nodepools to be deleted; sleep 10; done;"
+        volumeMounts:
+        - name: serviceaccount
+          mountPath: /etc/serviceaccount/
+          readOnly: true
+        env:
+          - name: PROJECT_ID
+            value: "{{ .PROJECT_ID }}"
+          - name: ZONE
+            value: "{{ .ZONE }}"
+          - name: CLUSTER_NAME
+            value: "{{ .CLUSTER_NAME }}"
+          - name: PR_NUMBER
+            value: "{{ .PR_NUMBER }}"
+          - name: PROMBENCH_REPO
+            value: "{{ .PROMBENCH_REPO }}"
+      containers:
+      - name: prombench-test-{{ .PR_NUMBER }}
+        image: docker.io/prombench/prombench:2.0.2
+        imagePullPolicy: Always
+        args:
+        # sleep forever after make deploy succeeded
+        - "make deploy && echo 'deploy succeeded, now sleeping' && while sleep 86400; do :; done"
+        env:
+          - name: PROJECT_ID
+            value: "{{ .PROJECT_ID }}"
+          - name: ZONE
+            value: "{{ .ZONE }}"
+          - name: CLUSTER_NAME
+            value: "{{ .CLUSTER_NAME }}"
+          - name: RELEASE
+            value: "{{ .RELEASE }}"
+          - name: PR_NUMBER
+            value: "{{ .PR_NUMBER }}"
+          - name: DOMAIN_NAME
+            value: "{{ .DOMAIN_NAME }}"
+          - name: PROMBENCH_REPO
+            value: "{{ .PROMBENCH_REPO }}"
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - "/bin/sh"
+              - "-c"
+              - "until make all_nodepools_running; do echo waiting for nodepools to be created; sleep 10; done; make clean; kill -9 -1"
+              # wait until all_nodepools_running returns a success code then run make clean and kill the container
+        volumeMounts:
+        - name: serviceaccount
+          mountPath: /etc/serviceaccount/
+          readOnly: true
+      volumes:
+        - name: serviceaccount
+          secret:
+            secretName: service-account
+      terminationGracePeriodSeconds: 900 # 15 mins
+      nodeSelector:
+        cloud.google.com/gke-nodepool: prow
+
