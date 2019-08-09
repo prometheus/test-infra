@@ -53,9 +53,11 @@ export GITHUB_REPO=prometheus
     -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
     -v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:$GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL \
     -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
+    -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)" \
     -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
     -f manifests/cluster-infra
 ```
+> Note: Use `-v GKE_AUTH="$(echo $AUTH_FILE | base64 -w 0)"` if you're passing the data directly into `$AUTH_FILE`
 - The output will show the ingress IP which will be used to point the domain name to. Alternatively you can see it from the GKE/Services tab.
 - Set the `A record` for `<DOMAIN_NAME>` to point to `nginx-ingress-controller` IP address.
 - The services will be accessible at:
@@ -83,10 +85,8 @@ export HMAC_TOKEN=$(openssl rand -hex 20)
 ./prombench gke resource apply -a $AUTH_FILE -v ZONE:$ZONE \
     -v CLUSTER_NAME:$CLUSTER_NAME -v PROJECT_ID:$PROJECT_ID \
     -v HMAC_TOKEN="$(printf $HMAC_TOKEN | base64 -w 0)" \
-    -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)" \
     -f manifests/prow/secrets.yaml
 ```
-> Note: Use `-v GKE_AUTH="$(echo $AUTH_FILE | base64 -w 0)"` if you're passing the data directly into `$AUTH_FILE`
 
 - Deploy all internal prow components
 
