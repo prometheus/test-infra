@@ -15,7 +15,7 @@ The `/manifest` directory contains all the kubernetes manifest files.
 ## Setup prombench
 1. [Create the main node](#create-the-main-node)
 2. [Deploy monitoring components](#deploy-monitoring-components)
-3. [Deploy prow](#deploy-prow) or [Deploy GitHub Actions](#deploy-github-actions)
+3. [Deploy GitHub Actions](#deploy-github-actions)
 
 ### Create the Main Node
 ---
@@ -67,44 +67,6 @@ export GITHUB_REPO=prometheus
 - The services will be accessible at:
   * Grafana :: `http://<DOMAIN_NAME>/grafana`
   * Prometheus ::  `http://<DOMAIN_NAME>/prometheus-meta`
-
-### Deploy Prow
-> Github integration - monitoring GitHub comments to starts new tests.
-
----
-```
-export HMAC_TOKEN=$(openssl rand -hex 20)
-```
-
-- Add a [github webhook](https://github.com/prometheus/prometheus/settings/hooks) where to send the events.
-  * Content Type: `json`
-  * Send:  `Issue comments,Pull requests`
-  * Secret: `echo $HMAC_TOKEN`
-  * Payload URL: `http://<DOMAIN_NAME>/hook`
-
-- Add all required tokens as k8s secrets.
-  * hmac is used when verifying requests from GitHub.
-  * gke auth is used when scaling up and down the cluster.
-```
-./prombench gke resource apply -a $AUTH_FILE -v ZONE:$ZONE \
-    -v CLUSTER_NAME:$CLUSTER_NAME -v PROJECT_ID:$PROJECT_ID \
-    -v HMAC_TOKEN="$(printf $HMAC_TOKEN | base64 -w 0)" \
-    -f manifests/prow/secrets.yaml
-```
-
-- Deploy all internal prow components
-
-```
-export PROMBENCH_REPO=https://github.com/prometheus/prombench.git
-
-./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
-    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
-    -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
-    -v PROMBENCH_REPO:$PROMBENCH_REPO \
-    -f manifests/prow/components
-```
-
-* Prow dashboard will be accessible at :: `http://<DOMAIN_NAME>`
 
 ### Deploy GitHub Actions
 This section assumes you already have the `main.workflow` file placed to the `.github` directory in the repository from where you want to use prombench from. You can find an example of `main.workflow` in the [`/examples`](examples) directory.
