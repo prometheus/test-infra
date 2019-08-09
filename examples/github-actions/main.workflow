@@ -1,3 +1,5 @@
+# NOTE: This is the trimmed down main.workflow for prometheus/prometheus
+
 workflow "Start benchmark" {
   on = "issue_comment"
   resolves = ["start_benchmark"]
