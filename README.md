@@ -112,6 +112,7 @@ Starting a prombench test:
 
 Restarting a prombench test:
 - To restart a test, comment `/benchmark` again on the PR. If the hash of the last commit is changed, the test will be restarted.
+- To restart a test with a separate Prometheus release version just run `/benchmark <new_rel_version>`
 
 Stopping a prombench test:
 - To cancel benchmarking, a mantainer should comment `/benchmark cancel`.
