@@ -32,7 +32,7 @@ action "start_benchmark" {
   needs = ["start_benchmark_validate"]
   uses = "docker://prombench/prombench:2.0.2"
   args = [
-    "export RELEASE=$(cat /github/home/ARG_0) && [ -z $RELEASE ] && export RELEASE=master;",
+    "export RELEASE=v$(cat /github/home/ARG_0) && [ -z $RELEASE ] && export RELEASE=master;",
     "export PR_NUMBER=$(cat /github/home/ARG_1);",
     "make",
     "create_pb_test_ss"
