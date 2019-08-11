@@ -51,7 +51,7 @@ type GKE struct {
 	k8sProvider *k8sProvider.K8s
 	// DeploymentFiles files provided from the cli.
 	DeploymentFiles []string
-	// Vaiables to subtitude in the DeploymentFiles.
+	// Variables to substitute in the DeploymentFiles.
 	// These are also used when the command requires some variables that are not provided by the deployment file.
 	DeploymentVars map[string]string
 	// Content bytes after parsing the template variables, grouped by filename.
@@ -89,7 +89,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 		c.Auth = string(auth)
 	}
 
-	// Create tempory file to store the credentials.
+	// Create temporary file to store the credentials.
 	saFile, err := ioutil.TempFile("", "service-account")
 	if err != nil {
 		return errors.Wrap(err, "could not create temp file")

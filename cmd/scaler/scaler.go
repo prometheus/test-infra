@@ -37,7 +37,7 @@ func new() *scale {
 
 func (s *scale) updateReplicas(replicas *int32) []k8s.Resource {
 	var k8sResource []k8s.Resource
-	for _, deployment := range s.k8sClient.GetResourses() {
+	for _, deployment := range s.k8sClient.GetResources() {
 		k8sObjects := make([]runtime.Object, 0)
 
 		for _, resource := range deployment.Objects {
