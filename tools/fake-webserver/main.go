@@ -16,6 +16,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/pprof"
 	"time"
@@ -68,7 +69,9 @@ func main() {
 				DisableCompression: !*allowCompression,
 			},
 		))
-		go http.ListenAndServe(fmt.Sprintf(":%d", 8080+i), mux)
+		go func(i int) {
+			log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", 8080+i), mux))
+		}(i)
 	}
 
 	runClient()

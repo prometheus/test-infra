@@ -154,7 +154,7 @@ func writeArgs(args []string, output string) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		log.Printf(filepath.Join(output, filename))
+		log.Print(filepath.Join(output, filename))
 	}
 }
 
