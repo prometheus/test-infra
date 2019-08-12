@@ -46,7 +46,7 @@ type K8s struct {
 	ApiExtClient *apiServerExtensionsClient.Clientset
 	// DeploymentFiles files provided from the cli.
 	DeploymentFiles []string
-	// Vaiables to subtitude in the DeploymentFiles.
+	// Variables to substitute in the DeploymentFiles.
 	// These are also used when the command requires some variables that are not provided by the deployment file.
 	DeploymentVars map[string]string
 	// K8s resource.runtime objects after parsing the template variables, grouped by filename.
@@ -86,8 +86,8 @@ func New(ctx context.Context, config *clientcmdapi.Config) (*K8s, error) {
 	}, nil
 }
 
-// GetResourses is a getter function for Resources field in K8s.
-func (c *K8s) GetResourses() []Resource {
+// GetResources is a getter function for Resources field in K8s.
+func (c *K8s) GetResources() []Resource {
 	return c.resources
 }
 

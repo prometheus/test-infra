@@ -8,8 +8,6 @@ ifeq ($(AUTH_FILE),)
 AUTH_FILE = /etc/serviceaccount/service-account.json
 endif
 
-export GOOGLE_APPLICATION_CREDENTIALS=$(AUTH_FILE)
-
 .PHONY: deploy clean
 deploy: nodepool_create resource_apply
 clean: resource_delete nodepool_delete
@@ -34,4 +32,16 @@ resource_delete:
 nodepool_delete:
 	$(PROMBENCH_CMD) gke nodepool delete -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
+		-f manifests/prombench/nodepools.yaml
+
+all_nodepools_running:
+	$(PROMBENCH_CMD) gke nodepool check-running -a ${AUTH_FILE} \
+		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} \
+		-v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
+		-f manifests/prombench/nodepools.yaml
+
+all_nodepools_deleted:
+	$(PROMBENCH_CMD) gke nodepool check-deleted -a ${AUTH_FILE} \
+		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} \
+		-v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
 		-f manifests/prombench/nodepools.yaml
