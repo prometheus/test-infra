@@ -12,6 +12,8 @@ build:
           path: ./cmd/scaler
         - name: fake-webserver
           path: ./cmd/fake-webserver
+        - name: comment-monitor
+          path: ./tools/commentMonitor
     flags: -a -tags netgo
 
 crossbuild:
