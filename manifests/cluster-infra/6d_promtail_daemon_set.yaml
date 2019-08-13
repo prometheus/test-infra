@@ -31,7 +31,7 @@ data:
       relabel_configs:
       - action: keep
         source_labels: [__meta_kubernetes_pod_label_app]
-        regex: prometheus|prometheus-meta|loki|promtail|prombench-test-[\d]+-[\d]+
+        regex: prometheus|prometheus-meta|loki|promtail|prombench-test-[\d]+
       - source_labels: [__meta_kubernetes_pod_label_app]
         target_label: __service__
       - source_labels: [__meta_kubernetes_pod_node_name]
