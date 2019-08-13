@@ -84,7 +84,7 @@ cat $AUTH_FILE | base64 -w 0
 Starting:
 - `/benchmark` - benchmark PR with the master branch.
 - `/benchmark master` - same as above
-- `/benchmark 2.4.0` - can use any release version
+- `/benchmark v2.4.0` - can use any release version
 
 Restarting:
 - Comment `/benchmark` again on the PR. If the hash of the last commit has changed, the test will be restarted.
