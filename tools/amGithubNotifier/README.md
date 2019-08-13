@@ -25,6 +25,12 @@ groups:
 ```
 
 
+### Example for building the docker image
+From the repository root:
+```
+$ make docker DOCKERFILE_PATH=tools/amGithubNotifier/Dockerfile DOCKER_IMAGE_NAME=amGithubNotifier DOCKER_IMAGE_TAG=0.0.1
+```
+
 #### Usage and examples:
 ```
 ./amGithubNotifier --help
