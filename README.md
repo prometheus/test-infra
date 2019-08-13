@@ -2,7 +2,7 @@
 
 ![Prombench Design](design.svg)
 
-It runs with [Prow CI](https://github.com/kubernetes/test-infra/blob/master/prow/) on a [Google Kubernetes Engine Cluster](https://cloud.google.com/kubernetes-engine/).
+It runs with [Github Actions](https://github.com/features/actions) on a [Google Kubernetes Engine Cluster](https://cloud.google.com/kubernetes-engine/).
 It is designed to support adding more k8s providers.
 
 ## Overview of the manifest files
@@ -10,9 +10,12 @@ The `/manifest` directory contains all the kubernetes manifest files.
 - `cluster.yaml` : This is used to create the Main Node.
 - `cluster-infra/` : These are the persistent components of the Main Node.
 - `prombench/` : These resources are created and destroyed for each prombench test.
-- `prow/` : Resources for deploying [prow](https://github.com/kubernetes/test-infra/tree/master/prow/), which is used to trigger tests from GitHub comments.
 
 ## Setup prombench
+1. [Create the main node](#create-the-main-node)
+2. [Deploy monitoring components](#deploy-monitoring-components)
+3. [Setup GitHub Actions](#setup-github-actions)
+
 ### Create the Main Node
 ---
 - Create a new project on Google Cloud.
@@ -53,58 +56,43 @@ export GITHUB_REPO=prometheus
     -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
     -v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:$GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL \
     -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
+    -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)" \
     -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
     -f manifests/cluster-infra
 ```
+> Note: Use `-v GKE_AUTH="$(echo $AUTH_FILE | base64 -w 0)"` if you're passing the data directly into `$AUTH_FILE`
 - The output will show the ingress IP which will be used to point the domain name to. Alternatively you can see it from the GKE/Services tab.
 - Set the `A record` for `<DOMAIN_NAME>` to point to `nginx-ingress-controller` IP address.
 - The services will be accessible at:
   * Grafana :: `http://<DOMAIN_NAME>/grafana`
   * Prometheus ::  `http://<DOMAIN_NAME>/prometheus-meta`
 
-### Deploy Prow
-> Github integration - monitoring GitHub comments to starts new tests.
+### Setup GitHub Actions
+Place a workflow file in the `.github` directory of the repository.
+See the [prometheus/prometheus](https://github.com/prometheus/prometheus) repository for an example.
 
----
+Create a github action `AUTH_FILE` secret with the base64 encoded content of the `service-account.json` file.
 ```
-export HMAC_TOKEN=$(openssl rand -hex 20)
+cat $AUTH_FILE | base64 -w 0
 ```
-
-- Add a [github webhook](https://github.com/prometheus/prometheus/settings/hooks) where to send the events.
-  * Content Type: `json`
-  * Send:  `Issue comments,Pull requests`
-  * Secret: `echo $HMAC_TOKEN`
-  * Payload URL: `http://<DOMAIN_NAME>/hook`
-
-- Add all required tokens as k8s secrets.
-  * hmac is used when verifying requests from GitHub.
-  * gke auth is used when scaling up and down the cluster.
-```
-./prombench gke resource apply -a $AUTH_FILE -v ZONE:$ZONE \
-    -v CLUSTER_NAME:$CLUSTER_NAME -v PROJECT_ID:$PROJECT_ID \
-    -v HMAC_TOKEN="$(printf $HMAC_TOKEN | base64 -w 0)" \
-    -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)" \
-    -f manifests/prow/secrets.yaml
-```
-> Note: Use `-v GKE_AUTH="$(echo $AUTH_FILE | base64 -w 0)"` if you're passing the data directly into `$AUTH_FILE`
-
-- Deploy all internal prow components
-
-```
-export GITHUB_ORG=prometheus
-export GITHUB_REPO=prometheus
-export PROMBENCH_REPO=https://github.com/prometheus/prombench
-
-./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
-    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
-    -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
-    -v PROMBENCH_REPO:$PROMBENCH_REPO \
-    -f manifests/prow/components
-```
-
-* Prow dashboard will be accessible at :: `http://<DOMAIN_NAME>`
 
 ## Usage
+### Trigger tests via a Github comment.
+---
+> Due to the high cost of each test, only maintainers can manage tests.
+
+Starting:
+- `/benchmark` - benchmark PR with the master branch.
+- `/benchmark master` - same as above
+- `/benchmark v2.4.0` - can use any release version
+
+Restarting:
+- Comment `/benchmark` again on the PR. If the hash of the last commit has changed, the test will be restarted.
+- To restart the test with a different Prometheus release version comment `/benchmark <new_rel_version>`
+
+Stopping:
+- Comment `/benchmark cancel`.
+
 ### Start a benchmarking test manually
 ---
 
@@ -129,18 +117,8 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
     -f manifests/prombench/benchmark
 ```
 
-### Trigger tests via a Github comment.
----
-
-A Prometheus maintainer can comment as follows to benchmark a PR:
-- `/benchmark` (benchmark PR with the master branch.)
-- `/benchmark master`
-- `/benchmark 2.4.0` (Any release version can be added here. Don't prepend `v` to the release version here. The benchmark plugin in Prow will prepend it.)
-
-To cancel benchmarking, a mantainer should comment `/benchmark cancel`.
-
 ## Buliding from source
-To build Prombench and related tools from source you need to have a working Go environment with version 1.12 or greater installed. Prombench uses promu for building the binaries.
+To build Prombench and related tools from source you need to have a working Go environment with go modules enabled. Prombench uses [promu](https://github.com/prometheus/promu) to build the binaries.
 ```
 make build
 ```
