@@ -1,3 +1,16 @@
+// Copyright 2019 The Prometheus Authors
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package k8s
 
 import (
@@ -31,7 +44,9 @@ import (
 )
 
 func init() {
-	apiServerExtensionsV1beta1.AddToScheme(scheme.Scheme)
+	if err := apiServerExtensionsV1beta1.AddToScheme(scheme.Scheme); err != nil {
+		log.Fatal("apiServerExtensionsV1beta1.AddToScheme err:", err)
+	}
 }
 
 // Resource holds the resource objects after parsing deployment files.
@@ -388,8 +403,7 @@ func (c *K8s) daemonSetApply(resource runtime.Object) error {
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
-	c.daemonsetReady(resource)
-	return nil
+	return c.daemonsetReady(resource)
 }
 
 func (c *K8s) deploymentApply(resource runtime.Object) error {
@@ -1257,7 +1271,7 @@ func (c *K8s) statefulSetReady(resource runtime.Object) (bool, error) {
 	}
 }
 
-func (c *K8s) daemonsetReady(resource runtime.Object) (bool, error) {
+func (c *K8s) daemonsetReady(resource runtime.Object) error {
 	req := resource.(*appsV1.DaemonSet)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	if len(req.Namespace) == 0 {
@@ -1270,15 +1284,15 @@ func (c *K8s) daemonsetReady(resource runtime.Object) (bool, error) {
 
 		res, err := client.Get(req.Name, apiMetaV1.GetOptions{})
 		if err != nil {
-			return false, errors.Wrapf(err, "Checking DaemonSet resource:'%v' status failed err:%v", req.Name, err)
+			return errors.Wrapf(err, "Checking DaemonSet resource:'%v' status failed err:%v", req.Name, err)
 		}
 		if res.Status.NumberUnavailable == 0 {
-			return true, nil
+			return nil
 		}
 	default:
-		return false, fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
-	return false, nil
+	return nil
 }
 
 func (c *K8s) namespaceDeleted(resource runtime.Object) (bool, error) {
