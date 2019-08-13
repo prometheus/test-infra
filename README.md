@@ -14,7 +14,7 @@ The `/manifest` directory contains all the kubernetes manifest files.
 ## Setup prombench
 1. [Create the main node](#create-the-main-node)
 2. [Deploy monitoring components](#deploy-monitoring-components)
-3. [Deploy GitHub Actions](#deploy-github-actions)
+3. [Setup GitHub Actions](#setup-github-actions)
 
 ### Create the Main Node
 ---
@@ -67,17 +67,32 @@ export GITHUB_REPO=prometheus
   * Grafana :: `http://<DOMAIN_NAME>/grafana`
   * Prometheus ::  `http://<DOMAIN_NAME>/prometheus-meta`
 
-### Deploy GitHub Actions
-This section assumes you already have the `main.workflow` file placed to the `.github` directory in the repository from where you want to use prombench from. You can find an example of `main.workflow` in the [`/examples`](examples) directory.
+### Setup GitHub Actions
+Place a workflow file in the `.github` directory of the repository.
+See the [prometheus/prometheus](https://github.com/prometheus/prometheus) repository for an example.
 
 Copy and paste the output of the following to the `AUTH_FILE` secret in the Github Actions workflow.
 ```
 cat $AUTH_FILE | base64 -w 0
 ```
 
-Follow [Triggering tests via Github comments](#trigger-tests-via-a-github-comment)
-
 ## Usage
+### Trigger tests via a Github comment.
+---
+> Due to the high cost of each test, only maintainers can manage tests.
+
+Starting:
+- `/benchmark` - benchmark PR with the master branch.
+- `/benchmark master` - same as above
+- `/benchmark 2.4.0` - can use any release version
+
+Restarting:
+- Comment `/benchmark` again on the PR. If the hash of the last commit has changed, the test will be restarted.
+- To restart the test with a different Prometheus release version comment `/benchmark <new_rel_version>`
+
+Stopping:
+- Comment `/benchmark cancel`.
+
 ### Start a benchmarking test manually
 ---
 
@@ -102,24 +117,8 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
     -f manifests/prombench/benchmark
 ```
 
-### Trigger tests via a Github comment.
----
-
-Starting a prombench test:
-- `/benchmark` (benchmark PR with the master branch.)
-- `/benchmark master`
-- `/benchmark 2.4.0` (Any release version can be added here. Don't prepend `v` to the release version here. The benchmark plugin in Prow will prepend it.)
-
-Restarting a prombench test:
-- To restart a test, comment `/benchmark` again on the PR. If the hash of the last commit is changed, the test will be restarted.
-- To restart a test with a separate Prometheus release version just run `/benchmark <new_rel_version>`
-
-Stopping a prombench test:
-- To cancel benchmarking, a mantainer should comment `/benchmark cancel`.
-
-
 ## Buliding from source
-To build Prombench and related tools from source you need to have a working Go environment with version 1.12 or greater installed. Prombench uses promu for building the binaries.
+To build Prombench and related tools from source you need to have a working Go environment with go modules enabled. Prombench uses [promu](https://github.com/prometheus/promu) to build the binaries.
 ```
 make build
 ```

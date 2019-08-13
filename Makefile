@@ -12,14 +12,14 @@ endif
 deploy: nodepool_create resource_apply
 clean: nodepool_delete resource_delete
 
-create_pb_test_ss:
+create_test_ss:
 	$(PROMBENCH_CMD) gke resource apply -a ${AUTH_FILE} -v PROJECT_ID:${PROJECT_ID} \
 		-v ZONE:${ZONE} -v CLUSTER_NAME:${CLUSTER_NAME} -v DOMAIN_NAME:${DOMAIN_NAME} \
 		-v PR_NUMBER:${PR_NUMBER} -v RELEASE:${RELEASE} -v LAST_COMMIT:${GITHUB_SHA} \
 		-v PROMBENCH_REPO:${PROMBENCH_REPO} \
 		-f manifests/prombench/stateful-set.yaml
 
-delete_pb_test_ss:
+delete_test_ss:
 	$(PROMBENCH_CMD) gke resource delete -a ${AUTH_FILE} -v PROJECT_ID:${PROJECT_ID} \
 		-v ZONE:${ZONE} -v CLUSTER_NAME:${CLUSTER_NAME} -v DOMAIN_NAME:${DOMAIN_NAME} \
 		-v PR_NUMBER:${PR_NUMBER} -v RELEASE:${RELEASE} -v LAST_COMMIT:${GITHUB_SHA} \
