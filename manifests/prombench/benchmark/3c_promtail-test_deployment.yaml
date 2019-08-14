@@ -59,7 +59,7 @@ data:
         target_label: __path__
 ---
 apiVersion: apps/v1
-kind: DaemonSet
+kind: Deployment
 metadata:
   name: promtail-test-pr-{{ .PR_NUMBER }}
   namespace: prombench-{{ .PR_NUMBER }}
@@ -67,6 +67,7 @@ metadata:
     app: promtail
     promtail: test-pr-{{ .PR_NUMBER }}
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: promtail
@@ -151,7 +152,7 @@ spec:
             path: /var/log/pods
 ---
 apiVersion: apps/v1
-kind: DaemonSet
+kind: Deployment
 metadata:
   name: promtail-test-{{ normalise .RELEASE }}
   namespace: prombench-{{ .PR_NUMBER }}
@@ -159,6 +160,7 @@ metadata:
     app: promtail
     promtail: test-{{ normalise .RELEASE }}
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: promtail
