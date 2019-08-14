@@ -50,8 +50,12 @@ data:
       - action: replace
         source_labels: [__meta_kubernetes_pod_container_name]
         target_label: container_name
-      - action: labelmap
-        regex: __meta_kubernetes_pod_label_(.+)
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_label_prometheus]
+        target_label: prometheus
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_label_promtail]
+        target_label: promtail
       - replacement: /var/log/pods/*$1/*.log
         separator: /
         source_labels: [__meta_kubernetes_pod_uid, __meta_kubernetes_pod_container_name]
