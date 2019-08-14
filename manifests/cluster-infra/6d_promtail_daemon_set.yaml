@@ -67,12 +67,14 @@ spec:
   selector:
     matchLabels:
       app: promtail
+      promtail: meta
   updateStrategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
         app: promtail
+        promtail: meta
     spec:
       serviceAccountName: promtail
       containers:

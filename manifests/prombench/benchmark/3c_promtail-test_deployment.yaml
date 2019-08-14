@@ -32,7 +32,7 @@ data:
       relabel_configs:
       - action: keep
         source_labels: [__meta_kubernetes_pod_label_app]
-        regex: prometheus
+        regex: prometheus|promtail
       - source_labels: [__meta_kubernetes_pod_label_app]
         target_label: __service__
       - source_labels: [__meta_kubernetes_pod_node_name]
