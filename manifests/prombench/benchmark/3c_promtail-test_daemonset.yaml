@@ -61,22 +61,36 @@ data:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: promtail
+  name: promtail-test-pr-{{ .PR_NUMBER }}
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: promtail
+    promtail: test-pr-{{ .PR_NUMBER }}
 spec:
   selector:
     matchLabels:
       app: promtail
+      promtail: test-pr-{{ .PR_NUMBER }}
   updateStrategy:
     type: RollingUpdate
   template:
     metadata:
+      namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: promtail
+        promtail: test-pr-{{ .PR_NUMBER }}
     spec:
       serviceAccountName: promtail
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - promtail
       containers:
         - name: promtail
           image: grafana/promtail:latest
@@ -117,14 +131,107 @@ spec:
             successThreshold: 1
             timeoutSeconds: 1
       nodeSelector:
-        cloud.google.com/gke-nodepool: prow
+        cloud.google.com/gke-nodepool: prometheus-{{ .PR_NUMBER }}
+        isolation: prometheus
       tolerations:
         - key: node-role.kubernetes.io/master
           effect: NoSchedule
       volumes:
         - name: config
           configMap:
-            name: promtail
+            name: promtail-test
+        - name: run
+          hostPath:
+            path: /run/promtail
+        - name: docker
+          hostPath:
+            path: /var/lib/docker/containers
+        - name: pods
+          hostPath:
+            path: /var/log/pods
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: promtail-test-{{ normalise .RELEASE }}
+  namespace: prombench-{{ .PR_NUMBER }}
+  labels:
+    app: promtail
+    promtail: test-{{ normalise .RELEASE }}
+spec:
+  selector:
+    matchLabels:
+      app: promtail
+      promtail: test-{{ normalise .RELEASE }}
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      namespace: prombench-{{ .PR_NUMBER }}
+      labels:
+        app: promtail
+        promtail: test-{{ normalise .RELEASE }}
+    spec:
+      serviceAccountName: promtail
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - promtail
+      containers:
+        - name: promtail
+          image: grafana/promtail:latest
+          imagePullPolicy: IfNotPresent
+          args:
+            - "-config.file=/etc/promtail/promtail.yaml"
+            - "-client.url=http://loki:3100/api/prom/push"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/promtail
+            - name: run
+              mountPath: /run/promtail
+            - name: pods
+              mountPath: /var/log/pods
+              readOnly: true
+            - name: docker
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+          env:
+          - name: HOSTNAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          ports:
+            - containerPort: 3101
+              name: http-metrics
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsGroup: 0
+            runAsUser: 0
+          readinessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /ready
+              port: http-metrics
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+      nodeSelector:
+        cloud.google.com/gke-nodepool: prometheus-{{ .PR_NUMBER }}
+        isolation: prometheus
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+      volumes:
+        - name: config
+          configMap:
+            name: promtail-test
         - name: run
           hostPath:
             path: /run/promtail
