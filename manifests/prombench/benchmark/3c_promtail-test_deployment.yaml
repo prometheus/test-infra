@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: promtail-test
+  name: promtail-benchtest-config
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: promtail
@@ -65,17 +65,17 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: promtail-test-pr-{{ .PR_NUMBER }}
+  name: promtail-pr-{{ .PR_NUMBER }}
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: promtail
-    promtail: test-pr-{{ .PR_NUMBER }}
+    promtail: pr-{{ .PR_NUMBER }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: promtail
-      promtail: test-pr-{{ .PR_NUMBER }}
+      promtail: pr-{{ .PR_NUMBER }}
   updateStrategy:
     type: RollingUpdate
   template:
@@ -83,7 +83,7 @@ spec:
       namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: promtail
-        promtail: test-pr-{{ .PR_NUMBER }}
+        promtail: pr-{{ .PR_NUMBER }}
     spec:
       serviceAccountName: promtail
       affinity:
@@ -144,7 +144,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: promtail-test
+            name: promtail-benchtest-config
         - name: run
           hostPath:
             path: /run/promtail
@@ -158,17 +158,17 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: promtail-test-{{ normalise .RELEASE }}
+  name: promtail-{{ normalise .RELEASE }}
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: promtail
-    promtail: test-{{ normalise .RELEASE }}
+    promtail: {{ normalise .RELEASE }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: promtail
-      promtail: test-{{ normalise .RELEASE }}
+      promtail: {{ normalise .RELEASE }}
   updateStrategy:
     type: RollingUpdate
   template:
@@ -176,7 +176,7 @@ spec:
       namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: promtail
-        promtail: test-{{ normalise .RELEASE }}
+        promtail: {{ normalise .RELEASE }}
     spec:
       serviceAccountName: promtail
       affinity:
@@ -237,7 +237,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: promtail-test
+            name: promtail-benchtest-config
         - name: run
           hostPath:
             path: /run/promtail
