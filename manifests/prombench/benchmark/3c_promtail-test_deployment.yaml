@@ -87,15 +87,15 @@ spec:
     spec:
       serviceAccountName: promtail
       affinity:
-        podAntiAffinity:
+        podAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
           - topologyKey: kubernetes.io/hostname
             labelSelector:
               matchExpressions:
-              - key: app
+              - key: prometheus
                 operator: In
                 values:
-                - promtail
+                - test-pr-{{ .PR_NUMBER }}
       containers:
         - name: promtail
           image: grafana/promtail:latest
@@ -180,15 +180,15 @@ spec:
     spec:
       serviceAccountName: promtail
       affinity:
-        podAntiAffinity:
+        podAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
           - topologyKey: kubernetes.io/hostname
             labelSelector:
               matchExpressions:
-              - key: app
+              - key: prometheus
                 operator: In
                 values:
-                - promtail
+                - test-{{ normalise .RELEASE }}
       containers:
         - name: promtail
           image: grafana/promtail:latest
