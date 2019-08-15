@@ -1,6 +1,6 @@
 # Automated Prometheus E2E testing and benchmarking.
 
-![Prombench Design](design.svg)
+![Prombench Design](design.png)
 
 It runs with [Github Actions](https://github.com/features/actions) on a [Google Kubernetes Engine Cluster](https://cloud.google.com/kubernetes-engine/).
 It is designed to support adding more k8s providers.
@@ -33,7 +33,7 @@ export AUTH_FILE=<path to service-account.json>
 ```
 
 ### Deploy monitoring components
-> Collecting, monitoring and displaying the test results
+> Collecting, monitoring and displaying the test results and logs
 
 ---
 
@@ -49,7 +49,7 @@ export GITHUB_ORG=prometheus
 export GITHUB_REPO=prometheus
 ```
 
-- Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Grafana, Alertmanager & Github Notifier.
+- Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Loki, Grafana, Alertmanager & Github Notifier.
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID -v ZONE:$ZONE \
     -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
@@ -66,6 +66,7 @@ export GITHUB_REPO=prometheus
 - The services will be accessible at:
   * Grafana :: `http://<DOMAIN_NAME>/grafana`
   * Prometheus ::  `http://<DOMAIN_NAME>/prometheus-meta`
+  * Logs :: `http://<DOMAIN_NAME>/grafana/explore`
 
 ### Setup GitHub Actions
 Place a workflow file in the `.github` directory of the repository.
