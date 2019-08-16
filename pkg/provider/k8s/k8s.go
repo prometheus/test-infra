@@ -1262,7 +1262,7 @@ func (c *K8s) statefulSetReady(resource runtime.Object) (bool, error) {
 		if req.Spec.Replicas != nil {
 			replicas = *req.Spec.Replicas
 		}
-		if res.Status.CurrentReplicas == replicas {
+		if res.Status.ReadyReplicas == replicas {
 			return true, nil
 		}
 		return false, nil
