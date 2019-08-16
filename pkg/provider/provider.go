@@ -23,6 +23,8 @@ import (
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -100,6 +102,23 @@ func DeploymentsParse(deploymentFiles []string, deploymentVars map[string]string
 			return nil, fmt.Errorf("couldn't apply template to file %s: %v", name, err)
 		}
 		deploymentObjects = append(deploymentObjects, Resource{FileName: name, Content: content})
+	}
+	return deploymentObjects, nil
+}
+
+// FetchConfigMapData fetches configmap data from the fs
+func FetchConfigMapData(configMapFiles []string) ([]Resource, error) {
+	deploymentObjects := make([]Resource, 0)
+	for _, path := range configMapFiles {
+		fileContent, err := ioutil.ReadFile(path)
+		if err != nil {
+			return nil, errors.Wrap(err, "content for a ConfigMap should be a file, you can specify multiple files with --from-file")
+		}
+		fileInfo, err := os.Stat(path)
+		if err != nil {
+			return nil, err
+		}
+		deploymentObjects = append(deploymentObjects, Resource{Content: fileContent, FileName: fileInfo.Name()})
 	}
 	return deploymentObjects, nil
 }

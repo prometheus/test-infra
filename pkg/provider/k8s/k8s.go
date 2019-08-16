@@ -70,6 +70,13 @@ type K8s struct {
 	ctx context.Context
 }
 
+// ConfigMapConfig holds config for creating ConfigMap from DeploymentFile.
+type ConfigMapConfig struct {
+	Enabled   bool
+	Name      string
+	Namespace string
+}
+
 // New returns a k8s client that can apply and delete resources.
 func New(ctx context.Context, config *clientcmdapi.Config) (*K8s, error) {
 	var restConfig *rest.Config
@@ -1320,4 +1327,10 @@ func (c *K8s) namespaceDeleted(resource runtime.Object) (bool, error) {
 	default:
 		return false, fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
+}
+
+// GenerateConfigMapResource generates configmap object
+func (c *K8s) GenerateConfigMapResource([]provider.Resource) (runtime.Object, error) {
+	// Generate a runtime Object for configmap here
+	return nil, nil
 }

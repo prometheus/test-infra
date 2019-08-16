@@ -71,6 +71,8 @@ type GKE struct {
 	gkeResources []Resource
 	// K8s resource.runtime objects after parsing the template variables, grouped by filename.
 	k8sResources []k8sProvider.Resource
+	// config for creating ConfigMap from file.
+	ConfigMapConfig k8sProvider.ConfigMapConfig
 
 	ctx context.Context
 }
@@ -145,7 +147,15 @@ func (c *GKE) GKEDeploymentsParse(*kingpin.ParseContext) error {
 // Any variables passed to the cli will be replaced in the resources files following the golang text template format.
 func (c *GKE) K8SDeploymentsParse(*kingpin.ParseContext) error {
 	c.setProjectID()
-
+	if c.ConfigMapConfig.Enabled {
+		deploymentResource, err := provider.FetchConfigMapData(c.DeploymentFiles)
+		if err != nil {
+			return err
+		}
+		// create a ConfigMap object here
+		resource, err := c.k8sProvider.GenerateConfigMapResource(deploymentResource)
+		return nil
+	}
 	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
 	if err != nil {
 		log.Fatalf("Couldn't parse deployment files: %v", err)

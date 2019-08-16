@@ -45,6 +45,17 @@ func main() {
 		Short('v').
 		StringMapVar(&g.DeploymentVars)
 
+	// K8s ConfigMap operations from file.
+	k8sConfigMap := k8sGKE.Command("configmap", "use configmap").
+		Action(g.NewK8sProvider).
+		Action(g.K8SDeploymentsParse)
+	k8sConfigMap.Flag("enabled", "enable creation of ConfigMap from file").
+		Hidden().
+		Default("true").
+		BoolVar(&g.ConfigMapConfig.Enabled)
+	k8sConfigMap.Flag("name", "Name of the ConfigMap").Required().StringVar(&g.ConfigMapConfig.Name)
+	k8sConfigMap.Flag("namespace", "Namespace of the ConfigMap").Required().StringVar(&g.ConfigMapConfig.Namespace)
+
 	// Cluster operations.
 	k8sGKECluster := k8sGKE.Command("cluster", "manage GKE clusters").
 		Action(g.GKEDeploymentsParse)
