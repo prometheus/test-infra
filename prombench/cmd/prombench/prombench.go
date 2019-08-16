@@ -56,6 +56,11 @@ func main() {
 	k8sConfigMap.Flag("name", "Name of the ConfigMap").Required().StringVar(&g.ConfigMapConfig.Name)
 	k8sConfigMap.Flag("namespace", "Namespace of the ConfigMap").Required().StringVar(&g.ConfigMapConfig.Namespace)
 
+	k8sConfigMap.Command("apply", "apply the configmap").
+		Action(g.ResourceApply)
+	k8sConfigMap.Command("delete", "delete the configmap").
+		Action(g.ResourceDelete)
+
 	// Cluster operations.
 	k8sGKECluster := k8sGKE.Command("cluster", "manage GKE clusters").
 		Action(g.GKEDeploymentsParse)

@@ -147,15 +147,20 @@ func (c *GKE) GKEDeploymentsParse(*kingpin.ParseContext) error {
 // Any variables passed to the cli will be replaced in the resources files following the golang text template format.
 func (c *GKE) K8SDeploymentsParse(*kingpin.ParseContext) error {
 	c.setProjectID()
+
+	// if run from the `gke configmap` subcommand
 	if c.ConfigMapConfig.Enabled {
+		k8sObjects := make([]runtime.Object, 0)
 		deploymentResource, err := provider.FetchConfigMapData(c.DeploymentFiles)
 		if err != nil {
 			return err
 		}
-		// create a ConfigMap object here
-		resource, err := c.k8sProvider.GenerateConfigMapResource(deploymentResource)
+		resource := c.k8sProvider.GenerateConfigMapResource(deploymentResource, c.ConfigMapConfig)
+		k8sObjects = append(k8sObjects, resource)
+		c.k8sResources = append(c.k8sResources, k8sProvider.Resource{FileName: c.ConfigMapConfig.Name, Objects: k8sObjects})
 		return nil
 	}
+
 	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
 	if err != nil {
 		log.Fatalf("Couldn't parse deployment files: %v", err)

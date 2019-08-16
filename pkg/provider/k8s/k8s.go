@@ -1329,8 +1329,21 @@ func (c *K8s) namespaceDeleted(resource runtime.Object) (bool, error) {
 	}
 }
 
-// GenerateConfigMapResource generates configmap object
-func (c *K8s) GenerateConfigMapResource([]provider.Resource) (runtime.Object, error) {
-	// Generate a runtime Object for configmap here
-	return nil, nil
+// GenerateConfigMapResource returns the ConfigMap runtime object.
+func (c *K8s) GenerateConfigMapResource(filedata []provider.Resource, cc ConfigMapConfig) runtime.Object {
+	configMapData := make(map[string]string)
+	for _, data := range filedata {
+		configMapData[data.FileName] = string(data.Content)
+	}
+	return &apiCoreV1.ConfigMap{
+		TypeMeta: apiMetaV1.TypeMeta{
+			Kind:       "ConfigMap",
+			APIVersion: "v1",
+		},
+		ObjectMeta: apiMetaV1.ObjectMeta{
+			Name:      cc.Name,
+			Namespace: cc.Namespace,
+		},
+		Data: configMapData,
+	}
 }
