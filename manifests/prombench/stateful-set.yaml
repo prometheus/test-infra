@@ -59,6 +59,10 @@ spec:
             value: "{{ .DOMAIN_NAME }}"
           - name: PROMBENCH_REPO
             value: "{{ .PROMBENCH_REPO }}"
+          - name: GITHUB_ORG
+            value: "{{ .GITHUB_ORG }}"
+          - name: GITHUB_REPO
+            value: "{{ .GITHUB_REPO }}"
         lifecycle:
           preStop:
             exec:

@@ -114,6 +114,7 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 ./prombench gke resource apply -a $AUTH_FILE \
     -v ZONE:$ZONE -v PROJECT_ID:$PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
     -v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v DOMAIN_NAME:$DOMAIN_NAME \
+    -v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
     -f manifests/prombench/benchmark
 ```
 

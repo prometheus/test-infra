@@ -3,19 +3,8 @@
 This is used for building prometheus binaries from Pull Requests and running them on containers.  
 Prombench uses this to build binaries for the Pull Request being benchmarked.
 
-### How to run
-#### Docker Container
+### Example for building the docker image
+From the repository root:
 ```
-mkdir -p config
-echo \
-"global:
-  scrape_interval:     15s
-scrape_configs:
-  - job_name: 'prometheus'
-    scrape_interval: 5s
-    static_configs:
-      - targets: ['localhost:9090']" > config/prometheus.yaml
-
-docker build -t prometheus-builder .
-docker run --rm -p 9090:9090 -v /absolute-path/to/config:/etc/prometheus/config -v data:/data prometheus-builder <PR_NUMBER> 
+$ make docker DOCKERFILE_PATH=temp/prometheus-builder/Dockerfile DOCKERBUILD_CONTEXT=temp/prometheus-builder DOCKER_IMAGE_NAME=prometheus-builder DOCKER_IMAGE_TAG=2.0.2
 ```
