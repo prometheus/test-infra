@@ -37,6 +37,8 @@ spec:
             value: "Main Org."
           - name: GF_SECURITY_ADMIN_PASSWORD
             value: "{{ .GRAFANA_ADMIN_PASSWORD }}"
+          - name: GF_USERS_VIEWERS_CAN_EDIT
+            value: "true"
         readinessProbe:
           httpGet:
             path: /login
