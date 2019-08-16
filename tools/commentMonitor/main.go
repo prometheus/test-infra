@@ -51,6 +51,14 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	// Temporary fix for the new Github actions time format. This makes the time stamps unusable.
+	txt := string(data)
+	reg := regexp.MustCompile("(.*)\"[0-9]+/[0-9]+/2019 [0-9]+:[0-9]+:[0-9]+ [AP]M(.*)")
+	txt = reg.ReplaceAllString(txt, "$1\"2019-06-11T09:26:28Z$2")
+	log.Println(txt)
+	data = []byte(txt)
+	// End of the temporary fix
+
 	// Parsing event.json.
 	event, err := github.ParseWebHook("issue_comment", data)
 	if err != nil {
@@ -141,9 +149,24 @@ func regexValidation(regex string, comment string) ([]string, error) {
 }
 
 func writeArgs(args []string, output string) {
+	// More regex can be added.
+	regex := make(map[string]*regexp.Regexp)
+	// Regex for PR number.
+	regex["PR_NUMBER"] = regexp.MustCompile("(?m)^([0-9]+)\\s*$")
+	// Regex for Release version.
+	regex["RELEASE"] = regexp.MustCompile("(?mi)^(master|[0-9]+\\.[0-9]+\\.[0-9]+\\S*)\\s*$")
+
+	var filename string
 	for i, arg := range args[1:] {
+		if regex["PR_NUMBER"].MatchString(arg) {
+			filename = fmt.Sprintf("%v", "PR_NUMBER")
+		} else if regex["RELEASE"].MatchString(arg) {
+			filename = fmt.Sprintf("%v", "RELEASE")
+		} else {
+			filename = fmt.Sprintf("ARG_%v", i)
+		}
+
 		data := []byte(arg)
-		filename := fmt.Sprintf("ARG_%v", i)
 		err := ioutil.WriteFile(filepath.Join(output, filename), data, 0644)
 		if err != nil {
 			log.Fatalln(err)
