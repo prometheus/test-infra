@@ -71,7 +71,7 @@ type GKE struct {
 	gkeResources []Resource
 	// K8s resource.runtime objects after parsing the template variables, grouped by filename.
 	k8sResources []k8sProvider.Resource
-	// config for creating ConfigMap from file.
+	// Config for creating ConfigMap from file.
 	ConfigMapConfig k8sProvider.ConfigMapConfig
 
 	ctx context.Context
@@ -148,7 +148,7 @@ func (c *GKE) GKEDeploymentsParse(*kingpin.ParseContext) error {
 func (c *GKE) K8SDeploymentsParse(*kingpin.ParseContext) error {
 	c.setProjectID()
 
-	// if run from the `gke configmap` subcommand
+	// If run from the `gke configmap` subcommand.
 	if c.ConfigMapConfig.Enabled {
 		k8sObjects := make([]runtime.Object, 0)
 		deploymentResource, err := provider.FetchConfigMapData(c.DeploymentFiles)

@@ -46,7 +46,7 @@ func main() {
 		StringMapVar(&g.DeploymentVars)
 
 	// K8s ConfigMap operations from file.
-	k8sConfigMap := k8sGKE.Command("configmap", "use configmap").
+	k8sConfigMap := k8sGKE.Command("configmap", "create configmap directly from file").
 		Action(g.NewK8sProvider).
 		Action(g.K8SDeploymentsParse)
 	k8sConfigMap.Flag("enabled", "enable creation of ConfigMap from file").

@@ -23,8 +23,6 @@ import (
 	"strings"
 	"text/template"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -112,7 +110,7 @@ func FetchConfigMapData(configMapFiles []string) ([]Resource, error) {
 	for _, path := range configMapFiles {
 		fileContent, err := ioutil.ReadFile(path)
 		if err != nil {
-			return nil, errors.Wrap(err, "content for a ConfigMap should be a file, you can specify multiple files with --from-file")
+			return nil, err
 		}
 		fileInfo, err := os.Stat(path)
 		if err != nil {
