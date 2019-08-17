@@ -154,7 +154,7 @@ func writeArgs(args []string, output string) {
 	// Regex for PR number.
 	regex["PR_NUMBER"] = regexp.MustCompile("(?m)^([0-9]+)\\s*$")
 	// Regex for Release version.
-	regex["RELEASE"] = regexp.MustCompile("(?mi)^(master|[0-9]+\\.[0-9]+\\.[0-9]+\\S*)\\s*$")
+	regex["RELEASE"] = regexp.MustCompile("(?mi)^(master|v[0-9]+\\.[0-9]+\\.[0-9]+\\S*)\\s*$")
 
 	var filename string
 	for i, arg := range args[1:] {
