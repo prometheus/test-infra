@@ -104,6 +104,15 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	// Temporary fix for the new Github actions time format. This makes the time stamps unusable.
+	txt := string(data)
+	reg := regexp.MustCompile("(.*)\"[0-9]+/[0-9]+/2019 [0-9]+:[0-9]+:[0-9]+ [AP]M(.*)")
+	txt = reg.ReplaceAllString(txt, "$1\"2019-06-11T09:26:28Z$2")
+	data = []byte(txt)
+	log.Println("temp fix active")
+	// End of the temporary fix
+
 	// Parsing event.json.
 	event, err := github.ParseWebHook("issue_comment", data)
 	if err != nil {
@@ -194,6 +203,7 @@ func main() {
 			if err := cmClient.ghClient.postComment(ctx, buf.String()); err != nil {
 				log.Fatalf("%v : couldn't post generated comment", err)
 			}
+			log.Println("comment successfully posted")
 		}
 
 		// Set label to Github pr.
@@ -205,6 +215,7 @@ func main() {
 			if err := cmClient.ghClient.createLabel(ctx, cmClient.labelName); err != nil {
 				log.Fatalf("%v : couldn't set label", err)
 			}
+			log.Println("label successfully set")
 		}
 
 	default:
