@@ -57,9 +57,9 @@ spec:
         - name: grafana-dashboard-bench
           mountPath: /opt/grafana-provision/dashboards/bench-nodes.json
           subPath: bench-nodes.json
-        - name: grafana-dashboard-prow
-          mountPath: /opt/grafana-provision/dashboards/prow-nodes.json
-          subPath: prow-nodes.json
+        - name: grafana-dashboard-main-node
+          mountPath: /opt/grafana-provision/dashboards/main-nodes.json
+          subPath: main-nodes.json
         ports:
         - name: grafana-web
           containerPort: 3000
@@ -75,11 +75,11 @@ spec:
       - name: grafana-dashboard-bench
         configMap:
           name: grafana-dashboard-bench
-      - name: grafana-dashboard-prow
+      - name: grafana-dashboard-main-node
         configMap:
-          name: grafana-dashboard-prow
+          name: grafana-dashboard-main-node
       nodeSelector:
-        cloud.google.com/gke-nodepool: prow
+        cloud.google.com/gke-nodepool: main-node
 ---
 apiVersion: v1
 kind: Service

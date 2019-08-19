@@ -81,5 +81,5 @@ spec:
             secretName: service-account
       terminationGracePeriodSeconds: 900 # 15 mins
       nodeSelector:
-        cloud.google.com/gke-nodepool: prow
+        cloud.google.com/gke-nodepool: main-node
 

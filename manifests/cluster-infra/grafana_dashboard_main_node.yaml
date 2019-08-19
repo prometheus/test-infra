@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-dashboard-prow
+  name: grafana-dashboard-main-node
 data:
-  prow-nodes.json: |
+  main-nodes.json: |
     {
       "__requires": [
         {
@@ -29,7 +29,7 @@ data:
       "title": "Node Metrics",
       "description": "Dashboard to view Node metrics",
       "tags": [
-        "prow",
+        "main-node",
         "nodes",
         "node-metrics"
       ],
