@@ -463,9 +463,7 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 	}
 
 	// set annotations
-	var retryCount int
-
-	retryCount = provider.GlobalRetryCount
+	retryCount := provider.GlobalRetryCount
 	if count, ok := req.Annotations["prometheus.io/prombench.retry_count"]; ok {
 		intCount, err := strconv.Atoi(count)
 		if err != nil {
