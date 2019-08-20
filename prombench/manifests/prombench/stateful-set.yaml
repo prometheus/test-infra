@@ -4,6 +4,10 @@ metadata:
   name: prombench-test-{{ .PR_NUMBER }}
   labels:
     app: prombench-test-{{ .PR_NUMBER }}
+  annotations:
+    prometheus.io/prombench.exit_on_error: true
+    prometheus.io/prombench.wait_on_update: true
+    prometheus.io/prombench.retry_count: 60
 spec:
   replicas: 1
   selector:
@@ -43,7 +47,7 @@ spec:
         imagePullPolicy: Always
         args:
         # sleep forever after make deploy succeeded
-        - "make deploy && echo 'deploy succeeded, now sleeping' && while sleep 86400; do :; done"
+        - "make deploy && touch /tmp/READY && echo 'deploy succeeded, now sleeping' && while sleep 86400; do :; done"
         env:
           - name: PROJECT_ID
             value: "{{ .PROJECT_ID }}"
@@ -69,8 +73,14 @@ spec:
               command:
               - "/bin/sh"
               - "-c"
-              - "until make all_nodepools_running; do echo waiting for nodepools to be created; sleep 10; done; make clean; kill -9 -1"
+              - "rm /tmp/READY && until make all_nodepools_running; do echo waiting for nodepools to be created; sleep 10; done; make clean; kill -9 -1"
               # wait until all_nodepools_running returns a success code then run make clean and kill the container
+        readinessProbe:
+          exec:
+            command:
+            - stat -t
+            - /tmp/READY
+          initialDelaySeconds: 600 # 10 mins
         volumeMounts:
         - name: serviceaccount
           mountPath: /etc/serviceaccount/

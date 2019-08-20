@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -490,9 +491,18 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
+
+	retryCount := provider.GlobalRetryCount
+	if count, ok := req.Annotations["prometheus.io/prombench.retry_count"]; ok {
+		intCount, err := strconv.Atoi(count)
+		if err != nil {
+			return fmt.Errorf("%v: format of .retry_count annotation wrong", err)
+		}
+		retryCount = intCount
+	}
 	return provider.RetryUntilTrue(
 		fmt.Sprintf("applying statefulSet:%v", req.Name),
-		provider.GlobalRetryCount,
+		retryCount,
 		func() (bool, error) { return c.statefulSetReady(resource) })
 }
 
