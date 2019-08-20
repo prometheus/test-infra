@@ -80,7 +80,7 @@ spec:
             command:
             - cat
             - /tmp/READY
-          initialDelaySeconds: 600 # 10 mins
+          initialDelaySeconds: 300 # 5 mins
         volumeMounts:
         - name: serviceaccount
           mountPath: /etc/serviceaccount/

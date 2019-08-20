@@ -31,6 +31,10 @@ const (
 	globalRetryTime  = 10 * time.Second
 )
 
+var (
+	ExitOnError = false
+)
+
 // Resource holds the file content after parsing the template variables.
 type Resource struct {
 	FileName string

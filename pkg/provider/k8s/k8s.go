@@ -185,6 +185,9 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 			}
 			if err != nil {
 				log.Printf("error applying '%v' err:%v \n", deployment.FileName, err)
+				if provider.ExitOnError {
+					return err
+				}
 			}
 		}
 	}
@@ -490,6 +493,12 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
+	}
+
+	if exitOnError, ok := req.Annotations["prometheus.io/prombench.exit_on_error"]; ok {
+		if exitOnError == "true" {
+			provider.ExitOnError = true
+		}
 	}
 
 	retryCount := provider.GlobalRetryCount
