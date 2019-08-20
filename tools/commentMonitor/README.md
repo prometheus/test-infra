@@ -12,6 +12,9 @@ See [`test_event.json`](./test_event.json) for an example of `issue_comment` pay
 - `GITHUB_TOKEN` : GitHub oauth token
 - `ANYTHING_ELSE`: Any other env var passed can be used in the template passed to `COMMENT_TEMPLATE`
 
+## Comment validation
+A regex needs to be provided for validate the regex with the comment in the event payload.
+
 ## Extracting arguments
 The content of the extracted arguments will be written to the filesystem in the `--output` directory with filenames set to `ARG_0`, `ARG_1` and so forth.
 
@@ -22,11 +25,12 @@ For example, the following regex will create a file named `RELEASE` with the con
 (?mi)^/benchmark\s*(?P<RELEASE>master|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
 ```
 
+Don't provide a regex argument to commentMonitor if commentValidation and argument extraction is not desired.
 
 ## Commenting on PR
 A golang template should be passed to the `COMMENT_TEMPLATE` env var.
 
-The template variables can be accessed with `{{ index .VARIABLE_NAME }}`, the template variables have all the args extracted by commentMonitor aswell all the environtment variables.
+The template variables can be accessed with `{{ index .VARIABLE_NAME }}`, the template variables have all the args extracted by commentMonitor aswell all the environment variables.
 
 ## Setting label on PR
 Specify a custom label with `LABEL_NAME`.
