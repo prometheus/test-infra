@@ -12,7 +12,8 @@ See [the github issue events api](https://developer.github.com/v3/issues/events/
 - `GITHUB_TOKEN` : GitHub oauth token used for posting comments and settings the label.
 
 ## Extracting arguments
-A regex pattern is provided as an argument which is than used to parse the comment into separate arguments. Each argument is written to a file. 
+A regex pattern is provided as an argument which is then used to parse the comment into separate arguments. Each argument is written to a file. Additionally, some internal args are automatically set, eg. `PR_NUMBER`.
+
 Using [regex named groups](https://godoc.org/regexp/syntax) is mandatory so that each env file is named after the regex group.
 
 For example, the following regex will create a file named `RELEASE` with the content of the capture group:

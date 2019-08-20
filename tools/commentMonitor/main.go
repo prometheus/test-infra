@@ -141,16 +141,12 @@ func main() {
 
 		// Extract args if regexString provided.
 		if cmClient.regexString != "" {
-			// To have unnamed arguments start at ARG_0 and so forth.
-			unnamedArgCount := 0
-
 			// Add comment arguments.
 			commentArgs := cmClient.regex.FindStringSubmatch(commentBody)[1:]
 			commentArgsNames := cmClient.regex.SubexpNames()[1:]
 			for i, argName := range commentArgsNames {
 				if argName == "" {
-					argName = fmt.Sprintf("ARG_%v", unnamedArgCount)
-					unnamedArgCount++
+					log.Fatalln("using named groups is mandatory")
 				}
 				cmClient.allArgs[argName] = commentArgs[i]
 			}
