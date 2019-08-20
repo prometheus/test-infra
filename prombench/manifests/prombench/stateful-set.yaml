@@ -5,9 +5,9 @@ metadata:
   labels:
     app: prombench-test-{{ .PR_NUMBER }}
   annotations:
-    prometheus.io/prombench.exit_on_error: true
-    prometheus.io/prombench.wait_on_update: true
-    prometheus.io/prombench.retry_count: 60
+    prometheus.io/prombench.exit_on_error: 'true'
+    prometheus.io/prombench.wait_on_update: 'true'
+    prometheus.io/prombench.retry_count: '60'
 spec:
   replicas: 1
   selector:
@@ -78,7 +78,7 @@ spec:
         readinessProbe:
           exec:
             command:
-            - stat -t
+            - cat
             - /tmp/READY
           initialDelaySeconds: 600 # 10 mins
         volumeMounts:
