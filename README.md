@@ -82,17 +82,16 @@ cat $AUTH_FILE | base64 -w 0
 ---
 > Due to the high cost of each test, only maintainers can manage tests.
 
-Starting:
-- `/benchmark` - benchmark PR with the master branch.
-- `/benchmark master` - same as above
-- `/benchmark v2.4.0` - can use any release version
+**Starting:**
+- `/prombench master` - compare PR with the master branch.
+- `/prombench v2.4.0` - compare PR with a release version, from [quay.io/prometheus/prometheus:releaseVersion](https://quay.io/prometheus/prometheus:releaseVersion)
 
-Restarting:
-- Comment `/benchmark` again on the PR. If the hash of the last commit has changed, the test will be restarted.
-- To restart the test with a different Prometheus release version comment `/benchmark <new_rel_version>`
+**Restarting:**
+- Comment `/prombench <same_rel_version>` again on the PR. If the hash of the last commit has changed, the test will be restarted.
+- To restart the test with a different Prometheus release version comment `/prombench <new_rel_version>`
 
-Stopping:
-- Comment `/benchmark cancel`.
+**Stopping:**
+- Comment `/prombench cancel`.
 
 ### Start a benchmarking test manually
 ---
