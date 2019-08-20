@@ -22,7 +22,7 @@ Use [named & numbered capturing group](https://godoc.org/regexp/syntax) if you w
 
 For example, the following regex will create a file named `RELEASE` with the content of the capture group:
 ```
-(?mi)^/benchmark\s*(?P<RELEASE>master|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
+(?mi)^/prombench\s*(?P<RELEASE>master|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
 ```
 
 Don't provide a regex argument to commentMonitor if commentValidation and argument extraction is not desired.
