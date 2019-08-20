@@ -462,6 +462,23 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 		req.Namespace = "default"
 	}
 
+	// set annotations
+	var retryCount int
+
+	retryCount = provider.GlobalRetryCount
+	if count, ok := req.Annotations["prometheus.io/prombench.retry_count"]; ok {
+		intCount, err := strconv.Atoi(count)
+		if err != nil {
+			return fmt.Errorf("%v: format of .retry_count annotation wrong", err)
+		}
+		retryCount = intCount
+	}
+	if exitOnError, ok := req.Annotations["prometheus.io/prombench.exit_on_error"]; ok {
+		if exitOnError == "true" {
+			provider.ExitOnError = true
+		}
+	}
+
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.AppsV1().StatefulSets(req.Namespace)
@@ -486,6 +503,14 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+			if waitOnUpdate, ok := req.Annotations["prometheus.io/prombench.wait_on_update"]; ok {
+				if waitOnUpdate == "true" {
+					return provider.RetryUntilTrue(
+						fmt.Sprintf("applying statefulSet:%v", req.Name),
+						retryCount,
+						func() (bool, error) { return c.statefulSetReady(resource) })
+				}
+			}
 			return nil
 		} else if _, err := client.Create(req); err != nil {
 			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
@@ -495,20 +520,6 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 
-	if exitOnError, ok := req.Annotations["prometheus.io/prombench.exit_on_error"]; ok {
-		if exitOnError == "true" {
-			provider.ExitOnError = true
-		}
-	}
-
-	retryCount := provider.GlobalRetryCount
-	if count, ok := req.Annotations["prometheus.io/prombench.retry_count"]; ok {
-		intCount, err := strconv.Atoi(count)
-		if err != nil {
-			return fmt.Errorf("%v: format of .retry_count annotation wrong", err)
-		}
-		retryCount = intCount
-	}
 	return provider.RetryUntilTrue(
 		fmt.Sprintf("applying statefulSet:%v", req.Name),
 		retryCount,
