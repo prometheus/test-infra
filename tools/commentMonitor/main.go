@@ -39,19 +39,13 @@ type githubClient struct {
 }
 
 type commentMonitorClient struct {
-	ghClient                githubClient
-	commentTemplateVars     map[string]string
-	labelName               string
-	inputFilePath           string
-	outputDirPath           string
-	regexString             string
-	regex                   *regexp.Regexp
-	namedArgs               []string
-	verifyUserDisabled      bool
-	validateCommentDisabled bool
-	extractArgsDisabled     bool
-	postCommentDisabled     bool
-	labelSetDisabled        bool
+	ghClient           githubClient
+	allArgs            map[string]string
+	inputFilePath      string
+	outputDirPath      string
+	regexString        string
+	regex              *regexp.Regexp
+	verifyUserDisabled bool
 }
 
 func main() {
@@ -63,7 +57,6 @@ func main() {
 	Example of comment template environment variable:
 	COMMENT_TEMPLATE="The benchmark is starting. Your Github token is {{ index . "GITHUB_TOKEN" }}."`)
 	app.HelpFlag.Short('h')
-
 	app.Flag("input", "path to event.json").
 		Short('i').
 		Default("/github/workflow/event.json").
@@ -72,27 +65,10 @@ func main() {
 		Short('o').
 		Default("/github/home/commentMonitor").
 		StringVar(&cmClient.outputDirPath)
-	app.Flag("named-arg", "Should be in the format: --named-arg=ARG_NAME:<regex_for_arg>").
-		StringsVar(&cmClient.namedArgs)
-	app.Flag("label-name", "Name of the label to set").
-		Default("prombench").
-		StringVar(&cmClient.labelName)
-
-	// Disable flags.
 	app.Flag("no-verify-user", "disable verifying user").
 		BoolVar(&cmClient.verifyUserDisabled)
-	app.Flag("no-comment-validate", "disable comment validation").
-		BoolVar(&cmClient.validateCommentDisabled)
-	app.Flag("no-args-extract", "disable args extraction").
-		BoolVar(&cmClient.extractArgsDisabled)
-	app.Flag("no-post-comment", "disable comment posting").
-		BoolVar(&cmClient.postCommentDisabled)
-	app.Flag("no-label-set", "disable setting label").
-		BoolVar(&cmClient.labelSetDisabled)
-
 	app.Arg("regex", "Regex pattern to match").
 		StringVar(&cmClient.regexString)
-
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	// Reading event.json.
@@ -132,14 +108,10 @@ func main() {
 		// Setup commentMonitorClient.
 		ctx := context.Background()
 		cmClient.ghClient = newGithubClient(ctx, owner, repo, prnumber)
-		cmClient.commentTemplateVars = make(map[string]string) // initialization required
+		cmClient.allArgs = make(map[string]string) // initialization required
 
-		// Validate comment.
-		if !cmClient.validateCommentDisabled {
-			if cmClient.regexString == "" {
-				log.Fatalln(`comment validation is enabled but no regex to validate against,
-				please use --no-comment-validate flag to disable comment validation`)
-			}
+		// Validate comment if regexString provided.
+		if cmClient.regexString != "" {
 			cmClient.regex = regexp.MustCompile(cmClient.regexString)
 			if !cmClient.regex.MatchString(commentBody) {
 				log.Fatalf("matching command not found. comment validation failed")
@@ -147,7 +119,7 @@ func main() {
 			log.Println("comment validation successful")
 		}
 
-		// Verify user.
+		// Verify if user is allowed to perform activity.
 		if !cmClient.verifyUserDisabled {
 			var allowed bool
 			allowedAssociations := []string{"COLLABORATOR", "MEMBER", "OWNER"}
@@ -167,36 +139,44 @@ func main() {
 			log.Println("author is a member or collaborator")
 		}
 
-		// Extract args, write them to fs, put them in commentTemplateVars.
-		if !cmClient.extractArgsDisabled {
-			if cmClient.validateCommentDisabled {
-				log.Fatalln(`comment validation must be enabled to use args extraction,
-				please use --no-args-extract flag to disable extracting arguments`)
+		// Extract args if regexString provided.
+		if cmClient.regexString != "" {
+			// To have unnamed arguments start at ARG_0 and so forth.
+			unnamedArgCount := 0
+
+			// Add comment arguments.
+			commentArgs := cmClient.regex.FindStringSubmatch(commentBody)[1:]
+			commentArgsNames := cmClient.regex.SubexpNames()[1:]
+			for i, argName := range commentArgsNames {
+				if argName == "" {
+					argName = fmt.Sprintf("ARG_%v", unnamedArgCount)
+					unnamedArgCount++
+				}
+				cmClient.allArgs[argName] = commentArgs[i]
 			}
-			args := cmClient.regex.FindStringSubmatch(commentBody)
-			args = append(args, strconv.Itoa(prnumber))
-			err := cmClient.extractArgs(args)
+
+			// Add non-comment arguments if any.
+			cmClient.allArgs["PR_NUMBER"] = strconv.Itoa(prnumber)
+
+			// write arguments to fs
+			err := cmClient.writeArgs()
 			if err != nil {
-				log.Fatalf("%v: could not extract args", err)
+				log.Fatalf("%v: could not write args to fs", err)
 			}
 		}
 
-		// Post generated comment to Github pr.
-		if !cmClient.postCommentDisabled {
-			if os.Getenv("COMMENT_TEMPLATE") == "" {
-				log.Fatalln(`COMMENT_TEMPLATE env var empty,
-				please use --no-post-comment flag to disable commenting`)
-			}
-			// Add all env vars to commentTemplateVars.
+		// Post generated comment to Github pr if COMMENT_TEMPLATE is set.
+		if os.Getenv("COMMENT_TEMPLATE") != "" {
+			// Add all env vars to allArgs.
 			for _, e := range os.Environ() {
 				tmp := strings.Split(e, "=")
-				cmClient.commentTemplateVars[tmp[0]] = tmp[1]
+				cmClient.allArgs[tmp[0]] = tmp[1]
 			}
 			// Generate the comment template.
 			var buf bytes.Buffer
 			commentTemplate := template.Must(template.New("Comment").
 				Parse(os.Getenv("COMMENT_TEMPLATE")))
-			if err := commentTemplate.Execute(&buf, cmClient.commentTemplateVars); err != nil {
+			if err := commentTemplate.Execute(&buf, cmClient.allArgs); err != nil {
 				log.Fatalln(err)
 			}
 			// Post the comment.
@@ -206,13 +186,9 @@ func main() {
 			log.Println("comment successfully posted")
 		}
 
-		// Set label to Github pr.
-		if !cmClient.labelSetDisabled {
-			if cmClient.labelName == "" {
-				log.Fatalln(`--label-name must set when setting a label,
-				please use --no-label-set flag to disable setting label`)
-			}
-			if err := cmClient.ghClient.createLabel(ctx, cmClient.labelName); err != nil {
+		// Set label to Github pr if LABEL_NAME is set.
+		if os.Getenv("LABEL_NAME") != "" {
+			if err := cmClient.ghClient.createLabel(ctx, os.Getenv("LABEL_NAME")); err != nil {
 				log.Fatalf("%v : couldn't set label", err)
 			}
 			log.Println("label successfully set")
@@ -223,42 +199,15 @@ func main() {
 	}
 }
 
-func (c commentMonitorClient) extractArgs(args []string) error {
-	namedArgsMap := make(map[string]regexp.Regexp)
-	for _, arg := range c.namedArgs {
-		re := regexp.MustCompile(`^\w+:.+$`)
-		if !re.MatchString(arg) {
-			return fmt.Errorf("named arg should be of the format: --named-arg=ARG_NAME:<regex_for_arg>")
-		}
-		namedArg := strings.Split(arg, ":")
-		namedArgRegex := regexp.MustCompile(namedArg[1])
-		namedArgsMap[namedArg[0]] = *namedArgRegex
-	}
-
-	for i, arg := range args[1:] {
-		var filename string
-		for name, re := range namedArgsMap {
-			if re.MatchString(arg) {
-				filename = name
-			}
-		}
-
-		if filename == "" {
-			filename = fmt.Sprintf("ARG_%v", i)
-		}
-
-		data := []byte(arg)
+func (c commentMonitorClient) writeArgs() error {
+	for filename, content := range c.allArgs {
+		data := []byte(content)
 		err := ioutil.WriteFile(filepath.Join(c.outputDirPath, filename), data, 0644)
 		if err != nil {
 			return fmt.Errorf("%v: could not write arg to filesystem", err)
 		}
-
-		// Add argument to commentTemplateVars
-		c.commentTemplateVars[filename] = arg
-
 		log.Printf("file added: %v", filepath.Join(c.outputDirPath, filename))
 	}
-
 	return nil
 }
 
