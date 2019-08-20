@@ -1,4 +1,5 @@
-FROM golang:alpine AS builder
+# NOTE: building this requires it to have the build context of the repository root
+FROM golang:1.12-alpine AS builder
 
 RUN apk update && apk add --no-cache git \
     ca-certificates
@@ -6,7 +7,7 @@ RUN apk update && apk add --no-cache git \
 ENV GO111MODULE=on
 
 WORKDIR /app
-COPY main.go .
+COPY tools/commentMonitor/main.go .
 
 COPY go.mod .
 COPY go.sum .
