@@ -32,10 +32,10 @@ import (
 )
 
 type githubClient struct {
-	clt      *github.Client
-	owner    string
-	repo     string
-	prnumber int
+	clt   *github.Client
+	owner string
+	repo  string
+	pr    int
 }
 
 type commentMonitorClient struct {
@@ -50,12 +50,14 @@ type commentMonitorClient struct {
 
 func main() {
 	log.SetFlags(log.Ltime | log.Lshortfile)
-	cmClient := commentMonitorClient{}
+	cmClient := commentMonitorClient{
+		allArgs: make(map[string]string),
+	}
 
 	app := kingpin.New(filepath.Base(os.Args[0]), `commentMonitor github comment extract
 	./commentMonitor -i /path/event.json -o /path "^myregex$"
 	Example of comment template environment variable:
-	COMMENT_TEMPLATE="The benchmark is starting. Your Github token is {{ index . "GITHUB_TOKEN" }}."`)
+	COMMENT_TEMPLATE="The benchmark is starting. Your Github token is {{ index . "SOME_VAR" }}."`)
 	app.HelpFlag.Short('h')
 	app.Flag("input", "path to event.json").
 		Short('i').
@@ -71,7 +73,6 @@ func main() {
 		StringVar(&cmClient.regexString)
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	// Reading event.json.
 	err := os.MkdirAll(cmClient.outputDirPath, os.ModePerm)
 	if err != nil {
 		log.Fatalln(err)
@@ -100,15 +101,14 @@ func main() {
 
 		owner := *e.GetRepo().Owner.Login
 		repo := *e.GetRepo().Name
-		prnumber := *e.GetIssue().Number
+		pr := *e.GetIssue().Number
 		author := *e.Sender.Login
 		authorAssociation := *e.GetComment().AuthorAssociation
 		commentBody := *e.GetComment().Body
 
 		// Setup commentMonitorClient.
 		ctx := context.Background()
-		cmClient.ghClient = newGithubClient(ctx, owner, repo, prnumber)
-		cmClient.allArgs = make(map[string]string) // initialization required
+		cmClient.ghClient = newGithubClient(ctx, owner, repo, pr)
 
 		// Validate comment if regexString provided.
 		if cmClient.regexString != "" {
@@ -156,9 +156,8 @@ func main() {
 			}
 
 			// Add non-comment arguments if any.
-			cmClient.allArgs["PR_NUMBER"] = strconv.Itoa(prnumber)
+			cmClient.allArgs["PR_NUMBER"] = strconv.Itoa(pr)
 
-			// write arguments to fs
 			err := cmClient.writeArgs()
 			if err != nil {
 				log.Fatalf("%v: could not write args to fs", err)
@@ -167,23 +166,10 @@ func main() {
 
 		// Post generated comment to Github pr if COMMENT_TEMPLATE is set.
 		if os.Getenv("COMMENT_TEMPLATE") != "" {
-			// Add all env vars to allArgs.
-			for _, e := range os.Environ() {
-				tmp := strings.Split(e, "=")
-				cmClient.allArgs[tmp[0]] = tmp[1]
+			err := cmClient.generateAndPostComment(ctx)
+			if err != nil {
+				log.Fatalf("%v: could not post comment", err)
 			}
-			// Generate the comment template.
-			var buf bytes.Buffer
-			commentTemplate := template.Must(template.New("Comment").
-				Parse(os.Getenv("COMMENT_TEMPLATE")))
-			if err := commentTemplate.Execute(&buf, cmClient.allArgs); err != nil {
-				log.Fatalln(err)
-			}
-			// Post the comment.
-			if err := cmClient.ghClient.postComment(ctx, buf.String()); err != nil {
-				log.Fatalf("%v : couldn't post generated comment", err)
-			}
-			log.Println("comment successfully posted")
 		}
 
 		// Set label to Github pr if LABEL_NAME is set.
@@ -195,7 +181,7 @@ func main() {
 		}
 
 	default:
-		log.Fatalln("commentMonitor only supports issue_comment event")
+		log.Fatalln("only issue_comment event is supported")
 	}
 }
 
@@ -211,27 +197,48 @@ func (c commentMonitorClient) writeArgs() error {
 	return nil
 }
 
+func (c commentMonitorClient) generateAndPostComment(ctx context.Context) error {
+	// Add all env vars to allArgs.
+	for _, e := range os.Environ() {
+		tmp := strings.Split(e, "=")
+		c.allArgs[tmp[0]] = tmp[1]
+	}
+	// Generate the comment template.
+	var buf bytes.Buffer
+	commentTemplate := template.Must(template.New("Comment").
+		Parse(os.Getenv("COMMENT_TEMPLATE")))
+	if err := commentTemplate.Execute(&buf, c.allArgs); err != nil {
+		return err
+	}
+	// Post the comment.
+	if err := c.ghClient.postComment(ctx, buf.String()); err != nil {
+		return fmt.Errorf("%v : couldn't post generated comment", err)
+	}
+	log.Println("comment successfully posted")
+	return nil
+}
+
 // githubClient Methods
-func newGithubClient(ctx context.Context, owner, repo string, prnumber int) githubClient {
+func newGithubClient(ctx context.Context, owner, repo string, pr int) githubClient {
 	ghToken := os.Getenv("GITHUB_TOKEN")
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: ghToken})
 	tc := oauth2.NewClient(ctx, ts)
 	return githubClient{
-		clt:      github.NewClient(tc),
-		owner:    owner,
-		repo:     repo,
-		prnumber: prnumber,
+		clt:   github.NewClient(tc),
+		owner: owner,
+		repo:  repo,
+		pr:    pr,
 	}
 }
 
 func (c githubClient) postComment(ctx context.Context, commentBody string) error {
 	issueComment := &github.IssueComment{Body: github.String(commentBody)}
-	_, _, err := c.clt.Issues.CreateComment(ctx, c.owner, c.repo, c.prnumber, issueComment)
+	_, _, err := c.clt.Issues.CreateComment(ctx, c.owner, c.repo, c.pr, issueComment)
 	return err
 }
 
 func (c githubClient) createLabel(ctx context.Context, labelName string) error {
 	benchmarkLabel := []string{labelName}
-	_, _, err := c.clt.Issues.AddLabelsToIssue(ctx, c.owner, c.repo, c.prnumber, benchmarkLabel)
+	_, _, err := c.clt.Issues.AddLabelsToIssue(ctx, c.owner, c.repo, c.pr, benchmarkLabel)
 	return err
 }
