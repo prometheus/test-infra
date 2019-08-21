@@ -464,6 +464,7 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 
 	// set annotations
 	retryCount := provider.GlobalRetryCount
+	waitOnUpdate := false
 	if count, ok := req.Annotations["prometheus.io/prombench.retry_count"]; ok {
 		intCount, err := strconv.Atoi(count)
 		if err != nil {
@@ -471,9 +472,14 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 		}
 		retryCount = intCount
 	}
-	if exitOnError, ok := req.Annotations["prometheus.io/prombench.exit_on_error"]; ok {
-		if exitOnError == "true" {
+	if e, ok := req.Annotations["prometheus.io/prombench.exit_on_error"]; ok {
+		if e == "true" {
 			provider.ExitOnError = true
+		}
+	}
+	if w, ok := req.Annotations["prometheus.io/prombench.wait_on_update"]; ok {
+		if w == "true" {
+			waitOnUpdate = true
 		}
 	}
 
@@ -501,13 +507,11 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
-			if waitOnUpdate, ok := req.Annotations["prometheus.io/prombench.wait_on_update"]; ok {
-				if waitOnUpdate == "true" {
-					return provider.RetryUntilTrue(
-						fmt.Sprintf("applying statefulSet:%v", req.Name),
-						retryCount,
-						func() (bool, error) { return c.statefulSetReady(resource) })
-				}
+			if waitOnUpdate {
+				return provider.RetryUntilTrue(
+					fmt.Sprintf("applying statefulSet:%v", req.Name),
+					retryCount,
+					func() (bool, error) { return c.statefulSetReady(resource) })
 			}
 			return nil
 		} else if _, err := client.Create(req); err != nil {
