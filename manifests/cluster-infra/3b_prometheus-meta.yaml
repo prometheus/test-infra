@@ -28,7 +28,7 @@ data:
         annotations:
           description: >
             Benchmark tests are running for {{"{{"}} $value {{"}}"}} days!
-            If this is intended ignore this message otherwise you can cancel it by commenting: `/benchmark cancel`
+            If this is intended ignore this message otherwise you can cancel it by commenting: `/prombench cancel`
 ---
 apiVersion: v1
 kind: ConfigMap
