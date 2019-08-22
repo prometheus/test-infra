@@ -13,5 +13,3 @@ COPY prombench /usr/bin/prombench
 COPY cmd/prombench/clone.sh /usr/bin/clone.sh
 
 ENTRYPOINT ["/usr/bin/clone.sh"]
-
-WORKDIR $PROMBENCH_DIR
