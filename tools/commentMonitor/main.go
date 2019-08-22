@@ -83,11 +83,14 @@ func main() {
 	}
 
 	// Temporary fix for the new Github actions time format. This makes the time stamps unusable.
-	txt := string(data)
 	reg := regexp.MustCompile("(.*)\"[0-9]+/[0-9]+/2019 [0-9]+:[0-9]+:[0-9]+ [AP]M(.*)")
-	txt = reg.ReplaceAllString(txt, "$1\"2019-06-11T09:26:28Z$2")
-	data = []byte(txt)
-	log.Println("temp fix active")
+	m := reg.FindSubmatch(data)
+	if m != nil {
+		txt := string(data)
+		txt = reg.ReplaceAllString(txt, "$1\"2019-06-11T09:26:28Z$2")
+		data = []byte(txt)
+		log.Println("temp fix active")
+	}
 	// End of the temporary fix
 
 	// Parsing event.json.
