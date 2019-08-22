@@ -1,18 +1,15 @@
 # NOTE: building this requires it to have the build context of the repository root
-
-FROM debian:sid
+FROM golang:1.12-alpine
 LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com>"
 
-RUN \
-    apt-get update && apt-get install -y --no-install-recommends \
-        apt-utils \
-        build-essential \
-        ca-certificates \
-        make \
-	&& rm -rf /var/lib/apt/lists/*
+RUN apk add --update make git
 
-COPY prombench /prombench/prombench
-COPY Makefile /prombench/Makefile
-COPY manifests/prombench /prombench/manifests/prombench
+ENV PROMBENCH_DIR /prombench
+ENV PROMBENCH_REPO https://github.com/prometheus/prombench.git
 
-WORKDIR /prombench
+COPY prombench /usr/bin/prombench
+COPY cmd/prombench/clone.sh /usr/bin/clone.sh
+
+ENTRYPOINT ["/usr/bin/clone.sh"]
+
+WORKDIR $PROMBENCH_DIR

@@ -1,3 +1,16 @@
+// Copyright 2019 The Prometheus Authors
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package gke
 
 import (
@@ -51,7 +64,7 @@ type GKE struct {
 	k8sProvider *k8sProvider.K8s
 	// DeploymentFiles files provided from the cli.
 	DeploymentFiles []string
-	// Vaiables to subtitude in the DeploymentFiles.
+	// Variables to substitute in the DeploymentFiles.
 	// These are also used when the command requires some variables that are not provided by the deployment file.
 	DeploymentVars map[string]string
 	// Content bytes after parsing the template variables, grouped by filename.
@@ -67,7 +80,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	// Set the auth env variable needed to the gke client.
 	if c.Auth != "" {
 	} else if c.Auth = os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"); c.Auth == "" {
-		log.Fatal("no auth provided! Need to either set the auth flag or the GOOGLE_APPLICATION_CREDENTIALS env variable")
+		return errors.Errorf("no auth provided! Need to either set the auth flag or the GOOGLE_APPLICATION_CREDENTIALS env variable")
 	}
 
 	// When the auth variable points to a file
@@ -76,7 +89,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 		c.Auth = string(content)
 	}
 
-	// Check is auth data is base64 encoded and decode.
+	// Check if auth data is base64 encoded and decode it.
 	encoded, err := regexp.MatchString("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$", c.Auth)
 	if err != nil {
 		return err
@@ -84,16 +97,30 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	if encoded {
 		auth, err := base64.StdEncoding.DecodeString(c.Auth)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "could not decode auth data")
 		}
 		c.Auth = string(auth)
 	}
+
+	// Create temporary file to store the credentials.
+	saFile, err := ioutil.TempFile("", "service-account")
+	if err != nil {
+		return errors.Wrap(err, "could not create temp file")
+	}
+	defer saFile.Close()
+	if _, err := saFile.Write([]byte(c.Auth)); err != nil {
+		return errors.Wrap(err, "could not write to temp file")
+	}
+	// Set the auth env variable needed to the k8s client.
+	// The client looks for this special variable name and it is the only way to set the auth for now.
+	// TODO: Remove when the client supports an auth config option in NewDefaultClientConfig.
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", saFile.Name())
 
 	opts := option.WithCredentialsJSON([]byte(c.Auth))
 
 	cl, err := gke.NewClusterManagerClient(context.Background(), opts)
 	if err != nil {
-		log.Fatalf("Could not create the client: %v", err)
+		return errors.Wrap(err, "could not create the gke client")
 	}
 	c.clientGKE = cl
 	c.ctx = context.Background()
@@ -394,7 +421,7 @@ func (c *GKE) nodePoolDeleted(req *containerpb.DeleteNodePoolRequest) (bool, err
 	return false, nil
 }
 
-// nodePoolRunning checks whether a nodepool has been created.
+// nodePoolRunning checks whether a nodepool has been created and is running.
 func (c *GKE) nodePoolRunning(zone, projectID, clusterID, poolName string) (bool, error) {
 	req := &containerpb.GetNodePoolRequest{
 		ProjectId:  projectID,
@@ -424,6 +451,52 @@ func (c *GKE) nodePoolRunning(zone, projectID, clusterID, poolName string) (bool
 
 	log.Printf("Current cluster node pool '%v' status:%v , %v", rep.Name, rep.Status, rep.StatusMessage)
 	return false, nil
+}
+
+// AllNodepoolsRunning returns an error if at least one node pool is not running.
+func (c *GKE) AllNodepoolsRunning(*kingpin.ParseContext) error {
+	reqC := &containerpb.CreateClusterRequest{}
+
+	for _, deployment := range c.gkeResources {
+		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
+			return errors.Errorf("error parsing the cluster deployment file %s:%v", deployment.FileName, err)
+		}
+
+		for _, node := range reqC.Cluster.NodePools {
+			isRunning, err := c.nodePoolRunning(reqC.Zone, reqC.ProjectId, reqC.Cluster.Name, node.Name)
+			if err != nil {
+				return errors.New("error fetching nodePool info")
+			}
+			if !isRunning {
+				return errors.Errorf("nodepool not running name: %v", node.Name)
+			}
+		}
+	}
+
+	return nil
+}
+
+// AllNodepoolsDeleted returns an error if at least one nodepool is not deleted.
+func (c *GKE) AllNodepoolsDeleted(*kingpin.ParseContext) error {
+	reqC := &containerpb.CreateClusterRequest{}
+
+	for _, deployment := range c.gkeResources {
+		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
+			return errors.Errorf("error parsing the cluster deployment file %s:%v", deployment.FileName, err)
+		}
+
+		for _, node := range reqC.Cluster.NodePools {
+			isRunning, err := c.nodePoolRunning(reqC.Zone, reqC.ProjectId, reqC.Cluster.Name, node.Name)
+			if err != nil {
+				return errors.New("error fetching nodePool info")
+			}
+			if isRunning {
+				return errors.Errorf("nodepool running name: %v", node.Name)
+			}
+		}
+	}
+
+	return nil
 }
 
 // NewK8sProvider sets the k8s provider used for deploying k8s manifests.

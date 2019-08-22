@@ -40,6 +40,10 @@ spec:
           value: "{{ .PR_NUMBER }}"
         - name: VOLUME_DIR
           value: "/prometheus-builder" # same as mountPath
+        - name: GITHUB_ORG
+          value: "{{ .GITHUB_ORG }}"
+        - name: GITHUB_REPO
+          value: "{{ .GITHUB_REPO }}"
         volumeMounts:
         - name: prometheus-executable
           mountPath: /prometheus-builder

@@ -2,23 +2,26 @@
 
 ![Prombench Design](design.svg)
 
-It runs with [Prow CI](https://github.com/kubernetes/test-infra/blob/master/prow/) on a [Google Kubernetes Engine Cluster](https://cloud.google.com/kubernetes-engine/).
+It runs with [Github Actions](https://github.com/features/actions) on a [Google Kubernetes Engine Cluster](https://cloud.google.com/kubernetes-engine/).
 It is designed to support adding more k8s providers.
 
 ## Overview of the manifest files
 The `/manifest` directory contains all the kubernetes manifest files.
-- `cluster.yaml` : This is used to create the GKE cluster.
-- `cluster-infra/` : These are the persistent cluster infrastructure resources.
-- `prombench/` : These resources are created and destoryed for each prombench test.
-- `prow/` : Resources for deploying [prow](https://github.com/kubernetes/test-infra/tree/master/prow/), which is used to trigger tests from GitHub comments.
+- `cluster.yaml` : This is used to create the Main Node.
+- `cluster-infra/` : These are the persistent components of the Main Node.
+- `prombench/` : These resources are created and destroyed for each prombench test.
 
-## Setting up the test-infra
-### Create a k8s cluster
+## Setup prombench
+1. [Create the main node](#create-the-main-node)
+2. [Deploy monitoring components](#deploy-monitoring-components)
+3. [Setup GitHub Actions](#setup-github-actions)
+
+### Create the Main Node
 ---
 - Create a new project on Google Cloud.
 - Create a [Service Account](https://cloud.google.com/iam/docs/creating-managing-service-accounts) on GKE with role `Kubernetes Engine Service Agent` & `Kubernetes Engine Admin`. If using gcloud cli add the [`roles/container.admin`](https://cloud.google.com/kubernetes-engine/docs/how-to/iam#kubernetes-engine-roles) and [`roles/iam.serviceAccountUser`](https://cloud.google.com/kubernetes-engine/docs/how-to/iam#service_account_user) roles to the GCP serviceAccount and download the json file.
 
-- Set the following environment variables & deploy cluster.
+- Set the following environment variables and deploy the cluster.
 ```
 export PROJECT_ID=<google-cloud project-id>
 export CLUSTER_NAME=prombench
@@ -29,67 +32,67 @@ export AUTH_FILE=<path to service-account.json>
     -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -f manifests/cluster.yaml
 ```
 
-### Deploy Prometheus-Meta & Grafana
-> This is used for collecting and displaying the test results.
+### Deploy monitoring components
+> Collecting, monitoring and displaying the test results and logs
 
 ---
 
-- Set the following environment variables
+- [Optional] If used with the Github integration generate a GitHub auth token.
+  * Login with the [Prombot account](https://github.com/prombot) and generate a [new auth token](https://github.com/settings/tokens).
+  * With permissions: `public_repo`, `read:org`, `write:discussion`.
 ```
 export GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL=<client-email present in service-account.json>
 export GRAFANA_ADMIN_PASSWORD=password
-export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom domain.
+export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom domain or an empty string when not used with the Github integration.
+export OAUTH_TOKEN=<generated token from github or set to an empty string " ">
+export GITHUB_ORG=prometheus
+export GITHUB_REPO=prometheus
 ```
 
-- Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta & Grafana.
+- Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Loki, Grafana, Alertmanager & Github Notifier.
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID -v ZONE:$ZONE \
     -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
     -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
     -v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:$GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL \
+    -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
+    -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)" \
+    -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
     -f manifests/cluster-infra
 ```
+> Note: Use `-v GKE_AUTH="$(echo $AUTH_FILE | base64 -w 0)"` if you're passing the data directly into `$AUTH_FILE`
 - The output will show the ingress IP which will be used to point the domain name to. Alternatively you can see it from the GKE/Services tab.
 - Set the `A record` for `<DOMAIN_NAME>` to point to `nginx-ingress-controller` IP address.
 - The services will be accessible at:
   * Grafana :: `http://<DOMAIN_NAME>/grafana`
   * Prometheus ::  `http://<DOMAIN_NAME>/prometheus-meta`
+  * Logs :: `http://<DOMAIN_NAME>/grafana/explore`
 
-### Deploy Prow
-> This is used to monitor GitHub comments and starts new tests.
+### Setup GitHub Actions
+Place a workflow file in the `.github` directory of the repository.
+See the [prometheus/prometheus](https://github.com/prometheus/prometheus) repository for an example.
 
----
-
-- Follow [Setting GitHub API and webhook](#setting-up-github-api-and-webhook-to-trigger-tests-from-comments)
-
-- Add all required tokens as k8s secrets.
-  * hmac is used when verifying requests from GitHub.
-  * oauth is used when sending requests to the GitHub api.
-  * gke auth is used when scaling up and down the cluster.
+Create a github action `AUTH_FILE` secret with the base64 encoded content of the `service-account.json` file.
 ```
-./prombench gke resource apply -a $AUTH_FILE -v ZONE:$ZONE \
-    -v CLUSTER_NAME:$CLUSTER_NAME -v PROJECT_ID:$PROJECT_ID \
-    -v HMAC_TOKEN="$(printf $HMAC_TOKEN | base64 -w 0)" \
-    -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
-    -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)" \
-    -f manifests/prow/secrets.yaml
+cat $AUTH_FILE | base64 -w 0
 ```
-
-- Deploy all internal prow components
-
-```
-export GITHUB_ORG=prometheus
-export GITHUB_REPO=prometheus
-
-./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
-    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
-    -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
-    -f manifests/prow/components
-```
-
-* Prow dashboard will be accessible at :: `http://<DOMAIN_NAME>`
 
 ## Usage
+### Trigger tests via a Github comment.
+---
+> Due to the high cost of each test, only maintainers can manage tests.
+
+**Starting:**
+- `/prombench master` - compare PR with the master branch.
+- `/prombench v2.4.0` - compare PR with a release version, from [quay.io/prometheus/prometheus:releaseVersion](https://quay.io/prometheus/prometheus:releaseVersion)
+
+**Restarting:**
+- Comment `/prombench <same_rel_version>` again on the PR. If the hash of the last commit has changed, the test will be restarted.
+- To restart the test with a different Prometheus release version comment `/prombench <new_rel_version>`
+
+**Stopping:**
+- Comment `/prombench cancel`.
+
 ### Start a benchmarking test manually
 ---
 
@@ -111,41 +114,12 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 ./prombench gke resource apply -a $AUTH_FILE \
     -v ZONE:$ZONE -v PROJECT_ID:$PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
     -v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v DOMAIN_NAME:$DOMAIN_NAME \
+    -v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
     -f manifests/prombench/benchmark
 ```
 
-### Setting up GitHub API and webhook to trigger tests from comments.
----
-
-- Generate a GitHub auth token that will be used to authenticate when sending requests to the GitHub api.
-  * Login with the [Prombot account](https://github.com/prombot) and generate a [new auth token](https://github.com/settings/tokens).  
-  permissions:*public_repo, read:org, write:discussion*.
-
-- Set the following environment variables
-```
-export HMAC_TOKEN=$(openssl rand -hex 20)
-export OAUTH_TOKEN=***Replace with the generated token from github***
-```
-
-- Add a [github webhook](https://github.com/prometheus/prometheus/settings/hooks) where to send the events.
-  * Content Type: `json`
-  * Send:  `Issue comments,Pull requests`
-  * Secret: `echo $HMAC_TOKEN`
-  * Payload URL: `http://<DOMAIN_NAME>/hook`
-
-
-### Trigger tests via a Github comment.
----
-
-A Prometheus maintainer can comment as follows to benchmark a PR:
-- `/benchmark` (benchmark PR with the master branch.)
-- `/benchmark master`
-- `/benchmark 2.4.0` (Any release version can be added here. Don't prepend `v` to the release version here. The benchmark plugin in Prow will prepend it.)
-
-To cancel benchmarking, a mantainer should comment `/benchmark cancel`.
-
 ## Buliding from source
-To build Prombench and related tools from source you need to have a working Go environment with version 1.12 or greater installed. Prombench uses promu for building the binaries.
+To build Prombench and related tools from source you need to have a working Go environment with go modules enabled. Prombench uses [promu](https://github.com/prometheus/promu) to build the binaries.
 ```
 make build
 ```

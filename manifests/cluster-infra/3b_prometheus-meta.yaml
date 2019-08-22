@@ -12,11 +12,59 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  name: alert-rules
+data:
+  prombench.rules.yml: |
+    groups:
+    - name: gke-related
+      rules:
+      - alert: benchmarkTestsRunning
+        expr: floor((time() - kube_namespace_created{namespace=~"prombench-[0-9]+"})/(60*60*24)) >= 3
+        labels:
+          severity: info
+          prNum: '{{"{{"}} $labels.prNum {{"}}"}}'
+          org: {{ .GITHUB_ORG }}
+          repo: {{ .GITHUB_REPO }}
+        annotations:
+          description: >
+            Benchmark tests are running for {{"{{"}} $value {{"}}"}} days!
+            If this is intended ignore this message otherwise you can cancel it by commenting: `/prombench cancel`
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
   name: prometheus-meta
 data:
   prometheus.yaml: |
     global:
       scrape_interval: 5s
+
+    rule_files:
+    - /etc/prometheus/alerts/*.yml
+
+    alerting:
+      alertmanagers:
+      - kubernetes_sd_configs:
+          - role: pod
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_namespace]
+          regex: default
+          action: keep
+        - source_labels: [__meta_kubernetes_pod_label_app]
+          regex: alertmanager
+          action: keep
+        - source_labels: [__meta_kubernetes_pod_label_app]
+          regex: alertmanager
+          action: replace
+          target_label: __alerts_path__
+          replacement: '/alertmanager/api/v2/alerts'
+        - source_labels: [__meta_kubernetes_pod_container_port_number]
+          regex:
+          action: drop
+
     scrape_configs:
 
     - job_name: kubelet
@@ -38,6 +86,28 @@ data:
         regex: (.+)
         target_label: __metrics_path__
         replacement: /api/v1/nodes/${1}/proxy/metrics
+
+    - job_name: kube-state-metrics
+      honor_timestamps: true
+      scheme: http
+      kubernetes_sd_configs:
+      - role: service
+      relabel_configs:
+      - separator: ;
+        regex: __meta_kubernetes_service_label_(.+)
+        replacement: $1
+        action: labelmap
+      - source_labels: [__meta_kubernetes_service_label_k8s_app]
+        separator: ;
+        regex: kube-state-metrics
+        replacement: $1
+        action: keep
+      metric_relabel_configs:
+      - action: replace
+        source_labels: [__name__, namespace]
+        regex: kube_namespace_created;prombench-(\d+)
+        target_label: prNum
+        replacement: $1
 
     - job_name: cadvisor
       scheme: https
@@ -71,7 +141,7 @@ data:
       relabel_configs:
       - action: keep
         source_labels: [__meta_kubernetes_service_label_app]
-        regex: prometheus|prometheus-meta|node-exporter|loadgen-querier
+        regex: prometheus|prometheus-meta|alertmanager|node-exporter|loadgen-querier
       - action: replace
         source_labels: [__meta_kubernetes_service_label_app]
         target_label: job
@@ -102,6 +172,11 @@ data:
         regex: default;meta
         target_label: __metrics_path__
         replacement: /prometheus-meta/metrics
+      - action: replace
+        source_labels: [__meta_kubernetes_namespace,__meta_kubernetes_service_label_app]
+        regex: default;alertmanager
+        target_label: __metrics_path__
+        replacement: /alertmanager/metrics
 
 ---
 apiVersion: apps/v1
@@ -137,8 +212,11 @@ spec:
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus/config
-        - name: data
+        - name: alert-rules
+          mountPath: /etc/prometheus/alerts
+        - name: storage
           mountPath: /data
+          subPath: prometheus-data
         ports:
         - name: prom-web
           containerPort: 9090
@@ -146,7 +224,10 @@ spec:
       - name: config-volume
         configMap:
           name: prometheus-meta
-      - name: data
+      - name: alert-rules
+        configMap:
+          name: alert-rules
+      - name: storage
         persistentVolumeClaim:
           claimName: prometheus-meta
       terminationGracePeriodSeconds: 300
