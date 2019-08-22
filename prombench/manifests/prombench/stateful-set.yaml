@@ -81,6 +81,9 @@ spec:
             - cat
             - /tmp/READY
           initialDelaySeconds: 300 # 5 mins
+          # Period and Threshold combined should be less than pkg/provider/globalRetryTime
+          periodSeconds: 5
+          failureThreshold: 1
         volumeMounts:
         - name: serviceaccount
           mountPath: /etc/serviceaccount/
