@@ -90,6 +90,10 @@ func main() {
 		txt = reg.ReplaceAllString(txt, "$1\"2019-06-11T09:26:28Z$2")
 		data = []byte(txt)
 		log.Println("temp fix active")
+	} else {
+		log.Println(`WARNING: Github actions outputs correct date format so can
+		remove the workaround fix in the code commentMonitor.
+		https://github.com/google/go-github/issues/1254`)
 	}
 	// End of the temporary fix
 
