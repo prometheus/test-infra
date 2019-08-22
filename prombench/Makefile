@@ -13,7 +13,7 @@ create_test_ss:
 		-v ZONE:${ZONE} -v CLUSTER_NAME:${CLUSTER_NAME} -v DOMAIN_NAME:${DOMAIN_NAME} \
 		-v PR_NUMBER:${PR_NUMBER} -v RELEASE:${RELEASE} -v LAST_COMMIT:${GITHUB_SHA} \
 		-v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
-		-v PROMBENCH_REPO:${PROMBENCH_REPO} \
+		-v TEST_INFRA_REPO:${TEST_INFRA_REPO} \
 		-f manifests/prombench/stateful-set.yaml
 
 delete_test_ss:
@@ -21,7 +21,7 @@ delete_test_ss:
 		-v ZONE:${ZONE} -v CLUSTER_NAME:${CLUSTER_NAME} -v DOMAIN_NAME:${DOMAIN_NAME} \
 		-v PR_NUMBER:${PR_NUMBER} -v RELEASE:${RELEASE} -v LAST_COMMIT:${GITHUB_SHA} \
 		-v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
-		-v PROMBENCH_REPO:${PROMBENCH_REPO} \
+		-v TEST_INFRA_REPO:${TEST_INFRA_REPO} \
 		-f manifests/prombench/stateful-set.yaml
 
 nodepool_create:
