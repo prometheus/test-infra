@@ -465,8 +465,8 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 	// set annotations
 	retryCount := provider.GlobalRetryCount
 	waitOnUpdate := false
-	if count, ok := req.Annotations["prometheus.io/prombench.retry_count"]; ok {
-		intCount, err := strconv.Atoi(count)
+	if c, ok := req.Annotations["prometheus.io/prombench.retry_count"]; ok {
+		intCount, err := strconv.Atoi(c)
 		if err != nil {
 			return fmt.Errorf("%v: format of .retry_count annotation wrong", err)
 		}
