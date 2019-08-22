@@ -8,14 +8,14 @@ build:
     binaries:
         - name: ./prombench/prombench
           path: ./prombench/cmd/prombench
-        - name: ./prombench/scaler
-          path: ./prombench/tools/scaler
-        - name: ./prombench/fake-webserver
-          path: ./prombench/tools/fake-webserver
-        - name: ./prombench/commentMonitor
-          path: ./prombench/tools/commentMonitor
-        - name: ./prombench/amGithubNotifier
-          path: ./prombench/tools/amGithubNotifier
+        - name: scaler
+          path: ./tools/scaler
+        - name: fake-webserver
+          path: ./tools/fake-webserver
+        - name: commentMonitor
+          path: ./tools/commentMonitor
+        - name: amGithubNotifier
+          path: ./tools/amGithubNotifier
     flags: -a -tags netgo
 
 crossbuild:

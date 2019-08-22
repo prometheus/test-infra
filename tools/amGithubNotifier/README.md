@@ -28,7 +28,7 @@ groups:
 ### Example for building the docker image
 From the repository root:
 ```
-$ make docker DOCKERFILE_PATH=prombench/tools/amGithubNotifier/Dockerfile DOCKER_IMAGE_NAME=amgithubnotifier DOCKERBUILD_CONTEXT=prombench/ DOCKER_IMAGE_TAG=0.0.1
+$ make docker DOCKERFILE_PATH=tools/amGithubNotifier/Dockerfile DOCKER_IMAGE_NAME=amgithubnotifier DOCKER_IMAGE_TAG=0.0.1
 ```
 
 #### Usage and examples:
