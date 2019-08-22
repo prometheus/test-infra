@@ -1,5 +1,8 @@
 FROM alpine:3.8
 
-COPY scaler /scaler
+ARG ARCH="amd64"
+ARG OS="linux"
+
+COPY .build/${OS}-${ARCH}/scaler /scaler
 
 ENTRYPOINT ["/scaler"]
