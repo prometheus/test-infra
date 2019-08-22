@@ -117,9 +117,3 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
     -v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
     -f manifests/prombench/benchmark
 ```
-
-## Buliding from source
-To build Prombench and related tools from source you need to have a working Go environment with go modules enabled. Prombench uses [promu](https://github.com/prometheus/promu) to build the binaries.
-```
-make build
-```
