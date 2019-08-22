@@ -510,7 +510,8 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 			if waitOnUpdate {
 				return provider.RetryUntilTrue(
 					fmt.Sprintf("applying statefulSet:%v", req.Name),
-					retryCount,
+					// For preStop hook, double the retry count
+					2*retryCount,
 					func() (bool, error) { return c.statefulSetReady(resource) })
 			}
 			return nil
