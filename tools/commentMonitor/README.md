@@ -7,7 +7,7 @@ comments and set labels on the pr from which the comment was received.
 See [the github issue events api](https://developer.github.com/v3/issues/events/) for some examples.
 
 #### Environment Variables:
-- `COMMENT_TEMPLATE`: If set, will post a comment with the content. It uses the Golang template variables substitutions. If content text includes a variable name `{{ index .envVariable }}` that exists as an env variable it is expanded with the content of the variable.
+- `COMMENT_TEMPLATE`: If set, will post a comment with the content. It uses the Golang template variables substitutions. If content text includes a variable name `{{ index . "SOME_VAR" }}` that exists as an env variable or comment argument it is expanded with the content of the variable.
 - `LABEL_NAME`: If set, will add the label to the PR.
 - `GITHUB_TOKEN` : GitHub oauth token used for posting comments and settings the label.
 
