@@ -2,7 +2,7 @@
 version: 2.1
 
 orbs:
-  prometheus: prometheus/prometheus@0.1.0
+  prometheus: prometheus/prometheus@dev:be2c698
 
 executors:
   # Whenever the Go version is updated here, .travis.yml and .promu.yml
@@ -10,6 +10,22 @@ executors:
   golang:
     docker:
     - image: circleci/golang:1.12
+
+commands:
+  publish_images:
+    parameters:
+      dockerfile_path:
+        type: string
+      container_image_name:
+        type: string
+    steps:
+    - prometheus/publish_images:
+        login_variable: DOCKER_LOGIN
+        organization: prombench
+        password_variable: DOCKER_PASSWORD
+        registry: docker.io
+        dockerfile_path: << parameters.dockerfile_path >>
+        container_image_name: << parameters.container_image_name >>
 
 jobs:
   test:
@@ -24,7 +40,39 @@ jobs:
           # don't limit this to the number of allocated cores, the job is
           # likely to get OOMed and killed.
           GOOPTS: "-p 2"
-
+    - run: git diff --exit-code
+    - prometheus/store_artifact:
+        file: prombench
+    - prometheus/store_artifact:
+        file: scaler
+    - prometheus/store_artifact:
+        file: fake-webserver
+   
+  publish_images:
+    description: |
+      Build and publish prombench image from the master branch.
+    docker:
+    - image: circleci/golang
+    steps:
+    - prometheus/setup_build_environment
+    - publish_images:
+        dockerfile_path: ./cmd/prombench/Dockerfile
+        container_image_name: prombench
+    - publish_images:
+        dockerfile_path: ./tools/amGithubNotifier/Dockerfile
+        container_image_name: amgithubnotifier
+    - publish_images:
+        dockerfile_path: ./tools/commentMonitor/Dockerfile
+        container_image_name: comment-monitor
+    - publish_images:
+        dockerfile_path: ./tools/fake-webserver/Dockerfile
+        container_image_name: fake-webserver
+    - publish_images:
+        dockerfile_path: ./tools/load-generator/Dockerfile
+        container_image_name: load-generator
+    - publish_images:
+        dockerfile_path: ./tools/scaler/Dockerfile
+        container_image_name: scaler
 workflows:
   version: 2
   prombench:
@@ -33,10 +81,16 @@ workflows:
         filters:
           tags:
             only: /.*/
-    - publish_master:
+    - prometheus/build:
+        name: build
+        filters:
+          tags:
+            only: /.*/
+    - publish_images:
         context: org-context
         requires:
         - test
+        - build
         filters:
           branches:
             only: master
