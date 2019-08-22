@@ -26,7 +26,8 @@ The comment parsing is optional and is disabled when no regex is provided.
 ### Docker image build
 From the repository root:
 ```
-$ make docker DOCKERFILE_PATH=tools/commentMonitor/Dockerfile DOCKER_IMAGE_NAME=comment-monitor DOCKER_IMAGE_TAG=0.0.1
+$ make docker DOCKERFILE_PATH=tools/commentMonitor/Dockerfile DOCKER_IMAGE_NAME=comment-monitor 
+DOCKERBUILD_CONTEXT=prombench/ DOCKER_IMAGE_TAG=0.0.1
 ```
 
 #### Usage and examples:
