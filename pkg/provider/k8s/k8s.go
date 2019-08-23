@@ -184,10 +184,7 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 				err = fmt.Errorf("creating request for unimplimented resource type:%v", kind)
 			}
 			if err != nil {
-				log.Printf("error applying '%v' err:%v \n", deployment.FileName, err)
-				if provider.ExitOnError {
-					return err
-				}
+				return fmt.Errorf("error applying '%v' err:%v", deployment.FileName, err)
 			}
 		}
 	}
@@ -236,7 +233,7 @@ func (c *K8s) ResourceDelete(deployments []Resource) error {
 				err = fmt.Errorf("deleting request for unimplimented resource type:%v", kind)
 			}
 			if err != nil {
-				log.Printf("error deleting '%v' err:%v \n", deployment.FileName, err)
+				return fmt.Errorf("error deleting '%v' err:%v", deployment.FileName, err)
 			}
 		}
 	}
@@ -462,25 +459,14 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 		req.Namespace = "default"
 	}
 
-	// set annotations
+	// use annotations
 	retryCount := provider.GlobalRetryCount
-	waitOnUpdate := false
 	if c, ok := req.Annotations["prometheus.io/prombench.retry_count"]; ok {
 		intCount, err := strconv.Atoi(c)
 		if err != nil {
 			return fmt.Errorf("%v: format of .retry_count annotation wrong", err)
 		}
 		retryCount = intCount
-	}
-	if e, ok := req.Annotations["prometheus.io/prombench.exit_on_error"]; ok {
-		if e == "true" {
-			provider.ExitOnError = true
-		}
-	}
-	if w, ok := req.Annotations["prometheus.io/prombench.wait_on_update"]; ok {
-		if w == "true" {
-			waitOnUpdate = true
-		}
 	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
@@ -507,14 +493,11 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
-			if waitOnUpdate {
-				return provider.RetryUntilTrue(
-					fmt.Sprintf("applying statefulSet:%v", req.Name),
-					// For preStop hook, double the retry count
-					2*retryCount,
-					func() (bool, error) { return c.statefulSetReady(resource) })
-			}
-			return nil
+			return provider.RetryUntilTrue(
+				fmt.Sprintf("applying statefulSet:%v", req.Name),
+				// For preStop hook, double the retry count
+				2*retryCount,
+				func() (bool, error) { return c.statefulSetReady(resource) })
 		} else if _, err := client.Create(req); err != nil {
 			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
