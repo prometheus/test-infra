@@ -17,7 +17,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -438,11 +437,12 @@ func (c *K8s) deploymentApply(resource runtime.Object) error {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
-			return nil
-		} else if _, err := client.Create(req); err != nil {
-			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
+		} else {
+			if _, err := client.Create(req); err != nil {
+				return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
+			}
+			log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 		}
-		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
@@ -457,16 +457,6 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	if len(req.Namespace) == 0 {
 		req.Namespace = "default"
-	}
-
-	// use annotations
-	retryCount := provider.GlobalRetryCount
-	if c, ok := req.Annotations["prometheus.io/prombench.retry_count"]; ok {
-		intCount, err := strconv.Atoi(c)
-		if err != nil {
-			return fmt.Errorf("%v: format of .retry_count annotation wrong", err)
-		}
-		retryCount = intCount
 	}
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
@@ -493,22 +483,19 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
-			return provider.RetryUntilTrue(
-				fmt.Sprintf("applying statefulSet:%v", req.Name),
-				// For preStop hook, double the retry count
-				2*retryCount,
-				func() (bool, error) { return c.statefulSetReady(resource) })
-		} else if _, err := client.Create(req); err != nil {
-			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
+		} else {
+			if _, err := client.Create(req); err != nil {
+				return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
+			}
+			log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 		}
-		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 
 	return provider.RetryUntilTrue(
 		fmt.Sprintf("applying statefulSet:%v", req.Name),
-		retryCount,
+		6*provider.GlobalRetryCount, // StatefulSet used to start test
 		func() (bool, error) { return c.statefulSetReady(resource) })
 }
 

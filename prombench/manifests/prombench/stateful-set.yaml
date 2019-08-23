@@ -4,8 +4,6 @@ metadata:
   name: prombench-test-{{ .PR_NUMBER }}
   labels:
     app: prombench-test-{{ .PR_NUMBER }}
-  annotations:
-    prometheus.io/prombench.retry_count: '90'
 spec:
   replicas: 1
   selector:
