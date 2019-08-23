@@ -35,8 +35,8 @@ spec:
             value: "{{ .CLUSTER_NAME }}"
           - name: PR_NUMBER
             value: "{{ .PR_NUMBER }}"
-          - name: PROMBENCH_REPO
-            value: "{{ .PROMBENCH_REPO }}"
+          - name: TEST_INFRA_REPO
+            value: "{{ .TEST_INFRA_REPO }}"
       containers:
       - name: prombench-test-{{ .PR_NUMBER }}
         image: docker.io/prombench/prombench:2.0.2
@@ -57,8 +57,8 @@ spec:
             value: "{{ .PR_NUMBER }}"
           - name: DOMAIN_NAME
             value: "{{ .DOMAIN_NAME }}"
-          - name: PROMBENCH_REPO
-            value: "{{ .PROMBENCH_REPO }}"
+          - name: TEST_INFRA_REPO
+            value: "{{ .TEST_INFRA_REPO }}"
           - name: GITHUB_ORG
             value: "{{ .GITHUB_ORG }}"
           - name: GITHUB_REPO
