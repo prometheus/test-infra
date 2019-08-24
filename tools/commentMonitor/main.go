@@ -82,21 +82,6 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	// Temporary fix for the new Github actions time format. This makes the time stamps unusable.
-	reg := regexp.MustCompile("(.*)\"[0-9]+/[0-9]+/2019 [0-9]+:[0-9]+:[0-9]+ [AP]M(.*)")
-	m := reg.FindSubmatch(data)
-	if m != nil {
-		txt := string(data)
-		txt = reg.ReplaceAllString(txt, "$1\"2019-06-11T09:26:28Z$2")
-		data = []byte(txt)
-		log.Println("temp fix active")
-	} else {
-		log.Println(`WARNING: Github actions outputs correct date format so can
-		remove the workaround fix in the code commentMonitor.
-		https://github.com/google/go-github/issues/1254`)
-	}
-	// End of the temporary fix
-
 	// Parsing event.json.
 	event, err := github.ParseWebHook("issue_comment", data)
 	if err != nil {
