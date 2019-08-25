@@ -183,7 +183,7 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 				err = fmt.Errorf("creating request for unimplimented resource type:%v", kind)
 			}
 			if err != nil {
-				log.Printf("error applying '%v' err:%v \n", deployment.FileName, err)
+				return fmt.Errorf("error applying '%v' err:%v", deployment.FileName, err)
 			}
 		}
 	}
@@ -232,7 +232,7 @@ func (c *K8s) ResourceDelete(deployments []Resource) error {
 				err = fmt.Errorf("deleting request for unimplimented resource type:%v", kind)
 			}
 			if err != nil {
-				log.Printf("error deleting '%v' err:%v \n", deployment.FileName, err)
+				return fmt.Errorf("error deleting '%v' err:%v", deployment.FileName, err)
 			}
 		}
 	}
@@ -437,11 +437,12 @@ func (c *K8s) deploymentApply(resource runtime.Object) error {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
-			return nil
-		} else if _, err := client.Create(req); err != nil {
-			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
+		} else {
+			if _, err := client.Create(req); err != nil {
+				return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
+			}
+			log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 		}
-		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
@@ -482,17 +483,23 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
-			return nil
-		} else if _, err := client.Create(req); err != nil {
-			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
+		} else {
+			if _, err := client.Create(req); err != nil {
+				return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
+			}
+			log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 		}
-		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
+
 	return provider.RetryUntilTrue(
 		fmt.Sprintf("applying statefulSet:%v", req.Name),
-		provider.GlobalRetryCount,
+		// 6*30(times)*10(seconds) = 30 minutes of wait time
+		// because StatefulSet is used to start and cleanup Prombench tests
+		// If a test fails, users will be notified after 30 minutes
+		// TODO: Make this be set dynamically
+		6*provider.GlobalRetryCount,
 		func() (bool, error) { return c.statefulSetReady(resource) })
 }
 

@@ -40,11 +40,11 @@ type Resource struct {
 // RetryUntilTrue returns when there is an error or the requested operation returns true.
 func RetryUntilTrue(name string, retryCount int, fn func() (bool, error)) error {
 	for i := 1; i <= retryCount; i++ {
+		time.Sleep(globalRetryTime)
 		if ready, err := fn(); err != nil {
 			return err
 		} else if !ready {
 			log.Printf("Request for '%v' is in progress. Checking in %v", name, globalRetryTime)
-			time.Sleep(globalRetryTime)
 			continue
 		}
 		log.Printf("Request for '%v' is done!", name)
