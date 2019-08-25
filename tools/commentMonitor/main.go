@@ -82,14 +82,6 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	// Temporary fix for the new Github actions time format. This makes the time stamps unusable.
-	txt := string(data)
-	reg := regexp.MustCompile("(.*)\"[0-9]+/[0-9]+/2019 [0-9]+:[0-9]+:[0-9]+ [AP]M(.*)")
-	txt = reg.ReplaceAllString(txt, "$1\"2019-06-11T09:26:28Z$2")
-	data = []byte(txt)
-	log.Println("temp fix active")
-	// End of the temporary fix
-
 	// Parsing event.json.
 	event, err := github.ParseWebHook("issue_comment", data)
 	if err != nil {

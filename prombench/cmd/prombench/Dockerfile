@@ -4,8 +4,10 @@ LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com
 
 RUN apk add --update make git
 
-ENV PROMBENCH_DIR /prombench
-ENV PROMBENCH_REPO https://github.com/prometheus/prombench.git
+ENV TEST_INFRA_DIR /test-infra
+ENV TEST_INFRA_REPO https://github.com/prometheus/prombench.git
+
+ENV PROMBENCH_DIR $TEST_INFRA_DIR/prombench
 
 ARG ARCH="amd64"
 ARG OS="linux"
@@ -14,5 +16,3 @@ COPY .build/${OS}-${ARCH}/prombench /usr/bin/prombench
 COPY cmd/prombench/clone.sh /usr/bin/clone.sh
 
 ENTRYPOINT ["/usr/bin/clone.sh"]
-
-WORKDIR $PROMBENCH_DIR

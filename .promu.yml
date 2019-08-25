@@ -6,16 +6,16 @@ repository:
     path: github.com/prometheus/prombench
 build:
     binaries:
-        - name: prombench
-          path: ./cmd/prombench
+        - name: ./prombench/prombench
+          path: ./prombench/cmd/prombench
         - name: scaler
           path: ./tools/scaler
         - name: fake-webserver
           path: ./tools/fake-webserver
         - name: commentMonitor
-          path: tools/commentMonitor
+          path: ./tools/commentMonitor
         - name: amGithubNotifier
-          path: tools/amGithubNotifier
+          path: ./tools/amGithubNotifier
     flags: -a -tags netgo
 
 crossbuild:
