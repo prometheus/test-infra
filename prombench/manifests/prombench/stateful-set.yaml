@@ -43,6 +43,7 @@ spec:
         imagePullPolicy: Always
         args:
         # - Create /tmp/READY to marmake k the StatefulSet as ready once make deploy succeeds
+        # - /tmp/READY is used in readiness probe
         # - Sleep forever after make deploy succeededs.
         - "make deploy && touch /tmp/READY && echo 'deploy succeeded, now sleeping' && while sleep 86400; do :; done"
         env:
@@ -71,6 +72,7 @@ spec:
               - "/bin/sh"
               - "-c"
               # - Delete /tmp/READY to mark the StatefulSet as un-ready before cleanup
+              # - /tmp/READY is used in readiness probe
               # - Sleep until all_nodepools_running returns a success code
               # - Then run make clean and kill the container.
               - "rm /tmp/READY && until make all_nodepools_running; do echo waiting for nodepools to be created; sleep 10; done; make clean; kill -9 -1"
