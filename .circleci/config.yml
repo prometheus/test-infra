@@ -73,6 +73,7 @@ jobs:
     - publish_images:
         dockerfile_path: ./tools/scaler/Dockerfile
         container_image_name: scaler
+
 workflows:
   version: 2
   prombench:
