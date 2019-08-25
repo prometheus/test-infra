@@ -56,7 +56,7 @@ jobs:
     steps:
     - prometheus/setup_build_environment
     - publish_images:
-        dockerfile_path: ./cmd/prombench/Dockerfile
+        dockerfile_path: ./prombench/cmd/prombench/Dockerfile
         container_image_name: prombench
     - publish_images:
         dockerfile_path: ./tools/amGithubNotifier/Dockerfile
