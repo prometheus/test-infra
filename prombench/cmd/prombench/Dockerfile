@@ -13,6 +13,6 @@ ARG ARCH="amd64"
 ARG OS="linux"
 
 COPY .build/${OS}-${ARCH}/prombench /usr/bin/prombench
-COPY cmd/prombench/clone.sh /usr/bin/clone.sh
+COPY prombench/cmd/prombench/clone.sh /usr/bin/clone.sh
 
 ENTRYPOINT ["/usr/bin/clone.sh"]
