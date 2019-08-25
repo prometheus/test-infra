@@ -42,7 +42,7 @@ spec:
         image: docker.io/prombench/prombench:2.0.2
         imagePullPolicy: Always
         args:
-        # - Create /tmp/READY to marmake k the StatefulSet as ready once make deploy succeeds
+        # - Create /tmp/READY to mark the StatefulSet as ready once make deploy succeeds
         # - /tmp/READY is used in readiness probe
         # - Sleep forever after make deploy succeededs.
         - "make deploy && touch /tmp/READY && echo 'deploy succeeded, now sleeping' && while sleep 86400; do :; done"
