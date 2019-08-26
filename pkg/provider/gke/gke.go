@@ -322,7 +322,10 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 				})
 
 			if err != nil {
-				log.Fatalf("Couldn't create cluster nodepool '%v', file:%v ,err: %v", node.Name, deployment.FileName, err)
+				if st, ok := status.FromError(err); ok && st.Code() != codes.AlreadyExists {
+					log.Fatalf("Couldn't create cluster nodepool '%v', file:%v ,err: %v", node.Name, deployment.FileName, err)
+				}
+				log.Printf("nodepool already exists '%v', file:%v ,err: %v", node.Name, deployment.FileName, err)
 			}
 
 			err = provider.RetryUntilTrue(
