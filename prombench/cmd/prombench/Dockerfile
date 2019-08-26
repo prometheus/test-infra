@@ -7,11 +7,11 @@ RUN apk add --update make git
 ENV TEST_INFRA_DIR /test-infra
 ENV TEST_INFRA_REPO https://github.com/prometheus/prombench.git
 
-ENV PROMBENCH_DIR $TEST_INFRA_DIR/prombench
+ENV PROMBENCH_DIR /prombench
 
 COPY prombench /usr/bin/prombench
 COPY cmd/prombench/clone.sh /usr/bin/clone.sh
 
 ENTRYPOINT ["/usr/bin/clone.sh"]
 
-WORKDIR $TEST_INFRA_DIR
+WORKDIR $PROMBENCH_DIR

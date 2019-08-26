@@ -75,7 +75,7 @@ spec:
               # - /tmp/READY is used in readiness probe
               # - Sleep until all_nodepools_running returns a success code
               # - Then run make clean and kill the container.
-              - "rm /tmp/READY ; cd prombench && until make all_nodepools_running; do echo waiting for nodepools to be created; sleep 10; done; make clean; kill -9 -1"
+              - "rm /tmp/READY; until make all_nodepools_running; do echo waiting for nodepools to be created; sleep 10; done; make clean; kill -9 -1"
         readinessProbe:
           exec:
             command:
