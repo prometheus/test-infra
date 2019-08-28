@@ -33,6 +33,8 @@ func main() {
 	g := gke.New()
 	k8sGKE := app.Command("gke", `Google container engine provider - https://cloud.google.com/kubernetes-engine/`).
 		Action(g.NewGKEClient)
+	k8sGKE.Flag("exit-on-error", "If set, prombench will exit with error code as soon as apply/deletion fails or times out.").
+		BoolVar(&g.ExitOnError)
 	k8sGKE.Flag("auth", "json authentication for the project. Accepts a filepath or an env variable that inlcudes tha json data. If not set the tool will use the GOOGLE_APPLICATION_CREDENTIALS env variable (export GOOGLE_APPLICATION_CREDENTIALS=service-account.json). https://cloud.google.com/iam/docs/creating-managing-service-account-keys.").
 		PlaceHolder("service-account.json").
 		Short('a').

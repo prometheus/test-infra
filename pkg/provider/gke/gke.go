@@ -71,6 +71,8 @@ type GKE struct {
 	gkeResources []Resource
 	// K8s resource.runtime objects after parsing the template variables, grouped by filename.
 	k8sResources []k8sProvider.Resource
+	// K8s deployment apply/delete exit strategy
+	ExitOnError bool
 
 	ctx context.Context
 }
@@ -559,6 +561,7 @@ func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 	if err != nil {
 		log.Fatal("k8s provider error", err)
 	}
+	c.k8sProvider.ExitOnError = c.ExitOnError
 	return nil
 }
 

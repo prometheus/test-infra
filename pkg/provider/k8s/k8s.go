@@ -66,6 +66,8 @@ type K8s struct {
 	DeploymentVars map[string]string
 	// K8s resource.runtime objects after parsing the template variables, grouped by filename.
 	resources []Resource
+	// K8s deployment apply/delete exit strategy
+	ExitOnError bool
 
 	ctx context.Context
 }
@@ -183,7 +185,10 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 				err = fmt.Errorf("creating request for unimplimented resource type:%v", kind)
 			}
 			if err != nil {
-				return fmt.Errorf("error applying '%v' err:%v", deployment.FileName, err)
+				if c.ExitOnError {
+					return fmt.Errorf("error applying '%v' err:%v", deployment.FileName, err)
+				}
+				log.Printf("error applying '%v' err:%v \n", deployment.FileName, err)
 			}
 		}
 	}
@@ -232,7 +237,10 @@ func (c *K8s) ResourceDelete(deployments []Resource) error {
 				err = fmt.Errorf("deleting request for unimplimented resource type:%v", kind)
 			}
 			if err != nil {
-				return fmt.Errorf("error deleting '%v' err:%v", deployment.FileName, err)
+				if c.ExitOnError {
+					return fmt.Errorf("error deleting '%v' err:%v", deployment.FileName, err)
+				}
+				log.Printf("error deleting '%v' err:%v \n", deployment.FileName, err)
 			}
 		}
 	}
