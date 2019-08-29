@@ -14,6 +14,7 @@ create_test_ss:
 		-v PR_NUMBER:${PR_NUMBER} -v RELEASE:${RELEASE} -v LAST_COMMIT:${GITHUB_SHA} \
 		-v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
 		-v TEST_INFRA_REPO:${TEST_INFRA_REPO} \
+		--exit-on-error \
 		-f manifests/prombench/stateful-set.yaml
 
 delete_test_ss:
