@@ -257,7 +257,7 @@ func newBenchmarkTester() (*benchmarkTester, error) {
 }
 
 func (bench *benchmarkTester) compareBenchmarks(old, new string) (string, error) {
-	out, _, err := execCommand(strings.Join([]string{os.Getenv("GOPATH"), "/bin/benchcmp"}, ""), old, new)
+	out, _, err := execCommand(strings.Join([]string{os.Getenv("GOPATH"), "/bin/benchcmp"}, ""), "-mag", old, new)
 	log.Println("Benchmark comparision output: ", out)
 
 	if strings.Count(out, "\n") < 2 {
