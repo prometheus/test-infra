@@ -15,38 +15,13 @@ spec:
         app: prombench-test-{{ .PR_NUMBER }}
         last_commit: {{ .LAST_COMMIT }}
     spec:
-      initContainers:
-      - name: check-all-nodepools-deleted
-        image: docker.io/prombench/prombench:2.0.2
-        imagePullPolicy: Always
-        args:
-        # Wait until all_nodepools_deleted returns a success code then exit
-        - "until make all_nodepools_deleted; do echo waiting for nodepools to be deleted; sleep 10; done;"
-        volumeMounts:
-        - name: serviceaccount
-          mountPath: /etc/serviceaccount/
-          readOnly: true
-        env:
-          - name: PROJECT_ID
-            value: "{{ .PROJECT_ID }}"
-          - name: ZONE
-            value: "{{ .ZONE }}"
-          - name: CLUSTER_NAME
-            value: "{{ .CLUSTER_NAME }}"
-          - name: PR_NUMBER
-            value: "{{ .PR_NUMBER }}"
-          - name: TEST_INFRA_REPO
-            value: "{{ .TEST_INFRA_REPO }}"
       containers:
       - name: prombench-test-{{ .PR_NUMBER }}
         image: docker.io/prombench/prombench:2.0.2
         imagePullPolicy: Always
-        args:
-        # - Create /tmp/READY to mark the StatefulSet as ready once make deploy succeeds
-        # - /tmp/READY is used in readiness probe
-        # - Sleep forever after make deploy succeededs.
-        - "make deploy && touch /tmp/READY && echo 'deploy succeeded, now sleeping' && while sleep 86400; do :; done"
         env:
+          - name: SHELL_COMMAND
+            value: "supervisorctl start deploy"
           - name: PROJECT_ID
             value: "{{ .PROJECT_ID }}"
           - name: ZONE
@@ -69,13 +44,9 @@ spec:
           preStop:
             exec:
               command:
-              - "/bin/sh"
-              - "-c"
-              # - Delete /tmp/READY to mark the StatefulSet as un-ready before cleanup
-              # - /tmp/READY is used in readiness probe
-              # - Sleep until all_nodepools_running returns a success code
-              # - Then run make clean and kill the container.
-              - "rm /tmp/READY && until make all_nodepools_running; do echo waiting for nodepools to be created; sleep 10; done; make clean; kill -9 -1"
+              - "supervisorctl"
+              - "start"
+              - "clean"
         readinessProbe:
           exec:
             command:
