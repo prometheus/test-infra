@@ -1,8 +1,9 @@
 #!/bin/sh
 
-printf "READY\n"; # required for Header information by supervisord
-
-while read line; do
-  echo "Processing Event: $line" >&2; # send to stderr
+while true; do
+  printf "READY\n";
+  read line
+  echo "Processing Event: $line" >&2;
+  printf "RESULT 2\nOK";
   killall -SIGTERM supervisord
-done < /dev/stdin
+done
