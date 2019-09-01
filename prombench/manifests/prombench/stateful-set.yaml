@@ -44,9 +44,9 @@ spec:
           preStop:
             exec:
               command:
-              - "supervisorctl"
-              - "start"
-              - "clean"
+              - "sh"
+              - "-c"
+              - "supervisorctl start clean && sleep 99999999"
         readinessProbe:
           exec:
             command:
