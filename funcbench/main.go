@@ -234,6 +234,9 @@ func newBenchmarkTester() (*benchmarkTester, error) {
 	if err := os.Setenv("GO111MODULE", "on"); err != nil {
 		return nil, err
 	}
+	if err := os.Setenv("CGO_ENABLED", "0"); err != nil {
+		return nil, err
+	}
 
 	benchRegex, err := ioutil.ReadFile("/github/home/commentMonitor/REGEX")
 	if err != nil {

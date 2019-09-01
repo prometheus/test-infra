@@ -1,6 +1,6 @@
-FROM golang AS builder
+FROM golang:alpine AS builder
 
-RUN apt-get install git -y
+RUN apk add git
 
 ENV GO111MODULE=on
 
@@ -9,9 +9,9 @@ COPY . /
 
 RUN CGO_ENABLED=0 go build main.go
 
-FROM golang
+FROM golang:alpine
 
-RUN apt-get install git -y
+RUN apk add git
 
 COPY --from=builder /main /main
 
