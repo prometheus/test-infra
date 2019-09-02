@@ -15,4 +15,3 @@ supervisorctl stop deploy
 
 # Start cleaningup benchmarking components
 make clean
-# FIXME : what happens when there's an error in make clean
