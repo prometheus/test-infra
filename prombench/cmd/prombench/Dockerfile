@@ -15,8 +15,7 @@ COPY cmd/prombench/supervisor-scripts/init.sh /usr/bin/init.sh
 COPY cmd/prombench/supervisor-scripts/deploy.sh /usr/bin/deploy.sh
 COPY cmd/prombench/supervisor-scripts/clean.sh /usr/bin/clean.sh
 # supervisord eventlisteners
-COPY cmd/prombench/supervisor-scripts/sigint-supervisor.sh /usr/bin/sigint-supervisor.sh
-COPY cmd/prombench/supervisor-scripts/sigterm-supervisor.sh /usr/bin/sigterm-supervisor.sh
+COPY cmd/prombench/supervisor-scripts/signal-supervisor.sh /usr/bin/signal-supervisor.sh
 
 ENTRYPOINT ["/sbin/tini","--","supervisord", "-c", "/etc/supervisord.conf"]
 
