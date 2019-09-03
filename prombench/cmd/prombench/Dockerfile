@@ -9,7 +9,7 @@ ENV TEST_INFRA_REPO https://github.com/prometheus/prombench.git
 ENV PROMBENCH_DIR /prombench
 
 COPY prombench /usr/bin/prombench
-COPY cmd/prombench/supervisord.conf /etc/supervisord.conf
+COPY cmd/prombench/supervisord.ini /etc/supervisord.ini
 # supervisord programs
 COPY cmd/prombench/supervisor-scripts/init.sh /usr/bin/init.sh
 COPY cmd/prombench/supervisor-scripts/deploy.sh /usr/bin/deploy.sh
@@ -17,6 +17,6 @@ COPY cmd/prombench/supervisor-scripts/clean.sh /usr/bin/clean.sh
 # supervisord eventlisteners
 COPY cmd/prombench/supervisor-scripts/signal-supervisor.sh /usr/bin/signal-supervisor.sh
 
-ENTRYPOINT ["/sbin/tini","--","supervisord", "-c", "/etc/supervisord.conf"]
+ENTRYPOINT ["/sbin/tini","--","supervisord", "-c", "/etc/supervisord.ini"]
 
 WORKDIR $PROMBENCH_DIR
