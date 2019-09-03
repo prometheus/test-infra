@@ -46,6 +46,10 @@ spec:
               command:
               - "sh"
               - "-c"
+              # - `supervisorctl start clean` exits with `0` as soon as the `clean` program starts.
+              # - Kubernetes sends a SIGTERM as soon as preStop hook is successful.
+              # - So to wait till the supervisord event listener kills the container
+              # we sleep to keep the preStop hook running until `terminationGracePeriodSeconds`.
               - "supervisorctl start clean && sleep 99999999"
         readinessProbe:
           exec:
