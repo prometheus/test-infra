@@ -7,4 +7,4 @@ git clone $TEST_INFRA_REPO $TEST_INFRA_DIR
 cp /usr/bin/prombench $PROMBENCH_DIR/
 cp -r $TEST_INFRA_DIR/prombench/* $PROMBENCH_DIR/
 
-$SHELL_COMMAND
+eval "$SHELL_COMMAND"
