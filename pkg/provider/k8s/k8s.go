@@ -771,6 +771,12 @@ func (c *K8s) serviceApply(resource runtime.Object) error {
 		for _, l := range list.Items {
 			if l.Name == req.Name {
 				exists = true
+				if req.ResourceVersion == "" {
+					req.ResourceVersion = l.ResourceVersion
+				}
+				if req.Spec.ClusterIP == "" {
+					req.Spec.ClusterIP = l.Spec.ClusterIP
+				}
 				break
 			}
 		}
