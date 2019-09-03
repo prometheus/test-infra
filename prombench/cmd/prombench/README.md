@@ -6,7 +6,7 @@ The prombench docker image clones the lastest [prometheus/prombench](https://git
 ```
 docker run -e INIT_EXIT="1" -e SHELL_COMMAND="ls" --rm docker.io/prombench/prombench:2.0.2
 ```
-The prombench container may run multiple processes at once, see [supervisord.conf](./supervisord.conf) for more information.
+The prombench container may run multiple processes at once, see [supervisord.ini](./supervisord.ini) for more information.
 
 The `INIT_EXIT` env var is optional, specifying it means container will exit with error code `0` if `init` program exits with an expected error code. Otherwise container will exit based on the `signal-supervisor` event listener.
 
