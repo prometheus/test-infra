@@ -38,7 +38,7 @@ while true; do
   # Get PAYLOAD
   PAYLOAD=$(head -c $PAYLOAD_LENGTH /dev/stdin);
 
-  # Get PROCESS_NAME
+  # Get PROCESS_NAME and EXPECTED_EXIT_CODE
   for keypair in $PAYLOAD; do
     key="$(echo "$keypair" | cut -d ":" -f1)"
     value="$(echo "$keypair" | cut -d ":" -f2)"
