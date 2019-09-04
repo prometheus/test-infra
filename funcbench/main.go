@@ -174,7 +174,7 @@ func newGitClient(event *github.IssueCommentEvent) (*gitClient, error) {
 
 func (c *gitClient) cloneRepository() error {
 	if err := os.Chdir(os.Getenv("GITHUB_WORKSPACE")); err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	_, _, err := execCommand("git", "clone", fmt.Sprintf("https://github.com/%s/%s.git", c.owner, c.repo))
 	if err != nil {
