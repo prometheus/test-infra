@@ -40,7 +40,7 @@ resource_apply:
 resource_delete:
 	$(PROMBENCH_CMD) gke resource delete -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
-        -f manifests/prombench/benchmark/1c_cluster-role-binding.yaml \
+		-f manifests/prombench/benchmark/1c_cluster-role-binding.yaml \
 		-f manifests/prombench/benchmark/1a_namespace.yaml
 
 nodepool_delete:
