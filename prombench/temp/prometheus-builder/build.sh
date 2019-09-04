@@ -24,7 +24,7 @@ fi
 git checkout pr-branch
 
 echo ">> Creating prometheus binaries"
-if ! make build; then
+if ! make build PROMU_BINARIES="prometheus"; then
     echo "ERROR:: Building of binaries failed"
     exit 1;
 fi
