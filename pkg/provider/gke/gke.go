@@ -465,10 +465,10 @@ func (c *GKE) AllNodepoolsRunning(*kingpin.ParseContext) error {
 		for _, node := range reqC.Cluster.NodePools {
 			isRunning, err := c.nodePoolRunning(reqC.Zone, reqC.ProjectId, reqC.Cluster.Name, node.Name)
 			if err != nil {
-				return errors.New("error fetching nodePool info")
+				log.Fatalf("error fetching nodePool info")
 			}
 			if !isRunning {
-				return errors.Errorf("nodepool not running name: %v", node.Name)
+				log.Fatalf("nodepool not running name: %v", node.Name)
 			}
 		}
 	}
@@ -488,10 +488,10 @@ func (c *GKE) AllNodepoolsDeleted(*kingpin.ParseContext) error {
 		for _, node := range reqC.Cluster.NodePools {
 			isRunning, err := c.nodePoolRunning(reqC.Zone, reqC.ProjectId, reqC.Cluster.Name, node.Name)
 			if err != nil {
-				return errors.New("error fetching nodePool info")
+				log.Fatalf("error fetching nodePool info")
 			}
 			if isRunning {
-				return errors.Errorf("nodepool running name: %v", node.Name)
+				log.Fatalf("nodepool running name: %v", node.Name)
 			}
 		}
 	}
