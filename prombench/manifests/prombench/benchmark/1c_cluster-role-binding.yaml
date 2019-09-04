@@ -1,3 +1,29 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: loadgen-scaler
+  namespace: prombench-{{ .PR_NUMBER }}
+rules:
+- apiGroups: ["apps"]
+  resources:
+  - deployments
+  verbs: ["get", "list", "update"]
+---
+# Need to give get/update access to loadgen-scaler
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: loadgen-scaler
+  namespace: prombench-{{ .PR_NUMBER }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: loadgen-scaler
+subjects:
+- kind: ServiceAccount
+  name: loadgen-scaler
+  namespace: prombench-{{ .PR_NUMBER }}
+---
 # Need to give Prometheus servers access to pull metrics
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
