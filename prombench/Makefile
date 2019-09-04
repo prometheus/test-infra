@@ -6,6 +6,8 @@ endif
 
 .PHONY: deploy clean
 deploy: nodepool_create resource_apply
+# GCP sometimes takes longer than 30 tries when trying to delete nodepools
+# if k8s resources are not already cleared
 clean: resource_delete nodepool_delete
 
 create_test_ss:
