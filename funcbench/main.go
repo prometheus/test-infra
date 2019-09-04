@@ -210,10 +210,6 @@ func (c *gitClient) revertPRChanges() error {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() && info.Name() == ".git" {
-			return filepath.SkipDir
-		}
-
 		if !info.IsDir() && strings.HasSuffix(info.Name(), ".go") && !strings.HasSuffix(info.Name(), "_test.go") {
 			_, _, err := execCommand("git", "checkout", "--", path)
 			if err != nil {
