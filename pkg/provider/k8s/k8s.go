@@ -495,11 +495,7 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 
 	return provider.RetryUntilTrue(
 		fmt.Sprintf("applying statefulSet:%v", req.Name),
-		// 6*30(times)*10(seconds) = 30 minutes of wait time
-		// because StatefulSet is used to start and cleanup Prombench tests
-		// If a test fails, users will be notified after 30 minutes
-		// TODO: Make this be set dynamically
-		6*provider.GlobalRetryCount,
+		provider.GlobalRetryCount,
 		func() (bool, error) { return c.statefulSetReady(resource) })
 }
 
