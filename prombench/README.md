@@ -49,6 +49,11 @@ export GITHUB_ORG=prometheus
 export GITHUB_REPO=prometheus
 ```
 
+- Apply configmaps related to Grafana
+```
+make apply_configmaps
+```
+
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Loki, Grafana, Alertmanager & Github Notifier.
 ```
 ./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID -v ZONE:$ZONE \

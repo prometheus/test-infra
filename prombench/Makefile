@@ -61,3 +61,47 @@ all_nodepools_deleted:
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} \
 		-v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
 		-f manifests/prombench/nodepools.yaml
+
+apply_configmaps:
+	$(PROMBENCH_CMD) gke resource apply -a ${AUTH_FILE} \
+		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
+		-v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:${GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL} \
+		-f manifests/cluster-infra/1a_gcloud_rolebinding.yaml
+
+	$(PROMBENCH_CMD) gke configmap apply -a ${AUTH_FILE} \
+		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
+		--name=grafana-provision-datasource --namespace=default \
+		-f config/grafana/datasource_provision.yaml
+
+	$(PROMBENCH_CMD) gke configmap apply -a ${AUTH_FILE} \
+		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
+		--name=grafana-provision-dashboard --namespace=default \
+		-f config/grafana/dashboard_provision.yaml
+
+	$(PROMBENCH_CMD) gke configmap apply -a ${AUTH_FILE} \
+		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
+		--name=grafana-dashboards --namespace=default \
+		-f config/grafana/dashboards/bench-nodes.json \
+		-f config/grafana/dashboards/prow-nodes.json
+
+delete_configmaps:
+	$(PROMBENCH_CMD) gke resource apply -a ${AUTH_FILE} \
+		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
+		-v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:${GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL} \
+		-f manifests/cluster-infra/1a_gcloud_rolebinding.yaml
+
+	$(PROMBENCH_CMD) gke configmap delete -a ${AUTH_FILE} \
+		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
+		--name=grafana-provision-datasource --namespace=default \
+		-f config/grafana/datasource_provision.yaml
+
+	$(PROMBENCH_CMD) gke configmap delete -a ${AUTH_FILE} \
+		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
+		--name=grafana-provision-dashboard --namespace=default \
+		-f config/grafana/dashboard_provision.yaml
+
+	$(PROMBENCH_CMD) gke configmap delete -a ${AUTH_FILE} \
+		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
+		--name=grafana-dashboards --namespace=default \
+		-f config/grafana/dashboards/bench-nodes.json \
+		-f config/grafana/dashboards/prow-nodes.json
