@@ -48,6 +48,8 @@ type benchmarkTester struct {
 }
 
 func main() {
+	// Show file line with each log.
+	log.SetFlags(log.Ltime | log.Lshortfile)
 	app := kingpin.New(filepath.Base(os.Args[0]), "benchmark result posting and formating tool.\n-i location of github hook file (even.json)")
 	app.HelpFlag.Short('h')
 	input := app.Flag("input", "path to event.json").Short('i').Default("/github/workflow/event.json").String()
@@ -84,10 +86,6 @@ func main() {
 		log.Fatalln(err)
 	}
 	logLink := fmt.Sprintf("Full logs at: https://github.com/%s/%s/commit/%s/checks", ghClient.owner, ghClient.repo, ghClient.latestCommitHash)
-
-	if err := os.Chdir(os.Getenv("GITHUB_WORKSPACE")); err != nil {
-		log.Fatalln(err)
-	}
 
 	if err := gitClient.cloneRepository(); err != nil {
 		log.Fatalln(err)
@@ -145,7 +143,6 @@ func newGitHubClient(event *github.IssueCommentEvent) *gitHubClient {
 		prNumber:         *event.GetIssue().Number,
 		latestCommitHash: os.Getenv("GITHUB_SHA"),
 	}
-	log.Printf("GH Client: %+v\n", c)
 	return &c
 }
 
@@ -172,22 +169,26 @@ func newGitClient(event *github.IssueCommentEvent) (*gitClient, error) {
 		repo:   *event.GetRepo().Name,
 	}
 
-	log.Printf("Git Client: %+v\n", c)
 	return &c, err
 }
 
 func (c *gitClient) cloneRepository() error {
+	if err := os.Chdir(os.Getenv("GITHUB_WORKSPACE")); err != nil {
+		return err
+	}
 	_, _, err := execCommand("git", "clone", fmt.Sprintf("https://github.com/%s/%s.git", c.owner, c.repo))
 	if err != nil {
 		return err
 	}
-	err = os.Chdir(c.repo)
-	return err
+	return nil
 }
 
 // checkoutToPullRequest applies changes from the pull request to the working tree
 // of the branch that is being compared.
 func (c *gitClient) checkoutPR(num int) error {
+	if err := os.Chdir(filepath.Join(os.Getenv("GITHUB_WORKSPACE"), c.repo)); err != nil {
+		return errors.Wrap(err, "changing to GITHUB_WORKSPACE dir")
+	}
 	_, _, err := execCommand("git", "fetch", "origin", fmt.Sprintf("pull/%d/head:pullrequest", num))
 	if err != nil {
 		return err
@@ -205,26 +206,15 @@ func (c *gitClient) checkoutPR(num int) error {
 }
 
 func (c *gitClient) revertPRChanges() error {
-	return filepath.Walk(os.Getenv("GITHUB_WORKSPACE"), func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(filepath.Join(os.Getenv("GITHUB_WORKSPACE"), c.repo), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() || strings.Contains(path, ".git/") || strings.HasSuffix(info.Name(), "test.go") {
-			return nil
-		}
-
-		data, _, err := execCommand("git", "checkout", "--", path)
-		if err != nil {
-			log.Println("Following error occured during checkout: ", data, "If the error is caused by an untracted file, it will be deleted.")
-
-			// New file appeared and is not tracked, then it can be removed.
-			if strings.Contains(data, "did not match any file") {
-				if err := os.Remove(path); err != nil {
-					return errors.Errorf("Error: %v; Command out: %s", err, string(data))
-				}
-				return nil
+		if !info.IsDir() && strings.HasSuffix(info.Name(), ".go") && !strings.HasSuffix(info.Name(), "_test.go") {
+			_, _, err := execCommand("git", "checkout", "--", path)
+			if err != nil {
+				return err
 			}
-			return err
 		}
 		return nil
 	})
@@ -255,12 +245,11 @@ func newBenchmarkTester() (*benchmarkTester, error) {
 
 	_, _, err = execCommand("go", "get", "golang.org/x/tools/cmd/benchcmp")
 
-	log.Printf("Benchmark Tester: %+v\n", bench)
 	return &bench, err
 }
 
 func (bench *benchmarkTester) compareBenchmarks(old, new string) (string, error) {
-	out, _, err := execCommand(strings.Join([]string{os.Getenv("GOPATH"), "/bin/benchcmp"}, ""), old, new)
+	out, _, err := execCommand(filepath.Join(os.Getenv("GOPATH"), "/bin/benchcmp"), "-mag", old, new)
 	log.Println("Benchmark comparision output: ", out)
 
 	if strings.Count(out, "\n") < 2 {
