@@ -771,6 +771,14 @@ func (c *K8s) serviceApply(resource runtime.Object) error {
 		for _, l := range list.Items {
 			if l.Name == req.Name {
 				exists = true
+				// Immutable fields must be set when updating.
+				// See https://github.com/kubernetes/kubernetes/pull/66602
+				if req.ResourceVersion == "" {
+					req.ResourceVersion = l.ResourceVersion
+				}
+				if req.Spec.ClusterIP == "" {
+					req.Spec.ClusterIP = l.Spec.ClusterIP
+				}
 				break
 			}
 		}
