@@ -87,8 +87,7 @@ cat $AUTH_FILE | base64 -w 0
 - `/prombench v2.4.0` - compare PR with a release version, from [quay.io/prometheus/prometheus:releaseVersion](https://quay.io/prometheus/prometheus:releaseVersion)
 
 **Restarting:**
-- Comment `/prombench <same_rel_version>` again on the PR. If the hash of the last commit has changed, the test will be restarted.
-- To restart the test with a different Prometheus release version comment `/prombench <new_rel_version>`
+- Comment `/prombench restart <release_version>`
 
 **Stopping:**
 - Comment `/prombench cancel`.
