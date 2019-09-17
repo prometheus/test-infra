@@ -108,11 +108,14 @@ spec:
     spec:
       containers:
       - name: prom-load-generator
-        image: docker.io/prombench/load-generator:2.0.0
+        image: docker.io/prombench/load-generator:2.0.1
         imagePullPolicy: Always
         args:
         - "prombench-{{ .PR_NUMBER }}"
         - "{{ .PR_NUMBER }}"
+        env:
+        - name: DOMAIN_NAME
+          value: "{{ .DOMAIN_NAME }}"
         volumeMounts:
         - name: config-volume
           mountPath: /etc/loadgen
