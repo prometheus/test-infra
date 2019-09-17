@@ -35,6 +35,3 @@ $ make docker DOCKERFILE_PATH=tools/amGithubNotifier/Dockerfile DOCKER_IMAGE_NAM
 ```
 ./amGithubNotifier --help
 ```
-
-#### todo
-Revote test access token for prombot
