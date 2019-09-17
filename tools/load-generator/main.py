@@ -12,7 +12,7 @@ from prometheus_client import start_http_server, Histogram, Counter
 
 namespace = ""
 max_404_errors = 30
-domain_name = os.environ("DOMAIN_NAME")
+domain_name = os.environ["DOMAIN_NAME"]
 
 class Querier(object):
     """
