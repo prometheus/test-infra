@@ -12,6 +12,7 @@ from prometheus_client import start_http_server, Histogram, Counter
 
 namespace = ""
 max_404_errors = 30
+domain_name = os.environ("DOMAIN_NAME")
 
 class Querier(object):
     """
@@ -43,9 +44,9 @@ class Querier(object):
         self.step = qg.get("step", "15s")
 
         if self.type == "instant":
-            self.url = "http://prombench.prometheus.io/%s/prometheus-%s/api/v1/query" % (pr_number, target)
+            self.url = "http://%s/%s/prometheus-%s/api/v1/query" % (domain_name, pr_number, target)
         else:
-            self.url = "http://prombench.prometheus.io/%s/prometheus-%s/api/v1/query_range" % (pr_number, target)
+            self.url = "http://%s/%s/prometheus-%s/api/v1/query_range" % (domain_name, pr_number, target)
 
     def run(self):
         print("run querier %s %s for %s" % (self.target, self.name, self.url))
