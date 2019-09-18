@@ -24,6 +24,10 @@ data:
           containers:
           - name: fake-webserver
             image: docker.io/prombench/fake-webserver:2.0.0
+            requests:
+              memory: 80Mi
+            limits:
+              memory: 7600Mi
             ports:
             - name: metrics1
               containerPort: 8080
@@ -58,6 +62,10 @@ spec:
       containers:
       - name: fake-webserver
         image: docker.io/prombench/fake-webserver:2.0.0
+        requests:
+          memory: 80Mi
+        limits:
+          memory: 7600Mi
         ports:
         - name: metrics1
           containerPort: 8080
