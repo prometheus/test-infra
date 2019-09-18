@@ -53,13 +53,13 @@ spec:
         - name: grafana-dashboard-provision
           mountPath: /opt/grafana-provision/dashboards/prometheus-dashboard.yaml
           subPath: prometheus-dashboard.yaml
-        #dashboards json are saved in the path mentioned in grafana-dashboard-provision
-        - name: grafana-dashboard-bench
-          mountPath: /opt/grafana-provision/dashboards/bench-nodes.json
-          subPath: bench-nodes.json
-        - name: grafana-dashboard-prow
-          mountPath: /opt/grafana-provision/dashboards/prow-nodes.json
-          subPath: prow-nodes.json
+        # dashboards json are saved in the path mentioned in grafana-dashboard-provision
+        - name: grafana-dashboard-prombench
+          mountPath: /opt/grafana-provision/dashboards/prombench.json
+          subPath: prombench.json
+        - name: grafana-dashboard-node-metrics
+          mountPath: /opt/grafana-provision/dashboards/node-metrics.json
+          subPath: node-metrics.json
         ports:
         - name: grafana-web
           containerPort: 3000
@@ -72,14 +72,14 @@ spec:
       - name: grafana-dashboard-provision
         configMap:
           name: grafana-dashboard-provision
-      - name: grafana-dashboard-bench
+      - name: grafana-dashboard-prombench
         configMap:
-          name: grafana-dashboard-bench
-      - name: grafana-dashboard-prow
+          name: grafana-dashboard-prombench
+      - name: grafana-dashboard-node-metrics
         configMap:
-          name: grafana-dashboard-prow
+          name: grafana-dashboard-node-metrics
       nodeSelector:
-        cloud.google.com/gke-nodepool: prow
+        cloud.google.com/gke-nodepool: main-node
 ---
 apiVersion: v1
 kind: Service
