@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: node-exporter-prow
+  name: node-exporter-main-node
 spec:
   selector:
     matchLabels:
       app: node-exporter
-      node: prow
+      node: main-node
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 1
@@ -15,7 +15,7 @@ spec:
     metadata:
       labels:
         app: node-exporter
-        node: prow
+        node: main-node
       name: node-exporter
     spec:
       securityContext:
@@ -24,7 +24,7 @@ spec:
       hostNetwork: true
       hostPID: true
       nodeSelector:
-        cloud.google.com/gke-nodepool: prow
+        cloud.google.com/gke-nodepool: main-node
       containers:
       - image: quay.io/prometheus/node-exporter:v0.16.0
         args:

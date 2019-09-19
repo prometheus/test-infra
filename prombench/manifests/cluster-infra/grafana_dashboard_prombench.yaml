@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-dashboard-bench
+  name: grafana-dashboard-prombench
 data:
-  bench-nodes.json: |
+  prombench.json: |
     {
       "__requires": [
         {
