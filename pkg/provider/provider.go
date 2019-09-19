@@ -54,12 +54,7 @@ func RetryUntilTrue(name string, retryCount int, fn func() (bool, error)) error 
 }
 
 // applyTemplateVars applies golang templates to deployment files.
-func applyTemplateVars(file string, deploymentVars map[string]string) ([]byte, error) {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		log.Fatalf("Error reading file %v:%v", file, err)
-	}
-
+func applyTemplateVars(content []byte, deploymentVars map[string]string) ([]byte, error) {
 	fileContentParsed := bytes.NewBufferString("")
 	t := template.New("resource").Option("missingkey=error")
 	// k8s objects can't have dots(.) se we add a custom function to allow normalising the variable values.
@@ -69,7 +64,7 @@ func applyTemplateVars(file string, deploymentVars map[string]string) ([]byte, e
 		},
 	})
 	if err := template.Must(t.Parse(string(content))).Execute(fileContentParsed, deploymentVars); err != nil {
-		log.Fatalf("Failed to execute parse file:%s err:%v", file, err)
+		return nil, fmt.Errorf("Failed to execute parse file err: %s", err)
 	}
 	return fileContentParsed.Bytes(), nil
 }
@@ -95,9 +90,17 @@ func DeploymentsParse(deploymentFiles []string, deploymentVars map[string]string
 
 	deploymentObjects := make([]Resource, 0)
 	for _, name := range fileList {
-		content, err := applyTemplateVars(name, deploymentVars)
+		absFileName := strings.TrimSuffix(filepath.Base(name), filepath.Ext(name))
+		content, err := ioutil.ReadFile(name)
 		if err != nil {
-			return nil, fmt.Errorf("couldn't apply template to file %s: %v", name, err)
+			log.Fatalf("Error reading file %v:%v", name, err)
+		}
+		// Don't parse file with the suffix "noparse".
+		if !strings.HasSuffix(absFileName, "noparse") {
+			content, err = applyTemplateVars(content, deploymentVars)
+			if err != nil {
+				return nil, fmt.Errorf("couldn't apply template to file %s: %v", name, err)
+			}
 		}
 		deploymentObjects = append(deploymentObjects, Resource{FileName: name, Content: content})
 	}
