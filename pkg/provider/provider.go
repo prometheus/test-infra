@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	GlobalRetryCount = 30
+	GlobalRetryCount = 50
 	Separator        = "---"
 	globalRetryTime  = 10 * time.Second
 )
