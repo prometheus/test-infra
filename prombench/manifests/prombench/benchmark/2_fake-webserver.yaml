@@ -27,7 +27,7 @@ data:
             requests:
               memory: 80Mi
             limits:
-              memory: 7600Mi
+              memory: 99999Mi
             ports:
             - name: metrics1
               containerPort: 8080
@@ -65,7 +65,9 @@ spec:
         requests:
           memory: 80Mi
         limits:
-          memory: 7600Mi
+          # K8s bug, for some reason fake-webserver can't cross 2GiB memory
+          # So we set to some higher value.
+          memory: 99999Mi
         ports:
         - name: metrics1
           containerPort: 8080
