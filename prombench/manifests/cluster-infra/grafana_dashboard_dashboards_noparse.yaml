@@ -1,8 +1,1489 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-dashboard-prombench
+  name: grafana-dashboard-dashboards
 data:
+  node-metrics.json: |
+    {
+      "__requires": [
+        {
+          "type": "panel",
+          "id": "graph",
+          "name": "Graph",
+          "version": ""
+        },
+        {
+          "type": "grafana",
+          "id": "grafana",
+          "name": "Grafana",
+          "version": "3.1.0"
+        },
+        {
+          "type": "datasource",
+          "id": "prometheus",
+          "name": "Prometheus",
+          "version": "1.0.0"
+        }
+      ],
+      "id": null,
+      "title": "Node Metrics",
+      "description": "Dashboard to view Node metrics",
+      "tags": [
+        "nodes",
+        "node-metrics"
+      ],
+      "style": "dark",
+      "timezone": "browser",
+      "editable": true,
+      "hideControls": false,
+      "sharedCrosshair": false,
+      "rows": [
+        {
+          "collapse": false,
+          "editable": true,
+          "height": "25px",
+          "panels": [
+            {
+              "cacheTimeout": null,
+              "colorBackground": false,
+              "colorValue": false,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "prometheus-meta",
+              "editable": true,
+              "error": false,
+              "format": "none",
+              "gauge": {
+                "maxValue": 100,
+                "minValue": 0,
+                "show": false,
+                "thresholdLabels": false,
+                "thresholdMarkers": true
+              },
+              "id": 20,
+              "interval": null,
+              "links": [],
+              "maxDataPoints": 100,
+              "minSpan": 2,
+              "nullPointMode": "connected",
+              "nullText": null,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "repeat": "node",
+              "span": 12,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": false,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": false
+              },
+              "targets": [
+                {
+                  "expr": "count(node_cpu_seconds_total{namespace=\"$namespace\",node=\"$node\", mode=\"system\"}) or count(node_cpu{namespace=\"$namespace\",node=\"$node\", mode=\"system\"})",
+                  "instant": true,
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "",
+                  "metric": "",
+                  "refId": "A",
+                  "step": 14400,
+                  "target": ""
+                }
+              ],
+              "thresholds": "",
+              "title": "CPU Cores",
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              "valueName": "avg"
+            }
+          ],
+          "title": "New row"
+        },
+        {
+          "collapse": false,
+          "editable": true,
+          "height": "250px",
+          "panels": [
+            {
+              "aliasColors": {},
+              "bars": false,
+              "datasource": "prometheus-meta",
+              "decimals": 3,
+              "editable": true,
+              "error": false,
+              "fill": 10,
+              "description": "(user: The time spent in userland) -- (system: The time spent in the kernel) -- (iowait: Time spent waiting for I/O) -- (idle: Time the CPU had nothing to do -- (irq&softirq: Time servicing interrupts) -- (guest: If you are running VMs, the CPU they use) -- (steal: If you are a VM, time other VMs \"stole\" from your CPUs)",
+              "grid": {
+                "threshold1": 0,
+                "threshold1Color": "rgba(216, 200, 27, 0.27)",
+                "threshold2": null,
+                "threshold2Color": "rgba(234, 112, 112, 0.22)",
+                "thresholdLine": false
+              },
+              "id": 7,
+              "legend": {
+                "alignAsTable": false,
+                "avg": false,
+                "current": false,
+                "hideEmpty": false,
+                "max": false,
+                "min": false,
+                "rightSide": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 0,
+              "links": [],
+              "minSpan": 2,
+              "nullPointMode": "connected",
+              "percentage": true,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "repeat": "node",
+              "seriesOverrides": [],
+              "span": 12,
+              "stack": true,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"system\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"system\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "{{mode}}",
+                  "metric": "",
+                  "refId": "A",
+                  "step": 1200,
+                  "target": ""
+                },
+                {
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"user\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"user\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "user",
+                  "refId": "B",
+                  "step": 1200
+                },
+                {
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"nice\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"nice\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "nice",
+                  "refId": "C",
+                  "step": 1200
+                },
+                {
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"iowait\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"iowait\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "iowait",
+                  "refId": "E",
+                  "step": 1200
+                },
+                {
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"steal\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"steal\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+                  "intervalFactor": 2,
+                  "legendFormat": "steal",
+                  "refId": "H",
+                  "step": 1200
+                },
+                {
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"idle\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"idle\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "idle",
+                  "refId": "D",
+                  "step": 1200
+                },
+                {
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"irq\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"irq\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "irq",
+                  "refId": "F",
+                  "step": 1200
+                },
+                {
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"softirq\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"softirq\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "softirq",
+                  "refId": "G",
+                  "step": 1200
+                },
+                {
+                  "expr": "sum(irate(node_cpu_seconds_total{mode=\"guest\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"guest\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "guest",
+                  "refId": "I",
+                  "step": 1200
+                }
+              ],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "CPU",
+              "tooltip": {
+                "msResolution": false,
+                "shared": true,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "show": true
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "label": "%",
+                  "logBase": 1,
+                  "max": 100,
+                  "min": 0,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            }
+          ],
+          "title": "CPU"
+        },
+        {
+          "collapse": false,
+          "editable": true,
+          "height": "250px",
+          "panels": [
+            {
+              "aliasColors": {
+                "Slab": "#E5A8E2",
+                "Swap": "#E24D42"
+              },
+              "bars": false,
+              "datasource": "prometheus-meta",
+              "decimals": 2,
+              "editable": true,
+              "error": false,
+              "fill": 1,
+              "grid": {
+                "threshold1": null,
+                "threshold1Color": "rgba(216, 200, 27, 0.27)",
+                "threshold2": null,
+                "threshold2Color": "rgba(234, 112, 112, 0.22)"
+              },
+              "id": 17,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "minSpan": 2,
+              "nullPointMode": "connected",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "repeat": "node",
+              "seriesOverrides": [
+                {
+                  "alias": "/Apps|Buffers|Cached|Free|Slab|SwapCached|PageTables|VmallocUsed/",
+                  "fill": 5,
+                  "stack": true
+                },
+                {
+                  "alias": "Swap",
+                  "fill": 5,
+                  "stack": true
+                }
+              ],
+              "span": 12,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "( node_memory_MemTotal_bytes{namespace=\"$namespace\",node=\"$node\"} - node_memory_MemFree_bytes{namespace=\"$namespace\",node=\"$node\"} - node_memory_Buffers_bytes{namespace=\"$namespace\",node=\"$node\"} - node_memory_Cached_bytes{namespace=\"$namespace\",node=\"$node\"} - node_memory_SwapCached_bytes{namespace=\"$namespace\",node=\"$node\"} - node_memory_Slab_bytes{namespace=\"$namespace\",node=\"$node\"} - node_memory_PageTables_bytes{namespace=\"$namespace\",node=\"$node\"} - node_memory_VmallocUsed_bytes{namespace=\"$namespace\",node=\"$node\"} ) or ( node_memory_MemTotal{namespace=\"$namespace\",node=\"$node\"} - node_memory_MemFree{namespace=\"$namespace\",node=\"$node\"} - node_memory_Buffers{namespace=\"$namespace\",node=\"$node\"} - node_memory_Cached{namespace=\"$namespace\",node=\"$node\"} - node_memory_SwapCached{namespace=\"$namespace\",node=\"$node\"} - node_memory_Slab{namespace=\"$namespace\",node=\"$node\"} - node_memory_PageTables{namespace=\"$namespace\",node=\"$node\"} - node_memory_VmallocUsed{namespace=\"$namespace\",node=\"$node\"} )",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "Apps",
+                  "metric": "",
+                  "refId": "A",
+                  "step": 1200,
+                  "target": ""
+                },
+                {
+                  "expr": "node_memory_Buffers_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_Buffers{namespace=\"$namespace\",node=\"$node\"}",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "Buffers",
+                  "refId": "B",
+                  "step": 1200
+                },
+                {
+                  "expr": "node_memory_Cached_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_Cached{namespace=\"$namespace\",node=\"$node\"}",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "Cached",
+                  "refId": "D",
+                  "step": 1200
+                },
+                {
+                  "expr": "node_memory_MemFree_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_MemFree{namespace=\"$namespace\",node=\"$node\"}",
+                  "hide": false,
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "Free",
+                  "refId": "E",
+                  "step": 1200
+                },
+                {
+                  "expr": "node_memory_Slab_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_Slab{namespace=\"$namespace\",node=\"$node\"}",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "Slab",
+                  "refId": "F",
+                  "step": 1200
+                },
+                {
+                  "expr": "node_memory_SwapCached_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_SwapCached{namespace=\"$namespace\",node=\"$node\"}",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "SwapCached",
+                  "refId": "G",
+                  "step": 1200
+                },
+                {
+                  "expr": "node_memory_PageTables_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_PageTables{namespace=\"$namespace\",node=\"$node\"}",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "PageTables",
+                  "refId": "H",
+                  "step": 1200
+                },
+                {
+                  "expr": "node_memory_VmallocUsed_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_VmallocUsed{namespace=\"$namespace\",node=\"$node\"}",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "VmallocUsed",
+                  "metric": "",
+                  "refId": "I",
+                  "step": 1200
+                },
+                {
+                  "expr": "(node_memory_SwapTotal_bytes{namespace=\"$namespace\",node=\"$node\"} - node_memory_SwapFree{namespace=\"$namespace\",node=\"$node\"}) or (node_memory_SwapTotal{namespace=\"$namespace\",node=\"$node\"} - node_memory_SwapFree{namespace=\"$namespace\",node=\"$node\"})",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "Swap",
+                  "metric": "",
+                  "refId": "C",
+                  "step": 1200
+                },
+                {
+                  "expr": "node_memory_Committed_AS_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_Committed_AS{namespace=\"$namespace\",node=\"$node\"}",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "Committed",
+                  "metric": "",
+                  "refId": "J",
+                  "step": 1200
+                },
+                {
+                  "expr": "node_memory_Mapped_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_Mapped{namespace=\"$namespace\",node=\"$node\"}",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "Mapped",
+                  "refId": "K",
+                  "step": 1200
+                },
+                {
+                  "expr": "node_memory_Active_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_Active{namespace=\"$namespace\",node=\"$node\"}",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "Active",
+                  "metric": "",
+                  "refId": "L",
+                  "step": 1200
+                },
+                {
+                  "expr": "node_memory_Inactive_bytes{namespace=\"$namespace\",node=\"$node\"} or node_memory_Inactive{namespace=\"$namespace\",node=\"$node\"}",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "Inactive",
+                  "metric": "",
+                  "refId": "M",
+                  "step": 1200
+                }
+              ],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Memory",
+              "tooltip": {
+                "msResolution": false,
+                "shared": true,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "show": true
+              },
+              "yaxes": [
+                {
+                  "format": "bytes",
+                  "label": "GB",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            }
+          ],
+          "title": "Memory"
+        },
+        {
+          "collapse": false,
+          "editable": true,
+          "height": "250px",
+          "panels": [
+            {
+              "aliasColors": {},
+              "bars": false,
+              "datasource": "prometheus-meta",
+              "editable": true,
+              "error": false,
+              "fill": 1,
+              "grid": {
+                "threshold1": null,
+                "threshold1Color": "rgba(216, 200, 27, 0.27)",
+                "threshold2": null,
+                "threshold2Color": "rgba(234, 112, 112, 0.22)"
+              },
+              "id": 13,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "minSpan": 2,
+              "nullPointMode": "connected",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "repeat": "node",
+              "seriesOverrides": [],
+              "span": 12,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "node_load1{namespace=\"$namespace\",node=\"$node\"}",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "load",
+                  "metric": "",
+                  "refId": "A",
+                  "step": 1200,
+                  "target": ""
+                }
+              ],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Load",
+              "tooltip": {
+                "msResolution": false,
+                "shared": true,
+                "value_type": "cumulative"
+              },
+              "type": "graph",
+              "xaxis": {
+                "show": true
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            }
+          ],
+          "title": "Load"
+        },
+        {
+          "collapse": false,
+          "editable": true,
+          "height": "250px",
+          "panels": [
+            {
+              "aliasColors": {},
+              "bars": false,
+              "datasource": "prometheus-meta",
+              "decimals": 3,
+              "editable": true,
+              "error": false,
+              "fill": 1,
+              "grid": {
+                "threshold1": null,
+                "threshold1Color": "rgba(216, 200, 27, 0.27)",
+                "threshold2": null,
+                "threshold2Color": "rgba(234, 112, 112, 0.22)"
+              },
+              "id": 9,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "minSpan": 2,
+              "nullPointMode": "connected",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "repeat": "node",
+              "seriesOverrides": [],
+              "span": 12,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "100.0 - 100 * (node_filesystem_avail_bytes{namespace=\"$namespace\",node=\"$node\",device !~'tmpfs',device!~'by-uuid'} / node_filesystem_size_bytes{namespace=\"$namespace\",node=\"$node\",device !~'tmpfs',device!~'by-uuid'}) or 100.0 - 100 * (node_filesystem_avail{namespace=\"$namespace\",node=\"$node\",device !~'tmpfs',device!~'by-uuid'} / node_filesystem_size{namespace=\"$namespace\",node=\"$node\",device !~'tmpfs',device!~'by-uuid'})",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "{{mountpoint}}",
+                  "metric": "",
+                  "refId": "A",
+                  "step": 1200,
+                  "target": ""
+                }
+              ],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Disk Space Used",
+              "tooltip": {
+                "msResolution": true,
+                "shared": true,
+                "value_type": "cumulative"
+              },
+              "type": "graph",
+              "xaxis": {
+                "show": true
+              },
+              "yaxes": [
+                {
+                  "format": "percent",
+                  "logBase": 1,
+                  "max": 100,
+                  "min": 0,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            }
+          ],
+          "title": "Disk Used"
+        },
+        {
+          "collapse": false,
+          "editable": true,
+          "height": "250px",
+          "panels": [
+            {
+              "aliasColors": {},
+              "bars": false,
+              "datasource": "prometheus-meta",
+              "editable": true,
+              "error": false,
+              "fill": 1,
+              "grid": {
+                "threshold1": null,
+                "threshold1Color": "rgba(216, 200, 27, 0.27)",
+                "threshold2": null,
+                "threshold2Color": "rgba(234, 112, 112, 0.22)"
+              },
+              "id": 19,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "minSpan": 2,
+              "nullPointMode": "connected",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "repeat": "node",
+              "seriesOverrides": [],
+              "span": 12,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "irate(node_disk_io_time_seconds_total{namespace=\"$namespace\",node=\"$node\"}[5m])/10 or irate(node_disk_io_time_ms{namespace=\"$namespace\",node=\"$node\"}[5m])/10",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "{{device}}",
+                  "metric": "",
+                  "refId": "A",
+                  "step": 1200,
+                  "target": ""
+                }
+              ],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Disk Utilization per Device",
+              "tooltip": {
+                "msResolution": false,
+                "shared": false,
+                "value_type": "cumulative"
+              },
+              "type": "graph",
+              "xaxis": {
+                "show": true
+              },
+              "yaxes": [
+                {
+                  "format": "percent",
+                  "logBase": 1,
+                  "max": 100,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            }
+          ],
+          "title": "Disk Utilization"
+        },
+        {
+          "collapse": false,
+          "editable": true,
+          "height": "250px",
+          "panels": [
+            {
+              "aliasColors": {},
+              "bars": false,
+              "datasource": "prometheus-meta",
+              "editable": true,
+              "error": false,
+              "fill": 1,
+              "grid": {
+                "threshold1": null,
+                "threshold1Color": "rgba(216, 200, 27, 0.27)",
+                "threshold2": null,
+                "threshold2Color": "rgba(234, 112, 112, 0.22)"
+              },
+              "id": 14,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "minSpan": 2,
+              "nullPointMode": "connected",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "repeat": "node",
+              "seriesOverrides": [
+                {
+                  "alias": "/.*_read$/",
+                  "transform": "negative-Y"
+                }
+              ],
+              "span": 12,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "irate(node_disk_reads_completed_total{namespace=\"$namespace\",node=\"$node\"}[5m]) or irate(node_disk_reads_completed{namespace=\"$namespace\",node=\"$node\"}[5m])",
+                  "interval": "",
+                  "intervalFactor": 4,
+                  "legendFormat": "{{device}}_read",
+                  "metric": "",
+                  "refId": "A",
+                  "step": 2400,
+                  "target": ""
+                },
+                {
+                  "expr": "irate(node_disk_writes_completed_total{namespace=\"$namespace\",node=\"$node\"}[5m]) or irate(node_disk_writes_completed{namespace=\"$namespace\",node=\"$node\"}[5m])",
+                  "intervalFactor": 2,
+                  "legendFormat": "{{device}}_write",
+                  "metric": "",
+                  "refId": "B",
+                  "step": 1200
+                }
+              ],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Disk IOs per Device",
+              "tooltip": {
+                "msResolution": false,
+                "shared": false,
+                "value_type": "cumulative"
+              },
+              "type": "graph",
+              "xaxis": {
+                "show": true
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "label": "IO/second read (-) / write (+)",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            }
+          ],
+          "title": "Disk IOs per device"
+        },
+        {
+          "collapse": false,
+          "editable": true,
+          "height": "250px",
+          "panels": [
+            {
+              "aliasColors": {},
+              "bars": false,
+              "datasource": "prometheus-meta",
+              "editable": true,
+              "error": false,
+              "fill": 1,
+              "grid": {
+                "threshold1": null,
+                "threshold1Color": "rgba(216, 200, 27, 0.27)",
+                "threshold2": null,
+                "threshold2Color": "rgba(234, 112, 112, 0.22)"
+              },
+              "id": 18,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "minSpan": 2,
+              "nullPointMode": "connected",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "repeat": "node",
+              "seriesOverrides": [
+                {
+                  "alias": "/.*_read/",
+                  "transform": "negative-Y"
+                }
+              ],
+              "span": 12,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "irate(node_disk_read_bytes_total{namespace=\"$namespace\",node=\"$node\"}[5m]) * 512 or irate(node_disk_sectors_read{namespace=\"$namespace\",node=\"$node\"}[5m]) * 512",
+                  "interval": "",
+                  "intervalFactor": 4,
+                  "legendFormat": "{{device}}_read",
+                  "refId": "B",
+                  "step": 2400
+                },
+                {
+                  "expr": "irate(node_disk_written_bytes_total{namespace=\"$namespace\",node=\"$node\"}[5m]) * 512 or irate(node_disk_sectors_written{namespace=\"$namespace\",node=\"$node\"}[5m]) * 512",
+                  "interval": "",
+                  "intervalFactor": 4,
+                  "legendFormat": "{{device}}_write",
+                  "metric": "",
+                  "refId": "A",
+                  "step": 2400,
+                  "target": ""
+                }
+              ],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Disk Throughput per Device",
+              "tooltip": {
+                "msResolution": false,
+                "shared": false,
+                "value_type": "cumulative"
+              },
+              "type": "graph",
+              "xaxis": {
+                "show": true
+              },
+              "yaxes": [
+                {
+                  "format": "bytes",
+                  "label": "Bytes/second read (-) / write (+)",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            }
+          ],
+          "title": "Disk Throughput per device"
+        },
+        {
+          "collapse": false,
+          "editable": true,
+          "height": "250px",
+          "panels": [
+            {
+              "aliasColors": {},
+              "bars": false,
+              "datasource": "prometheus-meta",
+              "editable": true,
+              "error": false,
+              "fill": 1,
+              "grid": {
+                "threshold1": null,
+                "threshold1Color": "rgba(216, 200, 27, 0.27)",
+                "threshold2": null,
+                "threshold2Color": "rgba(234, 112, 112, 0.22)"
+              },
+              "id": 22,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "minSpan": 2,
+              "nullPointMode": "connected",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "repeat": "node",
+              "seriesOverrides": [],
+              "span": 12,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "irate(node_context_switches_total{namespace=\"$namespace\",node=\"$node\"}[5m]) or irate(node_context_switches{namespace=\"$namespace\",node=\"$node\"}[5m])",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "context switches",
+                  "metric": "",
+                  "refId": "A",
+                  "step": 1200,
+                  "target": ""
+                }
+              ],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Context Switches",
+              "tooltip": {
+                "msResolution": false,
+                "shared": true,
+                "value_type": "cumulative"
+              },
+              "type": "graph",
+              "xaxis": {
+                "show": true
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            }
+          ],
+          "title": "Network Traffic"
+        },
+        {
+          "collapse": false,
+          "editable": true,
+          "height": "250px",
+          "panels": [
+            {
+              "aliasColors": {},
+              "bars": false,
+              "datasource": "prometheus-meta",
+              "editable": true,
+              "error": false,
+              "fill": 1,
+              "grid": {
+                "threshold1": null,
+                "threshold1Color": "rgba(216, 200, 27, 0.27)",
+                "threshold2": null,
+                "threshold2Color": "rgba(234, 112, 112, 0.22)"
+              },
+              "id": 12,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "minSpan": 2,
+              "nullPointMode": "connected",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "repeat": "node",
+              "seriesOverrides": [
+                {
+                  "alias": "/.*_in/",
+                  "transform": "negative-Y"
+                }
+              ],
+              "span": 12,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "irate(node_network_receive_bytes_total{namespace=\"$namespace\",node=\"$node\"}[5m])*8 or irate(node_network_receive_bytes{namespace=\"$namespace\",node=\"$node\"}[5m])*8",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "{{device}}_in",
+                  "metric": "",
+                  "refId": "A",
+                  "step": 1200,
+                  "target": ""
+                },
+                {
+                  "expr": "irate(node_network_transmit_bytes_total{namespace=\"$namespace\",node=\"$node\"}[5m])*8 or irate(node_network_transmit_bytes{namespace=\"$namespace\",node=\"$node\"}[5m])*8",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "{{device}}_out",
+                  "refId": "B",
+                  "step": 1200
+                }
+              ],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Network Traffic",
+              "tooltip": {
+                "msResolution": false,
+                "shared": true,
+                "value_type": "cumulative"
+              },
+              "type": "graph",
+              "xaxis": {
+                "show": true
+              },
+              "yaxes": [
+                {
+                  "format": "bits",
+                  "label": "bits in (-) / bits out (+)",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            }
+          ],
+          "repeat": null,
+          "title": "New row"
+        },
+        {
+          "collapse": false,
+          "editable": true,
+          "height": "250px",
+          "panels": [
+            {
+              "aliasColors": {},
+              "bars": false,
+              "datasource": "prometheus-meta",
+              "editable": true,
+              "error": false,
+              "fill": 1,
+              "grid": {
+                "threshold1": null,
+                "threshold1Color": "rgba(216, 200, 27, 0.27)",
+                "threshold2": null,
+                "threshold2Color": "rgba(234, 112, 112, 0.22)"
+              },
+              "id": 21,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "minSpan": 2,
+              "nullPointMode": "connected",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "repeat": "node",
+              "seriesOverrides": [],
+              "span": 12,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "node_netstat_Tcp_CurrEstab{namespace=\"$namespace\",node=\"$node\"}",
+                  "intervalFactor": 2,
+                  "legendFormat": "established",
+                  "refId": "A",
+                  "step": 1200,
+                  "target": ""
+                }
+              ],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Netstat",
+              "tooltip": {
+                "msResolution": false,
+                "shared": true,
+                "value_type": "cumulative"
+              },
+              "type": "graph",
+              "xaxis": {
+                "show": true
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            }
+          ],
+          "title": "New row"
+        },
+        {
+          "collapse": false,
+          "editable": true,
+          "height": "250px",
+          "panels": [
+            {
+              "aliasColors": {},
+              "bars": false,
+              "datasource": "prometheus-meta",
+              "editable": true,
+              "error": false,
+              "fill": 1,
+              "grid": {
+                "threshold1": null,
+                "threshold1Color": "rgba(216, 200, 27, 0.27)",
+                "threshold2": null,
+                "threshold2Color": "rgba(234, 112, 112, 0.22)"
+              },
+              "id": 23,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "minSpan": 2,
+              "nullPointMode": "connected",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "repeat": "node",
+              "seriesOverrides": [
+                {
+                  "alias": "/.*Out.*/",
+                  "transform": "negative-Y"
+                },
+                {
+                  "alias": "Udp_NoPorts",
+                  "yaxis": 2
+                }
+              ],
+              "span": 12,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "irate(node_netstat_Udp_InDatagrams{namespace=\"$namespace\",node=\"$node\"}[5m])",
+                  "intervalFactor": 2,
+                  "legendFormat": "Udp_InDatagrams",
+                  "refId": "A",
+                  "step": 1200,
+                  "target": ""
+                },
+                {
+                  "expr": "irate(node_netstat_Udp_InErrors{namespace=\"$namespace\",node=\"$node\"}[5m])",
+                  "intervalFactor": 2,
+                  "legendFormat": "Udp_InErrors",
+                  "refId": "B",
+                  "step": 1200
+                },
+                {
+                  "expr": "irate(node_netstat_Udp_OutDatagrams{namespace=\"$namespace\",node=\"$node\"}[5m])",
+                  "interval": "",
+                  "intervalFactor": 2,
+                  "legendFormat": "Udp_OutDatagrams",
+                  "refId": "C",
+                  "step": 1200
+                },
+                {
+                  "expr": "irate(node_netstat_Udp_NoPorts{namespace=\"$namespace\",node=\"$node\"}[5m])",
+                  "intervalFactor": 2,
+                  "legendFormat": "Udp_NoPorts",
+                  "refId": "D",
+                  "step": 1200
+                }
+              ],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "UDP Stats",
+              "tooltip": {
+                "msResolution": false,
+                "shared": true,
+                "value_type": "cumulative"
+              },
+              "type": "graph",
+              "xaxis": {
+                "show": true
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            }
+          ],
+          "title": "New row"
+        },
+        {
+          "collapse": false,
+          "editable": true,
+          "height": "250px",
+          "panels": [
+            {
+              "aliasColors": {},
+              "bars": false,
+              "datasource": "prometheus-meta",
+              "editable": true,
+              "error": false,
+              "fill": 1,
+              "grid": {
+                "threshold1": null,
+                "threshold1Color": "rgba(216, 200, 27, 0.27)",
+                "threshold2": null,
+                "threshold2Color": "rgba(234, 112, 112, 0.22)"
+              },
+              "id": 24,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 2,
+              "links": [],
+              "minSpan": 2,
+              "nullPointMode": "connected",
+              "percentage": false,
+              "pointradius": 5,
+              "points": false,
+              "renderer": "flot",
+              "repeat": "node",
+              "seriesOverrides": [],
+              "span": 12,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "expr": "node_nf_conntrack_entries_limit{namespace=\"$namespace\",node=\"$node\"} - node_nf_conntrack_entries{namespace=\"$namespace\",node=\"$node\"}",
+                  "intervalFactor": 2,
+                  "legendFormat": "free",
+                  "refId": "A",
+                  "step": 1200,
+                  "target": ""
+                }
+              ],
+              "timeFrom": null,
+              "timeShift": null,
+              "title": "Conntrack",
+              "tooltip": {
+                "msResolution": false,
+                "shared": true,
+                "value_type": "cumulative"
+              },
+              "type": "graph",
+              "xaxis": {
+                "show": true
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "max": null,
+                  "min": null,
+                  "show": true
+                }
+              ]
+            }
+          ],
+          "repeat": null,
+          "title": "New row"
+        }
+      ],
+      "templating": {
+        "list": [
+          {
+            "allValue": null,
+            "current": {},
+            "datasource": "prometheus-meta",
+            "hide": 0,
+            "includeAll": false,
+            "label": null,
+            "multi": false,
+            "name": "namespace",
+            "options": [],
+            "query": "label_values(namespace)",
+            "refresh": 2,
+            "regex": "default|prombench-\\d+",
+            "sort": 1,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": null,
+            "current": {},
+            "datasource": "prometheus-meta",
+            "hide": 0,
+            "includeAll": false,
+            "label": null,
+            "multi": false,
+            "name": "node",
+            "options": [],
+            "query": "label_values({namespace=\"$namespace\"}, node)",
+            "refresh": 2,
+            "regex": ".*",
+            "sort": 0,
+            "tagValuesQuery": null,
+            "tags": [],
+            "tagsQuery": null,
+            "type": "query",
+            "useTags": false
+          }
+        ]
+      },
+      "time": {
+        "from": "now-30m",
+        "to": "now"
+      },
+      "timepicker": {
+        "now": true,
+        "refresh_intervals": [
+          "5s",
+          "10s",
+          "30s",
+          "1m",
+          "5m",
+          "15m",
+          "30m",
+          "1h",
+          "2h",
+          "1d"
+        ],
+        "time_options": [
+          "5m",
+          "15m",
+          "1h",
+          "6h",
+          "12h",
+          "24h",
+          "2d",
+          "7d",
+          "30d"
+        ]
+      },
+      "annotations": {
+        "list": []
+      },
+      "schemaVersion": 12,
+      "version": 30,
+      "links": [],
+      "gnetId": 405
+    }
   prombench.json: |
     {
       "__requires": [
@@ -96,35 +1577,35 @@ data:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 1,
-                  "legendFormat": "{{"{{"}}node{{"}}"}} - Total memory",
+                  "legendFormat": "{{node}} - Total memory",
                   "refId": "E"
               },
               {
                   "expr": "node_memory_MemTotal_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"} - node_memory_MemFree_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"} - node_memory_Buffers_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"} - node_memory_Cached_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{"{{"}}node{{"}}"}} - Used",
+                  "legendFormat": "{{node}} - Used",
                   "refId": "A"
               },
               {
                   "expr": "node_memory_Buffers_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{"{{"}}node{{"}}"}} - Buffers",
+                  "legendFormat": "{{node}} - Buffers",
                   "refId": "B"
               },
               {
                   "expr": "node_memory_Cached_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{"{{"}}node{{"}}"}} - Cached",
+                  "legendFormat": "{{node}} - Cached",
                   "refId": "C"
               },
               {
                   "expr": "node_memory_MemFree_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{"{{"}}node{{"}}"}} - Free",
+                  "legendFormat": "{{node}} - Free",
                   "refId": "D"
               }
               ],
@@ -204,7 +1685,7 @@ data:
                   "expr": "irate(node_disk_io_time_seconds_total{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\",device!~'^(md\\\\\\\\d+$|dm-)'}[5m])",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{"{{"}}node{{"}}"}} - {{"{{"}}device{{"}}"}}",
+                  "legendFormat": "{{node}} - {{device}}",
                   "refId": "A"
               }
               ],
@@ -284,14 +1765,14 @@ data:
                   "expr": "irate(node_context_switches_total{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}[5m])",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{"{{"}}node{{"}}"}} - Context Switches",
+                  "legendFormat": "{{node}} - Context Switches",
                   "refId": "A"
               },
               {
                   "expr": "irate(node_intr_total{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}[5m])",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{"{{"}}node{{"}}"}} - Interrupts",
+                  "legendFormat": "{{node}} - Interrupts",
                   "refId": "B"
               }
               ],
@@ -373,7 +1854,7 @@ data:
                   "expr": "100 - ((node_filesystem_avail_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\",device!~'rootfs'} * 100) / node_filesystem_size_bytes{node=~'(test+).*',device!~'rootfs'})",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{"{{"}}node{{"}}"}} - {{"{{"}}mountpoint{{"}}"}}",
+                  "legendFormat": "{{node}} - {{mountpoint}}",
                   "refId": "A"
               }
               ],
@@ -455,21 +1936,21 @@ data:
                   "expr": "node_load1{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{"{{"}}node{{"}}"}} - Load 1m",
+                  "legendFormat": "{{node}} - Load 1m",
                   "refId": "A"
               },
               {
                   "expr": "node_load5{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{"{{"}}node{{"}}"}} - Load 5m",
+                  "legendFormat": "{{node}} - Load 5m",
                   "refId": "B"
               },
               {
                   "expr": "node_load15{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{"{{"}}node{{"}}"}} - Load 15m",
+                  "legendFormat": "{{node}} - Load 15m",
                   "refId": "C"
               }
               ],
@@ -549,7 +2030,7 @@ data:
                   "expr": "1 - node_filesystem_free_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\",fstype!='rootfs',mountpoint!~'/(run|var).*',mountpoint!=''} / node_filesystem_size_bytes{job=\"node-exporter\",namespace=\"prombench-[[pr-number]]\",node=~\"(test+).*\"}",
                   "format": "time_series",
                   "intervalFactor": 1,
-                  "legendFormat": "{{"{{"}}node{{"}}"}} - {{"{{"}}mountpoint{{"}}"}}",
+                  "legendFormat": "{{node}} - {{mountpoint}}",
                   "refId": "A"
               }
               ],
@@ -646,7 +2127,7 @@ data:
               "expr": "prometheus_build_info{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - {{"{{"}}version{{"}}"}} - {{"{{"}}revision{{"}}"}}",
+              "legendFormat": "{{prometheus}} - {{version}} - {{revision}}",
               "refId": "A"
           }
           ],
@@ -726,7 +2207,7 @@ data:
               "expr": "time() - process_start_time_seconds{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Uptime",
+              "legendFormat": "{{prometheus}} - Uptime",
               "refId": "A"
           }
           ],
@@ -809,14 +2290,14 @@ data:
               "expr": "process_max_fds{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Max",
+              "legendFormat": "{{prometheus}} - Max",
               "refId": "A"
           },
           {
               "expr": "process_open_fds{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Open",
+              "legendFormat": "{{prometheus}} - Open",
               "refId": "B"
           }
           ],
@@ -904,7 +2385,7 @@ data:
               "expr": "prometheus_tsdb_head_series{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Time series",
+              "legendFormat": "{{prometheus}} - Time series",
               "metric": "prometheus_local_storage_memory_series",
               "refId": "A",
               "step": 10
@@ -994,7 +2475,7 @@ data:
               "expr": "prometheus_tsdb_head_active_appenders{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Head Appenders",
+              "legendFormat": "{{prometheus}} - Head Appenders",
               "metric": "prometheus_local_storage_memory_series",
               "refId": "A",
               "step": 10
@@ -1081,7 +2562,7 @@ data:
               "expr": "rate(prometheus_tsdb_head_samples_appended_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - samples/s",
+              "legendFormat": "{{prometheus}} - samples/s",
               "metric": "prometheus_local_storage_ingested_samples_total",
               "refId": "A",
               "step": 10
@@ -1177,7 +2658,7 @@ data:
               "expr": "prometheus_tsdb_head_chunks{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Chunks",
+              "legendFormat": "{{prometheus}} - Chunks",
               "metric": "prometheus_local_storage_memory_chunks",
               "refId": "A",
               "step": 10
@@ -1267,7 +2748,7 @@ data:
               "expr": "rate(prometheus_tsdb_head_chunks_created_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Created",
+              "legendFormat": "{{prometheus}} - Created",
               "metric": "prometheus_local_storage_chunk_ops_total",
               "refId": "A",
               "step": 10
@@ -1358,7 +2839,7 @@ data:
               "expr": "rate(prometheus_tsdb_head_chunks_removed_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Removed",
+              "legendFormat": "{{prometheus}} - Removed",
               "metric": "prometheus_local_storage_chunk_ops_total",
               "refId": "B",
               "step": 10
@@ -1457,7 +2938,7 @@ data:
               "expr": "prometheus_tsdb_head_min_time{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Min",
+              "legendFormat": "{{prometheus}} - Min",
               "metric": "prometheus_local_storage_series_chunks_persisted_count",
               "refId": "A",
               "step": 10
@@ -1474,7 +2955,7 @@ data:
               "expr": "prometheus_tsdb_head_max_time{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Max",
+              "legendFormat": "{{prometheus}} - Max",
               "metric": "prometheus_local_storage_series_chunks_persisted_count",
               "refId": "B",
               "step": 10
@@ -1565,7 +3046,7 @@ data:
               "expr": "rate(prometheus_tsdb_head_gc_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m]) / rate(prometheus_tsdb_head_gc_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - GC Time/s",
+              "legendFormat": "{{prometheus}} - GC Time/s",
               "metric": "prometheus_local_storage_series_chunks_persisted_count",
               "refId": "A",
               "step": 10
@@ -1660,7 +3141,7 @@ data:
               "expr": "prometheus_tsdb_blocks_loaded{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Blocks Loaded",
+              "legendFormat": "{{prometheus}} - Blocks Loaded",
               "metric": "prometheus_local_storage_indexing_batch_sizes_sum",
               "refId": "A",
               "step": 10
@@ -1751,7 +3232,7 @@ data:
           {
               "expr": "rate(go_memstats_alloc_bytes_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Allocated Bytes/s",
+              "legendFormat": "{{prometheus}} - Allocated Bytes/s",
               "metric": "go_memstats_alloc_bytes",
               "refId": "A",
               "step": 10
@@ -1844,7 +3325,7 @@ data:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Reloads",
+              "legendFormat": "{{prometheus}} - Reloads",
               "metric": "prometheus_local_storage_series_chunks_persisted_count",
               "refId": "A",
               "step": 10
@@ -1937,7 +3418,7 @@ data:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - WAL Corruptions",
+              "legendFormat": "{{prometheus}} - WAL Corruptions",
               "metric": "prometheus_local_storage_series_chunks_persisted_count",
               "refId": "A",
               "step": 10
@@ -1947,7 +3428,7 @@ data:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Reload Failures",
+              "legendFormat": "{{prometheus}} - Reload Failures",
               "metric": "prometheus_local_storage_series_chunks_persisted_count",
               "refId": "B",
               "step": 10
@@ -1957,7 +3438,7 @@ data:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Head Series Not Found",
+              "legendFormat": "{{prometheus}} - Head Series Not Found",
               "metric": "prometheus_local_storage_series_chunks_persisted_count",
               "refId": "C",
               "step": 10
@@ -1967,7 +3448,7 @@ data:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Compaction Failures",
+              "legendFormat": "{{prometheus}} - Compaction Failures",
               "metric": "prometheus_local_storage_series_chunks_persisted_count",
               "refId": "D",
               "step": 10
@@ -1977,7 +3458,7 @@ data:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Retention Cutoff Failures",
+              "legendFormat": "{{prometheus}} - Retention Cutoff Failures",
               "metric": "prometheus_local_storage_series_chunks_persisted_count",
               "refId": "E",
               "step": 10
@@ -2069,7 +3550,7 @@ data:
               "expr": "rate(prometheus_tsdb_retention_cutoffs_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Retention Cutoffs",
+              "legendFormat": "{{prometheus}} - Retention Cutoffs",
               "metric": "last",
               "refId": "A",
               "step": 10
@@ -2161,7 +3642,7 @@ data:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Fsync Latency",
+              "legendFormat": "{{prometheus}} - Fsync Latency",
               "metric": "prometheus_local_storage_series_chunks_persisted_count",
               "refId": "A",
               "step": 10
@@ -2253,7 +3734,7 @@ data:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Truncate Latency",
+              "legendFormat": "{{prometheus}} - Truncate Latency",
               "metric": "prometheus_local_storage_series_chunks_persisted_count",
               "refId": "B",
               "step": 10
@@ -2343,7 +3824,7 @@ data:
               "expr": "rate(prometheus_tsdb_compaction_chunk_size_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_samples_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Bytes/Sample",
+              "legendFormat": "{{prometheus}} - Bytes/Sample",
               "metric": "prometheus_local_storage_series_chunks_persisted_count",
               "refId": "A",
               "step": 10
@@ -2434,7 +3915,7 @@ data:
               "expr": "rate(prometheus_tsdb_compaction_chunk_range_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_range_count{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Chunk Time Range",
+              "legendFormat": "{{prometheus}} - Chunk Time Range",
               "metric": "prometheus_local_storage_series_chunks_persisted_count",
               "refId": "A",
               "step": 10
@@ -2525,7 +4006,7 @@ data:
               "expr": "rate(prometheus_tsdb_compaction_chunk_samples_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_samples_count{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Chunk Samples",
+              "legendFormat": "{{prometheus}} - Chunk Samples",
               "metric": "prometheus_local_storage_series_chunks_persisted_count",
               "refId": "A",
               "step": 10
@@ -2617,7 +4098,7 @@ data:
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Compactions",
+              "legendFormat": "{{prometheus}} - Compactions",
               "metric": "prometheus_local_storage_series_chunks_persisted_count",
               "refId": "A",
               "step": 10
@@ -2708,7 +4189,7 @@ data:
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}}",
+              "legendFormat": "{{prometheus}}",
               "metric": "prometheus_local_storage_series_chunks_persisted_count",
               "refId": "A",
               "step": 10
@@ -2796,7 +4277,7 @@ data:
           {
               "expr": "irate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Irate",
+              "legendFormat": "{{prometheus}} - Irate",
               "metric": "prometheus_local_storage_ingested_samples_total",
               "refId": "A",
               "step": 10
@@ -2804,7 +4285,7 @@ data:
           {
               "expr": "rate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[5m])",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - 5m rate",
+              "legendFormat": "{{prometheus}} - 5m rate",
               "metric": "prometheus_local_storage_ingested_samples_total",
               "refId": "B",
               "step": 10
@@ -2907,7 +4388,7 @@ data:
           {
               "expr": "process_resident_memory_bytes{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - RSS",
+              "legendFormat": "{{prometheus}} - RSS",
               "metric": "process_resident_memory_bytes",
               "refId": "B",
               "step": 10
@@ -2915,7 +4396,7 @@ data:
           {
               "expr": "prometheus_local_storage_target_heap_size_bytes{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Target heap size",
+              "legendFormat": "{{prometheus}} - Target heap size",
               "metric": "go_memstats_alloc_bytes",
               "refId": "D",
               "step": 10
@@ -2923,7 +4404,7 @@ data:
           {
               "expr": "go_memstats_next_gc_bytes{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Next GC",
+              "legendFormat": "{{prometheus}} - Next GC",
               "metric": "go_memstats_next_gc_bytes",
               "refId": "C",
               "step": 10
@@ -2931,7 +4412,7 @@ data:
           {
               "expr": "go_memstats_alloc_bytes{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Allocated",
+              "legendFormat": "{{prometheus}} - Allocated",
               "metric": "go_memstats_alloc_bytes",
               "refId": "A",
               "step": 10
@@ -3022,7 +4503,7 @@ data:
               "expr": "rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - {{"{{"}}handler{{"}}"}}",
+              "legendFormat": "{{prometheus}} - {{handler}}",
               "metric": "prometheus_local_storage_memory_chunkdescs",
               "refId": "A",
               "step": 10
@@ -3113,7 +4594,7 @@ data:
               "expr": "rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - {{"{{"}}handler{{"}}"}}",
+              "legendFormat": "{{prometheus}} - {{handler}}",
               "metric": "prometheus_local_storage_memory_chunkdescs",
               "refId": "A",
               "step": 10
@@ -3205,7 +4686,7 @@ data:
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}}",
+              "legendFormat": "{{prometheus}}",
               "metric": "prometheus_local_storage_memory_chunkdescs",
               "refId": "A",
               "step": 10
@@ -3297,7 +4778,7 @@ data:
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}}",
+              "legendFormat": "{{prometheus}}",
               "metric": "prometheus_local_storage_memory_chunkdescs",
               "refId": "A",
               "step": 10
@@ -3389,7 +4870,7 @@ data:
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}}",
+              "legendFormat": "{{prometheus}}",
               "metric": "prometheus_local_storage_memory_chunkdescs",
               "refId": "A",
               "step": 10
@@ -3481,7 +4962,7 @@ data:
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}}",
+              "legendFormat": "{{prometheus}}",
               "metric": "prometheus_local_storage_memory_chunkdescs",
               "refId": "A",
               "step": 10
@@ -3571,7 +5052,7 @@ data:
               "expr": "rate(prometheus_rule_group_iterations_missed_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])  ",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Rule group missed",
+              "legendFormat": "{{prometheus}} - Rule group missed",
               "metric": "prometheus_local_storage_memory_chunkdescs",
               "refId": "B",
               "step": 10
@@ -3580,7 +5061,7 @@ data:
               "expr": "rate(prometheus_rule_evaluation_failures_total{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Rule evals failed",
+              "legendFormat": "{{prometheus}} - Rule evals failed",
               "metric": "prometheus_local_storage_memory_chunkdescs",
               "refId": "C",
               "step": 10
@@ -3670,7 +5151,7 @@ data:
               "expr": "rate(prometheus_rule_group_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[1m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Rule evaluation duration",
+              "legendFormat": "{{prometheus}} - Rule evaluation duration",
               "metric": "prometheus_local_storage_memory_chunkdescs",
               "refId": "A",
               "step": 10
@@ -3764,7 +5245,7 @@ data:
               "expr": "prometheus_rule_group_interval_seconds{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\",rule_group=~\"$RuleGroup\"}\n",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Interval",
+              "legendFormat": "{{prometheus}} - Interval",
               "metric": "prometheus_local_storage_memory_chunkdescs",
               "refId": "A",
               "step": 10
@@ -3773,7 +5254,7 @@ data:
               "expr": "prometheus_rule_group_last_duration_seconds{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\",rule_group=~\"$RuleGroup\"}\n",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{"{{"}}prometheus{{"}}"}} - Last Duration",
+              "legendFormat": "{{prometheus}} - Last Duration",
               "metric": "prometheus_local_storage_memory_chunkdescs",
               "refId": "B",
               "step": 10
