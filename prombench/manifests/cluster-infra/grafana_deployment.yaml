@@ -48,36 +48,27 @@ spec:
         volumeMounts:
         - name: grafana-persistent-storage
           mountPath: /var/lib/grafana
-        - name: grafana-datasources
+        - name: grafana-datasource-provision
           mountPath: /opt/grafana-provision/datasources
         - name: grafana-dashboard-provision
-          mountPath: /opt/grafana-provision/dashboards/prometheus-dashboard.yaml
-          subPath: prometheus-dashboard.yaml
-        # dashboards json are saved in the path mentioned in grafana-dashboard-provision
-        - name: grafana-dashboard-prombench
-          mountPath: /opt/grafana-provision/dashboards/prombench.json
-          subPath: prombench.json
-        - name: grafana-dashboard-node-metrics
-          mountPath: /opt/grafana-provision/dashboards/node-metrics.json
-          subPath: node-metrics.json
+          mountPath: /opt/grafana-provision/dashboards
+        - name: grafana-dashboards
+          mountPath: /var/lib/grafana/dashboards
         ports:
         - name: grafana-web
           containerPort: 3000
       volumes:
       - name: grafana-persistent-storage
         emptyDir: {}
-      - name: grafana-datasources
+      - name: grafana-datasource-provision
         configMap:
-          name: grafana-datasources
+          name: grafana-datasource-provision
       - name: grafana-dashboard-provision
         configMap:
           name: grafana-dashboard-provision
-      - name: grafana-dashboard-prombench
+      - name: grafana-dashboards
         configMap:
-          name: grafana-dashboard-prombench
-      - name: grafana-dashboard-node-metrics
-        configMap:
-          name: grafana-dashboard-node-metrics
+          name: grafana-dashboards
       nodeSelector:
         cloud.google.com/gke-nodepool: main-node
 ---
