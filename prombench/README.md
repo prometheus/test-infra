@@ -72,7 +72,7 @@ export GITHUB_REPO=prometheus
 Place a workflow file in the `.github` directory of the repository.
 See the [prometheus/prometheus](https://github.com/prometheus/prometheus) repository for an example.
 
-Create a github action `AUTH_FILE` secret with the base64 encoded content of the `service-account.json` file.
+Create a github action `PROMBENCH_GKE_AUTH` secret with the base64 encoded content of the `service-account.json` file.
 ```
 cat $AUTH_FILE | base64 -w 0
 ```
