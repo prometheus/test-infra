@@ -14,45 +14,40 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strconv"
-	"strings"
-	"text/template"
 
 	"github.com/google/go-github/v26/github"
 	"golang.org/x/oauth2"
 	"gopkg.in/alecthomas/kingpin.v2"
+	"gopkg.in/yaml.v3"
 )
 
-type githubClient struct {
-	clt   *github.Client
-	owner string
-	repo  string
-	pr    int
-}
-
-type commentMonitorClient struct {
-	ghClient           githubClient
-	allArgs            map[string]string
+type commentMonitorConfig struct {
 	inputFilePath      string
 	outputDirPath      string
+	eventMapFilePath   string
 	regexString        string
-	regex              *regexp.Regexp
 	verifyUserDisabled bool
+	webhook            bool
+	eventMap           webhookEventMaps
 }
+
+type webhookEventMap struct {
+	EventType       string `yaml:"event_type"`
+	CommentTemplate string `yaml:"comment_template"`
+	RegexString     string `yaml:"regex_string"`
+}
+
+type webhookEventMaps []webhookEventMap
 
 func main() {
 	log.SetFlags(log.Ltime | log.Lshortfile)
-	cmClient := commentMonitorClient{
-		allArgs: make(map[string]string),
-	}
+	cmConfig := commentMonitorConfig{}
 
 	app := kingpin.New(filepath.Base(os.Args[0]), `commentMonitor github comment extract
 	./commentMonitor -i /path/event.json -o /path "^myregex$"
@@ -62,27 +57,136 @@ func main() {
 	app.Flag("input", "path to event.json").
 		Short('i').
 		Default("/github/workflow/event.json").
-		StringVar(&cmClient.inputFilePath)
+		StringVar(&cmConfig.inputFilePath)
 	app.Flag("output", "path to write args to").
 		Short('o').
 		Default("/github/home/commentMonitor").
-		StringVar(&cmClient.outputDirPath)
+		StringVar(&cmConfig.outputDirPath)
 	app.Flag("no-verify-user", "disable verifying user").
-		BoolVar(&cmClient.verifyUserDisabled)
+		BoolVar(&cmConfig.verifyUserDisabled)
+	app.Flag("webhook", "enable webhook mode").
+		BoolVar(&cmConfig.webhook)
+	app.Flag("eventmap", "Filepath to eventmap file.").
+		Default("./eventmap.yaml").
+		StringVar(&cmConfig.eventMapFilePath)
 	app.Arg("regex", "Regex pattern to match").
-		StringVar(&cmClient.regexString)
+		StringVar(&cmConfig.regexString)
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	err := os.MkdirAll(cmClient.outputDirPath, os.ModePerm)
+	if cmConfig.webhook {
+		// get eventmap file.
+		data, err := ioutil.ReadFile(cmConfig.eventMapFilePath)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		err = yaml.Unmarshal(data, &cmConfig.eventMap)
+		if err != nil {
+			log.Fatalf("cannot unmarshal data: %v", err)
+		}
+		// run webhook server.
+		http.HandleFunc("/", cmConfig.webhookExtract)
+		log.Fatal(http.ListenAndServe(":8080", nil))
+	}
+	cmConfig.eventJSONExtract()
+}
+
+func newGithubClient(ctx context.Context, e *github.IssueCommentEvent) githubClient {
+	ghToken := os.Getenv("GITHUB_TOKEN")
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: ghToken})
+	tc := oauth2.NewClient(ctx, ts)
+	return githubClient{
+		clt:               github.NewClient(tc),
+		owner:             *e.GetRepo().Owner.Login,
+		repo:              *e.GetRepo().Name,
+		pr:                *e.GetIssue().Number,
+		author:            *e.Sender.Login,
+		authorAssociation: *e.GetComment().AuthorAssociation,
+		commentBody:       *e.GetComment().Body,
+	}
+}
+
+func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	payload, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "unable to read webhook body", http.StatusBadRequest)
+	}
+
+	// Setup commentMonitor client.
+	cmClient := commentMonitorClient{
+		allArgs: make(map[string]string),
+	}
+
+	// Parse webhook event.
+	event, err := github.ParseWebHook(github.WebHookType(r), payload)
+	if err != nil {
+		http.Error(w, "unable to parse webhook", http.StatusBadRequest)
+	}
+
+	switch e := event.(type) {
+	case *github.IssueCommentEvent:
+
+		// Setup github client.
+		ctx := context.Background()
+		cmClient.ghClient = newGithubClient(ctx, e)
+
+		// Validate regex.
+		err := cmClient.validateRegex(c.regexString)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "comment validation failed", http.StatusBadRequest)
+		}
+
+		// Verify user
+		err = cmClient.verifyUser(ctx, c.verifyUserDisabled)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "comment validation failed", http.StatusForbidden)
+		}
+
+		// Extract args.
+		err = cmClient.extractArgs(ctx, c.outputDirPath)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "could not extract arguments", http.StatusBadRequest)
+		}
+
+		// Post generated comment to GitHub pr.
+		err = cmClient.generateAndPostComment(ctx)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "could not post comment to GitHub", http.StatusBadRequest)
+		}
+
+		// Set label to Github pr.
+		err = cmClient.postLabel(ctx)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "could not set label to GitHub", http.StatusBadRequest)
+		}
+
+	default:
+		log.Fatalln("only issue_comment event is supported")
+	}
+}
+
+func (c commentMonitorConfig) eventJSONExtract() {
+	err := os.MkdirAll(c.outputDirPath, os.ModePerm)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	data, err := ioutil.ReadFile(cmClient.inputFilePath)
+	data, err := ioutil.ReadFile(c.inputFilePath)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	// Parsing event.json.
+	// Setup commentMonitor client.
+	cmClient := commentMonitorClient{
+		allArgs:         make(map[string]string),
+		commentTemplate: os.Getenv("COMMENT_TEMPLATE"),
+	}
+
+	// Parse event.json.
 	event, err := github.ParseWebHook("issue_comment", data)
 	if err != nil {
 		log.Fatalln(err)
@@ -91,142 +195,41 @@ func main() {
 	switch e := event.(type) {
 	case *github.IssueCommentEvent:
 
-		owner := *e.GetRepo().Owner.Login
-		repo := *e.GetRepo().Name
-		pr := *e.GetIssue().Number
-		author := *e.Sender.Login
-		authorAssociation := *e.GetComment().AuthorAssociation
-		commentBody := *e.GetComment().Body
-
-		// Setup commentMonitorClient.
+		// Setup github client.
 		ctx := context.Background()
-		cmClient.ghClient = newGithubClient(ctx, owner, repo, pr)
+		cmClient.ghClient = newGithubClient(ctx, e)
 
-		// Validate comment if regexString provided.
-		if cmClient.regexString != "" {
-			cmClient.regex = regexp.MustCompile(cmClient.regexString)
-			if !cmClient.regex.MatchString(commentBody) {
-				log.Fatalf("matching command not found. comment validation failed")
-			}
-			log.Println("comment validation successful")
+		// Validate regex.
+		err := cmClient.validateRegex(c.regexString)
+		if err != nil {
+			log.Fatalln(err)
 		}
 
-		// Verify if user is allowed to perform activity.
-		if !cmClient.verifyUserDisabled {
-			var allowed bool
-			allowedAssociations := []string{"COLLABORATOR", "MEMBER", "OWNER"}
-			for _, a := range allowedAssociations {
-				if a == authorAssociation {
-					allowed = true
-				}
-			}
-			if !allowed {
-				log.Printf("author is not a member or collaborator")
-				b := fmt.Sprintf("@%s is not a org member nor a collaborator and cannot execute benchmarks.", author)
-				if err := cmClient.ghClient.postComment(ctx, b); err != nil {
-					log.Fatalf("%v : couldn't post comment", err)
-				}
-				os.Exit(1)
-			}
-			log.Println("author is a member or collaborator")
+		// Verify user.
+		err = cmClient.verifyUser(ctx, c.verifyUserDisabled)
+		if err != nil {
+			log.Fatalln(err)
 		}
 
-		// Extract args if regexString provided.
-		if cmClient.regexString != "" {
-			// Add comment arguments.
-			commentArgs := cmClient.regex.FindStringSubmatch(commentBody)[1:]
-			commentArgsNames := cmClient.regex.SubexpNames()[1:]
-			for i, argName := range commentArgsNames {
-				if argName == "" {
-					log.Fatalln("using named groups is mandatory")
-				}
-				cmClient.allArgs[argName] = commentArgs[i]
-			}
-
-			// Add non-comment arguments if any.
-			cmClient.allArgs["PR_NUMBER"] = strconv.Itoa(pr)
-
-			err := cmClient.writeArgs()
-			if err != nil {
-				log.Fatalf("%v: could not write args to fs", err)
-			}
+		// Extract args.
+		err = cmClient.extractArgs(ctx, c.outputDirPath)
+		if err != nil {
+			log.Fatalln(err)
 		}
 
-		// Post generated comment to Github pr if COMMENT_TEMPLATE is set.
-		if os.Getenv("COMMENT_TEMPLATE") != "" {
-			err := cmClient.generateAndPostComment(ctx)
-			if err != nil {
-				log.Fatalf("%v: could not post comment", err)
-			}
+		// Post generated comment to GitHub pr.
+		err = cmClient.generateAndPostComment(ctx)
+		if err != nil {
+			log.Fatalln(err)
 		}
 
-		// Set label to Github pr if LABEL_NAME is set.
-		if os.Getenv("LABEL_NAME") != "" {
-			if err := cmClient.ghClient.createLabel(ctx, os.Getenv("LABEL_NAME")); err != nil {
-				log.Fatalf("%v : couldn't set label", err)
-			}
-			log.Println("label successfully set")
+		// Set label to Github pr.
+		err = cmClient.postLabel(ctx)
+		if err != nil {
+			log.Fatalln(err)
 		}
 
 	default:
 		log.Fatalln("only issue_comment event is supported")
 	}
-}
-
-func (c commentMonitorClient) writeArgs() error {
-	for filename, content := range c.allArgs {
-		data := []byte(content)
-		err := ioutil.WriteFile(filepath.Join(c.outputDirPath, filename), data, 0644)
-		if err != nil {
-			return fmt.Errorf("%v: could not write arg to filesystem", err)
-		}
-		log.Printf("file added: %v", filepath.Join(c.outputDirPath, filename))
-	}
-	return nil
-}
-
-func (c commentMonitorClient) generateAndPostComment(ctx context.Context) error {
-	// Add all env vars to allArgs.
-	for _, e := range os.Environ() {
-		tmp := strings.Split(e, "=")
-		c.allArgs[tmp[0]] = tmp[1]
-	}
-	// Generate the comment template.
-	var buf bytes.Buffer
-	commentTemplate := template.Must(template.New("Comment").
-		Parse(os.Getenv("COMMENT_TEMPLATE")))
-	if err := commentTemplate.Execute(&buf, c.allArgs); err != nil {
-		return err
-	}
-	// Post the comment.
-	if err := c.ghClient.postComment(ctx, buf.String()); err != nil {
-		return fmt.Errorf("%v : couldn't post generated comment", err)
-	}
-	log.Println("comment successfully posted")
-	return nil
-}
-
-// githubClient Methods
-func newGithubClient(ctx context.Context, owner, repo string, pr int) githubClient {
-	ghToken := os.Getenv("GITHUB_TOKEN")
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: ghToken})
-	tc := oauth2.NewClient(ctx, ts)
-	return githubClient{
-		clt:   github.NewClient(tc),
-		owner: owner,
-		repo:  repo,
-		pr:    pr,
-	}
-}
-
-func (c githubClient) postComment(ctx context.Context, commentBody string) error {
-	issueComment := &github.IssueComment{Body: github.String(commentBody)}
-	_, _, err := c.clt.Issues.CreateComment(ctx, c.owner, c.repo, c.pr, issueComment)
-	return err
-}
-
-func (c githubClient) createLabel(ctx context.Context, labelName string) error {
-	benchmarkLabel := []string{labelName}
-	_, _, err := c.clt.Issues.AddLabelsToIssue(ctx, c.owner, c.repo, c.pr, benchmarkLabel)
-	return err
 }
