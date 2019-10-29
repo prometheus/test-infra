@@ -37,8 +37,8 @@ type githubClient struct {
 // TODO: Once go-github starts supporting repository_dispatch event, use it.
 // https://github.com/google/go-github/issues/1316
 type repositoryDispatchEvent struct {
-	eventType     string
-	clientPayload map[string]string
+	EventType     string            `json:"event_type"`
+	ClientPayload map[string]string `json:"client_payload"`
 }
 
 func (c githubClient) postComment(ctx context.Context, commentBody string) error {
@@ -55,8 +55,8 @@ func (c githubClient) createLabel(ctx context.Context, labelName string) error {
 
 func (c githubClient) createRepositoryDispatch(ctx context.Context, eventType string, clientPayload map[string]string) error {
 	rd := repositoryDispatchEvent{
-		eventType:     eventType,
-		clientPayload: clientPayload,
+		EventType:     eventType,
+		ClientPayload: clientPayload,
 	}
 	body, err := json.Marshal(rd)
 	if err != nil {
@@ -68,9 +68,9 @@ func (c githubClient) createRepositoryDispatch(ctx context.Context, eventType st
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("token %v", os.Getenv("GITHUB_TOKEN")))
-	req.Header.Set("Accept", "application/vnd.github.everest-preview+json")
+	req.Header.Add("Authorization", fmt.Sprintf("token %v", os.Getenv("GITHUB_TOKEN")))
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/vnd.github.everest-preview+json")
 	_, err = httpClt.Do(req)
 	if err != nil {
 		return err

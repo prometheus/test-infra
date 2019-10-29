@@ -17,10 +17,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -28,7 +26,7 @@ import (
 )
 
 type commentMonitorClient struct {
-	ghClient        githubClient
+	ghClient        *githubClient
 	allArgs         map[string]string
 	regex           *regexp.Regexp
 	eventMap        webhookEventMaps
@@ -37,30 +35,17 @@ type commentMonitorClient struct {
 }
 
 // Validate comment if regexString provided.
-func (c commentMonitorClient) validateRegex(regexString string) error {
-	// For webhook.
-	if len(c.eventMap) != 0 {
-		for _, e := range c.eventMap {
-			c.regex = regexp.MustCompile(e.RegexString)
-			if c.regex.MatchString(c.ghClient.commentBody) {
-				c.commentTemplate = e.CommentTemplate
-				c.eventType = e.EventType
-				log.Println("comment validation successful")
-				return nil
-			}
+func (c *commentMonitorClient) validateRegex() error {
+	for _, e := range c.eventMap {
+		c.regex = regexp.MustCompile(e.RegexString)
+		if c.regex.MatchString(c.ghClient.commentBody) {
+			c.commentTemplate = e.CommentTemplate
+			c.eventType = e.EventType
+			log.Println("comment validation successful")
+			return nil
 		}
-		return fmt.Errorf("matching command not found. comment validation failed")
 	}
-
-	// For one-time run.
-	if regexString != "" {
-		c.regex = regexp.MustCompile(regexString)
-		if !c.regex.MatchString(c.ghClient.commentBody) {
-			return fmt.Errorf("matching command not found. comment validation failed")
-		}
-		log.Println("comment validation successful")
-	}
-	return nil
+	return fmt.Errorf("matching command not found. comment validation failed")
 }
 
 // Verify if user is allowed to perform activity.
@@ -86,7 +71,7 @@ func (c commentMonitorClient) verifyUser(ctx context.Context, verifyUserDisabled
 }
 
 // Extract args if regexString provided.
-func (c commentMonitorClient) extractArgs(ctx context.Context, outputDirPath string) error {
+func (c *commentMonitorClient) extractArgs(ctx context.Context) error {
 	if c.regex != nil {
 		// Add comment arguments.
 		commentArgs := c.regex.FindStringSubmatch(c.ghClient.commentBody)[1:]
@@ -101,16 +86,9 @@ func (c commentMonitorClient) extractArgs(ctx context.Context, outputDirPath str
 		// Add non-comment arguments if any.
 		c.allArgs["PR_NUMBER"] = strconv.Itoa(c.ghClient.pr)
 
-		if len(c.eventMap) != 0 {
-			err := c.ghClient.createRepositoryDispatch(ctx, c.eventType, c.allArgs)
-			if err != nil {
-				return fmt.Errorf("%v: could not create repository_dispatch event", err)
-			}
-		} else {
-			err := c.writeArgs(outputDirPath)
-			if err != nil {
-				return fmt.Errorf("%v: could not write args to fs", err)
-			}
+		err := c.ghClient.createRepositoryDispatch(ctx, c.eventType, c.allArgs)
+		if err != nil {
+			return fmt.Errorf("%v: could not create repository_dispatch event", err)
 		}
 
 	}
@@ -128,19 +106,6 @@ func (c commentMonitorClient) postLabel(ctx context.Context) error {
 	return nil
 }
 
-// writeArgs writes all arguments to the file system.
-func (c commentMonitorClient) writeArgs(outputDirPath string) error {
-	for filename, content := range c.allArgs {
-		data := []byte(content)
-		err := ioutil.WriteFile(filepath.Join(outputDirPath, filename), data, 0644)
-		if err != nil {
-			return fmt.Errorf("%v: could not write arg to filesystem", err)
-		}
-		log.Printf("file added: %v", filepath.Join(outputDirPath, filename))
-	}
-	return nil
-}
-
 func (c commentMonitorClient) generateAndPostComment(ctx context.Context) error {
 	if c.commentTemplate != "" {
 		// Add all env vars to allArgs.
@@ -148,6 +113,7 @@ func (c commentMonitorClient) generateAndPostComment(ctx context.Context) error 
 			tmp := strings.Split(e, "=")
 			c.allArgs[tmp[0]] = tmp[1]
 		}
+		fmt.Printf("All args: %#v", c.allArgs)
 		// Generate the comment template.
 		var buf bytes.Buffer
 		commentTemplate := template.Must(template.New("Comment").Parse(c.commentTemplate))

@@ -6,8 +6,10 @@ comments and set labels on the pr from which the comment was received.
 
 See [the github issue events api](https://developer.github.com/v3/issues/events/) for some examples.
 
+If running as a webhook, the `regex_string`, `event_type` and `comment_template` can be specified in the `eventmap.yml` file. See [Running as a webhook for more information](#running-as-a-webhook)
+
 #### Environment Variables:
-- `COMMENT_TEMPLATE`: If set, will post a comment with the content. It uses the Golang template variables substitutions. If content text includes a variable name `{{ index . "SOME_VAR" }}` that exists as an env variable or comment argument it is expanded with the content of the variable.
+- `COMMENT_TEMPLATE` (only used when **not** running in webhook mode) : If set, will post a comment with the content. It uses the Golang template variables substitutions. If content text includes a variable name `{{ index . "SOME_VAR" }}` that exists as an env variable or comment argument it is expanded with the content of the variable.
 - `LABEL_NAME`: If set, will add the label to the PR.
 - `GITHUB_TOKEN` : GitHub oauth token used for posting comments and settings the label.
 
@@ -22,6 +24,17 @@ For example, the following regex will create a file named `RELEASE` with the con
 ```
 
 The comment parsing is optional and is disabled when no regex is provided.
+
+## Running as a webhook
+Running comment monitor with the `--webhook` flag starts it in the webhook mode, it also requires the eventmap file which is specified by the `--eventmap` flag.
+
+Example content of the `eventmap.yml` file:
+```
+- event_type: prombench_stop
+  regex_string: (?mi)^/prombench\s+cancel\s*$
+  comment_template: |
+    Benchmark cancel is in progress.
+```
 
 ### Docker image build
 From the repository root:

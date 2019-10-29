@@ -15,11 +15,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/google/go-github/v26/github"
 	"golang.org/x/oauth2"
@@ -28,15 +30,13 @@ import (
 )
 
 type commentMonitorConfig struct {
-	inputFilePath      string
-	outputDirPath      string
-	eventMapFilePath   string
-	regexString        string
 	verifyUserDisabled bool
 	webhook            bool
+	eventMapFilePath   string
 	eventMap           webhookEventMaps
 }
 
+// Structure of eventmap.yaml file.
 type webhookEventMap struct {
 	EventType       string `yaml:"event_type"`
 	CommentTemplate string `yaml:"comment_template"`
@@ -49,52 +49,48 @@ func main() {
 	log.SetFlags(log.Ltime | log.Lshortfile)
 	cmConfig := commentMonitorConfig{}
 
-	app := kingpin.New(filepath.Base(os.Args[0]), `commentMonitor github comment extract
-	./commentMonitor -i /path/event.json -o /path "^myregex$"
-	Example of comment template environment variable:
-	COMMENT_TEMPLATE="The benchmark is starting. Your Github token is {{ index . "SOME_VAR" }}."`)
+	app := kingpin.New(filepath.Base(os.Args[0]), `commentMonitor GithubAction - Post and monitor GitHub comments.`)
 	app.HelpFlag.Short('h')
-	app.Flag("input", "path to event.json").
-		Short('i').
-		Default("/github/workflow/event.json").
-		StringVar(&cmConfig.inputFilePath)
-	app.Flag("output", "path to write args to").
-		Short('o').
-		Default("/github/home/commentMonitor").
-		StringVar(&cmConfig.outputDirPath)
 	app.Flag("no-verify-user", "disable verifying user").
 		BoolVar(&cmConfig.verifyUserDisabled)
 	app.Flag("webhook", "enable webhook mode").
 		BoolVar(&cmConfig.webhook)
 	app.Flag("eventmap", "Filepath to eventmap file.").
-		Default("./eventmap.yaml").
+		Default("./eventmap.yml").
 		StringVar(&cmConfig.eventMapFilePath)
-	app.Arg("regex", "Regex pattern to match").
-		StringVar(&cmConfig.regexString)
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	if cmConfig.webhook {
-		// get eventmap file.
+		// Get eventmap file.
 		data, err := ioutil.ReadFile(cmConfig.eventMapFilePath)
 		if err != nil {
 			log.Fatalln(err)
 		}
+		// TODO: Do strict checking.
 		err = yaml.Unmarshal(data, &cmConfig.eventMap)
 		if err != nil {
 			log.Fatalf("cannot unmarshal data: %v", err)
 		}
-		// run webhook server.
+		if len(cmConfig.eventMap) == 0 {
+			log.Fatalln("eventmap empty")
+		}
 		http.HandleFunc("/", cmConfig.webhookExtract)
 		log.Fatal(http.ListenAndServe(":8080", nil))
 	}
-	cmConfig.eventJSONExtract()
+
+	// If not run as webhook, just post comment from COMMENT_TEMPLATE.
+	cmConfig.postComment()
+
 }
 
-func newGithubClient(ctx context.Context, e *github.IssueCommentEvent) githubClient {
+func newGithubClientForIssueComments(ctx context.Context, e *github.IssueCommentEvent) (*githubClient, error) {
 	ghToken := os.Getenv("GITHUB_TOKEN")
+	if ghToken == "" {
+		return nil, fmt.Errorf("env var missing")
+	}
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: ghToken})
 	tc := oauth2.NewClient(ctx, ts)
-	return githubClient{
+	return &githubClient{
 		clt:               github.NewClient(tc),
 		owner:             *e.GetRepo().Owner.Login,
 		repo:              *e.GetRepo().Name,
@@ -102,7 +98,19 @@ func newGithubClient(ctx context.Context, e *github.IssueCommentEvent) githubCli
 		author:            *e.Sender.Login,
 		authorAssociation: *e.GetComment().AuthorAssociation,
 		commentBody:       *e.GetComment().Body,
-	}
+	}, nil
+}
+
+func newGithubClient(ctx context.Context, owner, repo string, pr int) (*githubClient, error) {
+	ghToken := os.Getenv("GITHUB_TOKEN")
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: ghToken})
+	tc := oauth2.NewClient(ctx, ts)
+	return &githubClient{
+		clt:   github.NewClient(tc),
+		owner: owner,
+		repo:  repo,
+		pr:    pr,
+	}, nil
 }
 
 func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Request) {
@@ -114,7 +122,8 @@ func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Requ
 
 	// Setup commentMonitor client.
 	cmClient := commentMonitorClient{
-		allArgs: make(map[string]string),
+		allArgs:  make(map[string]string),
+		eventMap: c.eventMap,
 	}
 
 	// Parse webhook event.
@@ -128,27 +137,35 @@ func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Requ
 
 		// Setup github client.
 		ctx := context.Background()
-		cmClient.ghClient = newGithubClient(ctx, e)
+		cmClient.ghClient, err = newGithubClientForIssueComments(ctx, e)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "could not create GitHub client", http.StatusBadRequest)
+			return
+		}
 
 		// Validate regex.
-		err := cmClient.validateRegex(c.regexString)
+		err := cmClient.validateRegex()
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "comment validation failed", http.StatusBadRequest)
+			return
 		}
 
 		// Verify user
 		err = cmClient.verifyUser(ctx, c.verifyUserDisabled)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, "comment validation failed", http.StatusForbidden)
+			http.Error(w, "user not allowed to run command", http.StatusForbidden)
+			return
 		}
 
 		// Extract args.
-		err = cmClient.extractArgs(ctx, c.outputDirPath)
+		err = cmClient.extractArgs(ctx)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "could not extract arguments", http.StatusBadRequest)
+			return
 		}
 
 		// Post generated comment to GitHub pr.
@@ -156,6 +173,7 @@ func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Requ
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "could not post comment to GitHub", http.StatusBadRequest)
+			return
 		}
 
 		// Set label to Github pr.
@@ -163,6 +181,7 @@ func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Requ
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "could not set label to GitHub", http.StatusBadRequest)
+			return
 		}
 
 	default:
@@ -170,66 +189,29 @@ func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-func (c commentMonitorConfig) eventJSONExtract() {
-	err := os.MkdirAll(c.outputDirPath, os.ModePerm)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	data, err := ioutil.ReadFile(c.inputFilePath)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
+func (c commentMonitorConfig) postComment() error {
 	// Setup commentMonitor client.
 	cmClient := commentMonitorClient{
 		allArgs:         make(map[string]string),
 		commentTemplate: os.Getenv("COMMENT_TEMPLATE"),
 	}
-
-	// Parse event.json.
-	event, err := github.ParseWebHook("issue_comment", data)
+	// Setup GitHub client.
+	owner := os.Getenv("GH_OWNER")
+	repo := os.Getenv("GH_REPO")
+	pr, err := strconv.Atoi(os.Getenv("GH_PR"))
 	if err != nil {
-		log.Fatalln(err)
+		return fmt.Errorf("env var not set correctly")
+	}
+	ctx := context.Background()
+	cmClient.ghClient, err = newGithubClient(ctx, owner, repo, pr)
+	if err != nil {
+		return fmt.Errorf("could not create GitHub client")
 	}
 
-	switch e := event.(type) {
-	case *github.IssueCommentEvent:
-
-		// Setup github client.
-		ctx := context.Background()
-		cmClient.ghClient = newGithubClient(ctx, e)
-
-		// Validate regex.
-		err := cmClient.validateRegex(c.regexString)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		// Verify user.
-		err = cmClient.verifyUser(ctx, c.verifyUserDisabled)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		// Extract args.
-		err = cmClient.extractArgs(ctx, c.outputDirPath)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		// Post generated comment to GitHub pr.
-		err = cmClient.generateAndPostComment(ctx)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		// Set label to Github pr.
-		err = cmClient.postLabel(ctx)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-	default:
-		log.Fatalln("only issue_comment event is supported")
+	// Post generated comment to GitHub pr.
+	err = cmClient.generateAndPostComment(ctx)
+	if err != nil {
+		return fmt.Errorf("could not post comment")
 	}
+	return nil
 }
