@@ -71,9 +71,12 @@ func (c githubClient) createRepositoryDispatch(ctx context.Context, eventType st
 	req.Header.Add("Authorization", fmt.Sprintf("token %v", os.Getenv("GITHUB_TOKEN")))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/vnd.github.everest-preview+json")
-	_, err = httpClt.Do(req)
+	resp, err := httpClt.Do(req)
 	if err != nil {
 		return err
+	}
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("repository_dispatch event could not be triggered")
 	}
 	return nil
 }
