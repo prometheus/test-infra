@@ -79,7 +79,10 @@ func main() {
 	}
 
 	// If not run as webhook, just post comment from COMMENT_TEMPLATE.
-	cmConfig.postComment()
+	err := cmConfig.postComment()
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 }
 
@@ -147,12 +150,12 @@ func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Requ
 		// Validate regex.
 		err := cmClient.validateRegex()
 		if err != nil {
-			log.Println(err)
+			//log.Println(err) // Don't log on failure.
 			http.Error(w, "comment validation failed", http.StatusBadRequest)
 			return
 		}
 
-		// Verify user
+		// Verify user.
 		err = cmClient.verifyUser(ctx, c.verifyUserDisabled)
 		if err != nil {
 			log.Println(err)
@@ -190,15 +193,23 @@ func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Requ
 }
 
 func (c commentMonitorConfig) postComment() error {
+	// Verify env vars are not empty.
+	reqdEnvVars := []string{"COMMENT_TEMPLATE", "GITHUB_ORG", "GITHUB_REPO", "PR_NUMBER"}
+	for _, e := range reqdEnvVars {
+		if os.Getenv(e) == "" {
+			return fmt.Errorf("environment variable %v not set", e)
+		}
+	}
+
 	// Setup commentMonitor client.
 	cmClient := commentMonitorClient{
 		allArgs:         make(map[string]string),
 		commentTemplate: os.Getenv("COMMENT_TEMPLATE"),
 	}
 	// Setup GitHub client.
-	owner := os.Getenv("GH_OWNER")
-	repo := os.Getenv("GH_REPO")
-	pr, err := strconv.Atoi(os.Getenv("GH_PR"))
+	owner := os.Getenv("GITHUB_ORG")
+	repo := os.Getenv("GITHUB_REPO")
+	pr, err := strconv.Atoi(os.Getenv("PR_NUMBER"))
 	if err != nil {
 		return fmt.Errorf("env var not set correctly")
 	}

@@ -11,8 +11,6 @@ data:
 
         **Compared versions:** [**`PR-{{ index . "PR_NUMBER" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-pr) and [**`{{ index . "RELEASE" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-release)
 
-        **GitHub Actions logs:**  [{{ index . "GITHUB_SHA" }}/checks](https://github.com/{{ index . "GITHUB_REPOSITORY" }}/commit/{{ index . "GITHUB_SHA" }}/checks)
-
         After successful deployment, the benchmarking metrics can be viewed at:
 
         - [Prometheus Meta](http://{{ index . "DOMAIN_NAME" }}/prometheus-meta/graph?g0.expr={namespace%3D"prombench-{{ index . "PR_NUMBER" }}"}&g0.tab=1)
@@ -28,15 +26,12 @@ data:
       comment_template: |
         Benchmark cancel is in progress.
 
-        **GitHub Actions logs:**  [{{ index . "GITHUB_SHA" }}/checks](https://github.com/{{ index . "GITHUB_REPOSITORY" }}/commit/{{ index . "GITHUB_SHA" }}/checks)
-
     - event_type: prombench_restart
       regex_string: (?mi)^/prombench\s+restart\s+(?P<RELEASE>master|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
       comment_template: |
         ⏱️ Welcome to Prometheus Benchmarking Tool. ⏱️
 
         **Compared versions:** [**`PR-{{ index . "PR_NUMBER" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-pr) and [**`{{ index . "RELEASE" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-release)
-        **GitHub Actions logs:**  [{{ index . "GITHUB_SHA" }}/checks](https://github.com/{{ index . "GITHUB_REPOSITORY" }}/commit/{{ index . "GITHUB_SHA" }}/checks)'
 
         After successful deployment, the benchmarking metrics can be viewed at:
 

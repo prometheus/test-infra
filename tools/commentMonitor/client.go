@@ -113,7 +113,6 @@ func (c commentMonitorClient) generateAndPostComment(ctx context.Context) error 
 			tmp := strings.Split(e, "=")
 			c.allArgs[tmp[0]] = tmp[1]
 		}
-		fmt.Printf("All args: %#v", c.allArgs)
 		// Generate the comment template.
 		var buf bytes.Buffer
 		commentTemplate := template.Must(template.New("Comment").Parse(c.commentTemplate))

@@ -21,6 +21,8 @@ spec:
         - "--eventmap=/etc/cm/eventmap.yml"
         name: comment-monitor
         env:
+        - name: DOMAIN_NAME
+          value: {{ .DOMAIN_NAME }}
         - name: GITHUB_TOKEN
           valueFrom:
             secretKeyRef:
