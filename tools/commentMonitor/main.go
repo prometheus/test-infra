@@ -123,6 +123,8 @@ func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Requ
 		http.Error(w, "unable to read webhook body", http.StatusBadRequest)
 	}
 
+	// TODO: setup webhook security with a webhook secret.
+
 	// Setup commentMonitor client.
 	cmClient := commentMonitorClient{
 		allArgs:  make(map[string]string),
