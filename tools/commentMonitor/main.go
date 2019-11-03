@@ -21,7 +21,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/google/go-github/v26/github"
 	"golang.org/x/oauth2"
@@ -31,9 +30,9 @@ import (
 
 type commentMonitorConfig struct {
 	verifyUserDisabled bool
-	webhook            bool
 	eventMapFilePath   string
 	eventMap           webhookEventMaps
+	port               string
 }
 
 // Structure of eventmap.yaml file.
@@ -53,37 +52,30 @@ func main() {
 	app.HelpFlag.Short('h')
 	app.Flag("no-verify-user", "disable verifying user").
 		BoolVar(&cmConfig.verifyUserDisabled)
-	app.Flag("webhook", "enable webhook mode").
-		BoolVar(&cmConfig.webhook)
 	app.Flag("eventmap", "Filepath to eventmap file.").
 		Default("./eventmap.yml").
 		StringVar(&cmConfig.eventMapFilePath)
+	app.Flag("port", "port number to run webhook in.").
+		Default("8080").
+		StringVar(&cmConfig.port)
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	if cmConfig.webhook {
-		// Get eventmap file.
-		data, err := ioutil.ReadFile(cmConfig.eventMapFilePath)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		// TODO: Do strict checking.
-		err = yaml.Unmarshal(data, &cmConfig.eventMap)
-		if err != nil {
-			log.Fatalf("cannot unmarshal data: %v", err)
-		}
-		if len(cmConfig.eventMap) == 0 {
-			log.Fatalln("eventmap empty")
-		}
-		http.HandleFunc("/", cmConfig.webhookExtract)
-		log.Fatal(http.ListenAndServe(":8080", nil))
-	}
-
-	// If not run as webhook, just post comment from COMMENT_TEMPLATE.
-	err := cmConfig.postComment()
+	// Get eventmap file.
+	data, err := ioutil.ReadFile(cmConfig.eventMapFilePath)
 	if err != nil {
 		log.Fatalln(err)
 	}
-
+	// TODO: Do strict checking.
+	err = yaml.Unmarshal(data, &cmConfig.eventMap)
+	if err != nil {
+		log.Fatalf("cannot unmarshal data: %v", err)
+	}
+	if len(cmConfig.eventMap) == 0 {
+		log.Fatalln("eventmap empty")
+	}
+	http.HandleFunc("/", cmConfig.webhookExtract)
+	log.Println("Server is ready to handle requests at", cmConfig.port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", cmConfig.port), nil))
 }
 
 func newGithubClientForIssueComments(ctx context.Context, e *github.IssueCommentEvent) (*githubClient, error) {
@@ -104,23 +96,13 @@ func newGithubClientForIssueComments(ctx context.Context, e *github.IssueComment
 	}, nil
 }
 
-func newGithubClient(ctx context.Context, owner, repo string, pr int) (*githubClient, error) {
-	ghToken := os.Getenv("GITHUB_TOKEN")
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: ghToken})
-	tc := oauth2.NewClient(ctx, ts)
-	return &githubClient{
-		clt:   github.NewClient(tc),
-		owner: owner,
-		repo:  repo,
-		pr:    pr,
-	}, nil
-}
-
 func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	payload, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, "unable to read webhook body", http.StatusBadRequest)
+		return
 	}
 
 	// TODO: setup webhook security with a webhook secret.
@@ -134,7 +116,9 @@ func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Requ
 	// Parse webhook event.
 	event, err := github.ParseWebHook(github.WebHookType(r), payload)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, "unable to parse webhook", http.StatusBadRequest)
+		return
 	}
 
 	switch e := event.(type) {
@@ -150,10 +134,9 @@ func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Requ
 		}
 
 		// Validate regex.
-		err := cmClient.validateRegex()
-		if err != nil {
+		if !cmClient.validateRegex() {
 			//log.Println(err) // Don't log on failure.
-			http.Error(w, "comment validation failed", http.StatusBadRequest)
+			http.Error(w, "comment validation failed", http.StatusOK)
 			return
 		}
 
@@ -162,6 +145,14 @@ func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Requ
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "user not allowed to run command", http.StatusForbidden)
+			return
+		}
+
+		// Get the last commit sha from PR.
+		cmClient.allArgs["LAST_COMMIT_SHA"], err = cmClient.ghClient.getLastCommitSHA(ctx)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "could not fetch sha", http.StatusBadRequest)
 			return
 		}
 
@@ -181,7 +172,7 @@ func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Requ
 			return
 		}
 
-		// Set label to Github pr.
+		// Set label to GitHub pr.
 		err = cmClient.postLabel(ctx)
 		if err != nil {
 			log.Println(err)
@@ -192,39 +183,4 @@ func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Requ
 	default:
 		log.Fatalln("only issue_comment event is supported")
 	}
-}
-
-func (c commentMonitorConfig) postComment() error {
-	// Verify env vars are not empty.
-	reqdEnvVars := []string{"COMMENT_TEMPLATE", "GITHUB_ORG", "GITHUB_REPO", "PR_NUMBER"}
-	for _, e := range reqdEnvVars {
-		if os.Getenv(e) == "" {
-			return fmt.Errorf("environment variable %v not set", e)
-		}
-	}
-
-	// Setup commentMonitor client.
-	cmClient := commentMonitorClient{
-		allArgs:         make(map[string]string),
-		commentTemplate: os.Getenv("COMMENT_TEMPLATE"),
-	}
-	// Setup GitHub client.
-	owner := os.Getenv("GITHUB_ORG")
-	repo := os.Getenv("GITHUB_REPO")
-	pr, err := strconv.Atoi(os.Getenv("PR_NUMBER"))
-	if err != nil {
-		return fmt.Errorf("env var not set correctly")
-	}
-	ctx := context.Background()
-	cmClient.ghClient, err = newGithubClient(ctx, owner, repo, pr)
-	if err != nil {
-		return fmt.Errorf("could not create GitHub client")
-	}
-
-	// Post generated comment to GitHub pr.
-	err = cmClient.generateAndPostComment(ctx)
-	if err != nil {
-		return fmt.Errorf("could not post comment")
-	}
-	return nil
 }

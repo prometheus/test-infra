@@ -1,9 +1,7 @@
 # commentMonitor
 Simple webhook server to parse GitHub comments and take actions based on the comment.
 
-It can be run both as a webhook and a GitHub Action, when running it as a GitHub action it can only post a github comment.
-
-## Running as a webhook
+Currently it only works with [`issue_comment` event](https://developer.github.com/v3/activity/events/types/#issuecommentevent) coming from PRs.
 
 ### Environment Variables:
 - `LABEL_NAME`: If set, will add the label to the PR.
@@ -11,7 +9,7 @@ It can be run both as a webhook and a GitHub Action, when running it as a GitHub
 - Any other environment variable used in any of the comment templates in `eventmap.yml`.
 
 ### Setting up the webhook server
-Running comment monitor with the `--webhook` flag starts it in the webhook mode, it also requires the eventmap file which is specified by the `--eventmap` flag. It currently only supports `issue_comment` GitHub events.
+Running commentMonitor requires the eventmap file which is specified by the `--eventmap` flag.
 
 The `regex_string`, `event_type` and `comment_template` can be specified in the `eventmap.yml` file.
 
@@ -26,23 +24,12 @@ Example content of the `eventmap.yml` file:
 If a GitHub comment matches with `regex_string`, then commentMonitor will trigger a [`repository_dispatch`](https://developer.github.com/v3/repos/#create-a-repository-dispatch-event) with the event type `event_type` and then post a comment to the issue with `comment_template`. The extracted out arguments will be passed to the [`client_payload`](https://developer.github.com/v3/repos/#example-5) of the `repository_dispatch` event.
 
 
-
 ### Setting up the GitHub webhook
 - Create a personal access token with the scope `public_repo` and `write:discussion` and set the environment variable `GITHUB_TOKEN` with it.
-- Set the webhook server URL as the webhook URL in the repository settings.
-
-## Running as a GitHub Action
-commentMonitor can also be run as a Github Action to post comment using Golang templating.
-
-### Environment Variables:
-- `COMMENT_TEMPLATE` : A comment template using Golang template variables substitutions. If content text includes a variable name `{{ index . "SOME_VAR" }}` that exists as an env variable or comment argument it is expanded with the content of the variable.
-- `GITHUB_TOKEN`
-- `GITHUB_ORG`
-- `GITHUB_REPO`
-- `PR_NUMBER`
+- Set the webhook server URL as the webhook URL in the repository settings and set the content type to `application/json`.
 
 ## Extracting arguments
-The `regex_string` provided in `eventmap.yml` is used to parse the comment into separate arguments. Additionally, some internal args are automatically set, eg. `PR_NUMBER`.
+The `regex_string` provided in `eventmap.yml` is used to parse the comment into separate arguments. Additionally, some internal args are automatically set, eg. `PR_NUMBER` and `LAST_COMMMIT_SHA`.
 
 Using [regex named groups](https://godoc.org/regexp/syntax) is mandatory so that each comment argument is named after the regex group.
 

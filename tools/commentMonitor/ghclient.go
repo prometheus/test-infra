@@ -53,6 +53,13 @@ func (c githubClient) createLabel(ctx context.Context, labelName string) error {
 	return err
 }
 
+func (c githubClient) getLastCommitSHA(ctx context.Context) (string, error) {
+	// https://developer.github.com/v3/pulls/#list-commits-on-a-pull-request
+	listops := &github.ListOptions{Page: 1, PerPage: 250}
+	l, _, err := c.clt.PullRequests.ListCommits(ctx, c.owner, c.repo, c.pr, listops)
+	return l[len(l)-1].GetSHA(), err
+}
+
 func (c githubClient) createRepositoryDispatch(ctx context.Context, eventType string, clientPayload map[string]string) error {
 	rd := repositoryDispatchEvent{
 		EventType:     eventType,

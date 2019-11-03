@@ -35,17 +35,17 @@ type commentMonitorClient struct {
 }
 
 // Validate comment if regexString provided.
-func (c *commentMonitorClient) validateRegex() error {
+func (c *commentMonitorClient) validateRegex() bool {
 	for _, e := range c.eventMap {
 		c.regex = regexp.MustCompile(e.RegexString)
 		if c.regex.MatchString(c.ghClient.commentBody) {
 			c.commentTemplate = e.CommentTemplate
 			c.eventType = e.EventType
 			log.Println("comment validation successful")
-			return nil
+			return true
 		}
 	}
-	return fmt.Errorf("matching command not found. comment validation failed")
+	return false
 }
 
 // Verify if user is allowed to perform activity.
