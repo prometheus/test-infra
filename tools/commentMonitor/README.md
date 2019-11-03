@@ -31,7 +31,7 @@ If a GitHub comment matches with `regex_string`, then commentMonitor will trigge
 ## Extracting arguments
 The `regex_string` provided in `eventmap.yml` is used to parse the comment into separate arguments. Additionally, some internal args are automatically set, eg. `PR_NUMBER` and `LAST_COMMMIT_SHA`.
 
-Using [regex named groups](https://godoc.org/regexp/syntax) is mandatory so that each comment argument is named after the regex group.
+If `regex_string` contains a capturing groups, using [named groups](https://godoc.org/regexp/syntax) is mandatory so that each comment argument is named after the regex group.
 
 For example, the following regex will create an argument named `RELEASE` with the content of the capture group:
 ```
