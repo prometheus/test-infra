@@ -85,15 +85,15 @@ cat $AUTH_FILE | base64 -w 0
 **Starting:**
 - `/prombench master` - compare PR with the master branch.
 - `/prombench v2.4.0` - compare PR with a release version, from [quay.io/prometheus/prometheus:releaseVersion](https://quay.io/prometheus/prometheus:releaseVersion)
-    - creates a comments: `on start`, `on fail`, no comment `on success`.
+    - creates a comments: `on start`, no comment `on success`, `on fail`.
 
 **Restarting:**
 - `/prombench restart <release_version>`
-    - creates a comments: `on start`, `on fail`, no comment `on success`.
+    - creates a comments: `on start`, no comment `on success`, `on fail`.
 
 **Stopping:**
 - `/prombench cancel`
-    - creates a comments: `on start`, `on fail`, no comment `on success`.
+    - creates a comments: `on start`, no comment `on success`, `on fail`.
 
 ### Start a benchmarking test manually
 ---
