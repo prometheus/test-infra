@@ -82,20 +82,15 @@ cat $AUTH_FILE | base64 -w 0
 ---
 > Due to the high cost of each test, only maintainers can manage tests.
 
-Due to GithubActions scheduling, the feedback comments (`on start`,`on fail`, `on success`) takes about ~40 seconds.
-
 **Starting:**
 - `/prombench master` - compare PR with the master branch.
 - `/prombench v2.4.0` - compare PR with a release version, from [quay.io/prometheus/prometheus:releaseVersion](https://quay.io/prometheus/prometheus:releaseVersion)
-    - creates a comments: `on start`, `on fail`, no comment `on success`.
 
 **Restarting:**
 - `/prombench restart <release_version>`
-    - creates a comments: `on start`, `on fail`, no comment `on success`.
 
 **Stopping:**
 - `/prombench cancel`
-    - creates a comments: `on start`, `on fail`, no comment `on success`.
 
 ### Start a benchmarking test manually
 ---

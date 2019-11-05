@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: comment-monitor
+  labels:
+    app: comment-monitor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: comment-monitor
+  template:
+    metadata:
+      labels:
+        app: comment-monitor
+    spec:
+      containers:
+      - image: docker.io/prombench/comment-monitor:0.0.2
+        args:
+        - "--webhook"
+        - "--eventmap=/etc/cm/eventmap.yml"
+        name: comment-monitor
+        env:
+        - name: DOMAIN_NAME
+          value: {{ .DOMAIN_NAME }}
+        - name: LABEL_NAME
+          value: prombench
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: oauth-token
+              key: oauth
+        volumeMounts:
+        - name: comment-monitor-eventmap
+          mountPath: /etc/cm/
+        ports:
+        - name: cm-port
+          containerPort: 8080
+      volumes:
+      - name: comment-monitor-eventmap
+        configMap:
+          name: comment-monitor-eventmap
+      terminationGracePeriodSeconds: 300
+      nodeSelector:
+        cloud.google.com/gke-nodepool: main-node
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: comment-monitor
+  labels:
+    app: comment-monitor
+spec:
+  type: NodePort
+  ports:
+  - name: cm-port
+    port: 80
+    targetPort: cm-port
+  selector:
+    app: comment-monitor
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-comment-monitor
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: comment-monitor
+          servicePort: cm-port
+        path: /hook

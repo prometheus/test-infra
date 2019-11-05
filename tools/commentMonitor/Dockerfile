@@ -8,6 +8,8 @@ ENV GO111MODULE=on
 
 WORKDIR /app
 COPY tools/commentMonitor/main.go .
+COPY tools/commentMonitor/client.go .
+COPY tools/commentMonitor/ghclient.go .
 
 COPY go.mod .
 COPY go.sum .
