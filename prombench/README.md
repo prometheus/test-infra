@@ -1,6 +1,6 @@
 # Automated Prometheus E2E testing and benchmarking.
 
-![Prombench Design](design.png)
+![Prombench Design](design.svg)
 
 It runs with [Github Actions](https://github.com/features/actions) on a [Google Kubernetes Engine Cluster](https://cloud.google.com/kubernetes-engine/).
 It is designed to support adding more k8s providers.
