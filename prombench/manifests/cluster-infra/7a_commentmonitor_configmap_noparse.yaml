@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: comment-monitor-eventmap
+data:
+  eventmap.yml: |
+    - event_type: prombench_start
+      regex_string: (?mi)^/prombench\s*(?P<RELEASE>master|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
+      comment_template: |
+        ⏱️ Welcome to Prometheus Benchmarking Tool. ⏱️
+
+        **Compared versions:** [**`PR-{{ index . "PR_NUMBER" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-pr) and [**`{{ index . "RELEASE" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-release)
+
+        After successful deployment, the benchmarking metrics can be viewed at:
+
+        - [Prometheus Meta](http://{{ index . "DOMAIN_NAME" }}/prometheus-meta/graph?g0.expr={namespace%3D"prombench-{{ index . "PR_NUMBER" }}"}&g0.tab=1)
+        - [Grafana Home](http://{{ index . "DOMAIN_NAME" }}/grafana)
+        - [Grafana Exlorer, Loki logs](http://{{ index . "DOMAIN_NAME" }}/grafana/explore)
+
+        **Other Commands:**
+        To stop benchmark: `/prombench cancel`
+        To restart benchmark: `/prombench restart v2.12.0`
+
+    - event_type: prombench_stop
+      regex_string: (?mi)^/prombench\s+cancel\s*$
+      comment_template: |
+        Benchmark cancel is in progress.
+
+    - event_type: prombench_restart
+      regex_string: (?mi)^/prombench\s+restart\s+(?P<RELEASE>master|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
+      comment_template: |
+        ⏱️ Welcome to Prometheus Benchmarking Tool. ⏱️
+
+        **Compared versions:** [**`PR-{{ index . "PR_NUMBER" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-pr) and [**`{{ index . "RELEASE" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-release)
+
+        After successful deployment, the benchmarking metrics can be viewed at:
+
+        - [Prometheus Meta](http://{{ index . "DOMAIN_NAME" }}/prometheus-meta/graph?g0.expr={namespace%3D"prombench-{{ index . "PR_NUMBER" }}"}&g0.tab=1)
+        - [Grafana Home](http://{{ index . "DOMAIN_NAME" }}/grafana)
+        - [Grafana Exlorer, Loki logs](http://{{ index . "DOMAIN_NAME" }}/grafana/explore)
+
+        **Other Commands:**
+        To stop benchmark: `/prombench cancel`
+        To restart benchmark: `/prombench restart v2.12.0`
