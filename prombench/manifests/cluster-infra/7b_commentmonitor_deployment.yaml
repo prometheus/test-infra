@@ -16,8 +16,8 @@ spec:
     spec:
       containers:
       - image: docker.io/prombench/comment-monitor:0.0.2
+        imagePullPolicy: Always
         args:
-        - "--webhook"
         - "--eventmap=/etc/cm/eventmap.yml"
         name: comment-monitor
         env:

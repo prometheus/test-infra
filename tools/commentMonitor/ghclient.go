@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -65,6 +66,7 @@ func (c githubClient) createRepositoryDispatch(ctx context.Context, eventType st
 		EventType:     eventType,
 		ClientPayload: clientPayload,
 	}
+	log.Printf("creating repository_dispatch with payload: %v", clientPayload)
 	body, err := json.Marshal(rd)
 	if err != nil {
 		return err
