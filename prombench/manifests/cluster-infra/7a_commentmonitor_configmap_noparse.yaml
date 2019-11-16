@@ -14,7 +14,7 @@ data:
         After successful deployment, the benchmarking metrics can be viewed at:
 
         - [Prometheus Meta](http://{{ index . "DOMAIN_NAME" }}/prometheus-meta/graph?g0.expr={namespace%3D"prombench-{{ index . "PR_NUMBER" }}"}&g0.tab=1)
-        - [Grafana Home](http://{{ index . "DOMAIN_NAME" }}/grafana)
+        - [Prombench Dashboard](http://{{ index . "DOMAIN_NAME" }}/grafana/d/7gmLoNDmz/prombench?orgId=1&var-pr-number={{ index . "PR_NUMBER" }})
         - [Grafana Exlorer, Loki logs](http://{{ index . "DOMAIN_NAME" }}/grafana/explore)
 
         **Other Commands:**
@@ -36,7 +36,7 @@ data:
         After successful deployment, the benchmarking metrics can be viewed at:
 
         - [Prometheus Meta](http://{{ index . "DOMAIN_NAME" }}/prometheus-meta/graph?g0.expr={namespace%3D"prombench-{{ index . "PR_NUMBER" }}"}&g0.tab=1)
-        - [Grafana Home](http://{{ index . "DOMAIN_NAME" }}/grafana)
+        - [Prombench Dashboard](http://{{ index . "DOMAIN_NAME" }}/grafana/d/7gmLoNDmz/prombench?orgId=1&var-pr-number={{ index . "PR_NUMBER" }})
         - [Grafana Exlorer, Loki logs](http://{{ index . "DOMAIN_NAME" }}/grafana/explore)
 
         **Other Commands:**
