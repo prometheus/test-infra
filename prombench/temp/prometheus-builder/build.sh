@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eu
 
 CIRCLECI_BASE_API_URL="https://circleci.com/api/v1.1/project/github"
 FILTER="successful"
@@ -40,23 +41,33 @@ BUILD=$(curl -s "$URL" | jq --arg JOB $CIRCLE_JOB "$JQ_ARG")
 BUILD_ID=$(echo $BUILD | jq -r '.build_id' )
 BUILD_REV=$(echo $BUILD | jq -r '.v_rev' )
 
-# Check if the build is of the latest commit.
-if [ $LAST_COMMIT_SHA != $BUILD_REV ]; then
-    echo "Last commit hash and the commit hash of the circleci build don't match. exiting"
-    exit 1;
+if [[ $BUILD_REV == "null" ]]; then
+    # Build prometheus locally.
+    echo ">> Creating prometheus binaries"
+    if ! make build PROMU_BINARIES="prometheus"; then
+        echo "ERROR:: Building of binaries failed"
+        exit 1;
+    fi
+else
+    # Use circleCI artifact.
+    if [ $LAST_COMMIT_SHA != $BUILD_REV ]; then
+        # Check if the build is of the latest commit.
+        echo "Last commit hash and the commit hash of the circleci build don't match. exiting"
+        exit 1;
+    fi
+
+    # Get the artifact url.
+    JQ_ARG='.[] | select(.path==$PATH) | .url'
+    URL="$CIRCLECI_BASE_API_URL/$GITHUB_ORG/$GITHUB_REPO/$BUILD_ID/artifacts"
+    PROMETHEUS_BIN_URL=$(curl -s "$URL" | jq -r --arg PATH "build/$OS-$ARCH/prometheus" "$JQ_ARG")
+
+    # Download the artifact.
+    echo ">> Downloading artifact: $PROMETHEUS_BIN_URL"
+    curl -O "$PROMETHEUS_BIN_URL"
+    chmod u+x prometheus
 fi
 
-# Get the artifact url.
-JQ_ARG='.[] | select(.path==$PATH) | .url'
-URL="$CIRCLECI_BASE_API_URL/$GITHUB_ORG/$GITHUB_REPO/$BUILD_ID/artifacts"
-PROMETHEUS_BIN_URL=$(curl -s "$URL" | jq -r --arg PATH "build/$OS-$ARCH/prometheus" "$JQ_ARG")
-
-# Download the artifact.
-echo "Downloading artifact: $PROMETHEUS_BIN_URL"
-curl -O "$PROMETHEUS_BIN_URL"
-chmod u+x prometheus
-
-# Copy files to mounted volume.
+# Copy files to volume.
 echo ">> Copy files to volume"
 cp prometheus               $VOLUME_DIR/prometheus
 cp -r console_libraries/    $VOLUME_DIR
