@@ -8,7 +8,11 @@ RUN \
         ca-certificates \
         make \
         git \
-	&& rm -rf /var/lib/apt/lists/*
+       && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
+       && echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list \
+       && apt-get update \
+       && apt-get install -y --no-install-recommends nodejs yarn \
+       && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /go/src/github.com
 COPY build.sh /go/src/github.com/build.sh
