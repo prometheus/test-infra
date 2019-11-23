@@ -31,6 +31,8 @@ import (
 type commentMonitorConfig struct {
 	verifyUserDisabled bool
 	eventMapFilePath   string
+	whSecretFilePath   string
+	whSecret           []byte
 	eventMap           webhookEventMaps
 	port               string
 }
@@ -50,6 +52,9 @@ func main() {
 
 	app := kingpin.New(filepath.Base(os.Args[0]), `commentMonitor GithubAction - Post and monitor GitHub comments.`)
 	app.HelpFlag.Short('h')
+	app.Flag("webhooksecretfile", "path to webhook secret file").
+		Default("/etc/github/whsecret").
+		StringVar(&cmConfig.whSecretFilePath)
 	app.Flag("no-verify-user", "disable verifying user").
 		BoolVar(&cmConfig.verifyUserDisabled)
 	app.Flag("eventmap", "Filepath to eventmap file.").
@@ -73,6 +78,13 @@ func main() {
 	if len(cmConfig.eventMap) == 0 {
 		log.Fatalln("eventmap empty")
 	}
+
+	// Get webhook secret.
+	cmConfig.whSecret, err = ioutil.ReadFile(cmConfig.whSecretFilePath)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	http.HandleFunc("/", cmConfig.webhookExtract)
 	log.Println("Server is ready to handle requests at", cmConfig.port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", cmConfig.port), nil))
@@ -98,14 +110,12 @@ func newGithubClientForIssueComments(ctx context.Context, e *github.IssueComment
 
 func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	payload, err := ioutil.ReadAll(r.Body)
+	payload, err := github.ValidatePayload(r, c.whSecret)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "unable to read webhook body", http.StatusBadRequest)
 		return
 	}
-
-	// TODO: setup webhook security with a webhook secret.
 
 	// Setup commentMonitor client.
 	cmClient := commentMonitorClient{
