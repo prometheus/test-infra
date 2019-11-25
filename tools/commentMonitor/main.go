@@ -53,7 +53,7 @@ func main() {
 	app := kingpin.New(filepath.Base(os.Args[0]), `commentMonitor GithubAction - Post and monitor GitHub comments.`)
 	app.HelpFlag.Short('h')
 	app.Flag("webhooksecretfile", "path to webhook secret file").
-		Default("/etc/github/whsecret").
+		Default("./whsecret").
 		StringVar(&cmConfig.whSecretFilePath)
 	app.Flag("no-verify-user", "disable verifying user").
 		BoolVar(&cmConfig.verifyUserDisabled)
@@ -65,29 +65,16 @@ func main() {
 		StringVar(&cmConfig.port)
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	// Get eventmap file.
-	data, err := ioutil.ReadFile(cmConfig.eventMapFilePath)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	// TODO: Do strict checking.
-	err = yaml.Unmarshal(data, &cmConfig.eventMap)
-	if err != nil {
-		log.Fatalf("cannot unmarshal data: %v", err)
-	}
-	if len(cmConfig.eventMap) == 0 {
-		log.Fatalln("eventmap empty")
-	}
-
-	// Get webhook secret.
-	cmConfig.whSecret, err = ioutil.ReadFile(cmConfig.whSecretFilePath)
+	err := cmConfig.loadConfig()
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	http.HandleFunc("/", cmConfig.webhookExtract)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", cmConfig.webhookExtract)
+	mux.HandleFunc("/-/reload", cmConfig.reloadConfig)
 	log.Println("Server is ready to handle requests at", cmConfig.port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", cmConfig.port), nil))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", cmConfig.port), mux))
 }
 
 func newGithubClientForIssueComments(ctx context.Context, e *github.IssueCommentEvent) (*githubClient, error) {
@@ -108,7 +95,42 @@ func newGithubClientForIssueComments(ctx context.Context, e *github.IssueComment
 	}, nil
 }
 
-func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Request) {
+func (c *commentMonitorConfig) loadConfig() error {
+	// Get eventmap file.
+	data, err := ioutil.ReadFile(c.eventMapFilePath)
+	if err != nil {
+		return err
+	}
+	// TODO: Do strict checking.
+	err = yaml.Unmarshal(data, &c.eventMap)
+	if err != nil {
+		return fmt.Errorf("cannot unmarshal data: %v", err)
+	}
+	if len(c.eventMap) == 0 {
+		return fmt.Errorf("eventmap empty")
+	}
+	// Get webhook secret.
+	c.whSecret, err = ioutil.ReadFile(c.whSecretFilePath)
+	fmt.Println(c.whSecret)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *commentMonitorConfig) reloadConfig(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "unsupported method", http.StatusBadRequest)
+		return
+	}
+	err := c.loadConfig()
+	if err != nil {
+		http.Error(w, "reload unsuccessful", http.StatusInternalServerError)
+	}
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	payload, err := github.ValidatePayload(r, c.whSecret)
 	if err != nil {
