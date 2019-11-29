@@ -25,7 +25,7 @@ import (
 	"github.com/google/go-github/v26/github"
 	"golang.org/x/oauth2"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 )
 
 type commentMonitorConfig struct {
@@ -65,14 +65,8 @@ func main() {
 		StringVar(&cmConfig.port)
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	err := cmConfig.loadConfig()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", cmConfig.webhookExtract)
-	mux.HandleFunc("/-/reload", cmConfig.reloadConfig)
 	log.Println("Server is ready to handle requests at", cmConfig.port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", cmConfig.port), mux))
 }
@@ -101,8 +95,7 @@ func (c *commentMonitorConfig) loadConfig() error {
 	if err != nil {
 		return err
 	}
-	// TODO: Do strict checking.
-	err = yaml.Unmarshal(data, &c.eventMap)
+	err = yaml.UnmarshalStrict(data, &c.eventMap)
 	if err != nil {
 		return fmt.Errorf("cannot unmarshal data: %v", err)
 	}
@@ -118,20 +111,18 @@ func (c *commentMonitorConfig) loadConfig() error {
 	return nil
 }
 
-func (c *commentMonitorConfig) reloadConfig(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "unsupported method", http.StatusBadRequest)
-		return
-	}
-	err := c.loadConfig()
-	if err != nil {
-		http.Error(w, "reload unsuccessful", http.StatusInternalServerError)
-	}
-	w.WriteHeader(http.StatusCreated)
-}
-
 func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
+
+	// Load config on every request.
+	err := c.loadConfig()
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "comment-monitor configuration incorrect", http.StatusInternalServerError)
+		return
+	}
+
+	// Validate payload.
 	payload, err := github.ValidatePayload(r, c.whSecret)
 	if err != nil {
 		log.Println(err)
