@@ -41,7 +41,7 @@ For example, the following regex will create an argument named `RELEASE` with th
 ### Docker image build
 From the repository root:
 ```
-$ make docker DOCKERFILE_PATH=tools/commentMonitor/Dockerfile DOCKER_IMAGE_NAME=comment-monitor DOCKER_IMAGE_TAG=0.0.1
+$ make docker DOCKERFILE_PATH=tools/commentMonitor/Dockerfile DOCKER_IMAGE_NAME=comment-monitor DOCKER_IMAGE_TAG=0.0.2
 ```
 
 #### Usage and examples:

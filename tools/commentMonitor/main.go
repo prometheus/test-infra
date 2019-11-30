@@ -25,12 +25,14 @@ import (
 	"github.com/google/go-github/v26/github"
 	"golang.org/x/oauth2"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 )
 
 type commentMonitorConfig struct {
 	verifyUserDisabled bool
 	eventMapFilePath   string
+	whSecretFilePath   string
+	whSecret           []byte
 	eventMap           webhookEventMaps
 	port               string
 }
@@ -50,6 +52,9 @@ func main() {
 
 	app := kingpin.New(filepath.Base(os.Args[0]), `commentMonitor GithubAction - Post and monitor GitHub comments.`)
 	app.HelpFlag.Short('h')
+	app.Flag("webhooksecretfile", "path to webhook secret file").
+		Default("./whsecret").
+		StringVar(&cmConfig.whSecretFilePath)
 	app.Flag("no-verify-user", "disable verifying user").
 		BoolVar(&cmConfig.verifyUserDisabled)
 	app.Flag("eventmap", "Filepath to eventmap file.").
@@ -60,22 +65,10 @@ func main() {
 		StringVar(&cmConfig.port)
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	// Get eventmap file.
-	data, err := ioutil.ReadFile(cmConfig.eventMapFilePath)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	// TODO: Do strict checking.
-	err = yaml.Unmarshal(data, &cmConfig.eventMap)
-	if err != nil {
-		log.Fatalf("cannot unmarshal data: %v", err)
-	}
-	if len(cmConfig.eventMap) == 0 {
-		log.Fatalln("eventmap empty")
-	}
-	http.HandleFunc("/", cmConfig.webhookExtract)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", cmConfig.webhookExtract)
 	log.Println("Server is ready to handle requests at", cmConfig.port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", cmConfig.port), nil))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", cmConfig.port), mux))
 }
 
 func newGithubClientForIssueComments(ctx context.Context, e *github.IssueCommentEvent) (*githubClient, error) {
@@ -96,16 +89,46 @@ func newGithubClientForIssueComments(ctx context.Context, e *github.IssueComment
 	}, nil
 }
 
-func (c commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Request) {
+func (c *commentMonitorConfig) loadConfig() error {
+	// Get eventmap file.
+	data, err := ioutil.ReadFile(c.eventMapFilePath)
+	if err != nil {
+		return err
+	}
+	err = yaml.UnmarshalStrict(data, &c.eventMap)
+	if err != nil {
+		return fmt.Errorf("cannot unmarshal data: %v", err)
+	}
+	if len(c.eventMap) == 0 {
+		return fmt.Errorf("eventmap empty")
+	}
+	// Get webhook secret.
+	c.whSecret, err = ioutil.ReadFile(c.whSecretFilePath)
+	fmt.Println(c.whSecret)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	payload, err := ioutil.ReadAll(r.Body)
+
+	// Load config on every request.
+	err := c.loadConfig()
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "comment-monitor configuration incorrect", http.StatusInternalServerError)
+		return
+	}
+
+	// Validate payload.
+	payload, err := github.ValidatePayload(r, c.whSecret)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "unable to read webhook body", http.StatusBadRequest)
 		return
 	}
-
-	// TODO: setup webhook security with a webhook secret.
 
 	// Setup commentMonitor client.
 	cmClient := commentMonitorClient{

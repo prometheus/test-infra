@@ -19,6 +19,7 @@ spec:
         imagePullPolicy: Always
         args:
         - "--eventmap=/etc/cm/eventmap.yml"
+        - "--webhooksecretfile=/etc/github/whsecret"
         name: comment-monitor
         env:
         - name: DOMAIN_NAME
@@ -31,12 +32,18 @@ spec:
               name: oauth-token
               key: oauth
         volumeMounts:
+        - name: whsecret
+          mountPath: /etc/github
+          readOnly: true
         - name: comment-monitor-eventmap
           mountPath: /etc/cm/
         ports:
         - name: cm-port
           containerPort: 8080
       volumes:
+      - name: whsecret
+        secret:
+          secretName: whsecret
       - name: comment-monitor-eventmap
         configMap:
           name: comment-monitor-eventmap
