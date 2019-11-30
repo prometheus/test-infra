@@ -45,6 +45,7 @@ export GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL=<client-email present in service-accou
 export GRAFANA_ADMIN_PASSWORD=password
 export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom domain or an empty string when not used with the Github integration.
 export OAUTH_TOKEN=<generated token from github or set to an empty string " ">
+export WH_SECRET=<github webhook secret>
 export GITHUB_ORG=prometheus
 export GITHUB_REPO=prometheus
 ```
@@ -56,6 +57,7 @@ export GITHUB_REPO=prometheus
     -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
     -v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:$GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL \
     -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
+    -v WH_SECRET="$(printf $WH_SECRET | base64 -w 0)" \
     -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)" \
     -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
     -f manifests/cluster-infra
