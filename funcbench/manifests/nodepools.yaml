@@ -1,0 +1,15 @@
+zone: {{ .ZONE }}
+projectid: {{ .PROJECT_ID }}
+cluster:
+  name: {{ .CLUSTER_NAME }}
+  nodepools:
+  # These node-pools will be deployed on triggering benchmark
+  - name: funcbench-{{ .PR_NUMBER }}
+    initialnodecount: 1
+    config:
+      machinetype: n1-highmem-4
+      imagetype: COS
+      disksizegb: 20
+      localssdcount: 1
+      labels:
+        isolation: prometheus
