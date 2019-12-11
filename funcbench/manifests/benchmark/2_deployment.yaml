@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workflow
+  namespace: funcbench-{{ .PR_NUMBER }}
+data:
+  event.json: |
+    {
+      "action": "created",
+      "issue": {
+        "number": {{ .PR_NUMBER }}
+      },
+      "repository": {
+        "name": "{{ .GITHUB_REPO }}",
+        "owner": {
+          "login": "{{ .GITHUB_ORG }}"
+        }
+      }
+    }
+  BRANCH: {{ .BRANCH }}
+  RACE: {{ .RACE }}
+  REGEX: {{ .REGEX }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: funcbench-test-{{ .PR_NUMBER }}
+  namespace: funcbench-{{ .PR_NUMBER }}
+  labels:
+    app: prometheus
+    funcbench: test-{{ .PR_NUMBER }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+      funcbench: test-{{ .PR_NUMBER }}
+  template:
+    metadata:
+      namespace: funcbench-{{ .PR_NUMBER }}
+      labels:
+        app: prometheus
+        funcbench: test-{{ .PR_NUMBER }}
+    spec:
+      initContainers:
+      - name: clean-up
+        image: busybox:latest
+        command: ['sh', '-c', 'rm -fr /build/* && mkdir /build/tmp && mkdir /build/src']
+        volumeMounts:
+        - name: instance-ssd
+          mountPath: /build
+      containers:
+      - name: funcbench
+        image: nevill/funcbench:latest
+        imagePullPolicy: Always
+        env:
+          - name: GITHUB_WORKSPACE
+            value: /build/src
+          - name: GITHUB_TOKEN
+            value: {{ .GITHUB_TOKEN }}
+          - name: GITHUB_SHA
+            value: {{ .LAST_COMMIT_SHA }}
+          - name: GOTMPDIR
+            value: /build/tmp
+          - name: TMPDIR
+            value: /build/tmp
+        volumeMounts:
+        - name: event-json
+          mountPath: /github/workflow
+        - name: comment-monitor
+          mountPath: /github/home/commentMonitor
+        - name: instance-ssd
+          mountPath: /build
+      volumes:
+      - name: comment-monitor
+        configMap:
+          name: workflow
+      - name: event-json
+        configMap:
+          name: workflow
+      - name: instance-ssd
+        hostPath:
+          # /mnt is where GKE keeps it's SSD
+          # don't change this if you want Prometheus to take advantage of these local SSDs
+          path: /mnt/disks/ssd0
+      nodeSelector:
+        cloud.google.com/gke-nodepool: funcbench-{{ .PR_NUMBER }}
+        isolation: prometheus
