@@ -21,8 +21,8 @@ data:
   RACE: {{ .RACE }}
   REGEX: {{ .REGEX }}
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: batch/v1
+kind: Job
 metadata:
   name: funcbench-test-{{ .PR_NUMBER }}
   namespace: funcbench-{{ .PR_NUMBER }}
@@ -30,11 +30,6 @@ metadata:
     app: prometheus
     funcbench: test-{{ .PR_NUMBER }}
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: prometheus
-      funcbench: test-{{ .PR_NUMBER }}
   template:
     metadata:
       namespace: funcbench-{{ .PR_NUMBER }}
@@ -42,6 +37,7 @@ spec:
         app: prometheus
         funcbench: test-{{ .PR_NUMBER }}
     spec:
+      restartPolicy: Never
       initContainers:
       - name: clean-up
         image: busybox:latest
