@@ -26,18 +26,10 @@ kind: Job
 metadata:
   name: funcbench-test-{{ .PR_NUMBER }}
   namespace: funcbench-{{ .PR_NUMBER }}
-  labels:
-    app: prometheus
-    funcbench: test-{{ .PR_NUMBER }}
 spec:
   # never re-create a new pod
   backoffLimit: 0
   template:
-    metadata:
-      namespace: funcbench-{{ .PR_NUMBER }}
-      labels:
-        app: prometheus
-        funcbench: test-{{ .PR_NUMBER }}
     spec:
       restartPolicy: Never
       initContainers:
