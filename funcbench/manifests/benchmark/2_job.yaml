@@ -30,6 +30,8 @@ metadata:
     app: prometheus
     funcbench: test-{{ .PR_NUMBER }}
 spec:
+  # never re-create a new pod
+  backoffLimit: 0
   template:
     metadata:
       namespace: funcbench-{{ .PR_NUMBER }}
