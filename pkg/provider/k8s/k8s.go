@@ -541,8 +541,8 @@ func (c *K8s) jobApply(resource runtime.Object) error {
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return provider.RetryUntilTrue(
-		fmt.Sprintf("applying job:%v", req.Name),
-		provider.GlobalRetryCount,
+		fmt.Sprintf("running job:%v", req.Name),
+		5 * provider.GlobalRetryCount,
 		func() (bool, error) { return c.jobReady(resource) })
 }
 
@@ -1368,10 +1368,13 @@ func (c *K8s) jobReady(resource runtime.Object) (bool, error) {
 
 		// current jobReady only works for non-parallel jobs
 		// https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/#parallel-jobs
-		succeeded := int32(1)
-		if res.Status.Succeeded == succeeded {
+		count := int32(1)
+		if res.Status.Succeeded == count {
 			return true, nil
+		} else if res.Status.Failed == count {
+			return true, errors.New(fmt.Sprintf("Job %v has failed", req.Name))
 		}
+
 		return false, nil
 	default:
 		return false, fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
