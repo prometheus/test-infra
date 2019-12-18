@@ -540,9 +540,10 @@ func (c *K8s) jobApply(resource runtime.Object) error {
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
+	const Infinite int = 1<<31 - 1
 	return provider.RetryUntilTrue(
 		fmt.Sprintf("running job:%v", req.Name),
-		5 * provider.GlobalRetryCount,
+		Infinite,
 		func() (bool, error) { return c.jobReady(resource) })
 }
 
