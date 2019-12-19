@@ -37,7 +37,7 @@ type scale struct {
 	interval  time.Duration
 }
 
-func new() *scale {
+func newScaler() *scale {
 	k, err := k8s.New(context.Background(), nil)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error creating k8s client inside the k8s cluster"))
@@ -95,7 +95,7 @@ func main() {
 	app := kingpin.New(filepath.Base(os.Args[0]), "The Prombench-Scaler tool")
 	app.HelpFlag.Short('h')
 
-	s := new()
+	s := newScaler()
 
 	k8sApp := app.Command("scale", "Scale a Kubernetes deployment object periodically up and down. \nex: ./scaler scale -v NAMESPACE:scale -f fake-webserver.yaml 20 1 15m").
 		Action(s.k8sClient.DeploymentsParse).
