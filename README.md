@@ -10,7 +10,7 @@ Funcbench is a project for running `go test -bench` on 2 different branches and 
 
 See [funcbench/README.md](funcbench/README.md) for full description.
 
-### Buliding tools from source
+### Building tools from source
 With a working go modules enabled Go environment:
 - Install [promu](https://github.com/prometheus/promu): `go install https://github.com/prometheus/promu`
 - `promu build`
