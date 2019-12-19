@@ -182,7 +182,8 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 				err = c.statefulSetApply(resource)
 			case "job":
 				err = c.jobApply(resource)
-				c.jobDelete(resource)
+				// Even job deletion fails, it will be removed together with nodepool.
+				_ = c.jobDelete(resource)
 			default:
 				err = fmt.Errorf("creating request for unimplimented resource type:%v", kind)
 			}
