@@ -8,7 +8,7 @@ WORKDIR /app
 COPY tools/commentMonitor/*.go ./
 COPY go.* ./
 
-RUN GO111MODULE=on CGO_ENABLED=0 GOOS=linux go build -o /go/bin/commentMonitor
+RUN GO111MODULE=on go build -a -tags netgo -o /go/bin/commentMonitor
 
 FROM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
