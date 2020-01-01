@@ -1276,7 +1276,7 @@ func (c *K8s) serviceExists(resource runtime.Object) (bool, error) {
 			return false, errors.Wrapf(err, "Checking Service resource status failed")
 		}
 		if res.Spec.Type == apiCoreV1.ServiceTypeLoadBalancer {
-			// k8s API currently just supports LoadBalancerStatus
+			// K8s API currently just supports LoadBalancerStatus.
 			if len(res.Status.LoadBalancer.Ingress) > 0 {
 				log.Printf("\tService %s Details", req.Name)
 				for _, x := range res.Status.LoadBalancer.Ingress {
@@ -1367,7 +1367,7 @@ func (c *K8s) jobReady(resource runtime.Object) (bool, error) {
 			return false, errors.Wrapf(err, "Checking Job resource:'%v' status failed err:%v", req.Name, err)
 		}
 
-		// current jobReady only works for non-parallel jobs
+		// Current `jobReady` only works for non-parallel jobs.
 		// https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/#parallel-jobs
 		count := int32(1)
 		if res.Status.Succeeded == count {
