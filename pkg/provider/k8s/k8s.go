@@ -55,7 +55,7 @@ type Resource struct {
 	Objects  []runtime.Object
 }
 
-// K8s holds the fields used to generate API reqeust from within a cluster.
+// K8s holds the fields used to generate API request from within a cluster.
 type K8s struct {
 	clt          *kubernetes.Clientset
 	ApiExtClient *apiServerExtensionsClient.Clientset
@@ -278,7 +278,6 @@ func (c *K8s) clusterRoleApply(resource runtime.Object) error {
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
-
 }
 
 func (c *K8s) clusterRoleBindingApply(resource runtime.Object) error {
