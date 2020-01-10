@@ -1,26 +1,3 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: workflow
-  namespace: funcbench-{{ .PR_NUMBER }}
-data:
-  event.json: |
-    {
-      "action": "created",
-      "issue": {
-        "number": {{ .PR_NUMBER }}
-      },
-      "repository": {
-        "name": "{{ .GITHUB_REPO }}",
-        "owner": {
-          "login": "{{ .GITHUB_ORG }}"
-        }
-      }
-    }
-  BRANCH: {{ .BRANCH }}
-  RACE: {{ .RACE }}
-  REGEX: {{ .REGEX }}
----
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -43,31 +20,26 @@ spec:
       - name: funcbench
         image: nevill/funcbench:latest
         imagePullPolicy: Always
+        args:
+          - "-o"
+          - "{{ .GITHUB_ORG }}"
+          - "-r"
+          - "{{ .GITHUB_REPO }}"
+          - "-p"
+          - "{{ .PR_NUMBER }}"
+          - "{{ .BRANCH }}"
+          - "{{ .REGEX }}"
         env:
           - name: GITHUB_WORKSPACE
             value: /build/src
           - name: GITHUB_TOKEN
-            value: {{ .GITHUB_TOKEN }}
+            value: "{{ .GITHUB_TOKEN }}"
           - name: GITHUB_SHA
-            value: {{ .LAST_COMMIT_SHA }}
-          - name: GOTMPDIR
-            value: /build/tmp
-          - name: TMPDIR
-            value: /build/tmp
+            value: "{{ .LAST_COMMIT_SHA }}"
         volumeMounts:
-        - name: event-json
-          mountPath: /github/workflow
-        - name: comment-monitor
-          mountPath: /github/home/commentMonitor
         - name: instance-ssd
           mountPath: /build
       volumes:
-      - name: comment-monitor
-        configMap:
-          name: workflow
-      - name: event-json
-        configMap:
-          name: workflow
       - name: instance-ssd
         hostPath:
           # /mnt is where GKE keeps it's SSD
