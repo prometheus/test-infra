@@ -7,9 +7,9 @@ cluster:
   - name: funcbench-{{ .PR_NUMBER }}
     initialnodecount: 1
     config:
-      machinetype: n1-highmem-4
+      machinetype: n1-highmem-8
       imagetype: COS
-      disksizegb: 20
+      disksizegb: 50
       localssdcount: 1
       labels:
         isolation: prometheus
