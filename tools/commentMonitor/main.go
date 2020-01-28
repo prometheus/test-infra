@@ -205,7 +205,5 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 
 	default:
 		log.Println("only issue_comment event is supported")
-		http.Error(w, "only issue_comment event is supported", http.StatusBadRequest)
-		return
 	}
 }
