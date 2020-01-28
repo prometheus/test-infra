@@ -104,7 +104,6 @@ func (c *commentMonitorConfig) loadConfig() error {
 	}
 	// Get webhook secret.
 	c.whSecret, err = ioutil.ReadFile(c.whSecretFilePath)
-	fmt.Println(c.whSecret)
 	if err != nil {
 		return err
 	}
