@@ -104,7 +104,6 @@ func (c *commentMonitorConfig) loadConfig() error {
 	}
 	// Get webhook secret.
 	c.whSecret, err = ioutil.ReadFile(c.whSecretFilePath)
-	fmt.Println(c.whSecret)
 	if err != nil {
 		return err
 	}
@@ -204,6 +203,6 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		}
 
 	default:
-		log.Fatalln("only issue_comment event is supported")
+		log.Println("only issue_comment event is supported")
 	}
 }
