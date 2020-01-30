@@ -62,6 +62,7 @@ jobs:
         root: "."
         paths:
           - prombench/prombench
+          - funcbench/funcbench
   publish:
     docker:
       - image: circleci/buildpack-deps:18.04
@@ -72,11 +73,14 @@ jobs:
     - attach_workspace:
         at: "."
     - publish_image:
-        registry: "docker.io"
         organization: nevill
         image_name: prombench
         dockerfile_path: "prombench/cmd/prombench/Dockerfile"
         context_path: "prombench"
+    - publish_image:
+        organization: nevill
+        image_name: funcbench
+        context_path: "funcbench"
 workflows:
   version: 2
   prombench:
