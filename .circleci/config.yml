@@ -1,6 +1,11 @@
 ---
 version: 2.1
 
+# To use this config, you have to add following variables in CircleCI config:
+#   - DOCKER_USER
+#   - DOCKER_PASSWORD
+#   - DOCKER_ORG (optional, default is: prom)
+
 executors:
   # Whenever the Go version is updated here, .travis.yml and .promu.yml
   # should also be updated.
@@ -33,18 +38,32 @@ commands:
       dockerfile_path:
         description: Path to Dockerfile
         type: string
+        default: ""
       context_path:
         description: Path of docker build context
         type: string
         default: "."
     steps:
-    - run: |
-        TAG=`date +%Y%m%d`
-        DOCKER_REPO=<< parameters.registry >>/<< parameters.organization >>
-        DOCKER_IMAGE=<< parameters.image_name >>
-        docker build -t $DOCKER_REPO/$DOCKER_IMAGE:$TAG -f << parameters.dockerfile_path >> << parameters.context_path >>
-        echo -n $<< parameters.password >> | docker login -u $<< parameters.login >> --password-stdin << parameters.registry >>
-        docker push $DOCKER_REPO/$DOCKER_IMAGE:$TAG
+    - run:
+        name: Setup environment variables
+        command: |
+          echo "export TAG=`date +%Y%m%d`" >> $BASH_ENV
+          echo "DOCKER_REPO=<< parameters.registry >>/${DOCKER_ORG:-<< parameters.organization >>}" >> $BASH_ENV
+          echo "DOCKER_IMAGE=<< parameters.image_name >>" >> $BASH_ENV
+    - when:
+        condition: <<parameters.dockerfile_path>>
+        steps:
+        - run: docker build -t $DOCKER_REPO/$DOCKER_IMAGE:$TAG -f << parameters.dockerfile_path >> << parameters.context_path >>
+    - unless:
+        condition: <<parameters.dockerfile_path>>
+        steps:
+        - run: docker build -t $DOCKER_REPO/$DOCKER_IMAGE:$TAG << parameters.context_path >>
+    - run:
+        name: Push images to registry
+        command: |
+          docker images
+          echo -n $<< parameters.password >> | docker login -u $<< parameters.login >> --password-stdin << parameters.registry >>
+          docker push $DOCKER_REPO/$DOCKER_IMAGE:$TAG
 jobs:
   build_and_test:
     executor: golang
@@ -73,14 +92,13 @@ jobs:
     - attach_workspace:
         at: "."
     - publish_image:
-        organization: nevill
         image_name: prombench
         dockerfile_path: "prombench/cmd/prombench/Dockerfile"
         context_path: "prombench"
     - publish_image:
-        organization: nevill
         image_name: funcbench
         context_path: "funcbench"
+
 workflows:
   version: 2
   prombench:
