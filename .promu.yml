@@ -16,6 +16,8 @@ build:
           path: ./tools/commentMonitor
         - name: amGithubNotifier
           path: ./tools/amGithubNotifier
+        - name: ./funcbench/funcbench
+          path: ./funcbench
     flags: -a -tags netgo
 
 crossbuild:
