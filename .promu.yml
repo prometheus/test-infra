@@ -6,7 +6,7 @@ repository:
     path: github.com/prometheus/prombench
 build:
     binaries:
-        - name: ./prombench/prombench
+        - name: prombench
           path: ./prombench/cmd/prombench
         - name: scaler
           path: ./tools/scaler
@@ -16,7 +16,7 @@ build:
           path: ./tools/commentMonitor
         - name: amGithubNotifier
           path: ./tools/amGithubNotifier
-        - name: ./funcbench/funcbench
+        - name: funcbench
           path: ./funcbench
     flags: -a -tags netgo
 

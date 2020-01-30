@@ -1,9 +1,6 @@
 ---
 version: 2.1
 
-orbs:
-  prometheus: prometheus/prometheus@0.1.0
-
 executors:
   # Whenever the Go version is updated here, .travis.yml and .promu.yml
   # should also be updated.
@@ -11,11 +8,48 @@ executors:
     docker:
     - image: circleci/golang:1.13
 
+commands:
+  publish_image:
+    parameters:
+      registry:
+        description: Registry address
+        type: string
+        default: "docker.io"
+      organization:
+        description: Registry organization
+        type: string
+        default: prom
+      image_name:
+        description: Name of the container image
+        type: string
+      login:
+        description: Environment variable holding the registry login
+        type: env_var_name
+        default: DOCKER_USER
+      password:
+        description: Environment variable holding the registry password
+        type: env_var_name
+        default: DOCKER_PASSWORD
+      dockerfile_path:
+        description: Path to Dockerfile
+        type: string
+      context_path:
+        description: Path of docker build context
+        type: string
+        default: "."
+    steps:
+    - run: |
+        TAG=`date +%Y%m%d`
+        DOCKER_REPO=<< parameters.registry >>/<< parameters.organization >>
+        DOCKER_IMAGE=<< parameters.image_name >>
+        docker build -t $DOCKER_REPO/$DOCKER_IMAGE:$TAG -f << parameters.dockerfile_path >> << parameters.context_path >>
+        echo -n $<< parameters.password >> | docker login -u $<< parameters.login >> --password-stdin << parameters.registry >>
+        docker push $DOCKER_REPO/$DOCKER_IMAGE:$TAG
 jobs:
-  test:
+  build_and_test:
     executor: golang
     steps:
-    - prometheus/setup_environment
+    - checkout
     - run:
         command: make all
         environment:
@@ -24,12 +58,38 @@ jobs:
           # don't limit this to the number of allocated cores, the job is
           # likely to get OOMed and killed.
           GOOPTS: "-p 2"
-
+    - persist_to_workspace:
+        root: "."
+        paths:
+          - prombench/prombench
+  publish:
+    docker:
+      - image: circleci/buildpack-deps:18.04
+    steps:
+    - checkout
+    - setup_remote_docker:
+        version: 18.06.0-ce
+    - attach_workspace:
+        at: "."
+    - publish_image:
+        registry: "docker.io"
+        organization: nevill
+        image_name: prombench
+        dockerfile_path: "prombench/cmd/prombench/Dockerfile"
+        context_path: "prombench"
 workflows:
   version: 2
   prombench:
     jobs:
-    - test:
+    - build_and_test:
         filters:
-          tags:
+          branches:
             only: /.*/
+    - publish:
+        requires:
+          - build_and_test
+        context: org-context
+        filters:
+          branches:
+            only:
+              - master
