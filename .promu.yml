@@ -12,7 +12,7 @@ build:
           path: ./funcbench
         - name: tools/amGithubNotifier
           path: ./tools/amGithubNotifier
-        - name: commentMonitor
+        - name: tools/commentMonitor
           path: ./tools/commentMonitor
         - name: fake-webserver
           path: ./tools/fake-webserver

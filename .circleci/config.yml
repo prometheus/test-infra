@@ -83,6 +83,7 @@ jobs:
           - prombench/prombench
           - funcbench/funcbench
           - tools/amGithubNotifier/amGithubNotifier
+          - tools/commentMonitor/commentMonitor
   publish:
     docker:
       - image: circleci/buildpack-deps:18.04
@@ -102,7 +103,9 @@ jobs:
     - publish_image:
         image_name: amgithubnotifier
         context_path: "tools/amGithubNotifier"
-
+    - publish_image:
+        image_name: commentmonitor
+        context_path: "tools/commentMonitor"
 workflows:
   version: 2
   prombench:
