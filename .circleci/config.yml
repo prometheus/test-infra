@@ -4,7 +4,7 @@ version: 2.1
 # To use this config, you have to add following variables in CircleCI config:
 #   - DOCKER_USER
 #   - DOCKER_PASSWORD
-#   - DOCKER_ORG (optional, default is: prom)
+#   - DOCKER_ORG (optional, default is: prombench)
 
 executors:
   # Whenever the Go version is updated here, .travis.yml and .promu.yml
@@ -23,7 +23,7 @@ commands:
       organization:
         description: Registry organization
         type: string
-        default: prom
+        default: prombench
       image_name:
         description: Name of the container image
         type: string
