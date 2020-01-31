@@ -10,14 +10,14 @@ build:
           path: ./prombench/cmd/prombench
         - name: funcbench
           path: ./funcbench
-        - name: scaler
-          path: ./tools/scaler
-        - name: fake-webserver
-          path: ./tools/fake-webserver
+        - name: tools/amGithubNotifier
+          path: ./tools/amGithubNotifier
         - name: commentMonitor
           path: ./tools/commentMonitor
-        - name: amGithubNotifier
-          path: ./tools/amGithubNotifier
+        - name: fake-webserver
+          path: ./tools/fake-webserver
+        - name: scaler
+          path: ./tools/scaler
     flags: -a -tags netgo
 crossbuild:
     platforms:

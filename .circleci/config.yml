@@ -82,6 +82,7 @@ jobs:
         paths:
           - prombench/prombench
           - funcbench/funcbench
+          - tools/amGithubNotifier/amGithubNotifier
   publish:
     docker:
       - image: circleci/buildpack-deps:18.04
@@ -98,6 +99,9 @@ jobs:
     - publish_image:
         image_name: funcbench
         context_path: "funcbench"
+    - publish_image:
+        image_name: amgithubnotifier
+        context_path: "tools/amGithubNotifier"
 
 workflows:
   version: 2
