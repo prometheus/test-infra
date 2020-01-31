@@ -14,7 +14,7 @@ build:
           path: ./tools/amGithubNotifier
         - name: tools/commentMonitor
           path: ./tools/commentMonitor
-        - name: fake-webserver
+        - name: tools/fake-webserver
           path: ./tools/fake-webserver
         - name: scaler
           path: ./tools/scaler

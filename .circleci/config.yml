@@ -84,6 +84,7 @@ jobs:
           - funcbench/funcbench
           - tools/amGithubNotifier/amGithubNotifier
           - tools/commentMonitor/commentMonitor
+          - tools/fake-webserver/fake-webserver
   publish:
     docker:
       - image: circleci/buildpack-deps:18.04
@@ -106,6 +107,9 @@ jobs:
     - publish_image:
         image_name: commentmonitor
         context_path: "tools/commentMonitor"
+    - publish_image:
+        image_name: fake-webserver
+        context_path: "tools/fake-webserver"
 workflows:
   version: 2
   prombench:
