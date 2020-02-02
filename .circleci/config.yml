@@ -77,15 +77,6 @@ jobs:
           # don't limit this to the number of allocated cores, the job is
           # likely to get OOMed and killed.
           GOOPTS: "-p 2"
-    - persist_to_workspace:
-        root: "."
-        paths:
-          - prombench/prombench
-          - funcbench/funcbench
-          - tools/amGithubNotifier/amGithubNotifier
-          - tools/commentMonitor/commentMonitor
-          - tools/fake-webserver/fake-webserver
-          - tools/scaler/scaler
   publish:
     docker:
       - image: circleci/buildpack-deps:18.04
@@ -93,27 +84,27 @@ jobs:
     - checkout
     - setup_remote_docker:
         version: 18.06.0-ce
-    - attach_workspace:
-        at: "."
     - publish_image:
         image_name: prombench
         dockerfile_path: "prombench/cmd/prombench/Dockerfile"
-        context_path: "prombench"
     - publish_image:
         image_name: funcbench
-        context_path: "funcbench"
+        dockerfile_path: "funcbench/Dockerfile"
     - publish_image:
         image_name: amgithubnotifier
-        context_path: "tools/amGithubNotifier"
+        dockerfile_path: "tools/amGithubNotifier/Dockerfile"
     - publish_image:
-        image_name: commentmonitor
-        context_path: "tools/commentMonitor"
+        image_name: comment-monitor
+        dockerfile_path: "tools/commentMonitor/Dockerfile"
     - publish_image:
         image_name: fake-webserver
-        context_path: "tools/fake-webserver"
+        dockerfile_path: "tools/fake-webserver/Dockerfile"
     - publish_image:
         image_name: scaler
-        context_path: "tools/scaler"
+        dockerfile_path: "tools/scaler/Dockerfile"
+    - publish_image:
+        image_name: load-generator
+        dockerfile_path: "tools/load-generator/Dockerfile"
 workflows:
   version: 2
   prombench:
