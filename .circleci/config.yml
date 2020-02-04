@@ -2,9 +2,12 @@
 version: 2.1
 
 # To use this config, you have to add following variables in CircleCI config:
-#   - DOCKER_USER
+#   - DOCKER_LOGIN
 #   - DOCKER_PASSWORD
-#   - DOCKER_ORG (optional, default is: prombench)
+#   - DOCKER_REPO (optional, default to prombench)
+
+orbs:
+  prometheus: prometheus/prometheus@0.4.0
 
 executors:
   # Whenever the Go version is updated here, .travis.yml and .promu.yml
@@ -13,62 +16,11 @@ executors:
     docker:
     - image: circleci/golang:1.13
 
-commands:
-  publish_image:
-    parameters:
-      registry:
-        description: Registry address
-        type: string
-        default: "docker.io"
-      organization:
-        description: Registry organization
-        type: string
-        default: prombench
-      image_name:
-        description: Name of the container image
-        type: string
-      login:
-        description: Environment variable holding the registry login
-        type: env_var_name
-        default: DOCKER_USER
-      password:
-        description: Environment variable holding the registry password
-        type: env_var_name
-        default: DOCKER_PASSWORD
-      dockerfile_path:
-        description: Path to Dockerfile
-        type: string
-        default: ""
-      context_path:
-        description: Path of docker build context
-        type: string
-        default: "."
-    steps:
-    - run:
-        name: Setup environment variables
-        command: |
-          echo "export TAG=`date +%Y%m%d`" >> $BASH_ENV
-          echo "DOCKER_REPO=<< parameters.registry >>/${DOCKER_ORG:-<< parameters.organization >>}" >> $BASH_ENV
-          echo "DOCKER_IMAGE=<< parameters.image_name >>" >> $BASH_ENV
-    - when:
-        condition: <<parameters.dockerfile_path>>
-        steps:
-        - run: docker build -t $DOCKER_REPO/$DOCKER_IMAGE:$TAG -f << parameters.dockerfile_path >> << parameters.context_path >>
-    - unless:
-        condition: <<parameters.dockerfile_path>>
-        steps:
-        - run: docker build -t $DOCKER_REPO/$DOCKER_IMAGE:$TAG << parameters.context_path >>
-    - run:
-        name: Push images to registry
-        command: |
-          docker images
-          echo -n $<< parameters.password >> | docker login -u $<< parameters.login >> --password-stdin << parameters.registry >>
-          docker push $DOCKER_REPO/$DOCKER_IMAGE:$TAG
 jobs:
   build_and_test:
     executor: golang
     steps:
-    - checkout
+    - prometheus/setup_environment
     - run:
         command: make all
         environment:
@@ -78,33 +30,66 @@ jobs:
           # likely to get OOMed and killed.
           GOOPTS: "-p 2"
   publish:
-    docker:
-      - image: circleci/buildpack-deps:18.04
+    executor: golang
     steps:
     - checkout
     - setup_remote_docker:
         version: 18.06.0-ce
-    - publish_image:
-        image_name: prombench
+    - run:
+        name: Setup environment variables
+        command: |
+          echo "export DOCKER_IMAGE_TAG=`date +%Y%m%d`" >> $BASH_ENV
+          echo "export DOCKER_ORG=${DOCKER_ORG:-prombench}" >> $BASH_ENV
+    - prometheus/publish_images:
+        container_image_name: prombench
         dockerfile_path: "prombench/cmd/prombench/Dockerfile"
-    - publish_image:
-        image_name: funcbench
+        registry: docker.io
+        organization: "$DOCKER_ORG"
+        login_variable: DOCKER_LOGIN
+        password_variable: DOCKER_PASSWORD
+    - prometheus/publish_images:
+        container_image_name: funcbench
         dockerfile_path: "funcbench/Dockerfile"
-    - publish_image:
-        image_name: amgithubnotifier
+        registry: docker.io
+        organization: "$DOCKER_ORG"
+        login_variable: DOCKER_LOGIN
+        password_variable: DOCKER_PASSWORD
+    - prometheus/publish_images:
+        container_image_name: amgithubnotifier
         dockerfile_path: "tools/amGithubNotifier/Dockerfile"
-    - publish_image:
-        image_name: comment-monitor
+        registry: docker.io
+        organization: "$DOCKER_ORG"
+        login_variable: DOCKER_LOGIN
+        password_variable: DOCKER_PASSWORD
+    - prometheus/publish_images:
+        container_image_name: comment-monitor
         dockerfile_path: "tools/commentMonitor/Dockerfile"
-    - publish_image:
-        image_name: fake-webserver
+        registry: docker.io
+        organization: "$DOCKER_ORG"
+        login_variable: DOCKER_LOGIN
+        password_variable: DOCKER_PASSWORD
+    - prometheus/publish_images:
+        container_image_name: fake-webserver
         dockerfile_path: "tools/fake-webserver/Dockerfile"
-    - publish_image:
-        image_name: scaler
+        registry: docker.io
+        organization: "$DOCKER_ORG"
+        login_variable: DOCKER_LOGIN
+        password_variable: DOCKER_PASSWORD
+    - prometheus/publish_images:
+        container_image_name: scaler
         dockerfile_path: "tools/scaler/Dockerfile"
-    - publish_image:
-        image_name: load-generator
+        registry: docker.io
+        organization: "$DOCKER_ORG"
+        login_variable: DOCKER_LOGIN
+        password_variable: DOCKER_PASSWORD
+    - prometheus/publish_images:
+        container_image_name: load-generator
         dockerfile_path: "tools/load-generator/Dockerfile"
+        registry: docker.io
+        organization: "$DOCKER_ORG"
+        login_variable: DOCKER_LOGIN
+        password_variable: DOCKER_PASSWORD
+
 workflows:
   version: 2
   prombench:
