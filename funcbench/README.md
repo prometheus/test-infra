@@ -1,12 +1,12 @@
 ## Intro
-A tool used as a github action to run a `go test -bench` and compare changes from a PR against another branch. The benchmark is triggered by creating a comment which specifies a branch to compare. The results are then posted back as a PR comment. 
+A tool used as a github action to run a `go test -bench` and compare changes from a PR against another branch. The benchmark is triggered by creating a comment which specifies a branch to compare. The results are then posted back as a PR comment.
 Comparison is done using [benchcmp](https://godoc.org/golang.org/x/tools/cmd/benchcmp). Arguments for the benchcmp are read from files created by previous action (for example [commentMonitor](/tools/commentMonitor/main.go)), which is responsible for the comment parsing.
 
 ## Use
 Tests are triggered by posting a comment in a PR with the following format:
 `/funcbench <branch> <golang test regex>  [-no-race]`
-Specifying which tests to run are filtered by using the standard golang regex format. 
-By default all benchmarks run with `-race` flag enabled and it can be disabled by appending `-no-race` at the end of the comment. 
+Specifying which tests to run are filtered by using the standard golang regex format.
+By default all benchmarks run with `-race` flag enabled and it can be disabled by appending `-no-race` at the end of the comment.
 
 ### Example Github actions workflow file
 ```
@@ -38,7 +38,8 @@ This tools is meant to be used as a Github action. The action itself is, to a la
 - Provide a Github token as an environment variable to both comment-monitor and funcbench.
 
 ## How to build
-`docker build -t <tag of your choice> .`
+From the repository root:
+`docker build -t <tag of your choice> -f funcbench/Dockerfile .`
 
 ## Examples
 Execute benchmark named `FuncName` regex, and compare it with `master` branch.
