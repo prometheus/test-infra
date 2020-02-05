@@ -1,7 +1,15 @@
-FROM        quay.io/prometheus/busybox:latest
-MAINTAINER  The Prometheus Authors <prometheus-developers@googlegroups.com>
+FROM golang:1.13-alpine AS builder
 
-COPY fake-webserver       /bin/webserver
+WORKDIR /src
+COPY tools/fake-webserver/*.go ./
+COPY go.* ./
 
-EXPOSE     8080
+RUN GO111MODULE=on go build -a -tags netgo -o /go/bin/fake-webserver
+
+FROM quay.io/prometheus/busybox:latest
+LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com>"
+
+COPY --from=builder /go/bin/fake-webserver /bin/webserver
+
+EXPOSE 8080
 ENTRYPOINT [ "/bin/webserver" ]

@@ -9,7 +9,7 @@ Eg. `somefile.yaml` will be parsed, whereas `somefile_noparse.yaml` will not be 
 ### Example for building the docker image
 From the repository root:
 ```
-$ make docker DOCKERFILE_PATH=prombench/cmd/prombench/Dockerfile DOCKER_IMAGE_NAME=prombench DOCKERBUILD_CONTEXT=prombench/ DOCKER_IMAGE_TAG=2.0.2
+$ make docker DOCKERFILE_PATH=prombench/cmd/prombench/Dockerfile DOCKER_IMAGE_NAME=prombench DOCKER_IMAGE_TAG=2.0.2
 ```
 
 ## Usage and examples:

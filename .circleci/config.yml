@@ -1,8 +1,13 @@
 ---
 version: 2.1
 
+# To use this config, you have to add following variables in CircleCI config:
+#   - DOCKER_LOGIN
+#   - DOCKER_PASSWORD
+#   - DOCKER_REPO (optional, default to prombench)
+
 orbs:
-  prometheus: prometheus/prometheus@0.1.0
+  prometheus: prometheus/prometheus@0.4.0
 
 executors:
   # Whenever the Go version is updated here, .travis.yml and .promu.yml
@@ -12,7 +17,7 @@ executors:
     - image: circleci/golang:1.13
 
 jobs:
-  test:
+  build_and_test:
     executor: golang
     steps:
     - prometheus/setup_environment
@@ -24,12 +29,80 @@ jobs:
           # don't limit this to the number of allocated cores, the job is
           # likely to get OOMed and killed.
           GOOPTS: "-p 2"
+  publish:
+    executor: golang
+    steps:
+    - checkout
+    - setup_remote_docker:
+        version: 18.06.0-ce
+    - run:
+        name: Setup environment variables
+        command: |
+          echo "export DOCKER_IMAGE_TAG=`date +%Y%m%d`" >> $BASH_ENV
+          echo "export DOCKER_ORG=${DOCKER_ORG:-prombench}" >> $BASH_ENV
+    - prometheus/publish_images:
+        container_image_name: prombench
+        dockerfile_path: "prombench/cmd/prombench/Dockerfile"
+        registry: docker.io
+        organization: "$DOCKER_ORG"
+        login_variable: DOCKER_LOGIN
+        password_variable: DOCKER_PASSWORD
+    - prometheus/publish_images:
+        container_image_name: funcbench
+        dockerfile_path: "funcbench/Dockerfile"
+        registry: docker.io
+        organization: "$DOCKER_ORG"
+        login_variable: DOCKER_LOGIN
+        password_variable: DOCKER_PASSWORD
+    - prometheus/publish_images:
+        container_image_name: amgithubnotifier
+        dockerfile_path: "tools/amGithubNotifier/Dockerfile"
+        registry: docker.io
+        organization: "$DOCKER_ORG"
+        login_variable: DOCKER_LOGIN
+        password_variable: DOCKER_PASSWORD
+    - prometheus/publish_images:
+        container_image_name: comment-monitor
+        dockerfile_path: "tools/commentMonitor/Dockerfile"
+        registry: docker.io
+        organization: "$DOCKER_ORG"
+        login_variable: DOCKER_LOGIN
+        password_variable: DOCKER_PASSWORD
+    - prometheus/publish_images:
+        container_image_name: fake-webserver
+        dockerfile_path: "tools/fake-webserver/Dockerfile"
+        registry: docker.io
+        organization: "$DOCKER_ORG"
+        login_variable: DOCKER_LOGIN
+        password_variable: DOCKER_PASSWORD
+    - prometheus/publish_images:
+        container_image_name: scaler
+        dockerfile_path: "tools/scaler/Dockerfile"
+        registry: docker.io
+        organization: "$DOCKER_ORG"
+        login_variable: DOCKER_LOGIN
+        password_variable: DOCKER_PASSWORD
+    - prometheus/publish_images:
+        container_image_name: load-generator
+        dockerfile_path: "tools/load-generator/Dockerfile"
+        registry: docker.io
+        organization: "$DOCKER_ORG"
+        login_variable: DOCKER_LOGIN
+        password_variable: DOCKER_PASSWORD
 
 workflows:
   version: 2
   prombench:
     jobs:
-    - test:
+    - build_and_test:
         filters:
-          tags:
+          branches:
             only: /.*/
+    - publish:
+        requires:
+          - build_and_test
+        context: org-context
+        filters:
+          branches:
+            only:
+              - master

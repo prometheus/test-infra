@@ -1,4 +1,4 @@
-# A cli tool to scale k8s deployments from within a k8s cluster. 
+# A cli tool to scale k8s deployments from within a k8s cluster.
 
 This tool uses [k8s provider](../../pkg/provider/k8s) to scale a deployment up and down periodically, from within a k8s cluster.
 
@@ -17,10 +17,14 @@ rules:
   verbs: ["get", "list", "update"]
 ```
 
+## Build Docker image
+From the repository root:
+`$ make docker DOCKERFILE_PATH=tools/scaler/Dockerfile DOCKER_IMAGE_NAME=scaler DOCKER_IMAGE_TAG=0.0.2`
+
 ## Usage
 ```
 // (Note: These commands should be executed inside a k8s container)
-./scaler -h  // Usage and examples. 
+./scaler -h  // Usage and examples.
 
 Sample Output of ./scaler help scale :
 
