@@ -1,17 +1,14 @@
-# NOTE: building this requires it to have the build context of the repository root
-ARG ARCH="amd64"
-ARG OS="linux"
-
-FROM golang:1.12-alpine AS builder
+FROM golang:1.13-alpine AS builder
 
 WORKDIR /src
-RUN apk add --update --no-cache git
-COPY tools/amGithubNotifier ./
+COPY tools/amGithubNotifier/*.go ./
 COPY go.* ./
 
-RUN GO111MODULE=on go build -a -tags netgo -o /src/build/amGithubNotifier
+RUN GO111MODULE=on go build -a -tags netgo -o /go/bin/amGithubNotifier
 
-FROM quay.io/prometheus/busybox-$OS-$ARCH:latest
+FROM quay.io/prometheus/busybox:latest
 LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com>"
-COPY --from=builder /src/build/amGithubNotifier /bin/amGithubNotifier
+
+COPY --from=builder /go/bin/amGithubNotifier /bin/
+
 ENTRYPOINT ["/bin/amGithubNotifier"]
