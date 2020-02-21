@@ -17,14 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: commentMonitor
-      uses: docker://prombench/comment-monitor:latest
+      uses: docker://prominfra/comment-monitor:latest
       env:
         COMMENT_TEMPLATE: 'The benchmark has started.' // Body of a comment that is created to announce start of a benchmark.
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} // Github secret token
       with:
         args: '"^/funcbench ?(?P<BRANCH>[^ B\.]+)? ?(?P<REGEX>\.|Bench.*|[^ ]+)? ?(?P<RACE>-no-race)?.*$"'
     - name: benchmark
-      uses: docker://prombench/funcbench:latest
+      uses: docker://prominfra/funcbench:latest
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} // Github secret token
 ```

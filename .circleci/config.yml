@@ -4,7 +4,7 @@ version: 2.1
 # To use this config, you have to add following variables in CircleCI config:
 #   - DOCKER_LOGIN
 #   - DOCKER_PASSWORD
-#   - DOCKER_REPO (optional, default to prombench)
+#   - DOCKER_REPO (optional, default to prominfra)
 
 orbs:
   prometheus: prometheus/prometheus@0.4.0
@@ -39,7 +39,7 @@ jobs:
         name: Setup environment variables
         command: |
           echo "export DOCKER_IMAGE_TAG=`date +%Y%m%d`" >> $BASH_ENV
-          echo "export DOCKER_ORG=${DOCKER_ORG:-prombench}" >> $BASH_ENV
+          echo "export DOCKER_ORG=${DOCKER_ORG:-prominfra}" >> $BASH_ENV
     - prometheus/publish_images:
         container_image_name: prombench
         dockerfile_path: "prombench/cmd/prombench/Dockerfile"

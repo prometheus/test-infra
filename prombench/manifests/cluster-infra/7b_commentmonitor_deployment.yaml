@@ -15,7 +15,7 @@ spec:
         app: comment-monitor
     spec:
       containers:
-      - image: docker.io/prombench/comment-monitor:0.0.2
+      - image: docker.io/prominfra/comment-monitor:0.0.2
         imagePullPolicy: Always
         args:
         - "--eventmap=/etc/cm/eventmap.yml"
