@@ -3,7 +3,7 @@ go:
     # .circle/config.yml should also be updated if in use.
     version: 1.13
 repository:
-    path: github.com/prometheus/prombench
+    path: github.com/prometheus/test-infra
 build:
     binaries:
         - name: prombench

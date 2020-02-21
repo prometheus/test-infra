@@ -25,7 +25,7 @@ import (
 	appsV1 "k8s.io/api/apps/v1"
 
 	"github.com/pkg/errors"
-	"github.com/prometheus/prombench/pkg/provider/k8s"
+	"github.com/prometheus/test-infra/pkg/provider/k8s"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"k8s.io/apimachinery/pkg/runtime"
 )

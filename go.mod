@@ -1,4 +1,4 @@
-module github.com/prometheus/prombench
+module github.com/prometheus/test-infra
 
 go 1.12
 
