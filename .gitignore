@@ -1,5 +1,5 @@
-/fake-webserver
-/scaler
-/amGithubNotifier
-/commentMonitor
-/funcbench
+/tools/amGithubNotifier/amGithubNotifier
+/tools/commentMonitor/commentMonitor
+/tools/fake-webserver/fake-webserver
+/tools/scaler/scaler
+/funcbench/funcbench
