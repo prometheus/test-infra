@@ -92,7 +92,7 @@ jobs:
 
 workflows:
   version: 2
-  prombench:
+  test-infra:
     jobs:
     - build_and_test:
         filters:
