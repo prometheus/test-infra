@@ -9,6 +9,7 @@ Specifying which tests to run are filtered by using the standard golang regex fo
 By default all benchmarks run with `-race` flag enabled and it can be disabled by appending `-no-race` at the end of the comment.
 
 ### Example Github actions workflow file
+> Note: No longer using `issue_comment`, to be replaced with commentMonitor usage.
 ```
 on: issue_comment // Workflow is executed when a pull request comment is created.
 name: Benchmark
