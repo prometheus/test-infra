@@ -35,7 +35,7 @@ import (
 
 	"strings"
 
-	"github.com/prometheus/prombench/pkg/provider"
+	"github.com/prometheus/test-infra/pkg/provider"
 
 	apiServerExtensionsV1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiServerExtensionsClient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"

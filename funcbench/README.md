@@ -9,6 +9,7 @@ Specifying which tests to run are filtered by using the standard golang regex fo
 By default all benchmarks run with `-race` flag enabled and it can be disabled by appending `-no-race` at the end of the comment.
 
 ### Example Github actions workflow file
+> Note: No longer using `issue_comment`, to be replaced with commentMonitor usage.
 ```
 on: issue_comment // Workflow is executed when a pull request comment is created.
 name: Benchmark
@@ -17,20 +18,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: commentMonitor
-      uses: docker://prombench/comment-monitor:latest
+      uses: docker://prominfra/comment-monitor:latest
       env:
         COMMENT_TEMPLATE: 'The benchmark has started.' // Body of a comment that is created to announce start of a benchmark.
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} // Github secret token
       with:
         args: '"^/funcbench ?(?P<BRANCH>[^ B\.]+)? ?(?P<REGEX>\.|Bench.*|[^ ]+)? ?(?P<RACE>-no-race)?.*$"'
     - name: benchmark
-      uses: docker://prombench/funcbench:latest
+      uses: docker://prominfra/funcbench:latest
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} // Github secret token
 ```
 
 ## Set up
-This tools is meant to be used as a Github action. The action itself is, to a large degree, unusable alone, as you need to combine it with another Github action that will provide necessary files to it. At this time, the only action it is supposed to work with, is [comment-monitor](https://github.com/prometheus/prombench/tree/master/tools/commentMonitor).
+This tools is meant to be used as a Github action. The action itself is, to a large degree, unusable alone, as you need to combine it with another Github action that will provide necessary files to it. At this time, the only action it is supposed to work with, is [comment-monitor](https://github.com/prometheus/test-infra/tree/master/tools/commentMonitor).
 - Create Github actions workflow file that is executed when an issue comment is created, `on = "issue_comment"`.
 - Add comment-monitor Github action as a first step.
 - Specify this regex `^/funcbench ?(?P<BRANCH>[^ B\.]+)? ?(?P<REGEX>\.|Bench.*|[^ ]+)? ?(?P<RACE>-no-race)?.*$` in the `args` field of the comment-monitor.

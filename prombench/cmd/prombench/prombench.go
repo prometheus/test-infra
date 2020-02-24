@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main // import "github.com/prometheus/prombench/cmd/prombench"
+package main // import "github.com/prometheus/test-infra/cmd/prombench"
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"github.com/prometheus/prombench/pkg/provider/gke"
+	"github.com/prometheus/test-infra/pkg/provider/gke"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 

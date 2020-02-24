@@ -1,4 +1,4 @@
-DOCKER_REPO             ?= prombench
+DOCKER_REPO             ?= prominfra
 
 .PHONY: all
 all: precheck style check_license lint build test unused

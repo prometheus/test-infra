@@ -16,7 +16,7 @@ LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com
 RUN apk add git
 
 ENV TEST_INFRA_DIR /test-infra
-ENV TEST_INFRA_REPO https://github.com/prometheus/prombench.git
+ENV TEST_INFRA_REPO https://github.com/prometheus/test-infra.git
 
 ENV PROMBENCH_DIR $TEST_INFRA_DIR/prombench
 
