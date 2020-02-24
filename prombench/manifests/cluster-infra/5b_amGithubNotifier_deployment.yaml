@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: amgithubnotifier
-        image: docker.io/prombench/amgithubnotifier:0.0.1
+        image: docker.io/prominfra/amgithubnotifier:0.0.1
         args:
         - "--org={{ .GITHUB_ORG }}"
         - "--repo={{ .GITHUB_REPO }}"
