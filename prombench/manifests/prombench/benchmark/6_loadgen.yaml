@@ -68,7 +68,7 @@ spec:
       serviceAccountName: loadgen-scaler
       containers:
       - name: prom-load-generator
-        image: docker.io/prominfra/scaler:2.0.0
+        image: docker.io/prominfra/scaler:master
         imagePullPolicy: Always
         args:
         - "scale"
@@ -108,7 +108,7 @@ spec:
     spec:
       containers:
       - name: prom-load-generator
-        image: docker.io/prominfra/load-generator:2.0.1
+        image: docker.io/prominfra/load-generator:master
         imagePullPolicy: Always
         args:
         - "prombench-{{ .PR_NUMBER }}"

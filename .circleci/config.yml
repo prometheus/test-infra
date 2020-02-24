@@ -38,7 +38,7 @@ jobs:
     - run:
         name: Setup environment variables
         command: |
-          echo "export DOCKER_IMAGE_TAG=`date +%Y%m%d`" >> $BASH_ENV
+          echo "export DOCKER_IMAGE_TAG=master" >> $BASH_ENV
           echo "export DOCKER_ORG=${DOCKER_ORG:-prominfra}" >> $BASH_ENV
     - prometheus/publish_images:
         container_image_name: prombench
@@ -85,6 +85,13 @@ jobs:
     - prometheus/publish_images:
         container_image_name: load-generator
         dockerfile_path: "tools/load-generator/Dockerfile"
+        registry: docker.io
+        organization: "$DOCKER_ORG"
+        login_variable: DOCKER_LOGIN
+        password_variable: DOCKER_PASSWORD
+    - prometheus/publish_images:
+        container_image_name: prometheus-builder
+        dockerfile_path: "prombench/temp/prometheus-builder/Dockerfile"
         registry: docker.io
         organization: "$DOCKER_ORG"
         login_variable: DOCKER_LOGIN
