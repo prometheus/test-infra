@@ -23,7 +23,7 @@ data:
         spec:
           containers:
           - name: fake-webserver
-            image: docker.io/prominfra/fake-webserver:2.0.1
+            image: docker.io/prominfra/fake-webserver:master
             ports:
             - name: metrics1
               containerPort: 8080
