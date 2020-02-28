@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go v0.39.0
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-github/v26 v26.1.3
+	github.com/google/go-github/v29 v29.0.3
 	github.com/google/gofuzz v1.0.0 // indirect
 	github.com/googleapis/gnostic v0.2.0 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect

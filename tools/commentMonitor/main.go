@@ -22,7 +22,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/google/go-github/v26/github"
+	"github.com/google/go-github/v29/github"
 	"golang.org/x/oauth2"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/yaml.v2"
@@ -167,14 +167,6 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "user not allowed to run command", http.StatusForbidden)
-			return
-		}
-
-		// Get the last commit sha from PR.
-		cmClient.allArgs["LAST_COMMIT_SHA"], err = cmClient.ghClient.getLastCommitSHA(ctx)
-		if err != nil {
-			log.Println(err)
-			http.Error(w, "could not fetch sha", http.StatusBadRequest)
 			return
 		}
 

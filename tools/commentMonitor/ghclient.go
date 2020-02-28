@@ -14,15 +14,12 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
-	"os"
 
-	"github.com/google/go-github/v26/github"
+	"github.com/google/go-github/v29/github"
 )
 
 type githubClient struct {
@@ -33,13 +30,6 @@ type githubClient struct {
 	author            string
 	commentBody       string
 	authorAssociation string
-}
-
-// TODO: Once go-github starts supporting repository_dispatch event, use it.
-// https://github.com/google/go-github/issues/1316
-type repositoryDispatchEvent struct {
-	EventType     string            `json:"event_type"`
-	ClientPayload map[string]string `json:"client_payload"`
 }
 
 func (c githubClient) postComment(ctx context.Context, commentBody string) error {
@@ -62,30 +52,18 @@ func (c githubClient) getLastCommitSHA(ctx context.Context) (string, error) {
 }
 
 func (c githubClient) createRepositoryDispatch(ctx context.Context, eventType string, clientPayload map[string]string) error {
-	rd := repositoryDispatchEvent{
+	allArgs, err := json.Marshal(clientPayload)
+	if err != nil {
+		return fmt.Errorf("%v: could not encode client payload", err)
+	}
+	cp := json.RawMessage(string(allArgs))
+
+	rd := github.DispatchRequestOptions{
 		EventType:     eventType,
-		ClientPayload: clientPayload,
+		ClientPayload: &cp,
 	}
-	log.Printf("creating repository_dispatch with payload: %v", clientPayload)
-	body, err := json.Marshal(rd)
-	if err != nil {
-		return err
-	}
-	httpClt := &http.Client{}
-	apiURL := fmt.Sprintf("https://api.github.com/repos/%v/%v/dispatches", c.owner, c.repo)
-	req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(body))
-	if err != nil {
-		return err
-	}
-	req.Header.Add("Authorization", fmt.Sprintf("token %v", os.Getenv("GITHUB_TOKEN")))
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Accept", "application/vnd.github.everest-preview+json")
-	resp, err := httpClt.Do(req)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("repository_dispatch event could not be triggered")
-	}
-	return nil
+
+	log.Printf("creating repository_dispatch with payload: %v", string(allArgs))
+	_, _, err = c.clt.Repositories.Dispatch(ctx, c.owner, c.repo, rd)
+	return err
 }
