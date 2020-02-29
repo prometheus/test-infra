@@ -34,7 +34,8 @@ type commentMonitorClient struct {
 	commentTemplate string
 }
 
-// Validate comment if regexString provided.
+// Set eventType and commentTemplate if
+// regexString is validated against provided commentBody.
 func (c *commentMonitorClient) validateRegex() bool {
 	for _, e := range c.eventMap {
 		c.regex = regexp.MustCompile(e.RegexString)

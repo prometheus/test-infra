@@ -37,7 +37,7 @@ type commentMonitorConfig struct {
 	port               string
 }
 
-// Structure of eventmap.yaml file.
+// Structure of eventmap.yml file.
 type webhookEventMap struct {
 	EventType       string `yaml:"event_type"`
 	CommentTemplate string `yaml:"comment_template"`
@@ -71,7 +71,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", cmConfig.port), mux))
 }
 
-func newGithubClientForIssueComments(ctx context.Context, e *github.IssueCommentEvent) (*githubClient, error) {
+func newGithubClient(ctx context.Context, e *github.IssueCommentEvent) (*githubClient, error) {
 	ghToken := os.Getenv("GITHUB_TOKEN")
 	if ghToken == "" {
 		return nil, fmt.Errorf("env var missing")
@@ -148,7 +148,7 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 
 		// Setup github client.
 		ctx := context.Background()
-		cmClient.ghClient, err = newGithubClientForIssueComments(ctx, e)
+		cmClient.ghClient, err = newGithubClient(ctx, e)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "could not create GitHub client", http.StatusBadRequest)
