@@ -118,3 +118,19 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
     -v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
     -f manifests/prombench/benchmark
 ```
+### Delete and Cleanup
+  - Delete the prombench GKE cluster
+  ```
+  ./prombench gke cluster delete  -a $AUTH_FILE 
+    -v PROJECT_ID:$PROJECT_ID -v ZONE:$ZONE \
+    -v CLUSTER_NAME:$CLUSTER_NAME \ 
+    -f manifests/cluster.yaml
+  ```
+
+  - Delete the GKE node pool
+  ```
+  ./prombench gke nodepool delete -a $AUTH_FILE \
+    -v ZONE:$ZONE -v PROJECT_ID:$PROJECT_ID \
+    -v CLUSTER_NAME:$CLUSTER_NAME -v PR_NUMBER:$PR_NUMBER \
+    -f manifests/prombench/nodepools.yaml
+  ```
