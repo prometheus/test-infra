@@ -34,7 +34,8 @@ type commentMonitorClient struct {
 	commentTemplate string
 }
 
-// Validate comment if regexString provided.
+// Set eventType and commentTemplate if
+// regexString is validated against provided commentBody.
 func (c *commentMonitorClient) validateRegex() bool {
 	for _, e := range c.eventMap {
 		c.regex = regexp.MustCompile(e.RegexString)
@@ -72,6 +73,7 @@ func (c commentMonitorClient) verifyUser(ctx context.Context, verifyUserDisabled
 
 // Extract args if regexString provided.
 func (c *commentMonitorClient) extractArgs(ctx context.Context) error {
+	var err error
 	if c.regex != nil {
 		// Add comment arguments.
 		commentArgs := c.regex.FindStringSubmatch(c.ghClient.commentBody)[1:]
@@ -85,12 +87,15 @@ func (c *commentMonitorClient) extractArgs(ctx context.Context) error {
 
 		// Add non-comment arguments if any.
 		c.allArgs["PR_NUMBER"] = strconv.Itoa(c.ghClient.pr)
+		c.allArgs["LAST_COMMIT_SHA"], err = c.ghClient.getLastCommitSHA(ctx)
+		if err != nil {
+			return fmt.Errorf("%v: could not fetch SHA", err)
+		}
 
-		err := c.ghClient.createRepositoryDispatch(ctx, c.eventType, c.allArgs)
+		err = c.ghClient.createRepositoryDispatch(ctx, c.eventType, c.allArgs)
 		if err != nil {
 			return fmt.Errorf("%v: could not create repository_dispatch event", err)
 		}
-
 	}
 	return nil
 }

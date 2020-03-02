@@ -22,7 +22,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/google/go-github/v26/github"
+	"github.com/google/go-github/v29/github"
 	"golang.org/x/oauth2"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/yaml.v2"
@@ -37,7 +37,7 @@ type commentMonitorConfig struct {
 	port               string
 }
 
-// Structure of eventmap.yaml file.
+// Structure of eventmap.yml file.
 type webhookEventMap struct {
 	EventType       string `yaml:"event_type"`
 	CommentTemplate string `yaml:"comment_template"`
@@ -71,7 +71,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", cmConfig.port), mux))
 }
 
-func newGithubClientForIssueComments(ctx context.Context, e *github.IssueCommentEvent) (*githubClient, error) {
+func newGithubClient(ctx context.Context, e *github.IssueCommentEvent) (*githubClient, error) {
 	ghToken := os.Getenv("GITHUB_TOKEN")
 	if ghToken == "" {
 		return nil, fmt.Errorf("env var missing")
@@ -148,7 +148,7 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 
 		// Setup github client.
 		ctx := context.Background()
-		cmClient.ghClient, err = newGithubClientForIssueComments(ctx, e)
+		cmClient.ghClient, err = newGithubClient(ctx, e)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "could not create GitHub client", http.StatusBadRequest)
@@ -167,14 +167,6 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "user not allowed to run command", http.StatusForbidden)
-			return
-		}
-
-		// Get the last commit sha from PR.
-		cmClient.allArgs["LAST_COMMIT_SHA"], err = cmClient.ghClient.getLastCommitSHA(ctx)
-		if err != nil {
-			log.Println(err)
-			http.Error(w, "could not fetch sha", http.StatusBadRequest)
 			return
 		}
 
