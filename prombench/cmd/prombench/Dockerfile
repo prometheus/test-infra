@@ -13,7 +13,7 @@ RUN CGO_ENABLED=0 GO111MODULE=on go build -a -tags netgo -o /go/bin/prombench
 FROM alpine:latest
 LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com>"
 
-RUN apk add git
+RUN apk add git make
 
 ENV TEST_INFRA_DIR /test-infra
 ENV TEST_INFRA_REPO https://github.com/prometheus/test-infra.git
