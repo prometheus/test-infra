@@ -4,9 +4,9 @@ Comparison is done using [benchcmp](https://godoc.org/golang.org/x/tools/cmd/ben
 
 ## Use
 Tests are triggered by posting a comment in a PR with the following format:
-`/funcbench <branch> <golang test regex>  [-no-race]`
+`/funcbench <branch> <golang test regex>`
 Specifying which tests to run are filtered by using the standard golang regex format.
-By default all benchmarks run with `-race` flag enabled and it can be disabled by appending `-no-race` at the end of the comment.
+By default all benchmarks run without `-race` flag (#275).
 
 ### Example Github actions workflow file
 > Note: No longer using `issue_comment`, to be replaced with commentMonitor usage.
@@ -23,7 +23,7 @@ jobs:
         COMMENT_TEMPLATE: 'The benchmark has started.' // Body of a comment that is created to announce start of a benchmark.
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} // Github secret token
       with:
-        args: '"^/funcbench ?(?P<BRANCH>[^ B\.]+)? ?(?P<REGEX>\.|Bench.*|[^ ]+)? ?(?P<RACE>-no-race)?.*$"'
+        args: '"^/funcbench ?(?P<BRANCH>[^ B\.]+)? ?(?P<REGEX>\.|Bench.*|[^ ]+)?'
     - name: benchmark
       uses: docker://prominfra/funcbench:latest
       env:
@@ -34,7 +34,7 @@ jobs:
 This tools is meant to be used as a Github action. The action itself is, to a large degree, unusable alone, as you need to combine it with another Github action that will provide necessary files to it. At this time, the only action it is supposed to work with, is [comment-monitor](https://github.com/prometheus/test-infra/tree/master/tools/commentMonitor).
 - Create Github actions workflow file that is executed when an issue comment is created, `on = "issue_comment"`.
 - Add comment-monitor Github action as a first step.
-- Specify this regex `^/funcbench ?(?P<BRANCH>[^ B\.]+)? ?(?P<REGEX>\.|Bench.*|[^ ]+)? ?(?P<RACE>-no-race)?.*$` in the `args` field of the comment-monitor.
+- Specify this regex `^/funcbench ?(?P<BRANCH>[^ B\.]+)? ?(?P<REGEX>\.|Bench.*|[^ ]+)?` in the `args` field of the comment-monitor.
 - Specify this Github action as a pre-built image, build from this source code, or just refer to this repository from the workflow file.
 - Provide a Github token as an environment variable to both comment-monitor and funcbench.
 

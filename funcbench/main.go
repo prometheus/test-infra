@@ -38,50 +38,60 @@ type gitHubClient struct {
 	repo             string
 	latestCommitHash string
 	prNumber         int
+	comment          bool
 	client           *github.Client
 }
 
 type benchmarkTester struct {
-	bechRegex       string
-	home            string
-	raceFlagEnabled bool
+	bechRegex string
+	home      string
 }
 
 func main() {
 	// Show file line with each log.
 	log.SetFlags(log.Ltime | log.Lshortfile)
-	app := kingpin.New(filepath.Base(os.Args[0]), "benchmark result posting and formating tool.\n-i location of github hook file (even.json)")
+	app := kingpin.New(
+		filepath.Base(os.Args[0]),
+		"benchmark result posting and formating tool.",
+	)
 	app.HelpFlag.Short('h')
-	input := app.Flag("input", "path to event.json").Short('i').Default("/github/workflow/event.json").String()
+
+	owner := app.Flag("owner", "It's a Github owner or organisation name.").Default("prometheus").Short('o').String()
+	repo := app.Flag("repo", "This is the repository name.").Default("prometheus").Short('r').String()
+
+	prNumber := app.Flag("pullrequest", "It's a new pull request ID, the benchmark will be run using a copy of its code.").Short('p').Required().Int()
+	branch := app.Arg("branch", "A name of branch, will be used as a baseline in benchmark.").Required().String()
+	regex := app.Arg("regex", "A regular expression will be used in '-bench regexp' during 'go test', check 'go help testflag' for details.").Default(".").String()
+
+	postComment := app.Flag("comment", "If set to false, it will not post the benchmark result back to Github. This is mainly for local testing.").Default("true").Bool()
+
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	data, err := ioutil.ReadFile(*input)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	log.Printf(
+		"Start testing %s/%s PR-%d VS branch %s, on benchmark `%s`. With comment: %v.\n",
+		*owner, *repo, *prNumber, *branch, *regex, *postComment,
+	)
 
-	event, err := github.ParseWebHook("issue_comment", data)
-	if err != nil {
-		log.Fatalln(err)
-	}
 	var (
 		ghClient  *gitHubClient
 		gitClient *gitClient
-		prNumber  int
 	)
-	switch eventType := event.(type) {
-	case *github.IssueCommentEvent:
-		ghClient = newGitHubClient(eventType)
-		gitClient, err = newGitClient(eventType)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		prNumber = *eventType.GetIssue().Number
 
-	default:
-		log.Fatalln("only issue_comment event is supported")
+	ghClient = &gitHubClient{
+		client:           newClient(os.Getenv("GITHUB_TOKEN")),
+		owner:            *owner,
+		repo:             *repo,
+		prNumber:         *prNumber,
+		comment:          *postComment,
+		latestCommitHash: os.Getenv("GITHUB_SHA"),
 	}
-	benchTest, err := newBenchmarkTester()
+
+	gitClient, err := newGitClient(*owner, *repo, *branch)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	benchTest, err := newBenchmarkTester(*regex)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -91,7 +101,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	if err := gitClient.checkoutPR(prNumber); err != nil {
+	if err := gitClient.checkoutPR(*prNumber); err != nil {
 		comment := fmt.Sprintf("Switch to a pull request branch failed. %s", logLink)
 		if postCommentErr := ghClient.postComment(comment); postCommentErr != nil {
 			log.Fatalf("Error posting a comment for `checkoutToPullRequest` command execution error. checkoutToPullRequest err:%v, postComment err:%v", err, postCommentErr)
@@ -135,24 +145,16 @@ func main() {
 
 }
 
-func newGitHubClient(event *github.IssueCommentEvent) *gitHubClient {
-	c := gitHubClient{
-		client:           newClient(os.Getenv("GITHUB_TOKEN")),
-		owner:            *event.GetRepo().Owner.Login,
-		repo:             *event.GetRepo().Name,
-		prNumber:         *event.GetIssue().Number,
-		latestCommitHash: os.Getenv("GITHUB_SHA"),
-	}
-	return &c
-}
-
 func (c *gitHubClient) postComment(comment string) error {
-	issueComment := &github.IssueComment{Body: github.String(comment)}
-	_, _, err := c.client.Issues.CreateComment(context.Background(), c.owner, c.repo, c.prNumber, issueComment)
-	return err
+	if c.comment {
+		issueComment := &github.IssueComment{Body: github.String(comment)}
+		_, _, err := c.client.Issues.CreateComment(context.Background(), c.owner, c.repo, c.prNumber, issueComment)
+		return err
+	}
+	return nil
 }
 
-func newGitClient(event *github.IssueCommentEvent) (*gitClient, error) {
+func newGitClient(owner, repo, branch string) (*gitClient, error) {
 	_, _, err := execCommand("git", "config", "--global", "user.email", "prombench@example.com")
 	if err != nil {
 		return nil, err
@@ -162,11 +164,10 @@ func newGitClient(event *github.IssueCommentEvent) (*gitClient, error) {
 		return nil, err
 	}
 
-	branch, err := ioutil.ReadFile("/github/home/commentMonitor/BRANCH")
 	c := gitClient{
-		branch: string(branch),
-		owner:  *event.GetRepo().Owner.Login,
-		repo:   *event.GetRepo().Name,
+		branch: branch,
+		owner:  owner,
+		repo:   repo,
 	}
 
 	return &c, err
@@ -220,30 +221,21 @@ func (c *gitClient) revertPRChanges() error {
 	})
 }
 
-func newBenchmarkTester() (*benchmarkTester, error) {
+func newBenchmarkTester(benchRegex string) (*benchmarkTester, error) {
 	if err := os.Setenv("GO111MODULE", "on"); err != nil {
 		return nil, err
 	}
+
 	if err := os.Setenv("CGO_ENABLED", "0"); err != nil {
 		return nil, err
 	}
 
-	benchRegex, err := ioutil.ReadFile("/github/home/commentMonitor/REGEX")
-	if err != nil {
-		return nil, err
-	}
-	raceArgument, err := ioutil.ReadFile("/github/home/commentMonitor/RACE")
-	if err != nil {
-		return nil, err
-	}
-
 	bench := benchmarkTester{
-		raceFlagEnabled: string(raceArgument) != "-no-race",
-		home:            os.Getenv("HOME"),
-		bechRegex:       string(benchRegex),
+		home:      os.Getenv("HOME"),
+		bechRegex: benchRegex,
 	}
 
-	_, _, err = execCommand("go", "get", "golang.org/x/tools/cmd/benchcmp")
+	_, _, err := execCommand("go", "get", "golang.org/x/tools/cmd/benchcmp")
 
 	return &bench, err
 }
@@ -264,11 +256,7 @@ func (bench *benchmarkTester) execBenchmark() (string, error) {
 		exitCode int
 		err      error
 	)
-	if bench.raceFlagEnabled {
-		out, exitCode, err = execCommand("go", "test", "-bench", fmt.Sprintf("^%s$", bench.bechRegex), "-benchmem", "-v", "./...")
-	} else {
-		out, exitCode, err = execCommand("go", "test", "-bench", fmt.Sprintf("^%s$", bench.bechRegex), "-benchmem", "-race", "-v", "./...")
-	}
+	out, exitCode, err = execCommand("go", "test", "-bench", fmt.Sprintf("^%s$", bench.bechRegex), "-benchmem", "-v", "./...")
 	log.Println("Executing benchmark with REGEX ", bench.bechRegex,
 		"Benchmark output: ", out)
 	if err != nil || exitCode != 0 {
