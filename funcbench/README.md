@@ -11,56 +11,45 @@ which is responsible for the comment parsing.
 
 ## Usage
 
+NOTE: Clean git state is required.
 Examples:
 
 * Execute benchmark named `FuncName` regex, and compare it with `master` branch.
 
  ```
- /funcbench master BenchmarkFuncName
+ /funcbench -v master BenchmarkFuncName
  ```
 
 * Execute all benchmarks matching `FuncName.*` regex, and compare it with `master` branch.
  
 ```
- /funcbench master FuncName.*
+ /funcbench -v master FuncName.*
  ```
 
 * Execute all benchmarks, and compare the results with `devel` branch.
 
  ```
- /funcbench devel .
+ /funcbench -v devel .
  ```
 
 * Execute all benchmarks matching `FuncName.*` regex, and compare it with `6d280faa16bfca1f26fa426d863afbb564c063d1` commit.
 
  ```
- /funcbench 6d280faa16bfca1f26fa426d863afbb564c063d1 FuncName.*
+ /funcbench -v 6d280faa16bfca1f26fa426d863afbb564c063d1 FuncName.*
  ```
 
 * Execute all benchmarks matching `FuncName.*` regex on current code. Compare it between sub-benchmarks (`b.Run`) of same benchmark for current commit.
 Errors out if there are no sub-benchmarks.
 
  ```
- /funcbench . FuncName.*
+ /funcbench -v . FuncName.*
  ```
-
-### CLI without Github on existing local repository.
-
-You can run it locally without any webhook. Just pass `--local/-l` flag e.g:
-
-Execute all benchmarks matching `FuncName.*` regex, and compare it with `master` branch without GitHub notification. 
-Use local repository for that. NOTE: Clean git state is required.
- 
-```
-./funcbench --local master FuncName.*
- ```
-
 
 ### GitHub 
 
 Tests are triggered by posting a comment in a PR with the following format:
 
-`/funcbench <branch> <Go test regex>`
+`/funcbench <branch/commit> <Go test regex>`
 
 Specifying which tests to run are filtered by using the standard [Go regex RE2 language](https://github.com/google/re2/wiki/Syntax).
 
@@ -68,7 +57,7 @@ By default all benchmarks run without `-race` flag (#275).
 
 #### Example Github actions workflow file to pass in --input flag.
 
-> Note: No longer using `issue_comment`, to be replaced with commentMonitor usage.
+> TODO: No longer using `issue_comment`, to be replaced with commentMonitor usage.
 
 ```
 on: issue_comment // Workflow is executed when a pull request comment is created.
