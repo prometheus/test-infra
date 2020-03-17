@@ -25,6 +25,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
@@ -98,14 +99,16 @@ type GitHub struct {
 }
 
 func newGitHubEnv(ctx context.Context, e environment, owner, repo string, prNumber int) (Environment, error) {
-	if err := os.Chdir(os.Getenv("GITHUB_WORKSPACE")); err != nil {
+	rpath := os.Getenv("GITHUB_WORKSPACE")
+	if err := os.Chdir(rpath); err != nil {
 		return nil, errors.Wrap(err, "changing to GITHUB_WORKSPACE dir")
 	}
 
 	ghClient := newGitHubClient(owner, repo, prNumber)
-	r, err := git.PlainCloneContext(ctx, ghClient.repo, false, &git.CloneOptions{
+	r, err := git.PlainCloneContext(ctx, fmt.Sprintf("%s/%s", rpath, ghClient.repo), false, &git.CloneOptions{
 		URL:      fmt.Sprintf("https://github.com/%s/%s.git", ghClient.owner, ghClient.repo),
 		Progress: os.Stdout,
+		Depth:    1,
 	})
 	if err != nil {
 		// If repo already exists, git.ErrRepositoryAlreadyExists will be returned.
@@ -135,7 +138,12 @@ func newGitHubEnv(ctx context.Context, e environment, owner, repo string, prNumb
 		return nil, err
 	}
 
-	if err := r.FetchContext(ctx, &git.FetchOptions{}); err != nil && err != git.NoErrAlreadyUpToDate {
+	if err := r.FetchContext(ctx, &git.FetchOptions{
+		RefSpecs: []config.RefSpec{
+			config.RefSpec(fmt.Sprintf("+refs/pull/%d/head:refs/heads/pullrequest", ghClient.prNumber)),
+		},
+		Progress: os.Stdout,
+	}); err != nil && err != git.NoErrAlreadyUpToDate {
 		if pErr := g.PostErr("Switch (fetch) to a pull request branch failed"); pErr != nil {
 			return nil, errors.Wrapf(err, "posting a comment for `checkout` command execution error; postComment err:%v", pErr)
 		}
@@ -143,7 +151,7 @@ func newGitHubEnv(ctx context.Context, e environment, owner, repo string, prNumb
 	}
 
 	if err = wt.Checkout(&git.CheckoutOptions{
-		Branch: plumbing.ReferenceName(fmt.Sprintf("pull/%d/head:pullrequest", ghClient.prNumber)),
+		Branch: plumbing.NewBranchReferenceName("pullrequest"),
 	}); err != nil {
 		if pErr := g.PostErr("Switch to a pull request branch failed"); pErr != nil {
 			return nil, errors.Wrapf(err, "posting a comment for `checkout` command execution error; postComment err:%v", pErr)
