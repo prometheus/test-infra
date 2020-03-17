@@ -23,7 +23,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/google/go-github/v26/github"
+	"github.com/google/go-github/v29/github"
 	"github.com/prometheus/alertmanager/notify/webhook"
 	"github.com/prometheus/alertmanager/template"
 	"golang.org/x/oauth2"
