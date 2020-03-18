@@ -1,11 +1,11 @@
 # funcbench
 
-A tool used as a github action to run a `go test -bench` and compare changes from a PR against another branch or commit. 
+A tool used as a github action to run a `go test -bench` and compare changes from a PR against another branch or commit.
 
 The benchmark can be triggered by creating a comment which specifies a branch to compare. The results are then posted back as a PR comment.
 The benchmark can be also trigger and used as CLI command, without GitHub hook.
 
-Comparison is done using [benchcmp](https://godoc.org/golang.org/x/tools/cmd/benchcmp). 
+Comparison is done using [benchcmp](https://godoc.org/golang.org/x/tools/cmd/benchcmp).
 Arguments for the benchcmp are read from files created by previous action (for example [commentMonitor](/tools/commentMonitor/main.go)),
 which is responsible for the comment parsing.
 
@@ -21,7 +21,7 @@ Examples:
  ```
 
 * Execute all benchmarks matching `FuncName.*` regex, and compare it with `master` branch.
- 
+
 ```
  /funcbench -v master FuncName.*
  ```
@@ -45,13 +45,15 @@ Errors out if there are no sub-benchmarks.
  /funcbench -v . FuncName.*
  ```
 
-### GitHub 
+### GitHub
 
 Tests are triggered by posting a comment in a PR with the following format:
 
 `/funcbench <branch/commit> <Go test regex>`
 
 Specifying which tests to run are filtered by using the standard [Go regex RE2 language](https://github.com/google/re2/wiki/Syntax).
+
+* To test it locally, set `-w` flag or `WORKSPACE` environment variable to an empty directory where the source will be cloned.
 
 By default all benchmarks run without `-race` flag (#275).
 

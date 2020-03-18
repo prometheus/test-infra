@@ -80,6 +80,7 @@ The special syntax Nx means to run the benchmark N times
 If d is 0, the timeout is disabled.
 The default is 2 hours (2h).`).Default("2h").Duration()
 	resultCacheDir := app.Flag("result-cache", "Directory to store output for given func name and commit sha. Useful for local runs.").String()
+	workspace := app.Flag("workspace", "A directory where source code will be cloned to.").Default(os.Getenv("WORKSPACE")).Short('w').String()
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 	logger := &logger{
@@ -110,10 +111,6 @@ The default is 2 hours (2h).`).Default("2h").Duration()
 				}
 				logger.Printf("funcbench start [Local Mode]: Benchmarking current version versus %q for benchmark funcs: %q\n", *compareTarget, *benchFunc)
 			} else {
-				if os.Getenv("GITHUB_WORKSPACE") == "" {
-					return errors.New("am I really inside GitHub action?")
-				}
-
 				if *owner == "" || *repo == "" {
 					return errors.New("funcbench in GitHub Mode requires --owner and --repo flags to be specified")
 				}
@@ -121,7 +118,7 @@ The default is 2 hours (2h).`).Default("2h").Duration()
 					logger:        logger,
 					benchFunc:     *benchFunc,
 					compareTarget: *compareTarget,
-					home:          os.Getenv("HOME"),
+					home:          *workspace,
 				}, *owner, *repo, *gitHubPRNumber)
 				if err != nil {
 					return errors.Wrap(err, "new env")
