@@ -99,13 +99,16 @@ type GitHub struct {
 }
 
 func newGitHubEnv(ctx context.Context, e environment, owner, repo string, prNumber int) (Environment, error) {
-	rpath := os.Getenv("GITHUB_WORKSPACE")
-	if err := os.Chdir(rpath); err != nil {
-		return nil, errors.Wrap(err, "changing to GITHUB_WORKSPACE dir")
+	if e.home == "" {
+		e.home = "."
+	}
+
+	if err := os.Chdir(e.home); err != nil {
+		return nil, err
 	}
 
 	ghClient := newGitHubClient(owner, repo, prNumber)
-	r, err := git.PlainCloneContext(ctx, fmt.Sprintf("%s/%s", rpath, ghClient.repo), false, &git.CloneOptions{
+	r, err := git.PlainCloneContext(ctx, fmt.Sprintf("%s/%s", e.home, ghClient.repo), false, &git.CloneOptions{
 		URL:      fmt.Sprintf("https://github.com/%s/%s.git", ghClient.owner, ghClient.repo),
 		Progress: os.Stdout,
 		Depth:    1,
