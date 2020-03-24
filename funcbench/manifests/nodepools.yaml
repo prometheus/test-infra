@@ -9,7 +9,6 @@ cluster:
     config:
       machinetype: n1-highmem-8
       imagetype: COS
-      disksizegb: 50
-      localssdcount: 1
+      disksizegb: 100
       labels:
         isolation: prometheus

@@ -9,42 +9,27 @@ spec:
   template:
     spec:
       restartPolicy: Never
-      initContainers:
-      - name: clean-up
-        image: busybox:latest
-        command: ['sh', '-c', 'rm -fr /build/* && mkdir /build/tmp && mkdir /build/src']
-        volumeMounts:
-        - name: instance-ssd
-          mountPath: /build
       containers:
       - name: funcbench
-        image: nevill/funcbench:latest
+        image: nevill/funcbench:20200324
         imagePullPolicy: Always
         args:
+          - "-v"
           - "-o"
           - "{{ .GITHUB_ORG }}"
           - "-r"
           - "{{ .GITHUB_REPO }}"
           - "-p"
           - "{{ .PR_NUMBER }}"
+          - "-w"
+          - "/build"
           - "{{ .BRANCH }}"
           - "{{ .REGEX }}"
         env:
-          - name: GITHUB_WORKSPACE
-            value: /build/src
           - name: GITHUB_TOKEN
             value: "{{ .GITHUB_TOKEN }}"
           - name: GITHUB_SHA
             value: "{{ .LAST_COMMIT_SHA }}"
-        volumeMounts:
-        - name: instance-ssd
-          mountPath: /build
-      volumes:
-      - name: instance-ssd
-        hostPath:
-          # /mnt is where GKE keeps it's SSD
-          # don't change this if you want Prometheus to take advantage of these local SSDs
-          path: /mnt/disks/ssd0
       nodeSelector:
         cloud.google.com/gke-nodepool: funcbench-{{ .PR_NUMBER }}
         isolation: prometheus
