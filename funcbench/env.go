@@ -103,10 +103,6 @@ func newGitHubEnv(ctx context.Context, e environment, owner, repo string, prNumb
 		e.home = "."
 	}
 
-	if err := os.Chdir(e.home); err != nil {
-		return nil, err
-	}
-
 	ghClient := newGitHubClient(owner, repo, prNumber)
 	r, err := git.PlainCloneContext(ctx, fmt.Sprintf("%s/%s", e.home, ghClient.repo), false, &git.CloneOptions{
 		URL:      fmt.Sprintf("https://github.com/%s/%s.git", ghClient.owner, ghClient.repo),
@@ -115,11 +111,11 @@ func newGitHubEnv(ctx context.Context, e environment, owner, repo string, prNumb
 	})
 	if err != nil {
 		// If repo already exists, git.ErrRepositoryAlreadyExists will be returned.
-		return nil, errors.Wrap(err, "git clone")
+		return nil, err
 	}
 
-	if err := os.Chdir(filepath.Join(os.Getenv("GITHUB_WORKSPACE"), ghClient.repo)); err != nil {
-		return nil, errors.Wrapf(err, "changing to GITHUB_WORKSPACE/%s dir", ghClient.repo)
+	if err := os.Chdir(filepath.Join(e.home, ghClient.repo)); err != nil {
+		return nil, err
 	}
 
 	g := &GitHub{

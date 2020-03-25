@@ -160,7 +160,7 @@ func funcbench(
 		return errors.Wrap(err, "get head")
 	}
 
-	if _, err := bench.c.exec("bash", "-c", "git update-index -q --ignore-submodules --refresh && git diff-files --quiet --ignore-submodules --"); err != nil {
+	if _, err := bench.c.exec("sh", "-c", "git update-index -q --ignore-submodules --refresh && git diff-files --quiet --ignore-submodules --"); err != nil {
 		return errors.Wrap(err, "not clean worktree")
 	}
 
