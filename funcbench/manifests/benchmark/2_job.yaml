@@ -11,17 +11,17 @@ spec:
       restartPolicy: Never
       containers:
       - name: funcbench
-        image: nevill/funcbench:20200324
+        image: docker.io/nevill/funcbench:20200324
         imagePullPolicy: Always
         args:
-          - "-v"
-          - "-o"
+          - "--verbose"
+          - "--owner"
           - "{{ .GITHUB_ORG }}"
-          - "-r"
+          - "--repo"
           - "{{ .GITHUB_REPO }}"
-          - "-p"
+          - "--github-pr"
           - "{{ .PR_NUMBER }}"
-          - "-w"
+          - "--workspace"
           - "/build"
           - "{{ .BRANCH }}"
           - "{{ .REGEX }}"
