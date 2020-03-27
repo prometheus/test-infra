@@ -11,7 +11,7 @@ spec:
       restartPolicy: Never
       containers:
       - name: funcbench
-        image: docker.io/nevill/funcbench:20200324
+        image: docker.io/prominfra/funcbench:master
         imagePullPolicy: Always
         args:
           - "--verbose"
@@ -28,8 +28,6 @@ spec:
         env:
           - name: GITHUB_TOKEN
             value: "{{ .GITHUB_TOKEN }}"
-          - name: GITHUB_SHA
-            value: "{{ .LAST_COMMIT_SHA }}"
       nodeSelector:
         cloud.google.com/gke-nodepool: funcbench-{{ .PR_NUMBER }}
-        isolation: prometheus
+        isolation: funcbench

@@ -11,4 +11,4 @@ cluster:
       imagetype: COS
       disksizegb: 100
       labels:
-        isolation: prometheus
+        isolation: funcbench
