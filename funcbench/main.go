@@ -150,7 +150,17 @@ func main() {
 			}
 
 			// ( ◔_◔)ﾉ Start benchmarking!
-			return funcbench(ctx, env, newBenchmarker(logger, env, &commander{verbose: cfg.verbose}, cfg.benchTime, cfg.benchTimeout, cfg.resultsDir))
+			cmps, err := startBenchmark(ctx, env, newBenchmarker(logger, env, &commander{verbose: cfg.verbose}, cfg.benchTime, cfg.benchTimeout, cfg.resultsDir))
+			if err != nil {
+				if pErr := env.PostErr(fmt.Sprintf("%v. Benchmark failed, please check logs.", err)); pErr != nil {
+					return errors.Wrap(err, "could not log error")
+				}
+				return err
+			}
+
+			// Post results.
+			// TODO (geekodour): probably post some kind of funcbench summary(?)
+			return env.PostResults(cmps)
 
 		}, func(err error) {
 			cancel()
@@ -172,82 +182,78 @@ func main() {
 	logger.Println("exiting")
 }
 
-func funcbench(
+// startBenchmark returns the comparision results.
+// 1. If target is same as current ref, run sub-benchmarks and return instead (TODO).
+// 2. Execute benchmark against packages in the current worktree.
+// 3. Cleanup of worktree in case funcbench was run previously and checkout target worktree.
+// 4. Execute benchmark against packages in the new(target) worktree.
+// 5. Return compared results.
+func startBenchmark(
 	ctx context.Context,
 	env Environment,
 	bench *Benchmarker,
-) error {
+) ([]BenchCmp, error) {
+	worktreeDirName := "_funchbench-cmp"
+
 	wt, _ := env.Repo().Worktree()
 	ref, err := env.Repo().Head()
 	if err != nil {
-		return errors.Wrap(err, "get head")
+		return nil, errors.Wrap(err, "get head")
 	}
 
 	if _, err := bench.c.exec("bash", "-c", "git update-index -q --ignore-submodules --refresh && git diff-files --quiet --ignore-submodules --"); err != nil {
-		return errors.Wrap(err, "not clean worktree")
+		return nil, errors.Wrap(err, "not clean worktree")
 	}
 
-	// 1. Execute benchmark against packages in the current directory.
-	newResult, err := bench.execBenchmark(wt.Filesystem.Root(), ref.Hash())
-	if err != nil {
-		// TODO(bwplotka): Just defer posting all errors?
-		if pErr := env.PostErr("Go bench test for this pull request failed"); pErr != nil {
-			return errors.Errorf("error: %v occured while processing error: %v", pErr, err)
-		}
-		return errors.Wrap(err, "exec benchmark A")
-	}
-
-	var oldResult string
-
+	// Get info about target.
 	targetCommit, compareWithItself, err := getTargetInfo(ctx, env.Repo(), env.CompareTarget())
 	if err != nil {
-		return errors.Wrap(err, "compareTargetRef")
+		return nil, errors.Wrap(err, "failed to get target info")
 	}
+	bench.logger.Println("Target:", targetCommit.String(), "Current Ref:", ref.Hash().String())
 
 	if compareWithItself {
-		bench.logger.Println("Target:", env.CompareTarget(), "is `.`; Assuming sub-benchmarks comparison.")
-
-		// 2a. Compare sub benchmarks. TODO.
-		cmps, err := bench.compareSubBenchmarks(newResult)
+		bench.logger.Println("Assuming sub-benchmarks comparison.")
+		subResult, err := bench.execBenchmark(wt.Filesystem.Root(), ref.Hash())
 		if err != nil {
-			if pErr := env.PostErr("`benchcmp` failed."); pErr != nil {
-				return errors.Errorf("error: %v occured while processing error: %v", pErr, err)
-			}
-			return errors.Wrap(err, "compare sub benchmarks")
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to execute sub-benchmark"))
 		}
-		return errors.Wrap(env.PostResults(cmps), "post results")
+
+		cmps, err := bench.compareSubBenchmarks(subResult)
+		if err != nil {
+			return nil, errors.Wrap(err, "comparing sub benchmarks failed")
+		}
+		return cmps, nil
 	}
 
-	bench.logger.Println("Target:", env.CompareTarget(), "is evaluated to be ", targetCommit.String(), ". Assuming comparing with this one (clean workdir will be checked.)")
-	// 2b. Compare with target commit/branch.
+	bench.logger.Println("Assuming comparing with target (clean workdir will be checked.)")
 
-	// 3. Best effort cleanup of worktree.
-	cmpWorkTreeDir := filepath.Join(wt.Filesystem.Root(), "_funcbench-cmp")
-
-	_, _ = bench.c.exec("git", "worktree", "remove", cmpWorkTreeDir)
-	bench.logger.Println("Checking out (in new workdir):", cmpWorkTreeDir, "commmit", ref.String())
-	if _, err := bench.c.exec("git", "worktree", "add", "-f", cmpWorkTreeDir, ref.Hash().String()); err != nil {
-		return errors.Wrapf(err, "failed to checkout %s in worktree %s", ref.String(), cmpWorkTreeDir)
-	}
-
-	// 4. Benchmark in new worktree.
-	oldResult, err = bench.execBenchmark(cmpWorkTreeDir, targetCommit)
+	// Execute benchmark A.
+	newResult, err := bench.execBenchmark(wt.Filesystem.Root(), ref.Hash())
 	if err != nil {
-		if pErr := env.PostErr(fmt.Sprintf("Go bench test for target %s failed", env.CompareTarget())); pErr != nil {
-			return errors.Errorf("error: %v occured while processing error: %v", pErr, err)
-		}
-		return errors.Wrap(err, "exec bench B")
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to execute benchmark for A: %v", ref.Name().String()))
 	}
 
-	// 5. Compare old vs new.
+	// Best effort cleanup and checkout new worktree.
+	cmpWorkTreeDir := filepath.Join(wt.Filesystem.Root(), worktreeDirName)
+	_, _ = bench.c.exec("git", "worktree", "remove", cmpWorkTreeDir)
+	bench.logger.Println("Checking out (in new workdir):", cmpWorkTreeDir, "commmit", targetCommit.String())
+	if _, err := bench.c.exec("git", "worktree", "add", "-f", cmpWorkTreeDir, targetCommit.String()); err != nil {
+		return nil, errors.Wrapf(err, "failed to checkout %s in worktree %s", targetCommit.String(), cmpWorkTreeDir)
+	}
+
+	// Execute benchmark B.
+	oldResult, err := bench.execBenchmark(cmpWorkTreeDir, targetCommit)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to execute benchmark for B: %v", env.CompareTarget()))
+	}
+
+	// Compare B vs A.
 	cmps, err := bench.compareBenchmarks(oldResult, newResult)
 	if err != nil {
-		if pErr := env.PostErr("`benchcmp` failed."); pErr != nil {
-			return errors.Errorf("error: %v occured while processing error: %v", pErr, err)
-		}
-		return errors.Wrap(err, "compare benchmarks")
+		return nil, errors.Wrap(err, "comparing benchmarks failed")
 	}
-	return errors.Wrap(env.PostResults(cmps), "post results")
+	return cmps, nil
 }
 
 func interrupt(logger Logger, cancel <-chan struct{}) error {
