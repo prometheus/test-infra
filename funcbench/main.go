@@ -199,7 +199,7 @@ func funcbench(
 
 	var oldResult string
 
-	targetCommit, compareWithItself, err := compareTargetRef(ctx, env.Repo(), env.CompareTarget())
+	targetCommit, compareWithItself, err := getTargetInfo(ctx, env.Repo(), env.CompareTarget())
 	if err != nil {
 		return errors.Wrap(err, "compareTargetRef")
 	}
@@ -262,10 +262,13 @@ func interrupt(logger Logger, cancel <-chan struct{}) error {
 	}
 }
 
-func compareTargetRef(ctx context.Context, repo *git.Repository, target string) (ref plumbing.Hash, compareWithItself bool, _ error) {
+// getTargetInfo returns the hash of the target,
+// if target is the same as the current ref, set compareWithItself to true.
+func getTargetInfo(ctx context.Context, repo *git.Repository, target string) (ref plumbing.Hash, compareWithItself bool, _ error) {
 	if target == "." {
 		return plumbing.Hash{}, true, nil
 	}
+
 	currRef, err := repo.Head()
 	if err != nil {
 		return plumbing.ZeroHash, false, err
@@ -275,8 +278,9 @@ func compareTargetRef(ctx context.Context, repo *git.Repository, target string) 
 		return currRef.Hash(), true, errors.Errorf("target: %s is the same as current ref %s (or is on the same commit); No changes would be expected; Aborting", target, currRef.String())
 	}
 
-	if err := repo.FetchContext(ctx, &git.FetchOptions{}); err != nil && err != git.NoErrAlreadyUpToDate {
-		return plumbing.ZeroHash, false, err
+	commitHash := plumbing.NewHash(target)
+	if !commitHash.IsZero() {
+		return commitHash, false, nil
 	}
 
 	targetRef, err := repo.Reference(plumbing.NewBranchReferenceName(target), false)
