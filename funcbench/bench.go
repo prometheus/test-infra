@@ -152,19 +152,19 @@ func formatCommentToMD(rawTable string) string {
 		switch {
 		case e == "":
 
-		case strings.Contains(e, "old ns/op"):
+		case strings.Contains(e, "ns/op"):
 			e = "| Benchmark | Old ns/op | New ns/op | Delta |"
 			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
 
-		case strings.Contains(e, "old MB/s"):
+		case strings.Contains(e, "MB/s"):
 			e = "| Benchmark | Old MB/s | New MB/s | Speedup |"
 			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
 
-		case strings.Contains(e, "old allocs"):
+		case strings.Contains(e, "allocs"):
 			e = "| Benchmark | Old allocs | New allocs | Delta |"
 			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
 
-		case strings.Contains(e, "old bytes"):
+		case strings.Contains(e, "bytes"):
 			e = "| Benchmark | Old bytes | New bytes | Delta |"
 			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
 
