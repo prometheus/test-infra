@@ -53,6 +53,7 @@ func (l *logger) FatalError(err error) {
 func main() {
 	cfg := struct {
 		verbose        bool
+		dryrun         bool
 		owner          string
 		repo           string
 		resultsDir     string
@@ -73,6 +74,8 @@ func main() {
 	app.HelpFlag.Short('h')
 	app.Flag("verbose", "Verbose mode. Errors includes trace and commands output are logged.").
 		Short('v').BoolVar(&cfg.verbose)
+	app.Flag("dryrun", "Dryrun for the GitHub API.").
+		BoolVar(&cfg.dryrun)
 
 	app.Flag("owner", "A Github owner or organisation name.").
 		Default("prometheus").StringVar(&cfg.owner)
@@ -135,7 +138,7 @@ func main() {
 				}
 			} else {
 				// Github Mode.
-				ghClient, err := newGitHubClient(ctx, cfg.owner, cfg.repo, cfg.ghPr)
+				ghClient, err := newGitHubClient(ctx, cfg.owner, cfg.repo, cfg.ghPr, cfg.dryrun)
 				if err != nil {
 					return errors.Wrapf(err, "could not create github client")
 				}

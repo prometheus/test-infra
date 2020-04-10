@@ -148,11 +148,12 @@ type gitHubClient struct {
 	repo     string
 	prNumber int
 	client   *github.Client
+	dryrun   bool
 }
 
-func newGitHubClient(ctx context.Context, owner, repo string, prNumber int) (*gitHubClient, error) {
+func newGitHubClient(ctx context.Context, owner, repo string, prNumber int, dryrun bool) (*gitHubClient, error) {
 	ghToken, ok := os.LookupEnv("GITHUB_TOKEN")
-	if !ok {
+	if !ok && !dryrun {
 		return nil, fmt.Errorf("GITHUB_TOKEN missing")
 	}
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: ghToken})
@@ -162,11 +163,16 @@ func newGitHubClient(ctx context.Context, owner, repo string, prNumber int) (*gi
 		owner:    owner,
 		repo:     repo,
 		prNumber: prNumber,
+		dryrun:   dryrun,
 	}
 	return &c, nil
 }
 
 func (c *gitHubClient) postComment(comment string) error {
+	if c.dryrun {
+		return nil
+	}
+
 	issueComment := &github.IssueComment{Body: github.String(comment)}
 	_, _, err := c.client.Issues.CreateComment(context.Background(), c.owner, c.repo, c.prNumber, issueComment)
 	return err
