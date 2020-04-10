@@ -18,8 +18,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
 
 	"github.com/google/go-github/v29/github"
 	"github.com/pkg/errors"
@@ -69,19 +67,6 @@ func newLocalEnv(e environment) (Environment, error) {
 }
 
 func (l *Local) PostErr(string) error { return nil } // Noop. We will see error anyway.
-
-// formatNs formats ns measurements to expose a useful amount of
-// precision. It mirrors the ns precision logic of testing.B.
-func formatNs(ns float64) string {
-	prec := 0
-	switch {
-	case ns < 10:
-		prec = 2
-	case ns < 100:
-		prec = 1
-	}
-	return strconv.FormatFloat(ns, 'f', prec, 64)
-}
 
 func (l *Local) PostResults(cmps []BenchCmp) error {
 	fmt.Println("Results:")
@@ -188,37 +173,4 @@ func (g *GitHub) PostResults(cmps []BenchCmp) error {
 	b := bytes.Buffer{}
 	Render(&b, cmps, false, false, g.compareTarget)
 	return g.client.postComment(formatCommentToMD(b.String()))
-}
-
-func formatCommentToMD(rawTable string) string {
-	tableContent := strings.Split(rawTable, "\n")
-	for i := 0; i <= len(tableContent)-1; i++ {
-		e := tableContent[i]
-		switch {
-		case e == "":
-
-		case strings.Contains(e, "old ns/op"):
-			e = "| Benchmark | Old ns/op | New ns/op | Delta |"
-			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
-
-		case strings.Contains(e, "old MB/s"):
-			e = "| Benchmark | Old MB/s | New MB/s | Speedup |"
-			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
-
-		case strings.Contains(e, "old allocs"):
-			e = "| Benchmark | Old allocs | New allocs | Delta |"
-			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
-
-		case strings.Contains(e, "old bytes"):
-			e = "| Benchmark | Old bytes | New bytes | Delta |"
-			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
-
-		default:
-			// Replace spaces with "|".
-			e = strings.Join(strings.Fields(e), "|")
-		}
-		tableContent[i] = e
-	}
-	return strings.Join(tableContent, "\n")
-
 }

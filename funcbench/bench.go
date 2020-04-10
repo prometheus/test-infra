@@ -79,19 +79,23 @@ func (b *Benchmarker) execBenchmark(pkgRoot string, commit plumbing.Hash) (out s
 	}
 
 	// TODO(bwplotka): Allow memprofiles.
+	// 'go test' flags: https://golang.org/cmd/go/#hdr-Testing_flags
 	extraArgs := []string{"-benchtime", b.benchTime.String()}
 	extraArgs = append(extraArgs, "-timeout", b.benchTimeout.String())
 	benchCmd := []string{"bash", "-c", strings.Join(append(append([]string{"cd", pkgRoot, "&&", "go", "test", "-run", "^$", "-bench", fmt.Sprintf("^%s$", b.benchFunc), "-benchmem"}, extraArgs...), "./..."), " ")}
 
-	b.logger.Println("Executing benchmark cmd:", benchCmd)
+	b.logger.Println("Executing benchmark command for", commit.String())
+	b.logger.Println(benchCmd)
 	out, err = b.c.exec(benchCmd...)
 	if err != nil {
 		return "", errors.Wrap(err, "benchmark ended with an error.")
 	}
 
-	fn := fileName
+	fn := filepath.Join(b.resultCacheDir, fileName)
 	if b.resultCacheDir != "" {
-		fn = filepath.Join(b.resultCacheDir, fileName)
+		if err := os.MkdirAll(b.resultCacheDir, os.ModePerm); err != nil {
+			return "", err
+		}
 	}
 	if err := ioutil.WriteFile(fn, []byte(out), os.ModePerm); err != nil {
 		return "", err
@@ -139,4 +143,37 @@ func (b *Benchmarker) compareBenchmarks(beforeFile, afterFile string) ([]BenchCm
 func (b *Benchmarker) compareSubBenchmarks(string) ([]BenchCmp, error) {
 	// TODO(bwplotka): Implement.
 	return nil, errors.New("not implemented")
+}
+
+func formatCommentToMD(rawTable string) string {
+	tableContent := strings.Split(rawTable, "\n")
+	for i := 0; i <= len(tableContent)-1; i++ {
+		e := tableContent[i]
+		switch {
+		case e == "":
+
+		case strings.Contains(e, "old ns/op"):
+			e = "| Benchmark | Old ns/op | New ns/op | Delta |"
+			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
+
+		case strings.Contains(e, "old MB/s"):
+			e = "| Benchmark | Old MB/s | New MB/s | Speedup |"
+			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
+
+		case strings.Contains(e, "old allocs"):
+			e = "| Benchmark | Old allocs | New allocs | Delta |"
+			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
+
+		case strings.Contains(e, "old bytes"):
+			e = "| Benchmark | Old bytes | New bytes | Delta |"
+			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
+
+		default:
+			// Replace spaces with "|".
+			e = strings.Join(strings.Fields(e), "|")
+		}
+		tableContent[i] = e
+	}
+	return strings.Join(tableContent, "\n")
+
 }
