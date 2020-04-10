@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/oklog/run"
 	"github.com/pkg/errors"
@@ -50,6 +51,19 @@ func (l *logger) FatalError(err error) {
 }
 
 func main() {
+	cfg := struct {
+		verbose        bool
+		owner          string
+		repo           string
+		resultsDir     string
+		workspaceDir   string
+		ghPr           int
+		benchTime      time.Duration
+		benchTimeout   time.Duration
+		compareTarget  string
+		benchFuncRegex string
+	}{}
+
 	app := kingpin.New(
 		filepath.Base(os.Args[0]),
 		"Benchmark and compare your Go code between sub benchmarks or commits.",
@@ -57,36 +71,44 @@ func main() {
 
 	// Options.
 	app.HelpFlag.Short('h')
-	verbose := app.Flag("verbose", "Verbose mode. Errors includes trace and commands output are logged.").Short('v').Bool()
+	app.Flag("verbose", "Verbose mode. Errors includes trace and commands output are logged.").
+		Short('v').BoolVar(&cfg.verbose)
 
-	// TODO(bwplotka): Why not just passing full import path? Easier (:
-	owner := app.Flag("owner", "A Github owner or organisation name.").Default("prometheus").Short('o').String()
-	repo := app.Flag("repo", "This is the repository name.").Default("prometheus").Short('r').String()
-	// TODO(bwplotka): Should we run in worktree for consistency?
-	gitHubPRNumber := app.Flag("github-pr", "GitHub Pull Request number (#<num>) that should used to pull the latest changes"+
-		"from and used for posting comments. NOTE: **This has to be run from the GithubAction.** If none provided, local mode is enabled.").
-		Short('p').Int()
+	app.Flag("owner", "A Github owner or organisation name.").
+		Default("prometheus").StringVar(&cfg.owner)
+	app.Flag("repo", "This is the repository name.").
+		Default("prometheus").StringVar(&cfg.repo)
+	app.Flag("github-pr", "GitHub PR number to pull changes from and to post benchmark results.").
+		IntVar(&cfg.ghPr)
+	app.Flag("workspace", "Directory to clone GitHub PR.").
+		Default("/tmp/funcbench").
+		StringVar(&cfg.workspaceDir)
+	app.Flag("result-cache", "Directory to store benchmark results.").
+		Default("_dev/funcbench").
+		StringVar(&cfg.resultsDir)
 
-	compareTarget := app.Arg("branch/commit/<.>", "Branch, commit SHA of the branch to compare benchmarks against."+
-		"If `.` of branch/commit is the same as the current one, funcbench will run once and try to compare between 2 sub-benchmarks.").String()
-	benchFunc := app.Arg("func regexp/<.>", "Function to use for benchmark. Supports RE2 regexp or `.` to run all benchmarks.").String()
+	app.Flag("bench-time", "Run enough iterations of each benchmark to take t, specified "+
+		"as a time.Duration. The special syntax Nx means to run the benchmark N times").
+		Short('t').Default("1s").DurationVar(&cfg.benchTime)
+	app.Flag("timeout", "Benchmark timeout specified in time.Duration format, "+
+		"disabled if set to 0. If a test binary runs longer than duration d, panic.").
+		Short('d').Default("2h").DurationVar(&cfg.benchTimeout)
 
-	benchTime := app.Flag("bench-time", `Run enough iterations of each benchmark to take t, specified
-as a time.Duration (for example, -benchtime 1h30s).
-The default is 1 second (1s).
-The special syntax Nx means to run the benchmark N times
-(for example, -benchtime 100x).`).Short('t').Default("1s").Duration()
-	benchTimeout := app.Flag("timeout", `If each test binary runs longer than duration d, panic.
-If d is 0, the timeout is disabled.
-The default is 2 hours (2h).`).Default("2h").Duration()
-	resultCacheDir := app.Flag("result-cache", "Directory to store output for given func name and commit sha. Useful for local runs.").String()
-	workspace := app.Flag("workspace", "A directory where source code will be cloned to.").Default(os.Getenv("WORKSPACE")).Short('w').String()
+	app.Arg("target", "Can be one of '.', branch name or commit SHA of the branch "+
+		"to compare against. If set to '.', branch/commit is the same as the current one; "+
+		"funcbench will run once and try to compare between 2 sub-benchmarks. "+
+		"Errors out if there are no sub-benchmarks.").
+		Required().StringVar(&cfg.compareTarget)
+	app.Arg("function-regex", "Function regex to use for benchmark."+
+		"Supports RE2 regexp and is fully anchored, by default will run all benchmarks.").
+		Default(".").
+		StringVar(&cfg.benchFuncRegex) // TODO (geekodour) : validate regex?
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 	logger := &logger{
 		// Show file line with each log.
 		Logger:  log.New(os.Stdout, "funcbech", log.Ltime|log.Lshortfile),
-		verbose: *verbose,
+		verbose: cfg.verbose,
 	}
 
 	var g run.Group
@@ -99,35 +121,30 @@ The default is 2 hours (2h).`).Default("2h").Duration()
 				err error
 			)
 
-			if *gitHubPRNumber == 0 {
+			if cfg.ghPr == 0 {
 				env, err = newLocalEnv(environment{
 					logger:        logger,
-					benchFunc:     *benchFunc,
-					compareTarget: *compareTarget,
-					home:          os.Getenv("HOME"),
+					benchFunc:     cfg.benchFuncRegex,
+					compareTarget: cfg.compareTarget,
 				})
 				if err != nil {
 					return errors.Wrap(err, "new env")
 				}
-				logger.Printf("funcbench start [Local Mode]: Benchmarking current version versus %q for benchmark funcs: %q\n", *compareTarget, *benchFunc)
+				logger.Printf("funcbench start [Local Mode]: Benchmarking current version versus %q for benchmark funcs: %q\n", cfg.compareTarget, cfg.benchFuncRegex)
 			} else {
-				if *owner == "" || *repo == "" {
-					return errors.New("funcbench in GitHub Mode requires --owner and --repo flags to be specified")
-				}
 				env, err = newGitHubEnv(ctx, environment{
 					logger:        logger,
-					benchFunc:     *benchFunc,
-					compareTarget: *compareTarget,
-					home:          *workspace,
-				}, *owner, *repo, *gitHubPRNumber)
+					benchFunc:     cfg.benchFuncRegex,
+					compareTarget: cfg.compareTarget,
+				}, cfg.owner, cfg.repo, cfg.workspaceDir, cfg.ghPr)
 				if err != nil {
 					return errors.Wrap(err, "new env")
 				}
-				logger.Printf("funcbench start [GitHub Mode]: Benchmarking %q (PR-%d) versus %q for benchmark funcs: %q\n", fmt.Sprintf("%s/%s", *owner, *repo), *gitHubPRNumber, *compareTarget, *benchFunc)
+				logger.Printf("funcbench start [GitHub Mode]: Benchmarking %q (PR-%d) versus %q for benchmark funcs: %q\n", fmt.Sprintf("%s/%s", cfg.owner, cfg.repo), cfg.ghPr, cfg.compareTarget, cfg.benchFuncRegex)
 			}
 
 			// ( ◔_◔)ﾉ Start benchmarking!
-			return funcbench(ctx, env, newBenchmarker(logger, env, &commander{verbose: *verbose}, *benchTime, *benchTimeout, *resultCacheDir))
+			return funcbench(ctx, env, newBenchmarker(logger, env, &commander{verbose: cfg.verbose}, cfg.benchTime, cfg.benchTimeout, cfg.resultsDir))
 
 		}, func(err error) {
 			cancel()
