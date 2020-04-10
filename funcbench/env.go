@@ -42,8 +42,6 @@ type environment struct {
 
 	benchFunc     string
 	compareTarget string
-
-	home string
 }
 
 func (e environment) BenchFunc() string     { return e.benchFunc }
@@ -80,9 +78,8 @@ func (l *Local) Repo() *git.Repository { return l.repo }
 type GitHub struct {
 	environment
 
-	repo    *git.Repository
-	client  *gitHubClient
-	logLink string
+	repo   *git.Repository
+	client *gitHubClient
 }
 
 func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspace string) (Environment, error) {
@@ -92,11 +89,11 @@ func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspac
 		Depth:    1,
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "git clone")
+		return nil, errors.Wrap(err, "could not clone git repository")
 	}
 
 	if err := os.Chdir(filepath.Join(workspace, gc.repo)); err != nil {
-		return nil, errors.Wrapf(err, "changing to %s/%s dir", workspace, gc.repo)
+		return nil, errors.Wrapf(err, "changing to %s/%s dir failed", workspace, gc.repo)
 	}
 
 	g := &GitHub{
@@ -131,6 +128,19 @@ func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspac
 	return g, nil
 }
 
+func (g *GitHub) PostErr(err string) error {
+	if err := g.client.postComment(fmt.Sprintf("%v. Benchmark did not complete, please check action logs.", err)); err != nil {
+		return errors.Wrap(err, "posting err")
+	}
+	return nil
+}
+
+func (g *GitHub) PostResults(cmps []BenchCmp) error {
+	b := bytes.Buffer{}
+	Render(&b, cmps, false, false, g.compareTarget)
+	return g.client.postComment(formatCommentToMD(b.String()))
+}
+
 func (g *GitHub) Repo() *git.Repository { return g.repo }
 
 type gitHubClient struct {
@@ -160,17 +170,4 @@ func (c *gitHubClient) postComment(comment string) error {
 	issueComment := &github.IssueComment{Body: github.String(comment)}
 	_, _, err := c.client.Issues.CreateComment(context.Background(), c.owner, c.repo, c.prNumber, issueComment)
 	return err
-}
-
-func (g *GitHub) PostErr(err string) error {
-	if err := g.client.postComment(fmt.Sprintf("%v. Logs: %v", err, g.logLink)); err != nil {
-		return errors.Wrap(err, "posting err")
-	}
-	return nil
-}
-
-func (g *GitHub) PostResults(cmps []BenchCmp) error {
-	b := bytes.Buffer{}
-	Render(&b, cmps, false, false, g.compareTarget)
-	return g.client.postComment(formatCommentToMD(b.String()))
 }
