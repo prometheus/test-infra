@@ -62,7 +62,9 @@ func newLocalEnv(e environment) (Environment, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	e.logger.Println("[Local Mode]")
+	e.logger.Println("Benchmarking current version versus:", e.compareTarget)
+	e.logger.Println("Benchmark func regex:", e.benchFunc)
 	return &Local{environment: e, repo: r}, nil
 }
 
@@ -98,34 +100,24 @@ type GitHub struct {
 	logLink string
 }
 
-func newGitHubEnv(ctx context.Context, e environment, owner, repo, workspace string, prNumber int) (Environment, error) {
-	ghClient := newGitHubClient(owner, repo, prNumber)
-	r, err := git.PlainCloneContext(ctx, fmt.Sprintf("%s/%s", workspace, ghClient.repo), false, &git.CloneOptions{
-		URL:      fmt.Sprintf("https://github.com/%s/%s.git", ghClient.owner, ghClient.repo),
+func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspace string) (Environment, error) {
+	r, err := git.PlainCloneContext(ctx, fmt.Sprintf("%s/%s", workspace, gc.repo), false, &git.CloneOptions{
+		URL:      fmt.Sprintf("https://github.com/%s/%s.git", gc.owner, gc.repo),
 		Progress: os.Stdout,
 		Depth:    1,
 	})
 	if err != nil {
-		// If repo already exists, git.ErrRepositoryAlreadyExists will be returned.
 		return nil, errors.Wrap(err, "git clone")
 	}
 
-	if err := os.Chdir(filepath.Join(workspace, ghClient.repo)); err != nil {
-		return nil, errors.Wrapf(err, "changing to %s/%s dir", workspace, ghClient.repo)
+	if err := os.Chdir(filepath.Join(workspace, gc.repo)); err != nil {
+		return nil, errors.Wrapf(err, "changing to %s/%s dir", workspace, gc.repo)
 	}
 
 	g := &GitHub{
 		environment: e,
 		repo:        r,
-		client:      ghClient,
-		logLink:     fmt.Sprintf("Full logs at: https://github.com/%s/%s/commit/%s/checks", ghClient.owner, ghClient.repo, ghClient.latestCommitHash),
-	}
-
-	if err := os.Setenv("GO111MODULE", "on"); err != nil {
-		return nil, err
-	}
-	if err := os.Setenv("CGO_ENABLED", "0"); err != nil {
-		return nil, err
+		client:      gc,
 	}
 
 	wt, err := g.repo.Worktree()
@@ -135,48 +127,48 @@ func newGitHubEnv(ctx context.Context, e environment, owner, repo, workspace str
 
 	if err := r.FetchContext(ctx, &git.FetchOptions{
 		RefSpecs: []config.RefSpec{
-			config.RefSpec(fmt.Sprintf("+refs/pull/%d/head:refs/heads/pullrequest", ghClient.prNumber)),
+			config.RefSpec(fmt.Sprintf("+refs/pull/%d/head:refs/heads/pullrequest", gc.prNumber)),
 		},
 		Progress: os.Stdout,
 	}); err != nil && err != git.NoErrAlreadyUpToDate {
-		if pErr := g.PostErr("Switch (fetch) to a pull request branch failed"); pErr != nil {
-			return nil, errors.Wrapf(err, "posting a comment for `checkout` command execution error; postComment err:%v", pErr)
-		}
-		return nil, err
+		return nil, errors.Wrap(err, "fetch to pull request branch failed")
 	}
 
 	if err = wt.Checkout(&git.CheckoutOptions{
 		Branch: plumbing.NewBranchReferenceName("pullrequest"),
 	}); err != nil {
-		if pErr := g.PostErr("Switch to a pull request branch failed"); pErr != nil {
-			return nil, errors.Wrapf(err, "posting a comment for `checkout` command execution error; postComment err:%v", pErr)
-		}
-		return nil, err
+		return nil, errors.Wrap(err, "switch to pull request branch failed")
 	}
+
+	e.logger.Println("[GitHub Mode]", gc.owner, ":", gc.repo)
+	e.logger.Println("Benchmarking PR -", gc.prNumber, "versus:", e.compareTarget)
+	e.logger.Println("Benchmark func regex:", e.benchFunc)
 	return g, nil
 }
 
 func (g *GitHub) Repo() *git.Repository { return g.repo }
 
 type gitHubClient struct {
-	owner            string
-	repo             string
-	latestCommitHash string
-	prNumber         int
-	client           *github.Client
+	owner    string
+	repo     string
+	prNumber int
+	client   *github.Client
 }
 
-func newGitHubClient(owner, repo string, prNumber int) *gitHubClient {
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")})
-	tc := oauth2.NewClient(context.Background(), ts)
-	c := gitHubClient{
-		client:           github.NewClient(tc),
-		owner:            owner,
-		repo:             repo,
-		prNumber:         prNumber,
-		latestCommitHash: os.Getenv("GITHUB_SHA"),
+func newGitHubClient(ctx context.Context, owner, repo string, prNumber int) (*gitHubClient, error) {
+	ghToken, ok := os.LookupEnv("GITHUB_TOKEN")
+	if !ok {
+		return nil, fmt.Errorf("GITHUB_TOKEN missing")
 	}
-	return &c
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: ghToken})
+	tc := oauth2.NewClient(ctx, ts)
+	c := gitHubClient{
+		client:   github.NewClient(tc),
+		owner:    owner,
+		repo:     repo,
+		prNumber: prNumber,
+	}
+	return &c, nil
 }
 
 func (c *gitHubClient) postComment(comment string) error {

@@ -121,26 +121,32 @@ func main() {
 				err error
 			)
 
+			// Setup Environment.
+			e := environment{
+				logger:        logger,
+				benchFunc:     cfg.benchFuncRegex,
+				compareTarget: cfg.compareTarget,
+			}
 			if cfg.ghPr == 0 {
-				env, err = newLocalEnv(environment{
-					logger:        logger,
-					benchFunc:     cfg.benchFuncRegex,
-					compareTarget: cfg.compareTarget,
-				})
+				// Local Mode.
+				env, err = newLocalEnv(e)
 				if err != nil {
-					return errors.Wrap(err, "new env")
+					return errors.Wrap(err, "environment creation error")
 				}
-				logger.Printf("funcbench start [Local Mode]: Benchmarking current version versus %q for benchmark funcs: %q\n", cfg.compareTarget, cfg.benchFuncRegex)
 			} else {
-				env, err = newGitHubEnv(ctx, environment{
-					logger:        logger,
-					benchFunc:     cfg.benchFuncRegex,
-					compareTarget: cfg.compareTarget,
-				}, cfg.owner, cfg.repo, cfg.workspaceDir, cfg.ghPr)
+				// Github Mode.
+				ghClient, err := newGitHubClient(ctx, cfg.owner, cfg.repo, cfg.ghPr)
 				if err != nil {
-					return errors.Wrap(err, "new env")
+					return errors.Wrapf(err, "could not create github client")
 				}
-				logger.Printf("funcbench start [GitHub Mode]: Benchmarking %q (PR-%d) versus %q for benchmark funcs: %q\n", fmt.Sprintf("%s/%s", cfg.owner, cfg.repo), cfg.ghPr, cfg.compareTarget, cfg.benchFuncRegex)
+
+				env, err = newGitHubEnv(ctx, e, ghClient, cfg.workspaceDir)
+				if err != nil {
+					if err := ghClient.postComment(fmt.Sprintf("%v. Could not setup environment, please check logs.", err)); err != nil {
+						return errors.Wrap(err, "could not post error")
+					}
+					return errors.Wrap(err, "environment creation error")
+				}
 			}
 
 			// ( ◔_◔)ﾉ Start benchmarking!
