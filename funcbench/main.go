@@ -156,7 +156,7 @@ func main() {
 			cmps, err := startBenchmark(ctx, env, newBenchmarker(logger, env, &commander{verbose: cfg.verbose}, cfg.benchTime, cfg.benchTimeout, cfg.resultsDir))
 			if err != nil {
 				if pErr := env.PostErr(fmt.Sprintf("%v. Benchmark failed, please check logs.", err)); pErr != nil {
-					return errors.Wrap(err, "could not log error")
+					return errors.Wrap(pErr, "could not log error")
 				}
 				return err
 			}
