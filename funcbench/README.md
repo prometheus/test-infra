@@ -1,6 +1,6 @@
 # funcbench
 
-Benchmark and compare your Go code between commits or sub benchmarks. It automated the use of `go test -bench` to run the benchmarks and uses [benchcmp](https://godoc.org/golang.org/x/tools/cmd/benchcmp) to compare them.
+Benchmark and compare your Go code between commits or sub benchmarks. It automates the use of `go test -bench` to run the benchmarks and uses [benchcmp](https://godoc.org/golang.org/x/tools/cmd/benchcmp) to compare them.
 
 funcbench currently supports two modes, Local and GitHub. Running it in the Github mode also allows it to accept *a pull request number* and *a branch/commit* to compare against, which makes it suitable for automated tests.
 

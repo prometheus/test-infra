@@ -134,7 +134,7 @@ func main() {
 				// Local Mode.
 				env, err = newLocalEnv(e)
 				if err != nil {
-					return errors.Wrap(err, "environment creation")
+					return errors.Wrap(err, "environment create")
 				}
 			} else {
 				// Github Mode.
@@ -148,7 +148,7 @@ func main() {
 					if err := ghClient.postComment(fmt.Sprintf("%v. Could not setup environment, please check logs.", err)); err != nil {
 						return errors.Wrap(err, "could not post error")
 					}
-					return errors.Wrap(err, "environment creation")
+					return errors.Wrap(err, "environment create")
 				}
 			}
 
