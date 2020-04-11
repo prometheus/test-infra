@@ -104,7 +104,7 @@ func main() {
 		Required().StringVar(&cfg.compareTarget)
 	app.Arg("function-regex", "Function regex to use for benchmark."+
 		"Supports RE2 regexp and is fully anchored, by default will run all benchmarks.").
-		Default(".").
+		Default(".*").
 		StringVar(&cfg.benchFuncRegex) // TODO (geekodour) : validate regex?
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
