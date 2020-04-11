@@ -84,8 +84,7 @@ func (b *Benchmarker) execBenchmark(pkgRoot string, commit plumbing.Hash) (out s
 	extraArgs = append(extraArgs, "-timeout", b.benchTimeout.String())
 	benchCmd := []string{"bash", "-c", strings.Join(append(append([]string{"cd", pkgRoot, "&&", "go", "test", "-run", "^$", "-bench", fmt.Sprintf("^%s$", b.benchFunc), "-benchmem"}, extraArgs...), "./..."), " ")}
 
-	b.logger.Println("Executing benchmark command for", commit.String())
-	b.logger.Println(benchCmd)
+	b.logger.Println("Executing benchmark command for", commit.String(), "\n", benchCmd)
 	out, err = b.c.exec(benchCmd...)
 	if err != nil {
 		return "", errors.Wrap(err, "benchmark ended with an error.")

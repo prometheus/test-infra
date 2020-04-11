@@ -1,13 +1,15 @@
 # funcbench
 
-Benchmark and compare your Go code between commits or sub benchmarks. It uses `go test -bench` to run the benchmarks and uses [benchcmp](https://godoc.org/golang.org/x/tools/cmd/benchcmp) to compare them.
+Benchmark and compare your Go code between commits or sub benchmarks. It automated the use of `go test -bench` to run the benchmarks and uses [benchcmp](https://godoc.org/golang.org/x/tools/cmd/benchcmp) to compare them.
 
-funcbench currently supports two modes, Local and GitHub. Running it in the Github Mode also allows it to accept *a pull request number* and *a branch/commit* to compare against, which makes it suitable for automated tests.
+funcbench currently supports two modes, Local and GitHub. Running it in the Github mode also allows it to accept *a pull request number* and *a branch/commit* to compare against, which makes it suitable for automated tests.
 
-### Environment variables
+## Environment variables
+
 - `GITHUB_TOKEN`: Access token to post benchmarks results to respective PR.
 
 ## Usage Examples
+
 > Clean git state is required.
 
 |Usage|Command|
@@ -20,6 +22,7 @@ funcbench currently supports two modes, Local and GitHub. Running it in the Gith
 |Execute benchmark named `BenchmarkFuncName`, and compare `pr#35` with `master` branch.|```./funcbench --dryrun --github-pr="35" master BenchmarkFuncName```|
 
 ## Triggering with GitHub comments
+
 The benchmark can be triggered by creating a comment in a PR which specifies a branch to compare. The results are then posted back to the PR as a comment.
 ```
 /funcbench <branch/commit> <benchmark function regex>
@@ -28,6 +31,7 @@ The benchmark can be triggered by creating a comment in a PR which specifies a b
 The comment is handled by [comment-monitor](https://github.com/prometheus/test-infra/tree/master/tools/commentMonitor) and then the parsed arguments are handed over to funcbench(if using Github Actions) or to [prombench](https://github.com/prometheus/test-infra/tree/master/prombench) if using funcbench with GKE.
 
 ## Building Docker container.
+
 From the repository root:
 
 `docker build -t <tag of your choice> -f funcbench/Dockerfile .`

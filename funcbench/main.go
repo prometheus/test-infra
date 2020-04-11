@@ -58,7 +58,7 @@ func main() {
 		repo           string
 		resultsDir     string
 		workspaceDir   string
-		ghPr           int
+		ghPR           int
 		benchTime      time.Duration
 		benchTimeout   time.Duration
 		compareTarget  string
@@ -82,7 +82,7 @@ func main() {
 	app.Flag("repo", "This is the repository name.").
 		Default("prometheus").StringVar(&cfg.repo)
 	app.Flag("github-pr", "GitHub PR number to pull changes from and to post benchmark results.").
-		IntVar(&cfg.ghPr)
+		IntVar(&cfg.ghPR)
 	app.Flag("workspace", "Directory to clone GitHub PR.").
 		Default("/tmp/funcbench").
 		StringVar(&cfg.workspaceDir)
@@ -130,17 +130,17 @@ func main() {
 				benchFunc:     cfg.benchFuncRegex,
 				compareTarget: cfg.compareTarget,
 			}
-			if cfg.ghPr == 0 {
+			if cfg.ghPR == 0 {
 				// Local Mode.
 				env, err = newLocalEnv(e)
 				if err != nil {
-					return errors.Wrap(err, "environment creation error")
+					return errors.Wrap(err, "environment creation")
 				}
 			} else {
 				// Github Mode.
-				ghClient, err := newGitHubClient(ctx, cfg.owner, cfg.repo, cfg.ghPr, cfg.dryrun)
+				ghClient, err := newGitHubClient(ctx, cfg.owner, cfg.repo, cfg.ghPR, cfg.dryrun)
 				if err != nil {
-					return errors.Wrapf(err, "could not create github client")
+					return errors.Wrapf(err, "github client")
 				}
 
 				env, err = newGitHubEnv(ctx, e, ghClient, cfg.workspaceDir)
@@ -148,7 +148,7 @@ func main() {
 					if err := ghClient.postComment(fmt.Sprintf("%v. Could not setup environment, please check logs.", err)); err != nil {
 						return errors.Wrap(err, "could not post error")
 					}
-					return errors.Wrap(err, "environment creation error")
+					return errors.Wrap(err, "environment creation")
 				}
 			}
 
@@ -211,7 +211,7 @@ func startBenchmark(
 	// Get info about target.
 	targetCommit, compareWithItself, err := getTargetInfo(ctx, env.Repo(), env.CompareTarget())
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get target info")
+		return nil, errors.Wrap(err, "getTargetInfo")
 	}
 	bench.logger.Println("Target:", targetCommit.String(), "Current Ref:", ref.Hash().String())
 
@@ -219,12 +219,12 @@ func startBenchmark(
 		bench.logger.Println("Assuming sub-benchmarks comparison.")
 		subResult, err := bench.execBenchmark(wt.Filesystem.Root(), ref.Hash())
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("failed to execute sub-benchmark"))
+			return nil, errors.Wrap(err, "execute sub-benchmark")
 		}
 
 		cmps, err := bench.compareSubBenchmarks(subResult)
 		if err != nil {
-			return nil, errors.Wrap(err, "comparing sub benchmarks failed")
+			return nil, errors.Wrap(err, "comparing sub benchmarks")
 		}
 		return cmps, nil
 	}
@@ -234,7 +234,7 @@ func startBenchmark(
 	// Execute benchmark A.
 	newResult, err := bench.execBenchmark(wt.Filesystem.Root(), ref.Hash())
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to execute benchmark for A: %v", ref.Name().String()))
+		return nil, errors.Wrapf(err, "execute benchmark for A: %v", ref.Name().String())
 	}
 
 	// Best effort cleanup and checkout new worktree.
@@ -242,19 +242,19 @@ func startBenchmark(
 	_, _ = bench.c.exec("git", "worktree", "remove", cmpWorkTreeDir)
 	bench.logger.Println("Checking out (in new workdir):", cmpWorkTreeDir, "commmit", targetCommit.String())
 	if _, err := bench.c.exec("git", "worktree", "add", "-f", cmpWorkTreeDir, targetCommit.String()); err != nil {
-		return nil, errors.Wrapf(err, "failed to checkout %s in worktree %s", targetCommit.String(), cmpWorkTreeDir)
+		return nil, errors.Wrapf(err, "checkout %s in worktree %s", targetCommit.String(), cmpWorkTreeDir)
 	}
 
 	// Execute benchmark B.
 	oldResult, err := bench.execBenchmark(cmpWorkTreeDir, targetCommit)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to execute benchmark for B: %v", env.CompareTarget()))
+		return nil, errors.Wrapf(err, "execute benchmark for B: %v", env.CompareTarget())
 	}
 
 	// Compare B vs A.
 	cmps, err := bench.compareBenchmarks(oldResult, newResult)
 	if err != nil {
-		return nil, errors.Wrap(err, "comparing benchmarks failed")
+		return nil, errors.Wrap(err, "comparing benchmarks")
 	}
 	return cmps, nil
 }

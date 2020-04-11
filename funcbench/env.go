@@ -58,9 +58,7 @@ func newLocalEnv(e environment) (Environment, error) {
 	if err != nil {
 		return nil, err
 	}
-	e.logger.Println("[Local Mode]")
-	e.logger.Println("Benchmarking current version versus:", e.compareTarget)
-	e.logger.Println("Benchmark func regex:", e.benchFunc)
+	e.logger.Println("[Local Mode]", "\nBenchmarking current version versus:", e.compareTarget, "\nBenchmark func regex:", e.benchFunc)
 	return &Local{environment: e, repo: r}, nil
 }
 
@@ -89,11 +87,11 @@ func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspac
 		Depth:    1,
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "could not clone git repository")
+		return nil, errors.Wrap(err, "clone git repository")
 	}
 
 	if err := os.Chdir(filepath.Join(workspace, gc.repo)); err != nil {
-		return nil, errors.Wrapf(err, "changing to %s/%s dir failed", workspace, gc.repo)
+		return nil, errors.Wrapf(err, "changing to %s/%s dir", workspace, gc.repo)
 	}
 
 	g := &GitHub{
@@ -113,18 +111,16 @@ func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspac
 		},
 		Progress: os.Stdout,
 	}); err != nil && err != git.NoErrAlreadyUpToDate {
-		return nil, errors.Wrap(err, "fetch to pull request branch failed")
+		return nil, errors.Wrap(err, "fetch to pull request branch")
 	}
 
 	if err = wt.Checkout(&git.CheckoutOptions{
 		Branch: plumbing.NewBranchReferenceName("pullrequest"),
 	}); err != nil {
-		return nil, errors.Wrap(err, "switch to pull request branch failed")
+		return nil, errors.Wrap(err, "switch to pull request branch")
 	}
 
-	e.logger.Println("[GitHub Mode]", gc.owner, ":", gc.repo)
-	e.logger.Println("Benchmarking PR -", gc.prNumber, "versus:", e.compareTarget)
-	e.logger.Println("Benchmark func regex:", e.benchFunc)
+	e.logger.Println("[GitHub Mode]", gc.owner, ":", gc.repo, "\nBenchmarking PR -", gc.prNumber, "versus:", e.compareTarget, "\nBenchmark func regex:", e.benchFunc)
 	return g, nil
 }
 
