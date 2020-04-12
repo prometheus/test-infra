@@ -196,9 +196,10 @@ func startBenchmark(
 	env Environment,
 	bench *Benchmarker,
 ) ([]BenchCmp, error) {
-	worktreeDirName := "_funchbench-cmp"
 
 	wt, _ := env.Repo().Worktree()
+	cmpWorkTreeDir := filepath.Join(wt.Filesystem.Root(), "_funcbench-cmp")
+
 	ref, err := env.Repo().Head()
 	if err != nil {
 		return nil, errors.Wrap(err, "get head")
@@ -238,8 +239,14 @@ func startBenchmark(
 	}
 
 	// Best effort cleanup and checkout new worktree.
-	cmpWorkTreeDir := filepath.Join(wt.Filesystem.Root(), worktreeDirName)
-	_, _ = bench.c.exec("git", "worktree", "remove", cmpWorkTreeDir)
+	if err := os.RemoveAll(cmpWorkTreeDir); err != nil {
+		return nil, errors.Wrapf(err, "delete worktree at %s", cmpWorkTreeDir)
+	}
+
+	if _, err := bench.c.exec("git", "worktree", "prune"); err != nil {
+		return nil, errors.Wrap(err, "worktree prune")
+	}
+
 	bench.logger.Println("Checking out (in new workdir):", cmpWorkTreeDir, "commmit", targetCommit.String())
 	if _, err := bench.c.exec("git", "worktree", "add", "-f", cmpWorkTreeDir, targetCommit.String()); err != nil {
 		return nil, errors.Wrapf(err, "checkout %s in worktree %s", targetCommit.String(), cmpWorkTreeDir)
