@@ -243,6 +243,7 @@ func startBenchmark(
 		return nil, errors.Wrapf(err, "delete worktree at %s", cmpWorkTreeDir)
 	}
 
+	// TODO (geekodour): switch to worktree remove once we decide not to support git<2.17
 	if _, err := bench.c.exec("git", "worktree", "prune"); err != nil {
 		return nil, errors.Wrap(err, "worktree prune")
 	}
