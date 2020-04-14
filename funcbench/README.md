@@ -19,7 +19,7 @@ funcbench currently supports two modes, Local and GitHub. Running it in the Gith
 |Execute all benchmarks, and compare the results with `devel` branch.|```./funcbench -v devel . ```|
 |Execute all benchmarks matching `BenchmarkFuncName.*` regex, and compare it with `6d280faa16bfca1f26fa426d863afbb564c063d1` commit.|```./funcbench -v 6d280faa16bfca1f26fa426d863afbb564c063d1 BenchmarkFuncName.*```|
 |Execute all benchmarks matching `BenchmarkFuncName.*` regex on current code. Compare it between sub-benchmarks (`b.Run`) of same benchmark for current commit. Errors out if there are no sub-benchmarks.|```./funcbench -v . FuncName.*```|
-|Execute benchmark named `BenchmarkFuncName`, and compare `pr#35` with `master` branch.|```./funcbench --dryrun --github-pr="35" master BenchmarkFuncName```|
+|Execute benchmark named `BenchmarkFuncName`, and compare `pr#35` with `master` branch.|```./funcbench --nocomment --github-pr="35" master BenchmarkFuncName```|
 
 ## Triggering with GitHub comments
 

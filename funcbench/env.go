@@ -140,32 +140,32 @@ func (g *GitHub) PostResults(cmps []BenchCmp) error {
 func (g *GitHub) Repo() *git.Repository { return g.repo }
 
 type gitHubClient struct {
-	owner    string
-	repo     string
-	prNumber int
-	client   *github.Client
-	dryrun   bool
+	owner     string
+	repo      string
+	prNumber  int
+	client    *github.Client
+	nocomment bool
 }
 
-func newGitHubClient(ctx context.Context, owner, repo string, prNumber int, dryrun bool) (*gitHubClient, error) {
+func newGitHubClient(ctx context.Context, owner, repo string, prNumber int, nocomment bool) (*gitHubClient, error) {
 	ghToken, ok := os.LookupEnv("GITHUB_TOKEN")
-	if !ok && !dryrun {
+	if !ok && !nocomment {
 		return nil, fmt.Errorf("GITHUB_TOKEN missing")
 	}
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: ghToken})
 	tc := oauth2.NewClient(ctx, ts)
 	c := gitHubClient{
-		client:   github.NewClient(tc),
-		owner:    owner,
-		repo:     repo,
-		prNumber: prNumber,
-		dryrun:   dryrun,
+		client:    github.NewClient(tc),
+		owner:     owner,
+		repo:      repo,
+		prNumber:  prNumber,
+		nocomment: nocomment,
 	}
 	return &c, nil
 }
 
 func (c *gitHubClient) postComment(comment string) error {
-	if c.dryrun {
+	if c.nocomment {
 		return nil
 	}
 
