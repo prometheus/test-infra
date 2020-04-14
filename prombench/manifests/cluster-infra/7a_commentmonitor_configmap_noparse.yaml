@@ -19,7 +19,7 @@ data:
 
         **Other Commands:**
         To stop benchmark: `/prombench cancel`
-        To restart benchmark: `/prombench restart v2.12.0`
+        To restart benchmark: `/prombench restart {{ index . "RELEASE" }}`
 
     - event_type: prombench_stop
       regex_string: (?mi)^/prombench\s+cancel\s*$
