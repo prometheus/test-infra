@@ -10,6 +10,7 @@ import (
 	"io"
 	"math"
 	"sort"
+	"strconv"
 	"text/tabwriter"
 
 	"golang.org/x/tools/benchmark/parse"
@@ -157,6 +158,19 @@ func (x ByDeltaAllocsPerOp) Len() int      { return len(x) }
 func (x ByDeltaAllocsPerOp) Swap(i, j int) { x[i], x[j] = x[j], x[i] }
 func (x ByDeltaAllocsPerOp) Less(i, j int) bool {
 	return lessByDelta(x[i], x[j], BenchCmp.DeltaAllocsPerOp)
+}
+
+// formatNs formats ns measurements to expose a useful amount of
+// precision. It mirrors the ns precision logic of testing.B.
+func formatNs(ns float64) string {
+	prec := 0
+	switch {
+	case ns < 10:
+		prec = 2
+	case ns < 100:
+		prec = 1
+	}
+	return strconv.FormatFloat(ns, 'f', prec, 64)
 }
 
 // Copied from https://github.com/golang/tools/blob/master/cmd/benchcmp/benchcmp.go.
