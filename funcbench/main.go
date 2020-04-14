@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/oklog/run"
 	"github.com/pkg/errors"
@@ -50,6 +51,20 @@ func (l *logger) FatalError(err error) {
 }
 
 func main() {
+	cfg := struct {
+		verbose        bool
+		nocomment      bool
+		owner          string
+		repo           string
+		resultsDir     string
+		workspaceDir   string
+		ghPR           int
+		benchTime      time.Duration
+		benchTimeout   time.Duration
+		compareTarget  string
+		benchFuncRegex string
+	}{}
+
 	app := kingpin.New(
 		filepath.Base(os.Args[0]),
 		"Benchmark and compare your Go code between sub benchmarks or commits.",
@@ -57,36 +72,46 @@ func main() {
 
 	// Options.
 	app.HelpFlag.Short('h')
-	verbose := app.Flag("verbose", "Verbose mode. Errors includes trace and commands output are logged.").Short('v').Bool()
+	app.Flag("verbose", "Verbose mode. Errors includes trace and commands output are logged.").
+		Short('v').BoolVar(&cfg.verbose)
+	app.Flag("nocomment", "Disable posting of comment using the GitHub API.").
+		BoolVar(&cfg.nocomment)
 
-	// TODO(bwplotka): Why not just passing full import path? Easier (:
-	owner := app.Flag("owner", "A Github owner or organisation name.").Default("prometheus").Short('o').String()
-	repo := app.Flag("repo", "This is the repository name.").Default("prometheus").Short('r').String()
-	// TODO(bwplotka): Should we run in worktree for consistency?
-	gitHubPRNumber := app.Flag("github-pr", "GitHub Pull Request number (#<num>) that should used to pull the latest changes"+
-		"from and used for posting comments. NOTE: **This has to be run from the GithubAction.** If none provided, local mode is enabled.").
-		Short('p').Int()
+	app.Flag("owner", "A Github owner or organisation name.").
+		Default("prometheus").StringVar(&cfg.owner)
+	app.Flag("repo", "This is the repository name.").
+		Default("prometheus").StringVar(&cfg.repo)
+	app.Flag("github-pr", "GitHub PR number to pull changes from and to post benchmark results.").
+		IntVar(&cfg.ghPR)
+	app.Flag("workspace", "Directory to clone GitHub PR.").
+		Default("/tmp/funcbench").
+		StringVar(&cfg.workspaceDir)
+	app.Flag("result-cache", "Directory to store benchmark results.").
+		Default("_dev/funcbench").
+		StringVar(&cfg.resultsDir)
 
-	compareTarget := app.Arg("branch/commit/<.>", "Branch, commit SHA of the branch to compare benchmarks against."+
-		"If `.` of branch/commit is the same as the current one, funcbench will run once and try to compare between 2 sub-benchmarks.").String()
-	benchFunc := app.Arg("func regexp/<.>", "Function to use for benchmark. Supports RE2 regexp or `.` to run all benchmarks.").String()
+	app.Flag("bench-time", "Run enough iterations of each benchmark to take t, specified "+
+		"as a time.Duration. The special syntax Nx means to run the benchmark N times").
+		Short('t').Default("1s").DurationVar(&cfg.benchTime)
+	app.Flag("timeout", "Benchmark timeout specified in time.Duration format, "+
+		"disabled if set to 0. If a test binary runs longer than duration d, panic.").
+		Short('d').Default("2h").DurationVar(&cfg.benchTimeout)
 
-	benchTime := app.Flag("bench-time", `Run enough iterations of each benchmark to take t, specified
-as a time.Duration (for example, -benchtime 1h30s).
-The default is 1 second (1s).
-The special syntax Nx means to run the benchmark N times
-(for example, -benchtime 100x).`).Short('t').Default("1s").Duration()
-	benchTimeout := app.Flag("timeout", `If each test binary runs longer than duration d, panic.
-If d is 0, the timeout is disabled.
-The default is 2 hours (2h).`).Default("2h").Duration()
-	resultCacheDir := app.Flag("result-cache", "Directory to store output for given func name and commit sha. Useful for local runs.").String()
-	workspace := app.Flag("workspace", "A directory where source code will be cloned to.").Default(os.Getenv("WORKSPACE")).Short('w').String()
+	app.Arg("target", "Can be one of '.', branch name or commit SHA of the branch "+
+		"to compare against. If set to '.', branch/commit is the same as the current one; "+
+		"funcbench will run once and try to compare between 2 sub-benchmarks. "+
+		"Errors out if there are no sub-benchmarks.").
+		Required().StringVar(&cfg.compareTarget)
+	app.Arg("function-regex", "Function regex to use for benchmark."+
+		"Supports RE2 regexp and is fully anchored, by default will run all benchmarks.").
+		Default(".*").
+		StringVar(&cfg.benchFuncRegex) // TODO (geekodour) : validate regex?
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 	logger := &logger{
 		// Show file line with each log.
 		Logger:  log.New(os.Stdout, "funcbech", log.Ltime|log.Lshortfile),
-		verbose: *verbose,
+		verbose: cfg.verbose,
 	}
 
 	var g run.Group
@@ -99,35 +124,46 @@ The default is 2 hours (2h).`).Default("2h").Duration()
 				err error
 			)
 
-			if *gitHubPRNumber == 0 {
-				env, err = newLocalEnv(environment{
-					logger:        logger,
-					benchFunc:     *benchFunc,
-					compareTarget: *compareTarget,
-					home:          os.Getenv("HOME"),
-				})
+			// Setup Environment.
+			e := environment{
+				logger:        logger,
+				benchFunc:     cfg.benchFuncRegex,
+				compareTarget: cfg.compareTarget,
+			}
+			if cfg.ghPR == 0 {
+				// Local Mode.
+				env, err = newLocalEnv(e)
 				if err != nil {
-					return errors.Wrap(err, "new env")
+					return errors.Wrap(err, "environment create")
 				}
-				logger.Printf("funcbench start [Local Mode]: Benchmarking current version versus %q for benchmark funcs: %q\n", *compareTarget, *benchFunc)
 			} else {
-				if *owner == "" || *repo == "" {
-					return errors.New("funcbench in GitHub Mode requires --owner and --repo flags to be specified")
-				}
-				env, err = newGitHubEnv(ctx, environment{
-					logger:        logger,
-					benchFunc:     *benchFunc,
-					compareTarget: *compareTarget,
-					home:          *workspace,
-				}, *owner, *repo, *gitHubPRNumber)
+				// Github Mode.
+				ghClient, err := newGitHubClient(ctx, cfg.owner, cfg.repo, cfg.ghPR, cfg.nocomment)
 				if err != nil {
-					return errors.Wrap(err, "new env")
+					return errors.Wrapf(err, "github client")
 				}
-				logger.Printf("funcbench start [GitHub Mode]: Benchmarking %q (PR-%d) versus %q for benchmark funcs: %q\n", fmt.Sprintf("%s/%s", *owner, *repo), *gitHubPRNumber, *compareTarget, *benchFunc)
+
+				env, err = newGitHubEnv(ctx, e, ghClient, cfg.workspaceDir)
+				if err != nil {
+					if err := ghClient.postComment(fmt.Sprintf("%v. Could not setup environment, please check logs.", err)); err != nil {
+						return errors.Wrap(err, "could not post error")
+					}
+					return errors.Wrap(err, "environment create")
+				}
 			}
 
 			// ( ◔_◔)ﾉ Start benchmarking!
-			return funcbench(ctx, env, newBenchmarker(logger, env, &commander{verbose: *verbose}, *benchTime, *benchTimeout, *resultCacheDir))
+			cmps, err := startBenchmark(ctx, env, newBenchmarker(logger, env, &commander{verbose: cfg.verbose}, cfg.benchTime, cfg.benchTimeout, cfg.resultsDir))
+			if err != nil {
+				if pErr := env.PostErr(fmt.Sprintf("%v. Benchmark failed, please check logs.", err)); pErr != nil {
+					return errors.Wrap(pErr, "could not log error")
+				}
+				return err
+			}
+
+			// Post results.
+			// TODO (geekodour): probably post some kind of funcbench summary(?)
+			return env.PostResults(cmps)
 
 		}, func(err error) {
 			cancel()
@@ -149,82 +185,86 @@ The default is 2 hours (2h).`).Default("2h").Duration()
 	logger.Println("exiting")
 }
 
-func funcbench(
+// startBenchmark returns the comparision results.
+// 1. If target is same as current ref, run sub-benchmarks and return instead (TODO).
+// 2. Execute benchmark against packages in the current worktree.
+// 3. Cleanup of worktree in case funcbench was run previously and checkout target worktree.
+// 4. Execute benchmark against packages in the new(target) worktree.
+// 5. Return compared results.
+func startBenchmark(
 	ctx context.Context,
 	env Environment,
 	bench *Benchmarker,
-) error {
+) ([]BenchCmp, error) {
+
 	wt, _ := env.Repo().Worktree()
+	cmpWorkTreeDir := filepath.Join(wt.Filesystem.Root(), "_funcbench-cmp")
+
 	ref, err := env.Repo().Head()
 	if err != nil {
-		return errors.Wrap(err, "get head")
+		return nil, errors.Wrap(err, "get head")
 	}
 
 	if _, err := bench.c.exec("bash", "-c", "git update-index -q --ignore-submodules --refresh && git diff-files --quiet --ignore-submodules --"); err != nil {
-		return errors.Wrap(err, "not clean worktree")
+		return nil, errors.Wrap(err, "not clean worktree")
 	}
 
-	// 1. Execute benchmark against packages in the current directory.
-	newResult, err := bench.execBenchmark(wt.Filesystem.Root(), ref.Hash())
+	// Get info about target.
+	targetCommit, compareWithItself, err := getTargetInfo(ctx, env.Repo(), env.CompareTarget())
 	if err != nil {
-		// TODO(bwplotka): Just defer posting all errors?
-		if pErr := env.PostErr("Go bench test for this pull request failed"); pErr != nil {
-			return errors.Errorf("error: %v occured while processing error: %v", pErr, err)
-		}
-		return errors.Wrap(err, "exec benchmark A")
+		return nil, errors.Wrap(err, "getTargetInfo")
 	}
-
-	var oldResult string
-
-	targetCommit, compareWithItself, err := compareTargetRef(ctx, env.Repo(), env.CompareTarget())
-	if err != nil {
-		return errors.Wrap(err, "compareTargetRef")
-	}
+	bench.logger.Println("Target:", targetCommit.String(), "Current Ref:", ref.Hash().String())
 
 	if compareWithItself {
-		bench.logger.Println("Target:", env.CompareTarget(), "is `.`; Assuming sub-benchmarks comparison.")
-
-		// 2a. Compare sub benchmarks. TODO.
-		cmps, err := bench.compareSubBenchmarks(newResult)
+		bench.logger.Println("Assuming sub-benchmarks comparison.")
+		subResult, err := bench.execBenchmark(wt.Filesystem.Root(), ref.Hash())
 		if err != nil {
-			if pErr := env.PostErr("`benchcmp` failed."); pErr != nil {
-				return errors.Errorf("error: %v occured while processing error: %v", pErr, err)
-			}
-			return errors.Wrap(err, "compare sub benchmarks")
+			return nil, errors.Wrap(err, "execute sub-benchmark")
 		}
-		return errors.Wrap(env.PostResults(cmps), "post results")
+
+		cmps, err := bench.compareSubBenchmarks(subResult)
+		if err != nil {
+			return nil, errors.Wrap(err, "comparing sub benchmarks")
+		}
+		return cmps, nil
 	}
 
-	bench.logger.Println("Target:", env.CompareTarget(), "is evaluated to be ", targetCommit.String(), ". Assuming comparing with this one (clean workdir will be checked.)")
-	// 2b. Compare with target commit/branch.
+	bench.logger.Println("Assuming comparing with target (clean workdir will be checked.)")
 
-	// 3. Best effort cleanup of worktree.
-	cmpWorkTreeDir := filepath.Join(wt.Filesystem.Root(), "_funcbench-cmp")
-
-	_, _ = bench.c.exec("git", "worktree", "remove", cmpWorkTreeDir)
-	bench.logger.Println("Checking out (in new workdir):", cmpWorkTreeDir, "commmit", ref.String())
-	if _, err := bench.c.exec("git", "worktree", "add", "-f", cmpWorkTreeDir, ref.Hash().String()); err != nil {
-		return errors.Wrapf(err, "failed to checkout %s in worktree %s", ref.String(), cmpWorkTreeDir)
-	}
-
-	// 4. Benchmark in new worktree.
-	oldResult, err = bench.execBenchmark(cmpWorkTreeDir, targetCommit)
+	// Execute benchmark A.
+	newResult, err := bench.execBenchmark(wt.Filesystem.Root(), ref.Hash())
 	if err != nil {
-		if pErr := env.PostErr(fmt.Sprintf("Go bench test for target %s failed", env.CompareTarget())); pErr != nil {
-			return errors.Errorf("error: %v occured while processing error: %v", pErr, err)
-		}
-		return errors.Wrap(err, "exec bench B")
+		return nil, errors.Wrapf(err, "execute benchmark for A: %v", ref.Name().String())
 	}
 
-	// 5. Compare old vs new.
+	// Best effort cleanup and checkout new worktree.
+	if err := os.RemoveAll(cmpWorkTreeDir); err != nil {
+		return nil, errors.Wrapf(err, "delete worktree at %s", cmpWorkTreeDir)
+	}
+
+	// TODO (geekodour): switch to worktree remove once we decide not to support git<2.17
+	if _, err := bench.c.exec("git", "worktree", "prune"); err != nil {
+		return nil, errors.Wrap(err, "worktree prune")
+	}
+
+	bench.logger.Println("Checking out (in new workdir):", cmpWorkTreeDir, "commmit", targetCommit.String())
+	if _, err := bench.c.exec("git", "worktree", "add", "-f", cmpWorkTreeDir, targetCommit.String()); err != nil {
+		return nil, errors.Wrapf(err, "checkout %s in worktree %s", targetCommit.String(), cmpWorkTreeDir)
+	}
+
+	// Execute benchmark B.
+	oldResult, err := bench.execBenchmark(cmpWorkTreeDir, targetCommit)
+	if err != nil {
+		return nil, errors.Wrapf(err, "execute benchmark for B: %v", env.CompareTarget())
+	}
+
+	// Compare B vs A.
 	cmps, err := bench.compareBenchmarks(oldResult, newResult)
 	if err != nil {
-		if pErr := env.PostErr("`benchcmp` failed."); pErr != nil {
-			return errors.Errorf("error: %v occured while processing error: %v", pErr, err)
-		}
-		return errors.Wrap(err, "compare benchmarks")
+		return nil, errors.Wrap(err, "comparing benchmarks")
 	}
-	return errors.Wrap(env.PostResults(cmps), "post results")
+	return cmps, nil
 }
 
 func interrupt(logger Logger, cancel <-chan struct{}) error {
@@ -239,10 +279,13 @@ func interrupt(logger Logger, cancel <-chan struct{}) error {
 	}
 }
 
-func compareTargetRef(ctx context.Context, repo *git.Repository, target string) (ref plumbing.Hash, compareWithItself bool, _ error) {
+// getTargetInfo returns the hash of the target,
+// if target is the same as the current ref, set compareWithItself to true.
+func getTargetInfo(ctx context.Context, repo *git.Repository, target string) (ref plumbing.Hash, compareWithItself bool, _ error) {
 	if target == "." {
 		return plumbing.Hash{}, true, nil
 	}
+
 	currRef, err := repo.Head()
 	if err != nil {
 		return plumbing.ZeroHash, false, err
@@ -252,8 +295,9 @@ func compareTargetRef(ctx context.Context, repo *git.Repository, target string) 
 		return currRef.Hash(), true, errors.Errorf("target: %s is the same as current ref %s (or is on the same commit); No changes would be expected; Aborting", target, currRef.String())
 	}
 
-	if err := repo.FetchContext(ctx, &git.FetchOptions{}); err != nil && err != git.NoErrAlreadyUpToDate {
-		return plumbing.ZeroHash, false, err
+	commitHash := plumbing.NewHash(target)
+	if !commitHash.IsZero() {
+		return commitHash, false, nil
 	}
 
 	targetRef, err := repo.Reference(plumbing.NewBranchReferenceName(target), false)
