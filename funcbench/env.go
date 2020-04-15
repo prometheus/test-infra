@@ -100,6 +100,10 @@ func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspac
 		client:      gc,
 	}
 
+	if err := os.Setenv("CGO_ENABLED", "0"); err != nil {
+		return nil, err
+	}
+
 	wt, err := g.repo.Worktree()
 	if err != nil {
 		return nil, err
