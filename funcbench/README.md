@@ -33,7 +33,7 @@ The benchmark can be triggered by creating a comment in a PR which specifies a b
 The comment is handled by [comment-monitor](https://github.com/prometheus/test-infra/tree/master/tools/commentMonitor) and then the parsed arguments are handed over to funcbench(if using Github Actions) or to [prombench](https://github.com/prometheus/test-infra/tree/master/prombench) if using funcbench with GKE.
 
 - Create GitHub actions workflow file (see below) that is executed when an `repository_dispatch` event is on.
-- Read BRANCH / PR_NUMBER / REGEX from event payload into environment variables.
+- Read BRANCH / BENCH_FUNC_REGEX / PR_NUMBER from event payload into environment variables.
 
 #### Example GitHub action workflow file
 
@@ -64,7 +64,7 @@ jobs:
         GITHUB_ORG: prominfra
         GITHUB_REPO: prometheus
         GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }} # The GH action token lasts up to 60min so using PERSONAL_TOKEN guarantees that can post back the results even when the bench tests takes longer.
-        REGEX: ${{ github.event.client_payload.REGEX }}
+        BENCH_FUNC_REGEX: ${{ github.event.client_payload.BENCH_FUNC_REGEX }}
       with:
         args: make funcbench_resource_apply
     - name: Recycle all

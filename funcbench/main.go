@@ -102,7 +102,7 @@ func main() {
 		"funcbench will run once and try to compare between 2 sub-benchmarks. "+
 		"Errors out if there are no sub-benchmarks.").
 		Required().StringVar(&cfg.compareTarget)
-	app.Arg("function-regex", "Function regex to use for benchmark."+
+	app.Arg("bench-func-regex", "Function regex to use for benchmark."+
 		"Supports RE2 regexp and is fully anchored, by default will run all benchmarks.").
 		Default(".*").
 		StringVar(&cfg.benchFuncRegex) // TODO (geekodour) : validate regex?

@@ -62,7 +62,7 @@ funcbench_resource_apply:
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
 		-v PR_NUMBER:${PR_NUMBER} -v GITHUB_TOKEN:${GITHUB_TOKEN} \
 		-v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
-		-v BRANCH:${BRANCH} -v REGEX:${REGEX} \
+		-v BRANCH:${BRANCH} -v BENCH_FUNC_REGEX:${BENCH_FUNC_REGEX} \
 		-f manifests/funcbench/benchmark
 
 funcbench_resource_delete:

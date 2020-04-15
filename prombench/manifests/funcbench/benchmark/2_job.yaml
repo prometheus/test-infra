@@ -22,7 +22,7 @@ spec:
           - "--github-pr"
           - "{{ .PR_NUMBER }}"
           - "{{ .BRANCH }}"
-          - "{{ .REGEX }}"
+          - "{{ .BENCH_FUNC_REGEX }}"
         env:
           - name: GITHUB_TOKEN
             value: "{{ .GITHUB_TOKEN }}"
