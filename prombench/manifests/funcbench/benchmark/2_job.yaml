@@ -21,8 +21,6 @@ spec:
           - "{{ .GITHUB_REPO }}"
           - "--github-pr"
           - "{{ .PR_NUMBER }}"
-          - "--workspace"
-          - "/build"
           - "{{ .BRANCH }}"
           - "{{ .REGEX }}"
         env:
