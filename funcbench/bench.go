@@ -82,7 +82,7 @@ func (b *Benchmarker) execBenchmark(pkgRoot string, commit plumbing.Hash) (out s
 	// 'go test' flags: https://golang.org/cmd/go/#hdr-Testing_flags
 	extraArgs := []string{"-benchtime", b.benchTime.String()}
 	extraArgs = append(extraArgs, "-timeout", b.benchTimeout.String())
-	benchCmd := []string{"bash", "-c", strings.Join(append(append([]string{"cd", pkgRoot, "&&", "go", "test", "-run", "^$", "-bench", fmt.Sprintf("^%s$", b.benchFunc), "-benchmem"}, extraArgs...), "./..."), " ")}
+	benchCmd := []string{"sh", "-c", strings.Join(append(append([]string{"cd", pkgRoot, "&&", "go", "test", "-run", "^$", "-bench", fmt.Sprintf("^%s$", b.benchFunc), "-benchmem"}, extraArgs...), "./..."), " ")}
 
 	b.logger.Println("Executing benchmark command for", commit.String(), "\n", benchCmd)
 	out, err = b.c.exec(benchCmd...)

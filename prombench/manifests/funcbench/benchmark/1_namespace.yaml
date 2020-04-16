@@ -1,0 +1,5 @@
+#A new namespace is created to differentiate the instances of funcbench
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: funcbench-{{ .PR_NUMBER }}

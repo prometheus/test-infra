@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: funcbench-test-{{ .PR_NUMBER }}
+  namespace: funcbench-{{ .PR_NUMBER }}
+spec:
+  # never re-create a new pod
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: funcbench
+        image: docker.io/prominfra/funcbench:master
+        imagePullPolicy: Always
+        args:
+          - "--verbose"
+          - "--owner"
+          - "{{ .GITHUB_ORG }}"
+          - "--repo"
+          - "{{ .GITHUB_REPO }}"
+          - "--github-pr"
+          - "{{ .PR_NUMBER }}"
+          - "{{ .BRANCH }}"
+          - "{{ .BENCH_FUNC_REGEX }}"
+        env:
+          - name: GITHUB_TOKEN
+            value: "{{ .GITHUB_TOKEN }}"
+      nodeSelector:
+        cloud.google.com/gke-nodepool: funcbench-{{ .PR_NUMBER }}
+        isolation: funcbench
