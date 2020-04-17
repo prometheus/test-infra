@@ -65,9 +65,12 @@ funcbench_resource_apply:
 		-v BRANCH:${BRANCH} -v BENCH_FUNC_REGEX:${BENCH_FUNC_REGEX} \
 		-f manifests/funcbench/benchmark
 
+# Removal of namespace should be at the end, after all other resources get removed.
 funcbench_resource_delete:
 	$(PROMBENCH_CMD) gke resource delete -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
-		-v PR_NUMBER:${PR_NUMBER} \
+		-v PR_NUMBER:${PR_NUMBER} -v GITHUB_TOKEN:${GITHUB_TOKEN} \
+		-v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
+		-v BRANCH:${BRANCH} -v BENCH_FUNC_REGEX:${BENCH_FUNC_REGEX} \
 		-f manifests/funcbench/benchmark/2_job.yaml \
 		-f manifests/funcbench/benchmark/1_namespace.yaml
