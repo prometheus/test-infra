@@ -24,9 +24,21 @@ funcbench currently supports two modes, Local and GitHub. Running it in the Gith
 ## Triggering with GitHub comments
 
 The benchmark can be triggered by creating a comment in a PR which specifies a branch to compare. The results are then posted back to the PR as a comment.
-```
-/funcbench <branch/commit> <benchmark function regex>
-```
+
+The syntax is: `/funcbench <branch> <benchmark function regex>`
+
+Examples:
+
+* `/funcbench master BenchmarkQuery.*` - compare all the benchmarks mathching `BenchmarkQuery.*` for branch master vs the PR.
+
+* `/funcbench feature-branch` or `/funcbench feature-branch .*` - compare all the benchmarks on feature-branch vs the PR.
+
+* You can even add some comments along with the command.
+    ```
+    /funcbench old_branch .*
+
+    The old_branch performs poorly, I bet mine are much better.
+    ```
 
 #### Setup
 
