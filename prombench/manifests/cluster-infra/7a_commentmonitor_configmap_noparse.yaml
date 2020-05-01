@@ -48,3 +48,10 @@ data:
         **Other Commands:**
         To stop benchmark: `/prombench cancel`
         To restart benchmark: `/prombench restart v2.12.0`
+
+    - event_type: funcbench_start
+      regex_string: (?m)^/funcbench[[:blank:]]+(?P<BRANCH>[\w\-\/\.]+)[[:blank:]]*(?P<BENCH_FUNC_REGEX>(?:Benchmark\w*)?(?:\.\*)?)?[[:blank:]]*$
+      comment_template: |
+        ⏱️ Welcome to Funcbench Tool. ⏱️
+
+        Running benchmark `{{ index . "BENCH_FUNC_REGEX"}}` on **`PR-{{ index . "PR_NUMBER" }}`** vs **`{{ index . "BRANCH" }}`**
