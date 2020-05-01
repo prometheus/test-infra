@@ -1,7 +1,7 @@
 DOCKER_REPO             ?= prominfra
 
 .PHONY: all
-all: precheck style check_license lint build test unused
+all: precheck style check_license lint build test unused docs-check
 
 .PHONY: docker
 docker:
@@ -15,5 +15,13 @@ docker-publish:
 .PHONY: docker-manifest
 docker-manifest:
 	@echo skip manifest creation
+
+.PHONY: docs
+docs:
+	./scripts/genflagdocs.sh
+
+.PHONY: docs-check
+docs-check:
+	./scripts/genflagdocs.sh check
 
 include Makefile.common
