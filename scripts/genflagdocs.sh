@@ -12,6 +12,10 @@ README_FILES="./tools/*/README.md ./funcbench/README.md ./prombench/README.md"
 primary_tools=("prombench" "funcbench")
 helper_tools=("amGithubNotifier" "commentMonitor")
 
+function fetch_embedmd {
+  pushd ..; go get github.com/campoy/embedmd; popd
+}
+
 function docs {
 # If check arg was passed, instead of the docs generation verifies if docs coincide with the codebase.
 if [[ "${CHECK}" == "check" ]]; then
@@ -49,4 +53,5 @@ for x in "${helper_tools[@]}"; do
     ${SED_BIN} -i -e 's/[ \t]*$//' "./tools/${x}/${x}-flags.txt"
 done
 
+fetch_embedmd
 docs
