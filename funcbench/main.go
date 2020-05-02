@@ -145,7 +145,7 @@ func main() {
 
 				env, err = newGitHubEnv(ctx, e, ghClient, cfg.workspaceDir)
 				if err != nil {
-					if err := ghClient.postComment(fmt.Sprintf("%v. Could not setup environment, please check logs.", err)); err != nil {
+					if err := ghClient.postComment(ctx, fmt.Sprintf("%v. Could not setup environment, please check logs.", err)); err != nil {
 						return errors.Wrap(err, "could not post error")
 					}
 					return errors.Wrap(err, "environment create")
@@ -155,7 +155,7 @@ func main() {
 			// ( ◔_◔)ﾉ Start benchmarking!
 			cmps, err := startBenchmark(ctx, env, newBenchmarker(logger, env, &commander{verbose: cfg.verbose}, cfg.benchTime, cfg.benchTimeout, cfg.resultsDir))
 			if err != nil {
-				if pErr := env.PostErr(fmt.Sprintf("%v. Benchmark failed, please check logs.", err)); pErr != nil {
+				if pErr := env.PostErr(ctx, fmt.Sprintf("%v. Benchmark failed, please check logs.", err)); pErr != nil {
 					return errors.Wrap(pErr, "could not log error")
 				}
 				return err
@@ -163,7 +163,7 @@ func main() {
 
 			// Post results.
 			// TODO (geekodour): probably post some kind of funcbench summary(?)
-			return env.PostResults(cmps)
+			return env.PostResults(ctx, cmps)
 
 		}, func(err error) {
 			cancel()
@@ -205,7 +205,7 @@ func startBenchmark(
 		return nil, errors.Wrap(err, "get head")
 	}
 
-	if _, err := bench.c.exec("sh", "-c", "git update-index -q --ignore-submodules --refresh && git diff-files --quiet --ignore-submodules --"); err != nil {
+	if _, err := bench.c.exec(ctx, "sh", "-c", "git update-index -q --ignore-submodules --refresh && git diff-files --quiet --ignore-submodules --"); err != nil {
 		return nil, errors.Wrap(err, "not clean worktree")
 	}
 
@@ -218,7 +218,7 @@ func startBenchmark(
 
 	if compareWithItself {
 		bench.logger.Println("Assuming sub-benchmarks comparison.")
-		subResult, err := bench.execBenchmark(wt.Filesystem.Root(), ref.Hash())
+		subResult, err := bench.execBenchmark(ctx, wt.Filesystem.Root(), ref.Hash())
 		if err != nil {
 			return nil, errors.Wrap(err, "execute sub-benchmark")
 		}
@@ -233,7 +233,7 @@ func startBenchmark(
 	bench.logger.Println("Assuming comparing with target (clean workdir will be checked.)")
 
 	// Execute benchmark A.
-	newResult, err := bench.execBenchmark(wt.Filesystem.Root(), ref.Hash())
+	newResult, err := bench.execBenchmark(ctx, wt.Filesystem.Root(), ref.Hash())
 	if err != nil {
 		return nil, errors.Wrapf(err, "execute benchmark for A: %v", ref.Name().String())
 	}
@@ -244,17 +244,17 @@ func startBenchmark(
 	}
 
 	// TODO (geekodour): switch to worktree remove once we decide not to support git<2.17
-	if _, err := bench.c.exec("git", "worktree", "prune"); err != nil {
+	if _, err := bench.c.exec(ctx, "git", "worktree", "prune"); err != nil {
 		return nil, errors.Wrap(err, "worktree prune")
 	}
 
 	bench.logger.Println("Checking out (in new workdir):", cmpWorkTreeDir, "commmit", targetCommit.String())
-	if _, err := bench.c.exec("git", "worktree", "add", "-f", cmpWorkTreeDir, targetCommit.String()); err != nil {
+	if _, err := bench.c.exec(ctx, "git", "worktree", "add", "-f", cmpWorkTreeDir, targetCommit.String()); err != nil {
 		return nil, errors.Wrapf(err, "checkout %s in worktree %s", targetCommit.String(), cmpWorkTreeDir)
 	}
 
 	// Execute benchmark B.
-	oldResult, err := bench.execBenchmark(cmpWorkTreeDir, targetCommit)
+	oldResult, err := bench.execBenchmark(ctx, cmpWorkTreeDir, targetCommit)
 	if err != nil {
 		return nil, errors.Wrapf(err, "execute benchmark for B: %v", env.CompareTarget())
 	}
@@ -312,9 +312,8 @@ type commander struct {
 	verbose bool
 }
 
-func (c *commander) exec(command ...string) (string, error) {
-	// TODO(bwplotka): Use context to kill command on interrupt.
-	cmd := exec.Command(command[0], command[1:]...)
+func (c *commander) exec(ctx context.Context, command ...string) (string, error) {
+	cmd := exec.CommandContext(ctx, command[0], command[1:]...)
 	var b bytes.Buffer
 	cmd.Stdout = &b
 	cmd.Stderr = &b

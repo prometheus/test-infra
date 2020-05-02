@@ -31,8 +31,8 @@ type Environment interface {
 	BenchFunc() string
 	CompareTarget() string
 
-	PostErr(err string) error
-	PostResults(cmps []BenchCmp) error
+	PostErr(ctx context.Context, err string) error
+	PostResults(ctx context.Context, cmps []BenchCmp) error
 
 	Repo() *git.Repository
 }
@@ -62,9 +62,9 @@ func newLocalEnv(e environment) (Environment, error) {
 	return &Local{environment: e, repo: r}, nil
 }
 
-func (l *Local) PostErr(string) error { return nil } // Noop. We will see error anyway.
+func (l *Local) PostErr(context.Context, string) error { return nil } // Noop. We will see error anyway.
 
-func (l *Local) PostResults(cmps []BenchCmp) error {
+func (l *Local) PostResults(ctx context.Context, cmps []BenchCmp) error {
 	fmt.Println("Results:")
 	Render(os.Stdout, cmps, false, false, l.compareTarget)
 	return nil
@@ -128,17 +128,17 @@ func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspac
 	return g, nil
 }
 
-func (g *GitHub) PostErr(err string) error {
-	if err := g.client.postComment(fmt.Sprintf("%v. Benchmark did not complete, please check action logs.", err)); err != nil {
+func (g *GitHub) PostErr(ctx context.Context, err string) error {
+	if err := g.client.postComment(ctx, fmt.Sprintf("%v. Benchmark did not complete, please check action logs.", err)); err != nil {
 		return errors.Wrap(err, "posting err")
 	}
 	return nil
 }
 
-func (g *GitHub) PostResults(cmps []BenchCmp) error {
+func (g *GitHub) PostResults(ctx context.Context, cmps []BenchCmp) error {
 	b := bytes.Buffer{}
 	Render(&b, cmps, false, false, g.compareTarget)
-	return g.client.postComment(formatCommentToMD(b.String()))
+	return g.client.postComment(ctx, formatCommentToMD(b.String()))
 }
 
 func (g *GitHub) Repo() *git.Repository { return g.repo }
@@ -168,12 +168,12 @@ func newGitHubClient(ctx context.Context, owner, repo string, prNumber int, noco
 	return &c, nil
 }
 
-func (c *gitHubClient) postComment(comment string) error {
+func (c *gitHubClient) postComment(ctx context.Context, comment string) error {
 	if c.nocomment {
 		return nil
 	}
 
 	issueComment := &github.IssueComment{Body: github.String(comment)}
-	_, _, err := c.client.Issues.CreateComment(context.Background(), c.owner, c.repo, c.prNumber, issueComment)
+	_, _, err := c.client.Issues.CreateComment(ctx, c.owner, c.repo, c.prNumber, issueComment)
 	return err
 }
