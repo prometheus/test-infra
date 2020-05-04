@@ -68,7 +68,7 @@ func (b *Benchmarker) benchOutFileName(commit plumbing.Hash) (string, error) {
 	return fmt.Sprintf("%s-%s.out", bb.String(), commit.String()), nil
 }
 
-func (b *Benchmarker) execBenchmark(ctx context.Context, pkgRoot string, commit plumbing.Hash) (out string, err error) {
+func (b *Benchmarker) exec(ctx context.Context, pkgRoot string, commit plumbing.Hash) (out string, err error) {
 	fileName, err := b.benchOutFileName(commit)
 	if err != nil {
 		return "", err

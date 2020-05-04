@@ -218,7 +218,7 @@ func startBenchmark(
 
 	if compareWithItself {
 		bench.logger.Println("Assuming sub-benchmarks comparison.")
-		subResult, err := bench.execBenchmark(ctx, wt.Filesystem.Root(), ref.Hash())
+		subResult, err := bench.exec(ctx, wt.Filesystem.Root(), ref.Hash())
 		if err != nil {
 			return nil, errors.Wrap(err, "execute sub-benchmark")
 		}
@@ -233,7 +233,7 @@ func startBenchmark(
 	bench.logger.Println("Assuming comparing with target (clean workdir will be checked.)")
 
 	// Execute benchmark A.
-	newResult, err := bench.execBenchmark(ctx, wt.Filesystem.Root(), ref.Hash())
+	newResult, err := bench.exec(ctx, wt.Filesystem.Root(), ref.Hash())
 	if err != nil {
 		return nil, errors.Wrapf(err, "execute benchmark for A: %v", ref.Name().String())
 	}
@@ -254,7 +254,7 @@ func startBenchmark(
 	}
 
 	// Execute benchmark B.
-	oldResult, err := bench.execBenchmark(ctx, cmpWorkTreeDir, targetCommit)
+	oldResult, err := bench.exec(ctx, cmpWorkTreeDir, targetCommit)
 	if err != nil {
 		return nil, errors.Wrapf(err, "execute benchmark for B: %v", env.CompareTarget())
 	}
