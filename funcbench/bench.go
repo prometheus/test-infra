@@ -14,6 +14,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
@@ -67,7 +68,7 @@ func (b *Benchmarker) benchOutFileName(commit plumbing.Hash) (string, error) {
 	return fmt.Sprintf("%s-%s.out", bb.String(), commit.String()), nil
 }
 
-func (b *Benchmarker) execBenchmark(pkgRoot string, commit plumbing.Hash) (out string, err error) {
+func (b *Benchmarker) exec(ctx context.Context, pkgRoot string, commit plumbing.Hash) (out string, err error) {
 	fileName, err := b.benchOutFileName(commit)
 	if err != nil {
 		return "", err
@@ -85,7 +86,7 @@ func (b *Benchmarker) execBenchmark(pkgRoot string, commit plumbing.Hash) (out s
 	benchCmd := []string{"sh", "-c", strings.Join(append(append([]string{"cd", pkgRoot, "&&", "go", "test", "-run", "^$", "-bench", fmt.Sprintf("^%s$", b.benchFunc), "-benchmem"}, extraArgs...), "./..."), " ")}
 
 	b.logger.Println("Executing benchmark command for", commit.String(), "\n", benchCmd)
-	out, err = b.c.exec(benchCmd...)
+	out, err = b.c.exec(ctx, benchCmd...)
 	if err != nil {
 		return "", errors.Wrap(err, "benchmark ended with an error.")
 	}
