@@ -18,4 +18,8 @@ RUN apk add git make
 COPY --from=builder /go/bin/prombench /usr/bin/prombench
 COPY prombench/ ./
 
-ENTRYPOINT ["sh","-c"]
+# Need 'eval' to prevent bash keywords be run as commands
+RUN echo -e '#!/bin/sh\ncd /prombench\neval "$@"' >/start.sh
+RUN chmod u+x /start.sh
+
+ENTRYPOINT ["/start.sh"]
