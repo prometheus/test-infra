@@ -138,7 +138,9 @@ func (g *GitHub) PostErr(ctx context.Context, err string) error {
 func (g *GitHub) PostResults(ctx context.Context, cmps []BenchCmp) error {
 	b := bytes.Buffer{}
 	Render(&b, cmps, false, false, g.compareTarget)
-	return g.client.postComment(ctx, formatCommentToMD(b.String()))
+	legend := fmt.Sprintf("Old: %s\nNew: PR-%d", g.compareTarget, g.client.prNumber)
+	result := fmt.Sprintf("<details><summary>Click to check benchmark result</summary>\n\n%s\n%s</details>", legend, formatCommentToMD(b.String()))
+	return g.client.postComment(ctx, result)
 }
 
 func (g *GitHub) Repo() *git.Repository { return g.repo }
