@@ -7,7 +7,7 @@ COPY go.* ./
 
 RUN CGO_ENABLED=0 GO111MODULE=on go build -a -tags netgo -o /go/bin/funcbench
 
-FROM prombench:master
+FROM prominfra/prombench:master
 LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com>"
 
 WORKDIR /funcbench
