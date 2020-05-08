@@ -12,7 +12,12 @@ LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com
 
 WORKDIR /funcbench
 
+ENV PROMBENCH_CMD prombench
+
 COPY --from=builder /go/bin/funcbench /bin/
 COPY funcbench/ ./
+
+RUN echo -e '#!/bin/sh\ncd /funcbench\neval "$@"' >/usr/bin/docker_entrypoint
+RUN chmod u+x /usr/bin/docker_entrypoint
 
 ENTRYPOINT ["/bin/funcbench"]

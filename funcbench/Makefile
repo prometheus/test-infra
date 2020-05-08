@@ -1,4 +1,4 @@
-PROMBENCH_CMD        = ../prombench/prombench
+PROMBENCH_CMD        ?= ../prombench/prombench
 
 ifeq ($(AUTH_FILE),)
 AUTH_FILE = /etc/serviceaccount/service-account.json
