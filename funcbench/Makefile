@@ -1,9 +1,5 @@
 PROMBENCH_CMD        ?= ../prombench/prombench
 
-ifeq ($(AUTH_FILE),)
-AUTH_FILE = /etc/serviceaccount/service-account.json
-endif
-
 .PHONY: deploy clean
 deploy: nodepool_create resource_apply
 # GCP sometimes takes longer than 30 tries when trying to delete nodepools
@@ -37,15 +33,3 @@ resource_delete:
 		-v BRANCH:${BRANCH} -v BENCH_FUNC_REGEX:${BENCH_FUNC_REGEX} \
 		-f manifests/benchmark/2_job.yaml \
 		-f manifests/benchmark/1_namespace.yaml
-
-all_nodepools_running:
-	$(PROMBENCH_CMD) gke nodepool check-running -a ${AUTH_FILE} \
-		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} \
-		-v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
-		-f manifests/nodepools.yaml
-
-all_nodepools_deleted:
-	$(PROMBENCH_CMD) gke nodepool check-deleted -a ${AUTH_FILE} \
-		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} \
-		-v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
-		-f manifests/nodepools.yaml
