@@ -17,6 +17,7 @@ ENV PROMBENCH_CMD prombench
 COPY --from=builder /go/bin/funcbench /bin/
 COPY funcbench/ ./
 
+# Need 'eval' to prevent bash keywords be run as commands
 RUN echo -e '#!/bin/sh\ncd /funcbench\neval "$@"' >/usr/bin/docker_entrypoint
 RUN chmod u+x /usr/bin/docker_entrypoint
 
