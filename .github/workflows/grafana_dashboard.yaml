@@ -14,9 +14,9 @@ jobs:
       id: apply_configmap
       uses: docker://prominfra/prombench:master
       env:
-        AUTH_FILE: ${{ secrets.PROMBENCH_GKE_AUTH }}
+        AUTH_FILE: ${{ secrets.TEST_INFRA_GKE_AUTH }}
         PROJECT_ID: macro-mile-203600
-        CLUSTER_NAME: prombench
+        CLUSTER_NAME: test-infra
         ZONE: europe-west3-a
         TEST_INFRA_REPO: https://github.com/prometheus/test-infra.git
       with:
