@@ -13,6 +13,46 @@ $ make docker DOCKERFILE_PATH=prombench/cmd/prombench/Dockerfile DOCKER_IMAGE_NA
 ```
 
 ## Usage and examples:
-```
-./prombench -h  // Usage and examples.
+[embedmd]:# (../../prombench-flags.txt)
+```txt
+usage: prombench [<flags>] <command> [<args> ...]
+
+The Prometheus benchmarking tool
+
+Flags:
+  -h, --help  Show context-sensitive help (also try --help-long and --help-man).
+
+Commands:
+  help [<command>...]
+    Show help.
+
+  gke cluster create
+    gke cluster create -a service-account.json -f FileOrFolder
+
+  gke cluster delete
+    gke cluster delete -a service-account.json -f FileOrFolder
+
+  gke nodepool create
+    gke nodepool create -a service-account.json -f FileOrFolder
+
+  gke nodepool delete
+    gke nodepool delete -a service-account.json -f FileOrFolder
+
+  gke nodepool check-running
+    gke nodepool check-running -a service-account.json -f FileOrFolder
+
+  gke nodepool check-deleted
+    gke nodepool check-deleted -a service-account.json -f FileOrFolder
+
+  gke resource apply
+    gke resource apply -a service-account.json -f manifestsFileOrFolder -v
+    PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
+    hashStable:COMMIT1 -v hashTesting:COMMIT2
+
+  gke resource delete
+    gke resource delete -a service-account.json -f manifestsFileOrFolder -v
+    PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
+    hashStable:COMMIT1 -v hashTesting:COMMIT2
+
+
 ```

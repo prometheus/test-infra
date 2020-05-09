@@ -7,7 +7,7 @@ set -u
 EMBEDMD_BIN=${EMBEDMD_BIN:-embedmd}
 SED_BIN=${SED_BIN:-sed}
 
-README_FILES="./tools/*/README.md ./funcbench/README.md ./prombench/README.md"
+README_FILES="./tools/*/README.md ./funcbench/README.md ./prombench/cmd/prombench/README.md"
 
 primary_tools=("prombench" "funcbench")
 helper_tools=("amGithubNotifier" "commentMonitor")
