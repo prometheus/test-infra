@@ -67,7 +67,13 @@ func main() {
 
 	app := kingpin.New(
 		filepath.Base(os.Args[0]),
-		"Benchmark and compare your Go code between sub benchmarks or commits.",
+		`Benchmark and compare your Go code between sub benchmarks or commits.
+		* For BenchmarkFuncName, compare current with master: ./funcbench -v master BenchmarkFuncName
+		* For BenchmarkFunc.*, compare current with master: ./funcbench -v master BenchmarkFunc.*
+		* For all benchmarks, compare current with devel: ./funcbench -v devel .* or ./funcbench -v devel
+		* For BenchmarkFunc.*, compare current with 6d280 commit: ./funcbench -v 6d280 BenchmarkFunc.*
+		* For BenchmarkFunc.*, compare between sub-benchmarks of same benchmark on current commit: ./funcbench -v . BenchmarkFunc.*
+		* For BenchmarkFuncName, compare pr#35 with master: ./funcbench --nocomment --github-pr="35" master BenchmarkFuncName`,
 	)
 
 	// Options.
