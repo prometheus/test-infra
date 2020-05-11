@@ -45,6 +45,20 @@ $ make docker DOCKERFILE_PATH=tools/commentMonitor/Dockerfile DOCKER_IMAGE_NAME=
 ```
 
 #### Usage and examples:
-```
-./commentMonitor --help
+[embedmd]:# (commentMonitor-flags.txt)
+```txt
+usage: commentMonitor [<flags>]
+
+commentMonitor GithubAction - Post and monitor GitHub comments.
+
+Flags:
+  -h, --help            Show context-sensitive help (also try --help-long and
+                        --help-man).
+      --webhooksecretfile="./whsecret"
+                        path to webhook secret file
+      --no-verify-user  disable verifying user
+      --eventmap="./eventmap.yml"
+                        Filepath to eventmap file.
+      --port="8080"     port number to run webhook in.
+
 ```

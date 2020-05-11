@@ -12,14 +12,50 @@ funcbench currently supports two modes, Local and GitHub. Running it in the Gith
 
 > Clean git state is required.
 
-|Usage|Command|
-|--|--|
-|Execute benchmark named `BenchmarkFuncName` regex, and compare it with `master` branch. | ``` ./funcbench -v master BenchmarkFuncName ``` |
-|Execute all benchmarks matching `BenchmarkFuncName.*` regex, and compare it with `master` branch.|```./funcbench -v master BenchmarkFuncName.*```|
-|Execute all benchmarks, and compare the results with `devel` branch.|```./funcbench -v devel . ```|
-|Execute all benchmarks matching `BenchmarkFuncName.*` regex, and compare it with `6d280faa16bfca1f26fa426d863afbb564c063d1` commit.|```./funcbench -v 6d280faa16bfca1f26fa426d863afbb564c063d1 BenchmarkFuncName.*```|
-|Execute all benchmarks matching `BenchmarkFuncName.*` regex on current code. Compare it between sub-benchmarks (`b.Run`) of same benchmark for current commit. Errors out if there are no sub-benchmarks.|```./funcbench -v . FuncName.*```|
-|Execute benchmark named `BenchmarkFuncName`, and compare `pr#35` with `master` branch.|```./funcbench --nocomment --github-pr="35" master BenchmarkFuncName```|
+[embedmd]:# (funcbench-flags.txt)
+```txt
+usage: funcbench [<flags>] <target> [<bench-func-regex>]
+
+Benchmark and compare your Go code between sub benchmarks or commits.
+
+  * For BenchmarkFuncName, compare current with master: ./funcbench -v master BenchmarkFuncName
+  * For BenchmarkFunc.*, compare current with master: ./funcbench -v master BenchmarkFunc.*
+  * For all benchmarks, compare current with devel: ./funcbench -v devel .* or ./funcbench -v devel
+  * For BenchmarkFunc.*, compare current with 6d280 commit: ./funcbench -v 6d280 BenchmarkFunc.*
+  * For BenchmarkFunc.*, compare between sub-benchmarks of same benchmark on current commit: ./funcbench -v . BenchmarkFunc.*
+  * For BenchmarkFuncName, compare pr#35 with master: ./funcbench --nocomment --github-pr="35" master BenchmarkFuncName
+Flags:
+  -h, --help                 Show context-sensitive help (also try --help-long
+                             and --help-man).
+  -v, --verbose              Verbose mode. Errors includes trace and commands
+                             output are logged.
+      --nocomment            Disable posting of comment using the GitHub API.
+      --owner="prometheus"   A Github owner or organisation name.
+      --repo="prometheus"    This is the repository name.
+      --github-pr=GITHUB-PR  GitHub PR number to pull changes from and to post
+                             benchmark results.
+      --workspace="/tmp/funcbench"
+                             Directory to clone GitHub PR.
+      --result-cache="_dev/funcbench"
+                             Directory to store benchmark results.
+  -t, --bench-time=1s        Run enough iterations of each benchmark to take t,
+                             specified as a time.Duration. The special syntax Nx
+                             means to run the benchmark N times
+  -d, --timeout=2h           Benchmark timeout specified in time.Duration
+                             format, disabled if set to 0. If a test binary runs
+                             longer than duration d, panic.
+
+Args:
+  <target>              Can be one of '.', branch name or commit SHA of the
+                        branch to compare against. If set to '.', branch/commit
+                        is the same as the current one; funcbench will run once
+                        and try to compare between 2 sub-benchmarks. Errors out
+                        if there are no sub-benchmarks.
+  [<bench-func-regex>]  Function regex to use for benchmark.Supports RE2 regexp
+                        and is fully anchored, by default will run all
+                        benchmarks.
+
+```
 
 ## Triggering with GitHub comments
 
