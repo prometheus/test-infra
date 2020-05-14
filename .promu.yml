@@ -6,8 +6,8 @@ repository:
     path: github.com/prometheus/test-infra
 build:
     binaries:
-        - name: prombench
-          path: ./prombench/cmd/prombench
+        - name: infra
+          path: ./infra
         - name: funcbench
           path: ./funcbench
         - name: tools/amGithubNotifier

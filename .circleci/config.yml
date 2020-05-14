@@ -41,8 +41,15 @@ jobs:
           echo "export DOCKER_IMAGE_TAG=master" >> $BASH_ENV
           echo "export DOCKER_ORG=${DOCKER_ORG:-prominfra}" >> $BASH_ENV
     - prometheus/publish_images:
+        container_image_name: infra
+        dockerfile_path: "infra/Dockerfile"
+        registry: docker.io
+        organization: "$DOCKER_ORG"
+        login_variable: DOCKER_LOGIN
+        password_variable: DOCKER_PASSWORD
+    - prometheus/publish_images:
         container_image_name: prombench
-        dockerfile_path: "prombench/cmd/prombench/Dockerfile"
+        dockerfile_path: "prombench/Dockerfile"
         registry: docker.io
         organization: "$DOCKER_ORG"
         login_variable: DOCKER_LOGIN
