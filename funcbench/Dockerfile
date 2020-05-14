@@ -7,18 +7,21 @@ COPY go.* ./
 
 RUN CGO_ENABLED=0 GO111MODULE=on go build -a -tags netgo -o /go/bin/funcbench
 
-FROM prominfra/prombench:master
+FROM prominfra/infra:master
 LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com>"
 
 WORKDIR /funcbench
 
-ENV PROMBENCH_CMD prombench
+# TODO(geekodour) see if this works under COPY
+ENV INFRA_CMD infra
 
-COPY --from=builder /go/bin/funcbench /bin/
-COPY funcbench/ ./
+COPY --from=builder /go/bin/funcbench /usr/bin/funcbench
 
+# Copy Makefiles and manifests
+# Need cd since ghActions ignores WORKDIR
 # Need 'eval' to prevent bash keywords be run as commands
+COPY funcbench/ ./
 RUN echo -e '#!/bin/sh\ncd /funcbench\neval "$@"' >/usr/bin/docker_entrypoint
 RUN chmod u+x /usr/bin/docker_entrypoint
 
-ENTRYPOINT ["/bin/funcbench"]
+ENTRYPOINT ["/usr/bin/funcbench"]

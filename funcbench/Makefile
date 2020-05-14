@@ -1,4 +1,4 @@
-PROMBENCH_CMD        ?= ../prombench/prombench
+INFRA_CMD        ?= ../infra/infra
 
 .PHONY: deploy clean
 deploy: nodepool_create resource_apply
@@ -7,17 +7,17 @@ deploy: nodepool_create resource_apply
 clean: resource_delete nodepool_delete
 
 nodepool_create:
-	$(PROMBENCH_CMD) gke nodepool create -a ${AUTH_FILE} \
+	$(INFRA_CMD) gke nodepool create -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
 		-f manifests/nodepools.yaml
 
 nodepool_delete:
-	$(PROMBENCH_CMD) gke nodepool delete -a ${AUTH_FILE} \
+	$(INFRA_CMD) gke nodepool delete -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
 		-f manifests/nodepools.yaml
 
 resource_apply:
-	$(PROMBENCH_CMD) gke resource apply -a ${AUTH_FILE} \
+	$(INFRA_CMD) gke resource apply -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
 		-v PR_NUMBER:${PR_NUMBER} -v GITHUB_TOKEN:${GITHUB_TOKEN} \
 		-v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
@@ -26,7 +26,7 @@ resource_apply:
 
 # Removal of namespace should be at the end, after all other resources get removed.
 resource_delete:
-	$(PROMBENCH_CMD) gke resource delete -a ${AUTH_FILE} \
+	$(INFRA_CMD) gke resource delete -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} \
 		-v PR_NUMBER:${PR_NUMBER} -v GITHUB_TOKEN:${GITHUB_TOKEN} \
 		-v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
