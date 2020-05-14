@@ -12,15 +12,13 @@ LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com
 
 WORKDIR /funcbench
 
-# TODO(geekodour) see if this works under COPY
-ENV INFRA_CMD infra
-
 COPY --from=builder /go/bin/funcbench /usr/bin/funcbench
 
 # Copy Makefiles and manifests
-# Need cd since ghActions ignores WORKDIR
+# Need 'cd' since ghActions ignores WORKDIR
 # Need 'eval' to prevent bash keywords be run as commands
 COPY funcbench/ ./
+ENV INFRA_CMD infra
 RUN echo -e '#!/bin/sh\ncd /funcbench\neval "$@"' >/usr/bin/docker_entrypoint
 RUN chmod u+x /usr/bin/docker_entrypoint
 
