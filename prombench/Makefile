@@ -1,4 +1,4 @@
-INFRA_CMD        = ../infra/infra
+INFRA_CMD        ?= ../infra/infra
 
 ifeq ($(AUTH_FILE),)
 AUTH_FILE = /etc/serviceaccount/service-account.json

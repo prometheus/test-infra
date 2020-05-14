@@ -8,7 +8,7 @@ WORKDIR /prombench
 # Need 'eval' to prevent bash keywords be run as commands
 COPY prombench/ ./
 ENV INFRA_CMD infra
-RUN echo -e '#!/bin/sh\ncd /funcbench\neval "$@"' >/usr/bin/docker_entrypoint
+RUN echo -e '#!/bin/sh\ncd /prombench\neval "$@"' >/usr/bin/docker_entrypoint
 RUN chmod u+x /usr/bin/docker_entrypoint
 
 ENTRYPOINT ["docker_entrypoint"]
