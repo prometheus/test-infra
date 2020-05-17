@@ -29,7 +29,7 @@ jobs:
           # don't limit this to the number of allocated cores, the job is
           # likely to get OOMed and killed.
           GOOPTS: "-p 2"
-  publish:
+  publish_infra:
     executor: golang
     steps:
     - checkout
@@ -47,6 +47,17 @@ jobs:
         organization: "$DOCKER_ORG"
         login_variable: DOCKER_LOGIN
         password_variable: DOCKER_PASSWORD
+  publish_others:
+    executor: golang
+    steps:
+    - checkout
+    - setup_remote_docker:
+        version: 18.06.0-ce
+    - run:
+        name: Setup environment variables
+        command: |
+          echo "export DOCKER_IMAGE_TAG=master" >> $BASH_ENV
+          echo "export DOCKER_ORG=${DOCKER_ORG:-prominfra}" >> $BASH_ENV
     - prometheus/publish_images:
         container_image_name: prombench
         dockerfile_path: "prombench/Dockerfile"
@@ -112,9 +123,18 @@ workflows:
         filters:
           branches:
             only: /.*/
-    - publish:
+    - publish_infra:
         requires:
           - build_and_test
+        context: org-context
+        filters:
+          branches:
+            only:
+              - master
+    - publish_others:
+        requires:
+          - build_and_test
+          - publish_infra
         context: org-context
         filters:
           branches:
