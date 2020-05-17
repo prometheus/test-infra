@@ -98,7 +98,7 @@ jobs:
         password_variable: DOCKER_PASSWORD
     - prometheus/publish_images:
         container_image_name: prometheus-builder
-        dockerfile_path: "prombench/temp/prometheus-builder/Dockerfile"
+        dockerfile_path: "tools/prometheus-builder/Dockerfile"
         registry: docker.io
         organization: "$DOCKER_ORG"
         login_variable: DOCKER_LOGIN

@@ -1,19 +1,17 @@
 # infra: A cli tool to create/scale/delete k8s clusters and deploy manifest files.
+
 Currently it supports GKE, but it is designed in a way that adding more providers should be easy.
 
 ### Parsing of files
+
 Files passed to `infra` will be parsed using golang templates, to skip parsing and load the file as is, use `noparse` suffix.
 
 Eg. `somefile.yaml` will be parsed, whereas `somefile_noparse.yaml` will not be parsed.
 
-### Example for building the docker image
-From the repository root:
-```
-$ make docker DOCKERFILE_PATH=infra/Dockerfile DOCKER_IMAGE_NAME=infra DOCKER_IMAGE_TAG=2.0.2
-```
-
 ## Usage and examples:
-[embedmd]:# (./infra-flags.txt)
+
+[embedmd]: # "./infra-flags.txt"
+
 ```txt
 usage: infra [<flags>] <command> [<args> ...]
 
@@ -55,4 +53,12 @@ Commands:
     hashStable:COMMIT1 -v hashTesting:COMMIT2
 
 
+```
+
+### Building Docker Image
+
+From the repository root:
+
+```
+$ make docker DOCKERFILE_PATH=infra/Dockerfile DOCKER_IMAGE_NAME=infra DOCKER_IMAGE_TAG=master
 ```

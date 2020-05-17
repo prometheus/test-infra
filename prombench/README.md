@@ -118,3 +118,11 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
     -v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
     -f manifests/prombench/benchmark
 ```
+
+### Building Docker Image
+
+From the repository root:
+
+```
+make docker DOCKERFILE_PATH=prombench/Dockerfile DOCKER_IMAGE_NAME=prombench DOCKER_IMAGE_TAG=master
+```
