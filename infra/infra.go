@@ -21,6 +21,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/test-infra/pkg/provider"
+	"github.com/prometheus/test-infra/pkg/provider/eks"
 	"github.com/prometheus/test-infra/pkg/provider/gke"
 	kind "github.com/prometheus/test-infra/pkg/provider/kind"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -106,6 +107,18 @@ func main() {
 		Action(k.ResourceApply)
 	k8sKINDResource.Command("delete", "kind resource delete -f manifestsFileOrFolder -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(k.ResourceDelete)
+
+	// EKS based commands
+	e := eks.New()
+	k8sEKS := app.Command("eks", "Amazon Elastic Kubernetes Service - https://aws.amazon.com/eks").
+		Action(e.NewEKSClient)
+	k8sEKS.Flag("file", "yaml file or folder  that describes the parameters for the object that will be deployed.").
+		Required().
+		Short('f').
+		ExistingFilesOrDirsVar(&e.DeploymentFiles)
+	k8sEKS.Flag("vars", "When provided it will substitute the token holders in the yaml file. Follows the standard golang template formating - {{ .hashStable }}.").
+		Short('v').
+		StringMapVar(&e.DeploymentVars)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error parsing commandline arguments"))
