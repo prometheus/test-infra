@@ -7,7 +7,7 @@ version: 2.1
 #   - DOCKER_REPO (optional, default to prominfra)
 
 orbs:
-  prometheus: prometheus/prometheus@0.4.0
+  prometheus: prometheus/prometheus@0.5.0
 
 executors:
   # Whenever the Go version is updated here, .travis.yml and .promu.yml
@@ -43,6 +43,7 @@ jobs:
     - prometheus/publish_images:
         container_image_name: infra
         dockerfile_path: "infra/Dockerfile"
+        dockerbuild_context: "infra/"
         registry: docker.io
         organization: "$DOCKER_ORG"
         login_variable: DOCKER_LOGIN
@@ -61,6 +62,7 @@ jobs:
     - prometheus/publish_images:
         container_image_name: prombench
         dockerfile_path: "prombench/Dockerfile"
+        dockerbuild_context: "prombench/"
         registry: docker.io
         organization: "$DOCKER_ORG"
         login_variable: DOCKER_LOGIN
@@ -68,6 +70,7 @@ jobs:
     - prometheus/publish_images:
         container_image_name: funcbench
         dockerfile_path: "funcbench/Dockerfile"
+        dockerbuild_context: "funcbench/"
         registry: docker.io
         organization: "$DOCKER_ORG"
         login_variable: DOCKER_LOGIN
@@ -75,6 +78,7 @@ jobs:
     - prometheus/publish_images:
         container_image_name: amgithubnotifier
         dockerfile_path: "tools/amGithubNotifier/Dockerfile"
+        dockerbuild_context: "tools/amGithubNotifier/"
         registry: docker.io
         organization: "$DOCKER_ORG"
         login_variable: DOCKER_LOGIN
@@ -82,6 +86,7 @@ jobs:
     - prometheus/publish_images:
         container_image_name: comment-monitor
         dockerfile_path: "tools/commentMonitor/Dockerfile"
+        dockerbuild_context: "tools/commentMonitor/"
         registry: docker.io
         organization: "$DOCKER_ORG"
         login_variable: DOCKER_LOGIN
@@ -89,6 +94,7 @@ jobs:
     - prometheus/publish_images:
         container_image_name: fake-webserver
         dockerfile_path: "tools/fake-webserver/Dockerfile"
+        dockerbuild_context: "tools/fake-webserver/"
         registry: docker.io
         organization: "$DOCKER_ORG"
         login_variable: DOCKER_LOGIN
@@ -96,6 +102,7 @@ jobs:
     - prometheus/publish_images:
         container_image_name: scaler
         dockerfile_path: "tools/scaler/Dockerfile"
+        dockerbuild_context: "tools/scaler/"
         registry: docker.io
         organization: "$DOCKER_ORG"
         login_variable: DOCKER_LOGIN
@@ -103,6 +110,7 @@ jobs:
     - prometheus/publish_images:
         container_image_name: load-generator
         dockerfile_path: "tools/load-generator/Dockerfile"
+        dockerbuild_context: "tools/load-generator/"
         registry: docker.io
         organization: "$DOCKER_ORG"
         login_variable: DOCKER_LOGIN
@@ -110,6 +118,7 @@ jobs:
     - prometheus/publish_images:
         container_image_name: prometheus-builder
         dockerfile_path: "tools/prometheus-builder/Dockerfile"
+        dockerbuild_context: "tools/prometheus-builder/"
         registry: docker.io
         organization: "$DOCKER_ORG"
         login_variable: DOCKER_LOGIN
