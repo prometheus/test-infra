@@ -42,9 +42,6 @@ Args:
 ```
 
 ### Building Docker Image
-
-From the repository root:
-
 ```
-make docker DOCKERFILE_PATH=tools/scaler/Dockerfile DOCKER_IMAGE_NAME=scaler DOCKER_IMAGE_TAG=master
+docker build -t prominfra/scaler:master .
 ```

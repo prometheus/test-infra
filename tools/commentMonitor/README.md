@@ -61,5 +61,5 @@ Flags:
 From the repository root:
 
 ```
-$ make docker DOCKERFILE_PATH=tools/commentMonitor/Dockerfile DOCKER_IMAGE_NAME=comment-monitor DOCKER_IMAGE_TAG=master
+docker build -t prominfra/comment-monitor:master .
 ```

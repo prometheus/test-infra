@@ -57,8 +57,6 @@ Commands:
 
 ### Building Docker Image
 
-From the repository root:
-
 ```
-$ make docker DOCKERFILE_PATH=infra/Dockerfile DOCKER_IMAGE_NAME=infra DOCKER_IMAGE_TAG=master
+docker build -t prominfra/infra:master .
 ```

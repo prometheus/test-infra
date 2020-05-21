@@ -50,9 +50,6 @@ Flags:
 
 ```
 ### Building Docker Image
-
-From the repository root:
-
 ```
-$ make docker DOCKERFILE_PATH=tools/amGithubNotifier/Dockerfile DOCKER_IMAGE_NAME=amgithubnotifier DOCKER_IMAGE_TAG=master
+docker build -t prominfra/amgithubnotifier:master .
 ```
