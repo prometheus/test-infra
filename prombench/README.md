@@ -34,7 +34,7 @@ export CLUSTER_NAME=prombench
 export ZONE=us-east1-b
 export AUTH_FILE=<path to service-account.json>
 
-./prombench gke cluster create -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
+../infra/infra gke cluster create -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
     -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -f manifests/cluster.yaml
 ```
 
@@ -61,7 +61,7 @@ export GITHUB_REPO=prometheus
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Loki, Grafana, Alertmanager & Github Notifier.
 
 ```
-./prombench gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID -v ZONE:$ZONE \
+../infra/infra gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID -v ZONE:$ZONE \
     -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
     -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
     -v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:$GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL \
@@ -127,7 +127,7 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 - Create the nodepools for the k8s objects
 
 ```
-./prombench gke nodepool create -a $AUTH_FILE \
+../infra/infra gke nodepool create -a $AUTH_FILE \
     -v ZONE:$ZONE -v PROJECT_ID:$PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
     -v PR_NUMBER:$PR_NUMBER -f manifests/prombench/nodepools.yaml
 ```
@@ -135,7 +135,7 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 - Deploy the k8s objects
 
 ```
-./prombench gke resource apply -a $AUTH_FILE \
+../infra/infra gke resource apply -a $AUTH_FILE \
     -v ZONE:$ZONE -v PROJECT_ID:$PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
     -v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v DOMAIN_NAME:$DOMAIN_NAME \
     -v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
