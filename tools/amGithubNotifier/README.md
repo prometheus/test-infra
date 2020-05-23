@@ -24,13 +24,6 @@ groups:
       description: 'description of the alert'
 ```
 
-
-### Example for building the docker image
-From the repository root:
-```
-$ make docker DOCKERFILE_PATH=tools/amGithubNotifier/Dockerfile DOCKER_IMAGE_NAME=amgithubnotifier DOCKER_IMAGE_TAG=0.0.1
-```
-
 #### Usage and examples:
 [embedmd]:# (amGithubNotifier-flags.txt)
 ```txt
@@ -55,4 +48,8 @@ Flags:
   --port="8080"  port number to run the server in
   --dryrun       dry run for github api
 
+```
+### Building Docker Image
+```
+docker build -t prominfra/amgithubnotifier:master .
 ```

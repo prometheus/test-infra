@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main // import "github.com/prometheus/test-infra/cmd/prombench"
+package main // import "github.com/prometheus/test-infra/infra"
 
 import (
 	"fmt"
@@ -27,7 +27,7 @@ import (
 func main() {
 	log.SetFlags(log.Ltime | log.Lshortfile)
 
-	app := kingpin.New(filepath.Base(os.Args[0]), "The Prometheus benchmarking tool")
+	app := kingpin.New(filepath.Base(os.Args[0]), "The prometheus/test-infra deployment tool")
 	app.HelpFlag.Short('h')
 
 	g := gke.New()
