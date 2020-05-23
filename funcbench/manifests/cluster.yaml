@@ -1,0 +1,12 @@
+projectid: {{ .PROJECT_ID }}
+zone: {{ .ZONE }}
+cluster:
+  name: {{ .CLUSTER_NAME }}
+  initialclusterversion: 1.14
+  nodepools:
+    - name: {{ .CLUSTER_NAME }}
+      initialnodecount: 1
+      config:
+        machinetype: n1-highmem-4
+        imagetype: COS
+        disksizegb: 100
