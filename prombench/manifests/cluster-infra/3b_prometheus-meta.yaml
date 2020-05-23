@@ -232,7 +232,7 @@ spec:
           claimName: prometheus-meta
       terminationGracePeriodSeconds: 300
       nodeSelector:
-        cloud.google.com/gke-nodepool: main-node
+        node-type: main-node
 ---
 apiVersion: v1
 kind: Service

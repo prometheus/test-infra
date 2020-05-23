@@ -262,7 +262,7 @@ spec:
             successThreshold: 1
             timeoutSeconds: 10
       nodeSelector:
-        cloud.google.com/gke-nodepool: main-node
+        node-type: main-node
 
 ---
 kind: Service

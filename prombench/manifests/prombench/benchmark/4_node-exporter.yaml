@@ -34,14 +34,14 @@ spec:
                 operator: In
                 values:
                 - test-{{ normalise .RELEASE }}
-            topologyKey: cloud.google.com/gke-nodepool
+            topologyKey: node-type
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
       hostNetwork: true
       hostPID: true
       nodeSelector:
-        cloud.google.com/gke-nodepool: prometheus-{{ .PR_NUMBER }}
+        node-type: prometheus-{{ .PR_NUMBER }}
       containers:
       - image: quay.io/prometheus/node-exporter:v0.16.0
         args:
@@ -101,14 +101,14 @@ spec:
                 operator: In
                 values:
                 - test-pr-{{ .PR_NUMBER }}
-            topologyKey: cloud.google.com/gke-nodepool
+            topologyKey: node-type
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
       hostNetwork: true
       hostPID: true
       nodeSelector:
-        cloud.google.com/gke-nodepool: prometheus-{{ .PR_NUMBER }}
+        node-type: prometheus-{{ .PR_NUMBER }}
       containers:
       - image: quay.io/prometheus/node-exporter:v0.16.0
         args:
@@ -165,7 +165,7 @@ spec:
       hostNetwork: true
       hostPID: true
       nodeSelector:
-        cloud.google.com/gke-nodepool: nodes-{{ .PR_NUMBER }}
+        node-type: nodes-{{ .PR_NUMBER }}
       containers:
       - image: quay.io/prometheus/node-exporter:v0.16.0
         args:

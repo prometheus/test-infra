@@ -24,7 +24,7 @@ spec:
       hostNetwork: true
       hostPID: true
       nodeSelector:
-        cloud.google.com/gke-nodepool: main-node
+        node-type: main-node
       containers:
       - image: quay.io/prometheus/node-exporter:v0.16.0
         args:

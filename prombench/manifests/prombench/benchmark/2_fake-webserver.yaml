@@ -36,7 +36,7 @@ data:
             - name: metrics5
               containerPort: 8084
           nodeSelector:
-            cloud.google.com/gke-nodepool: nodes-{{ .PR_NUMBER }}
+            node-type: nodes-{{ .PR_NUMBER }}
             isolation: none
 ---
 apiVersion: apps/v1
@@ -70,7 +70,7 @@ spec:
         - name: metrics5
           containerPort: 8084
       nodeSelector:
-        cloud.google.com/gke-nodepool: nodes-{{ .PR_NUMBER }}
+        node-type: nodes-{{ .PR_NUMBER }}
         isolation: none
 ---
 apiVersion: v1

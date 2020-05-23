@@ -91,7 +91,7 @@ spec:
         emptyDir: {}
       terminationGracePeriodSeconds: 300
       nodeSelector:
-        cloud.google.com/gke-nodepool: prometheus-{{ .PR_NUMBER }}
+        node-type: prometheus-{{ .PR_NUMBER }}
         isolation: prometheus
 ---
 apiVersion: v1
@@ -178,7 +178,7 @@ spec:
           path: /mnt/disks/ssd0
       terminationGracePeriodSeconds: 300
       nodeSelector:
-        cloud.google.com/gke-nodepool: prometheus-{{ .PR_NUMBER }}
+        node-type: prometheus-{{ .PR_NUMBER }}
         isolation: prometheus
 ---
 apiVersion: v1

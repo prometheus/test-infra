@@ -113,7 +113,7 @@ spec:
           securityContext:
             readOnlyRootFilesystem: true
       nodeSelector:
-        cloud.google.com/gke-nodepool: main-node
+        node-type: main-node
       terminationGracePeriodSeconds: 30
       volumes:
         - name: config
