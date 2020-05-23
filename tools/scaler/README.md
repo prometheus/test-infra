@@ -17,9 +17,6 @@ rules:
   verbs: ["get", "list", "update"]
 ```
 
-## Build Docker image
-From the repository root:
-`$ make docker DOCKERFILE_PATH=tools/scaler/Dockerfile DOCKER_IMAGE_NAME=scaler DOCKER_IMAGE_TAG=0.0.2`
 
 ## Usage
 ```
@@ -42,4 +39,9 @@ Args:
   <max>       Number of Replicas to scale up.
   <min>       Number of Replicas to scale down.
   <interval>  Time to wait before changing the number of replicas.
+```
+
+### Building Docker Image
+```
+docker build -t prominfra/scaler:master .
 ```

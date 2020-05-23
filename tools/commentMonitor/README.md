@@ -38,12 +38,6 @@ For example, the following regex will create an argument named `RELEASE` with th
 (?mi)^/prombench\s*(?P<RELEASE>master|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
 ```
 
-### Docker image build
-From the repository root:
-```
-$ make docker DOCKERFILE_PATH=tools/commentMonitor/Dockerfile DOCKER_IMAGE_NAME=comment-monitor DOCKER_IMAGE_TAG=0.0.2
-```
-
 #### Usage and examples:
 [embedmd]:# (commentMonitor-flags.txt)
 ```txt
@@ -61,4 +55,11 @@ Flags:
                         Filepath to eventmap file.
       --port="8080"     port number to run webhook in.
 
+```
+### Building Docker Image
+
+From the repository root:
+
+```
+docker build -t prominfra/comment-monitor:master .
 ```
