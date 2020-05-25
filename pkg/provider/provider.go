@@ -79,10 +79,13 @@ func RetryUntilTrue(name string, retryCount int, fn func() (bool, error)) error 
 func applyTemplateVars(content []byte, deploymentVars map[string]string) ([]byte, error) {
 	fileContentParsed := bytes.NewBufferString("")
 	t := template.New("resource").Option("missingkey=error")
-	// k8s objects can't have dots(.) se we add a custom function to allow normalising the variable values.
 	t = t.Funcs(template.FuncMap{
+		// k8s objects can't have dots(.) se we add a custom function to allow normalising the variable values.
 		"normalise": func(t string) string {
 			return strings.Replace(t, ".", "-", -1)
+		},
+		"get_range": func(rangeVars, seperator string) []string {
+			return strings.Split(rangeVars, seperator)
 		},
 	})
 	if err := template.Must(t.Parse(string(content))).Execute(fileContentParsed, deploymentVars); err != nil {
