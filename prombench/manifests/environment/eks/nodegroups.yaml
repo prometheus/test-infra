@@ -1,0 +1,27 @@
+cluster:
+  name: {{ .CLUSTER_NAME }}
+nodegroups:
+  - nodegroupname: prometheus-{{ .PR_NUMBER }}
+    noderole: {{ .NODE_ROLE }}
+    disksize: 100
+    instancetypes:
+      - t3.medium #change this so it matches with gke 
+    scalingconfig:
+      desiredsize: 2
+      maxsize: 2
+      minsize: 2
+    labels:
+      isolation: prometheus
+  - nodegroupname: nodes-{{ .PR_NUMBER }}
+    noderole: {{ .NODE_ROLE }}
+    disksize: 100
+    instancetypes:
+      - t3.medium #change this so it matches with gke
+    scalingconfig:
+      desiredsize: 1
+      maxsize: 1
+      minsize: 1
+    labels:
+      isolation: none
+    
+
