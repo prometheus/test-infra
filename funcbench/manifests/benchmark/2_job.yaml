@@ -28,4 +28,3 @@ spec:
             value: "{{ .GITHUB_TOKEN }}"
       nodeSelector:
         cloud.google.com/gke-nodepool: funcbench-{{ .PR_NUMBER }}
-        isolation: funcbench
