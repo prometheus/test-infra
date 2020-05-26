@@ -2,7 +2,7 @@ projectid: {{ .PROJECT_ID }}
 zone: {{ .ZONE }}
 cluster:
   name: {{ .CLUSTER_NAME }}
-  initialclusterversion: 1.14
+  initialclusterversion: 1.15
   nodepools:
     - name: {{ .CLUSTER_NAME }}
       initialnodecount: 1
