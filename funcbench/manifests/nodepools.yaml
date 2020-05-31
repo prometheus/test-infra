@@ -12,3 +12,4 @@ cluster:
       disksizegb: 100
       labels:
         isolation: funcbench
+        node-type: funcbench-{{ .PR_NUMBER }}
