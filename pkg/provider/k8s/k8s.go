@@ -253,7 +253,7 @@ func (c *K8s) clusterRoleApply(resource runtime.Object) error {
 	case "v1":
 		client := c.clt.RbacV1().ClusterRoles()
 
-		list, err := client.List(apiMetaV1.ListOptions{})
+		list, err := client.List(context.TODO(), apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "listing resource : %v", kind)
 		}
@@ -268,14 +268,14 @@ func (c *K8s) clusterRoleApply(resource runtime.Object) error {
 
 		if exists {
 			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, err := client.Update(req)
+				_, err := client.Update(context.TODO(), req, apiMetaV1.UpdateOptions{})
 				return err
 			}); err != nil {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 			return nil
-		} else if _, err := client.Create(req); err != nil {
+		} else if _, err := client.Create(context.TODO(), req, apiMetaV1.CreateOptions{}); err != nil {
 			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
@@ -292,7 +292,7 @@ func (c *K8s) clusterRoleBindingApply(resource runtime.Object) error {
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.RbacV1().ClusterRoleBindings()
-		list, err := client.List(apiMetaV1.ListOptions{})
+		list, err := client.List(context.TODO(), apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
@@ -307,14 +307,14 @@ func (c *K8s) clusterRoleBindingApply(resource runtime.Object) error {
 
 		if exists {
 			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, err := client.Update(req)
+				_, err := client.Update(context.TODO(), req, apiMetaV1.UpdateOptions{})
 				return err
 			}); err != nil {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 			return nil
-		} else if _, err := client.Create(req); err != nil {
+		} else if _, err := client.Create(context.TODO(), req, apiMetaV1.CreateOptions{}); err != nil {
 			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
@@ -336,7 +336,7 @@ func (c *K8s) configMapApply(resource runtime.Object) error {
 
 		client := c.clt.CoreV1().ConfigMaps(req.Namespace)
 
-		list, err := client.List(apiMetaV1.ListOptions{})
+		list, err := client.List(context.TODO(), apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
@@ -351,14 +351,14 @@ func (c *K8s) configMapApply(resource runtime.Object) error {
 
 		if exists {
 			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, err := client.Update(req)
+				_, err := client.Update(context.TODO(), req, apiMetaV1.UpdateOptions{})
 				return err
 			}); err != nil {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 			return nil
-		} else if _, err := client.Create(req); err != nil {
+		} else if _, err := client.Create(context.TODO(), req, apiMetaV1.CreateOptions{}); err != nil {
 			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
@@ -378,7 +378,7 @@ func (c *K8s) daemonSetApply(resource runtime.Object) error {
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.AppsV1().DaemonSets(req.Namespace)
-		list, err := client.List(apiMetaV1.ListOptions{})
+		list, err := client.List(context.TODO(), apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
@@ -393,14 +393,14 @@ func (c *K8s) daemonSetApply(resource runtime.Object) error {
 
 		if exists {
 			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, err := client.Update(req)
+				_, err := client.Update(context.TODO(), req, apiMetaV1.UpdateOptions{})
 				return err
 			}); err != nil {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 			return nil
-		} else if _, err := client.Create(req); err != nil {
+		} else if _, err := client.Create(context.TODO(), req, apiMetaV1.CreateOptions{}); err != nil {
 			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
@@ -420,7 +420,7 @@ func (c *K8s) deploymentApply(resource runtime.Object) error {
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.AppsV1().Deployments(req.Namespace)
-		list, err := client.List(apiMetaV1.ListOptions{})
+		list, err := client.List(context.TODO(), apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
@@ -435,14 +435,14 @@ func (c *K8s) deploymentApply(resource runtime.Object) error {
 
 		if exists {
 			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, err := client.Update(req)
+				_, err := client.Update(context.TODO(), req, apiMetaV1.UpdateOptions{})
 				return err
 			}); err != nil {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 		} else {
-			if _, err := client.Create(req); err != nil {
+			if _, err := client.Create(context.TODO(), req, apiMetaV1.CreateOptions{}); err != nil {
 				return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
@@ -466,7 +466,7 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.AppsV1().StatefulSets(req.Namespace)
-		list, err := client.List(apiMetaV1.ListOptions{})
+		list, err := client.List(context.TODO(), apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
@@ -480,14 +480,14 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 
 		if exists {
 			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, err := client.Update(req)
+				_, err := client.Update(context.TODO(), req, apiMetaV1.UpdateOptions{})
 				return err
 			}); err != nil {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 		} else {
-			if _, err := client.Create(req); err != nil {
+			if _, err := client.Create(context.TODO(), req, apiMetaV1.CreateOptions{}); err != nil {
 				return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
@@ -512,7 +512,7 @@ func (c *K8s) jobApply(resource runtime.Object) error {
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.BatchV1().Jobs(req.Namespace)
-		list, err := client.List(apiMetaV1.ListOptions{})
+		list, err := client.List(context.TODO(), apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
@@ -526,14 +526,14 @@ func (c *K8s) jobApply(resource runtime.Object) error {
 
 		if exists {
 			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, err := client.Update(req)
+				_, err := client.Update(context.TODO(), req, apiMetaV1.UpdateOptions{})
 				return err
 			}); err != nil {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 			return nil
-		} else if _, err := client.Create(req); err != nil {
+		} else if _, err := client.Create(context.TODO(), req, apiMetaV1.CreateOptions{}); err != nil {
 			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
@@ -557,7 +557,7 @@ func (c *K8s) customResourceApply(resource runtime.Object) error {
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1beta1":
 		client := c.ApiExtClient.ApiextensionsV1beta1().CustomResourceDefinitions()
-		list, err := client.List(apiMetaV1.ListOptions{})
+		list, err := client.List(context.TODO(), apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
@@ -570,14 +570,14 @@ func (c *K8s) customResourceApply(resource runtime.Object) error {
 		}
 		if exists {
 			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, err := client.Update(req)
+				_, err := client.Update(context.TODO(), req, apiMetaV1.UpdateOptions{})
 				return err
 			}); err != nil {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 			return nil
-		} else if _, err := client.Create(req); err != nil {
+		} else if _, err := client.Create(context.TODO(), req, apiMetaV1.CreateOptions{}); err != nil {
 			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
@@ -598,7 +598,7 @@ func (c *K8s) ingressApply(resource runtime.Object) error {
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1beta1":
 		client := c.clt.ExtensionsV1beta1().Ingresses(req.Namespace)
-		list, err := client.List(apiMetaV1.ListOptions{})
+		list, err := client.List(context.TODO(), apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
@@ -613,14 +613,14 @@ func (c *K8s) ingressApply(resource runtime.Object) error {
 
 		if exists {
 			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, err := client.Update(req)
+				_, err := client.Update(context.TODO(), req, apiMetaV1.UpdateOptions{})
 				return err
 			}); err != nil {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 			return nil
-		} else if _, err := client.Create(req); err != nil {
+		} else if _, err := client.Create(context.TODO(), req, apiMetaV1.CreateOptions{}); err != nil {
 			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
@@ -637,7 +637,7 @@ func (c *K8s) nameSpaceApply(resource runtime.Object) error {
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.CoreV1().Namespaces()
-		list, err := client.List(apiMetaV1.ListOptions{})
+		list, err := client.List(context.TODO(), apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
@@ -652,14 +652,14 @@ func (c *K8s) nameSpaceApply(resource runtime.Object) error {
 
 		if exists {
 			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, err := client.Update(req)
+				_, err := client.Update(context.TODO(), req, apiMetaV1.UpdateOptions{})
 				return err
 			}); err != nil {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 			return nil
-		} else if _, err := client.Create(req); err != nil {
+		} else if _, err := client.Create(context.TODO(), req, apiMetaV1.CreateOptions{}); err != nil {
 			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
@@ -680,7 +680,7 @@ func (c *K8s) roleApply(resource runtime.Object) error {
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.RbacV1().Roles(req.Namespace)
-		list, err := client.List(apiMetaV1.ListOptions{})
+		list, err := client.List(context.TODO(), apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
@@ -695,14 +695,14 @@ func (c *K8s) roleApply(resource runtime.Object) error {
 
 		if exists {
 			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, err := client.Update(req)
+				_, err := client.Update(context.TODO(), req, apiMetaV1.UpdateOptions{})
 				return err
 			}); err != nil {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 			return nil
-		} else if _, err := client.Create(req); err != nil {
+		} else if _, err := client.Create(context.TODO(), req, apiMetaV1.CreateOptions{}); err != nil {
 			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
@@ -722,7 +722,7 @@ func (c *K8s) roleBindingApply(resource runtime.Object) error {
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.RbacV1().RoleBindings(req.Namespace)
-		list, err := client.List(apiMetaV1.ListOptions{})
+		list, err := client.List(context.TODO(), apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
@@ -737,14 +737,14 @@ func (c *K8s) roleBindingApply(resource runtime.Object) error {
 
 		if exists {
 			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, err := client.Update(req)
+				_, err := client.Update(context.TODO(), req, apiMetaV1.UpdateOptions{})
 				return err
 			}); err != nil {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 			return nil
-		} else if _, err := client.Create(req); err != nil {
+		} else if _, err := client.Create(context.TODO(), req, apiMetaV1.CreateOptions{}); err != nil {
 			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
@@ -764,7 +764,7 @@ func (c *K8s) serviceAccountApply(resource runtime.Object) error {
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.CoreV1().ServiceAccounts(req.Namespace)
-		list, err := client.List(apiMetaV1.ListOptions{})
+		list, err := client.List(context.TODO(), apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
@@ -779,14 +779,14 @@ func (c *K8s) serviceAccountApply(resource runtime.Object) error {
 
 		if exists {
 			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, err := client.Update(req)
+				_, err := client.Update(context.TODO(), req, apiMetaV1.UpdateOptions{})
 				return err
 			}); err != nil {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 			return nil
-		} else if _, err := client.Create(req); err != nil {
+		} else if _, err := client.Create(context.TODO(), req, apiMetaV1.CreateOptions{}); err != nil {
 			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
@@ -806,7 +806,7 @@ func (c *K8s) serviceApply(resource runtime.Object) error {
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.CoreV1().Services(req.Namespace)
-		list, err := client.List(apiMetaV1.ListOptions{})
+		list, err := client.List(context.TODO(), apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
@@ -829,14 +829,14 @@ func (c *K8s) serviceApply(resource runtime.Object) error {
 
 		if exists {
 			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, err := client.Update(req)
+				_, err := client.Update(context.TODO(), req, apiMetaV1.UpdateOptions{})
 				return err
 			}); err != nil {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 			return nil
-		} else if _, err := client.Create(req); err != nil {
+		} else if _, err := client.Create(context.TODO(), req, apiMetaV1.CreateOptions{}); err != nil {
 			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
@@ -859,7 +859,7 @@ func (c *K8s) secretApply(resource runtime.Object) error {
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.CoreV1().Secrets(req.Namespace)
-		list, err := client.List(apiMetaV1.ListOptions{})
+		list, err := client.List(context.TODO(), apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
@@ -874,14 +874,14 @@ func (c *K8s) secretApply(resource runtime.Object) error {
 
 		if exists {
 			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, err := client.Update(req)
+				_, err := client.Update(context.TODO(), req, apiMetaV1.UpdateOptions{})
 				return err
 			}); err != nil {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 			return nil
-		} else if _, err := client.Create(req); err != nil {
+		} else if _, err := client.Create(context.TODO(), req, apiMetaV1.CreateOptions{}); err != nil {
 			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
@@ -900,7 +900,7 @@ func (c *K8s) persistentVolumeClaimApply(resource runtime.Object) error {
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.CoreV1().PersistentVolumeClaims(req.Namespace)
-		list, err := client.List(apiMetaV1.ListOptions{})
+		list, err := client.List(context.TODO(), apiMetaV1.ListOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
 		}
@@ -915,14 +915,14 @@ func (c *K8s) persistentVolumeClaimApply(resource runtime.Object) error {
 
 		if exists {
 			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, err := client.Update(req)
+				_, err := client.Update(context.TODO(), req, apiMetaV1.UpdateOptions{})
 				return err
 			}); err != nil {
 				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
 			}
 			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
 			return nil
-		} else if _, err := client.Create(req); err != nil {
+		} else if _, err := client.Create(context.TODO(), req, apiMetaV1.CreateOptions{}); err != nil {
 			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
@@ -941,7 +941,7 @@ func (c *K8s) clusterRoleDelete(resource runtime.Object) error {
 	case "v1":
 		client := c.clt.RbacV1().ClusterRoles()
 		delPolicy := apiMetaV1.DeletePropagationForeground
-		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+		if err := client.Delete(context.TODO(), req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
@@ -959,7 +959,7 @@ func (c *K8s) clusterRoleBindingDelete(resource runtime.Object) error {
 	case "v1":
 		client := c.clt.RbacV1().ClusterRoleBindings()
 		delPolicy := apiMetaV1.DeletePropagationForeground
-		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+		if err := client.Delete(context.TODO(), req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
@@ -979,7 +979,7 @@ func (c *K8s) configMapDelete(resource runtime.Object) error {
 	case "v1":
 		client := c.clt.CoreV1().ConfigMaps(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
-		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+		if err := client.Delete(context.TODO(), req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
@@ -1000,7 +1000,7 @@ func (c *K8s) daemonsetDelete(resource runtime.Object) error {
 	case "v1":
 		client := c.clt.AppsV1().DaemonSets(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
-		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+		if err := client.Delete(context.TODO(), req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
@@ -1021,7 +1021,7 @@ func (c *K8s) deploymentDelete(resource runtime.Object) error {
 	case "v1":
 		client := c.clt.AppsV1().Deployments(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
-		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+		if err := client.Delete(context.TODO(), req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
@@ -1042,7 +1042,7 @@ func (c *K8s) statefulSetDelete(resource runtime.Object) error {
 	case "v1":
 		client := c.clt.AppsV1().StatefulSets(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
-		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+		if err := client.Delete(context.TODO(), req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
@@ -1063,7 +1063,7 @@ func (c *K8s) jobDelete(resource runtime.Object) error {
 	case "v1":
 		client := c.clt.BatchV1().Jobs(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
-		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+		if err := client.Delete(context.TODO(), req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
@@ -1084,7 +1084,7 @@ func (c *K8s) customResourceDelete(resource runtime.Object) error {
 	case "v1beta1":
 		client := c.ApiExtClient.ApiextensionsV1beta1().CustomResourceDefinitions()
 		delPolicy := apiMetaV1.DeletePropagationForeground
-		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+		if err := client.Delete(context.TODO(), req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
@@ -1106,7 +1106,7 @@ func (c *K8s) ingressDelete(resource runtime.Object) error {
 	case "v1beta1":
 		client := c.clt.ExtensionsV1beta1().Ingresses(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
-		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+		if err := client.Delete(context.TODO(), req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
@@ -1124,7 +1124,7 @@ func (c *K8s) namespaceDelete(resource runtime.Object) error {
 	case "v1":
 		client := c.clt.CoreV1().Namespaces()
 		delPolicy := apiMetaV1.DeletePropagationForeground
-		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+		if err := client.Delete(context.TODO(), req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleting - kind: %v , name: %v", kind, req.Name)
@@ -1148,7 +1148,7 @@ func (c *K8s) roleDelete(resource runtime.Object) error {
 	case "v1":
 		client := c.clt.RbacV1().Roles(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
-		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+		if err := client.Delete(context.TODO(), req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
@@ -1169,7 +1169,7 @@ func (c *K8s) roleBindingDelete(resource runtime.Object) error {
 	case "v1":
 		client := c.clt.RbacV1().RoleBindings(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
-		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+		if err := client.Delete(context.TODO(), req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
@@ -1190,7 +1190,7 @@ func (c *K8s) serviceDelete(resource runtime.Object) error {
 	case "v1":
 		client := c.clt.CoreV1().Services(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
-		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+		if err := client.Delete(context.TODO(), req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
@@ -1211,7 +1211,7 @@ func (c *K8s) serviceAccountDelete(resource runtime.Object) error {
 	case "v1":
 		client := c.clt.CoreV1().ServiceAccounts(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
-		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+		if err := client.Delete(context.TODO(), req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
@@ -1231,7 +1231,7 @@ func (c *K8s) secretDelete(resource runtime.Object) error {
 	case "v1":
 		client := c.clt.CoreV1().Secrets(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
-		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+		if err := client.Delete(context.TODO(), req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
@@ -1251,7 +1251,7 @@ func (c *K8s) persistentVolumeClaimDelete(resource runtime.Object) error {
 	case "v1":
 		client := c.clt.CoreV1().PersistentVolumeClaims(req.Namespace)
 		delPolicy := apiMetaV1.DeletePropagationForeground
-		if err := client.Delete(req.Name, &apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+		if err := client.Delete(context.TODO(), req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
 		}
 		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
@@ -1271,7 +1271,7 @@ func (c *K8s) serviceExists(resource runtime.Object) (bool, error) {
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.CoreV1().Services(req.Namespace)
-		res, err := client.Get(req.Name, apiMetaV1.GetOptions{})
+		res, err := client.Get(context.TODO(), req.Name, apiMetaV1.GetOptions{})
 		if err != nil {
 			return false, errors.Wrapf(err, "Checking Service resource status failed")
 		}
@@ -1304,7 +1304,7 @@ func (c *K8s) deploymentReady(resource runtime.Object) (bool, error) {
 	case "v1":
 		client := c.clt.AppsV1().Deployments(req.Namespace)
 
-		res, err := client.Get(req.Name, apiMetaV1.GetOptions{})
+		res, err := client.Get(context.TODO(), req.Name, apiMetaV1.GetOptions{})
 		if err != nil {
 			return false, errors.Wrapf(err, "Checking Deployment resource:'%v' status failed err:%v", req.Name, err)
 		}
@@ -1333,7 +1333,7 @@ func (c *K8s) statefulSetReady(resource runtime.Object) (bool, error) {
 	case "v1":
 		client := c.clt.AppsV1().StatefulSets(req.Namespace)
 
-		res, err := client.Get(req.Name, apiMetaV1.GetOptions{})
+		res, err := client.Get(context.TODO(), req.Name, apiMetaV1.GetOptions{})
 		if err != nil {
 			return false, errors.Wrapf(err, "Checking StatefulSet resource:'%v' status failed err:%v", req.Name, err)
 		}
@@ -1362,7 +1362,7 @@ func (c *K8s) jobReady(resource runtime.Object) (bool, error) {
 	case "v1":
 		client := c.clt.BatchV1().Jobs(req.Namespace)
 
-		res, err := client.Get(req.Name, apiMetaV1.GetOptions{})
+		res, err := client.Get(context.TODO(), req.Name, apiMetaV1.GetOptions{})
 		if err != nil {
 			return false, errors.Wrapf(err, "Checking Job resource:'%v' status failed err:%v", req.Name, err)
 		}
@@ -1393,7 +1393,7 @@ func (c *K8s) daemonsetReady(resource runtime.Object) error {
 	case "v1":
 		client := c.clt.AppsV1().DaemonSets(req.Namespace)
 
-		res, err := client.Get(req.Name, apiMetaV1.GetOptions{})
+		res, err := client.Get(context.TODO(), req.Name, apiMetaV1.GetOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "Checking DaemonSet resource:'%v' status failed err:%v", req.Name, err)
 		}
@@ -1414,7 +1414,7 @@ func (c *K8s) namespaceDeleted(resource runtime.Object) (bool, error) {
 	case "v1":
 		client := c.clt.CoreV1().Namespaces()
 
-		if _, err := client.Get(req.Name, apiMetaV1.GetOptions{}); err != nil {
+		if _, err := client.Get(context.TODO(), req.Name, apiMetaV1.GetOptions{}); err != nil {
 			if apiErrors.IsNotFound(err) {
 				return true, nil
 			}
