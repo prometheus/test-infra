@@ -84,7 +84,6 @@ func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspac
 	r, err := git.PlainCloneContext(ctx, fmt.Sprintf("%s/%s", workspace, gc.repo), false, &git.CloneOptions{
 		URL:      fmt.Sprintf("https://github.com/%s/%s.git", gc.owner, gc.repo),
 		Progress: os.Stdout,
-		Depth:    1,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "clone git repository")
