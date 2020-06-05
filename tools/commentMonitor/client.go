@@ -34,6 +34,29 @@ type commentMonitorClient struct {
 	commentTemplate string
 }
 
+func (c *commentMonitorClient) extractCommand() {
+	s := strings.TrimLeft(c.ghClient.commentBody, "\r\n\t ")
+	if i := strings.Index(s, "\n"); i != -1 {
+		s = s[:i]
+	}
+	s = strings.TrimRight(s, "\r\n\t ")
+	c.ghClient.commentBody = s
+}
+
+// Check if the command starts with predefined prefix.
+func (c *commentMonitorClient) checkCommandPrefix() bool {
+	if prefixes, ok := os.LookupEnv("COMMAND_PREFIXES"); ok {
+		prefixes := strings.Split(prefixes, ",")
+		for _, p := range prefixes {
+			i := strings.Index(c.ghClient.commentBody, p)
+			if i == 0 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // Set eventType and commentTemplate if
 // regexString is validated against provided commentBody.
 func (c *commentMonitorClient) validateRegex() bool {

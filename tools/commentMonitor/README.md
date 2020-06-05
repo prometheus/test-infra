@@ -5,6 +5,7 @@ Currently it only works with [`issue_comment` event](https://developer.github.co
 
 ### Environment Variables:
 - `LABEL_NAME`: If set, will add the label to the PR.
+- `COMMAND_PREFIXES`: Comma separated list of command prefixes.
 - `GITHUB_TOKEN` : GitHub oauth token used for posting comments and settings the label.
 - Any other environment variable used in any of the comment templates in `eventmap.yml`.
 
@@ -14,11 +15,14 @@ Running commentMonitor requires the eventmap file which is specified by the `--e
 The `regex_string`, `event_type` and `comment_template` can be specified in the `eventmap.yml` file.
 
 Example content of the `eventmap.yml` file:
-```
+```yaml
 - event_type: prombench_stop
   regex_string: (?mi)^/prombench\s+cancel\s*$
   comment_template: |
     Benchmark cancel is in progress.
+```
+```shell
+$ export COMMENT_PREFIX='/funcbench,/prombench'
 ```
 
 If a GitHub comment matches with `regex_string`, then commentMonitor will trigger a [`repository_dispatch`](https://developer.github.com/v3/repos/#create-a-repository-dispatch-event) with the event type `event_type` and then post a comment to the issue with `comment_template`. The extracted out arguments will be passed to the [`client_payload`](https://developer.github.com/v3/repos/#example-5) of the `repository_dispatch` event.

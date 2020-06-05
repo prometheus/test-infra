@@ -155,10 +155,22 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 			return
 		}
 
+		// Strip whitespace.
+		cmClient.extractCommand()
+
+		// test-infra command check.
+		if !cmClient.checkCommandPrefix() {
+			http.Error(w, "comment validation failed", http.StatusOK)
+			return
+		}
+
 		// Validate regex.
 		if !cmClient.validateRegex() {
-			//log.Println(err) // Don't log on failure.
-			http.Error(w, "comment validation failed", http.StatusOK)
+			log.Println("invalid command syntax: ", cmClient.ghClient.commentBody)
+			if err := cmClient.ghClient.postComment(ctx, "command syntax invalid"); err != nil {
+				log.Printf("%v : couldn't post comment", err)
+			}
+			http.Error(w, "command syntax invalid", http.StatusBadRequest)
 			return
 		}
 
