@@ -103,7 +103,7 @@ func main() {
 		"disabled if set to 0. If a test binary runs longer than duration d, panic.").
 		Short('d').Default("2h").DurationVar(&cfg.benchTimeout)
 
-	app.Arg("target", "Can be one of '.', branch name or commit SHA of the branch "+
+	app.Arg("target", "Can be one of '.', tag name, branch name or commit SHA of the branch "+
 		"to compare against. If set to '.', branch/commit is the same as the current one; "+
 		"funcbench will run once and try to compare between 2 sub-benchmarks. "+
 		"Errors out if there are no sub-benchmarks.").
@@ -287,6 +287,7 @@ func interrupt(logger Logger, cancel <-chan struct{}) error {
 
 // getTargetInfo returns the hash of the target,
 // if target is the same as the current ref, set compareWithItself to true.
+// TODO return ZeroHash if we cannot find reference to target.
 func getTargetInfo(ctx context.Context, repo *git.Repository, target string) (ref plumbing.Hash, compareWithItself bool, _ error) {
 	if target == "." {
 		return plumbing.Hash{}, true, nil
@@ -306,12 +307,18 @@ func getTargetInfo(ctx context.Context, repo *git.Repository, target string) (re
 		return commitHash, false, nil
 	}
 
-	targetRef, err := repo.Reference(plumbing.NewBranchReferenceName(target), false)
-	if err != nil {
-		return plumbing.ZeroHash, false, err
+	branchRef, _ := repo.Reference(plumbing.NewBranchReferenceName(target), false)
+	if branchRef != nil {
+		return branchRef.Hash(), false, nil
 	}
 
-	return targetRef.Hash(), false, nil
+	tagRef, _ := repo.Reference(plumbing.NewTagReferenceName(target), false)
+	if tagRef != nil {
+		return tagRef.Hash(), false, nil
+	}
+
+	return plumbing.ZeroHash, false, err
+
 }
 
 type commander struct {
