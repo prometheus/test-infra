@@ -10,8 +10,7 @@ Eg. `somefile.yaml` will be parsed, whereas `somefile_noparse.yaml` will not be 
 
 ## Usage and examples:
 
-[embedmd]: # "./infra-flags.txt"
-
+[embedmd]:# (infra-flags.txt)
 ```txt
 usage: infra [<flags>] <command> [<args> ...]
 

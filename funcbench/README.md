@@ -12,8 +12,7 @@ funcbench currently supports two modes, Local and GitHub. Running it in the Gith
 
 > Clean git state is required.
 
-[embedmd]: # "funcbench-flags.txt"
-
+[embedmd]:# (funcbench-flags.txt)
 ```txt
 usage: funcbench [<flags>] <target> [<bench-func-regex>]
 
