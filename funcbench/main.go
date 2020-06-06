@@ -22,7 +22,6 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
-	"strings"
 	"syscall"
 	"time"
 
@@ -215,14 +214,7 @@ func startBenchmark(
 		return nil, errors.Wrap(err, "not clean worktree")
 	}
 
-	// Get info about target.
-	targetCommit, compareWithItself, err := getTargetInfo(ctx, env.Repo(), env.CompareTarget())
-	if err != nil {
-		return nil, errors.Wrap(err, "getTargetInfo")
-	}
-	bench.logger.Println("Target:", targetCommit.String(), "Current Ref:", ref.Hash().String())
-
-	if compareWithItself {
+	if env.CompareTarget() == "." {
 		bench.logger.Println("Assuming sub-benchmarks comparison.")
 		subResult, err := bench.exec(ctx, wt.Filesystem.Root(), ref.Hash())
 		if err != nil {
@@ -234,6 +226,18 @@ func startBenchmark(
 			return nil, errors.Wrap(err, "comparing sub benchmarks")
 		}
 		return cmps, nil
+	}
+
+	// Get info about target.
+	targetCommit := getTargetInfo(ctx, env.Repo(), env.CompareTarget())
+	if targetCommit == plumbing.ZeroHash {
+		return nil, fmt.Errorf("Cannot getTargetInfo from %s", env.CompareTarget())
+	}
+
+	bench.logger.Println("Target:", targetCommit.String(), "Current Ref:", ref.Hash().String())
+
+	if targetCommit == ref.Hash() {
+		return nil, fmt.Errorf("target: %s is the same as current ref %s (or is on the same commit); No changes would be expected; Aborting", targetCommit, ref.String())
 	}
 
 	bench.logger.Println("Assuming comparing with target (clean workdir will be checked.)")
@@ -286,39 +290,24 @@ func interrupt(logger Logger, cancel <-chan struct{}) error {
 }
 
 // getTargetInfo returns the hash of the target,
-// if target is the same as the current ref, set compareWithItself to true.
-// TODO return ZeroHash if we cannot find reference to target.
-func getTargetInfo(ctx context.Context, repo *git.Repository, target string) (ref plumbing.Hash, compareWithItself bool, _ error) {
-	if target == "." {
-		return plumbing.Hash{}, true, nil
-	}
-
-	currRef, err := repo.Head()
-	if err != nil {
-		return plumbing.ZeroHash, false, err
-	}
-
-	if target == strings.TrimPrefix(currRef.Name().String(), "refs/heads/") || target == currRef.Hash().String() {
-		return currRef.Hash(), true, errors.Errorf("target: %s is the same as current ref %s (or is on the same commit); No changes would be expected; Aborting", target, currRef.String())
-	}
-
+// if it cannot find from either branch names or tag names, plumbing.ZeroHash will return.
+func getTargetInfo(ctx context.Context, repo *git.Repository, target string) plumbing.Hash {
 	commitHash := plumbing.NewHash(target)
 	if !commitHash.IsZero() {
-		return commitHash, false, nil
+		return commitHash
 	}
 
-	branchRef, _ := repo.Reference(plumbing.NewBranchReferenceName(target), false)
-	if branchRef != nil {
-		return branchRef.Hash(), false, nil
+	brachRef, _ := repo.Reference(plumbing.NewBranchReferenceName(target), false)
+	if brachRef != nil {
+		return brachRef.Hash()
 	}
 
 	tagRef, _ := repo.Reference(plumbing.NewTagReferenceName(target), false)
 	if tagRef != nil {
-		return tagRef.Hash(), false, nil
+		return tagRef.Hash()
 	}
 
-	return plumbing.ZeroHash, false, err
-
+	return plumbing.ZeroHash
 }
 
 type commander struct {
