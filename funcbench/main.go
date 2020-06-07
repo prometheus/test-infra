@@ -231,7 +231,7 @@ func startBenchmark(
 	// Get info about target.
 	targetCommit := getTargetInfo(ctx, env.Repo(), env.CompareTarget())
 	if targetCommit == plumbing.ZeroHash {
-		return nil, fmt.Errorf("Cannot getTargetInfo from %s", env.CompareTarget())
+		return nil, fmt.Errorf("cannot find target %s", env.CompareTarget())
 	}
 
 	bench.logger.Println("Target:", targetCommit.String(), "Current Ref:", ref.Hash().String())
@@ -289,8 +289,8 @@ func interrupt(logger Logger, cancel <-chan struct{}) error {
 	}
 }
 
-// getTargetInfo returns the hash of the target,
-// if it cannot find from either branch names or tag names, plumbing.ZeroHash will return.
+// getTargetInfo returns the hash of the target if found,
+// otherwise returns plumbing.ZeroHash.
 func getTargetInfo(ctx context.Context, repo *git.Repository, target string) plumbing.Hash {
 	commitHash := plumbing.NewHash(target)
 	if !commitHash.IsZero() {
