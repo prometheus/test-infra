@@ -32,6 +32,7 @@ type commentMonitorConfig struct {
 	verifyUserDisabled bool
 	eventMapFilePath   string
 	whSecretFilePath   string
+	commandPrefixes    string
 	whSecret           []byte
 	eventMap           webhookEventMaps
 	port               string
@@ -63,6 +64,9 @@ func main() {
 	app.Flag("port", "port number to run webhook in.").
 		Default("8080").
 		StringVar(&cmConfig.port)
+	app.Flag("command-prefixes", `Comma separated list of command prefixes. Eg."/prombench,/funcbench" `).
+		Required().
+		StringVar(&cmConfig.commandPrefixes)
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	mux := http.NewServeMux()
@@ -99,6 +103,17 @@ func extractCommand(s string) string {
 	}
 	s = strings.TrimRight(s, "\r\n\t ")
 	return s
+}
+
+func checkCommandPrefix(command, prefixStrings string) bool {
+	prefixes := strings.Split(prefixStrings, ",")
+	for _, p := range prefixes {
+		i := strings.Index(command, p)
+		if i == 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Request) {
@@ -150,7 +165,7 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		command := extractCommand(cmClient.ghClient.commentBody)
 
 		// test-infra command check.
-		if !cmClient.checkCommandPrefix(command) {
+		if !checkCommandPrefix(command, c.commandPrefixes) {
 			http.Error(w, "comment validation failed", http.StatusOK)
 			return
 		}

@@ -5,7 +5,6 @@ Currently it only works with [`issue_comment` event](https://developer.github.co
 
 ### Environment Variables:
 - `LABEL_NAME`: If set, will add the label to the PR.
-- `COMMAND_PREFIXES`: Comma separated list of command prefixes.
 - `GITHUB_TOKEN` : GitHub oauth token used for posting comments and settings the label.
 - Any other environment variable used in any of the comment templates in `eventmap.yml`.
 
@@ -20,9 +19,6 @@ Example content of the `eventmap.yml` file:
   regex_string: (?mi)^/prombench\s+cancel\s*$
   comment_template: |
     Benchmark cancel is in progress.
-```
-```shell
-$ export COMMENT_PREFIX='/funcbench,/prombench'
 ```
 
 If a GitHub comment matches with `regex_string`, then commentMonitor will trigger a [`repository_dispatch`](https://developer.github.com/v3/repos/#create-a-repository-dispatch-event) with the event type `event_type` and then post a comment to the issue with `comment_template`. The extracted out arguments will be passed to the [`client_payload`](https://developer.github.com/v3/repos/#example-5) of the `repository_dispatch` event.
@@ -45,7 +41,7 @@ For example, the following regex will create an argument named `RELEASE` with th
 #### Usage and examples:
 [embedmd]:# (commentMonitor-flags.txt)
 ```txt
-usage: commentMonitor [<flags>]
+usage: commentMonitor --command-prefixes=COMMAND-PREFIXES [<flags>]
 
 commentMonitor GithubAction - Post and monitor GitHub comments.
 
@@ -58,6 +54,9 @@ Flags:
       --eventmap="./eventmap.yml"
                         Filepath to eventmap file.
       --port="8080"     port number to run webhook in.
+      --command-prefixes=COMMAND-PREFIXES
+                        Comma separated list of command prefixes.
+                        Eg."/prombench,/funcbench"
 
 ```
 ### Building Docker Image

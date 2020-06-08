@@ -34,20 +34,6 @@ type commentMonitorClient struct {
 	commentTemplate string
 }
 
-// Check if the command starts with predefined prefix.
-func (c *commentMonitorClient) checkCommandPrefix(command string) bool {
-	if prefixes, ok := os.LookupEnv("COMMAND_PREFIXES"); ok {
-		prefixes := strings.Split(prefixes, ",")
-		for _, p := range prefixes {
-			i := strings.Index(command, p)
-			if i == 0 {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 // Set eventType and commentTemplate if
 // regexString is validated against provided command.
 func (c *commentMonitorClient) validateRegex(command string) bool {
@@ -106,6 +92,7 @@ func (c *commentMonitorClient) extractArgs(ctx context.Context, command string) 
 			return fmt.Errorf("%v: could not fetch SHA", err)
 		}
 
+		// TODO (geekodour) : We could run this in a seperate method.
 		err = c.ghClient.createRepositoryDispatch(ctx, c.eventType, c.allArgs)
 		if err != nil {
 			return fmt.Errorf("%v: could not create repository_dispatch event", err)
