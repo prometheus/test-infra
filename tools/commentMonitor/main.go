@@ -23,7 +23,6 @@ import (
 	"path/filepath"
 
 	"github.com/google/go-github/v29/github"
-	"golang.org/x/oauth2"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/yaml.v2"
 )
@@ -69,24 +68,6 @@ func main() {
 	mux.HandleFunc("/", cmConfig.webhookExtract)
 	log.Println("Server is ready to handle requests at", cmConfig.port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", cmConfig.port), mux))
-}
-
-func newGithubClient(ctx context.Context, e *github.IssueCommentEvent) (*githubClient, error) {
-	ghToken := os.Getenv("GITHUB_TOKEN")
-	if ghToken == "" {
-		return nil, fmt.Errorf("env var missing")
-	}
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: ghToken})
-	tc := oauth2.NewClient(ctx, ts)
-	return &githubClient{
-		clt:               github.NewClient(tc),
-		owner:             *e.GetRepo().Owner.Login,
-		repo:              *e.GetRepo().Name,
-		pr:                *e.GetIssue().Number,
-		author:            *e.Sender.Login,
-		authorAssociation: *e.GetComment().AuthorAssociation,
-		commentBody:       *e.GetComment().Body,
-	}, nil
 }
 
 func (c *commentMonitorConfig) loadConfig() error {

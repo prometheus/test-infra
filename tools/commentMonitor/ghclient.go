@@ -18,8 +18,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/google/go-github/v29/github"
+	"golang.org/x/oauth2"
 )
 
 type githubClient struct {
@@ -30,6 +32,24 @@ type githubClient struct {
 	author            string
 	commentBody       string
 	authorAssociation string
+}
+
+func newGithubClient(ctx context.Context, e *github.IssueCommentEvent) (*githubClient, error) {
+	ghToken := os.Getenv("GITHUB_TOKEN")
+	if ghToken == "" {
+		return nil, fmt.Errorf("env var missing")
+	}
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: ghToken})
+	tc := oauth2.NewClient(ctx, ts)
+	return &githubClient{
+		clt:               github.NewClient(tc),
+		owner:             *e.GetRepo().Owner.Login,
+		repo:              *e.GetRepo().Name,
+		pr:                *e.GetIssue().Number,
+		author:            *e.Sender.Login,
+		authorAssociation: *e.GetComment().AuthorAssociation,
+		commentBody:       *e.GetComment().Body,
+	}, nil
 }
 
 func (c githubClient) postComment(ctx context.Context, commentBody string) error {
