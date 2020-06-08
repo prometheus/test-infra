@@ -31,6 +31,7 @@ type commentMonitorClient struct {
 	eventMap        webhookEventMaps
 	eventType       string
 	commentTemplate string
+	label           string
 }
 
 // Set eventType and commentTemplate if
@@ -41,6 +42,7 @@ func (c *commentMonitorClient) validateRegex(command string) bool {
 		if c.regex.MatchString(command) {
 			c.commentTemplate = e.CommentTemplate
 			c.eventType = e.EventType
+			c.label = e.Label
 			log.Println("comment validation successful")
 			return true
 		}
@@ -100,10 +102,9 @@ func (c *commentMonitorClient) extractArgs(command string) error {
 	return nil
 }
 
-// Set label to Github pr if LABEL_NAME is set.
-func (c commentMonitorClient) postLabel() error {
-	if os.Getenv("LABEL_NAME") != "" {
-		if err := c.ghClient.createLabel(os.Getenv("LABEL_NAME")); err != nil {
+func (c commentMonitorClient) postLabel(ctx context.Context) error {
+	if c.label != "" {
+		if err := c.ghClient.createLabel(ctx, c.label); err != nil {
 			return fmt.Errorf("%v : couldn't set label", err)
 		}
 		log.Println("label successfully set")
