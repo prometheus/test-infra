@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/google/go-github/v29/github"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -91,6 +92,15 @@ func (c *commentMonitorConfig) loadConfig() error {
 	return nil
 }
 
+func extractCommand(s string) string {
+	s = strings.TrimLeft(s, "\r\n\t ")
+	if i := strings.Index(s, "\n"); i != -1 {
+		s = s[:i]
+	}
+	s = strings.TrimRight(s, "\r\n\t ")
+	return s
+}
+
 func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
@@ -137,17 +147,17 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		}
 
 		// Strip whitespace.
-		cmClient.extractCommand()
+		command := extractCommand(cmClient.ghClient.commentBody)
 
 		// test-infra command check.
-		if !cmClient.checkCommandPrefix() {
+		if !cmClient.checkCommandPrefix(command) {
 			http.Error(w, "comment validation failed", http.StatusOK)
 			return
 		}
 
 		// Validate regex.
-		if !cmClient.validateRegex() {
-			log.Println("invalid command syntax: ", cmClient.ghClient.commentBody)
+		if !cmClient.validateRegex(command) {
+			log.Println("invalid command syntax: ", command)
 			if err := cmClient.ghClient.postComment(ctx, "command syntax invalid"); err != nil {
 				log.Printf("%v : couldn't post comment", err)
 			}
@@ -164,7 +174,7 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		}
 
 		// Extract args.
-		err = cmClient.extractArgs(ctx)
+		err = cmClient.extractArgs(ctx, command)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "could not extract arguments", http.StatusBadRequest)

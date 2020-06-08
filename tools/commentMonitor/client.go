@@ -34,21 +34,12 @@ type commentMonitorClient struct {
 	commentTemplate string
 }
 
-func (c *commentMonitorClient) extractCommand() {
-	s := strings.TrimLeft(c.ghClient.commentBody, "\r\n\t ")
-	if i := strings.Index(s, "\n"); i != -1 {
-		s = s[:i]
-	}
-	s = strings.TrimRight(s, "\r\n\t ")
-	c.ghClient.commentBody = s
-}
-
 // Check if the command starts with predefined prefix.
-func (c *commentMonitorClient) checkCommandPrefix() bool {
+func (c *commentMonitorClient) checkCommandPrefix(command string) bool {
 	if prefixes, ok := os.LookupEnv("COMMAND_PREFIXES"); ok {
 		prefixes := strings.Split(prefixes, ",")
 		for _, p := range prefixes {
-			i := strings.Index(c.ghClient.commentBody, p)
+			i := strings.Index(command, p)
 			if i == 0 {
 				return true
 			}
@@ -58,11 +49,11 @@ func (c *commentMonitorClient) checkCommandPrefix() bool {
 }
 
 // Set eventType and commentTemplate if
-// regexString is validated against provided commentBody.
-func (c *commentMonitorClient) validateRegex() bool {
+// regexString is validated against provided command.
+func (c *commentMonitorClient) validateRegex(command string) bool {
 	for _, e := range c.eventMap {
 		c.regex = regexp.MustCompile(e.RegexString)
-		if c.regex.MatchString(c.ghClient.commentBody) {
+		if c.regex.MatchString(command) {
 			c.commentTemplate = e.CommentTemplate
 			c.eventType = e.EventType
 			log.Println("comment validation successful")
@@ -95,17 +86,17 @@ func (c commentMonitorClient) verifyUser(ctx context.Context, verifyUserDisabled
 }
 
 // Extract args if regexString provided.
-func (c *commentMonitorClient) extractArgs(ctx context.Context) error {
+func (c *commentMonitorClient) extractArgs(ctx context.Context, command string) error {
 	var err error
 	if c.regex != nil {
-		// Add comment arguments.
-		commentArgs := c.regex.FindStringSubmatch(c.ghClient.commentBody)[1:]
-		commentArgsNames := c.regex.SubexpNames()[1:]
-		for i, argName := range commentArgsNames {
+		// Add command arguments.
+		commandArgs := c.regex.FindStringSubmatch(command)[1:]
+		commandArgsNames := c.regex.SubexpNames()[1:]
+		for i, argName := range commandArgsNames {
 			if argName == "" {
 				return fmt.Errorf("using named groups is mandatory")
 			}
-			c.allArgs[argName] = commentArgs[i]
+			c.allArgs[argName] = commandArgs[i]
 		}
 
 		// Add non-comment arguments if any.
