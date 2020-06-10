@@ -4,10 +4,6 @@ cluster:
   roleArn: {{ .ROLE_ARN }}
   resourcesvpconfig:
     endpointpublicaccess: true
-    publicaccesscidrs:
-      {{ range $cidr := get_range .PUBLIC_CIDRS .SEPERATOR }}
-      - {{ $cidr }}
-      {{ end }}
     subnetids:
       {{ range $subnet_id := get_range .SUBNET_IDS .SEPERATOR }}
       - {{ $subnet_id }}
@@ -23,7 +19,7 @@ nodegroups:
       maxsize: 1
       minsize: 1
     labels:
-      aws.amazon.com/eks-nodegroup: main-node
+      node-type: main-node
 
 
     
