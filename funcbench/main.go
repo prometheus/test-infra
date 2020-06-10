@@ -229,7 +229,7 @@ func startBenchmark(
 	}
 
 	// Get info about target.
-	targetCommit := getTargetInfo(ctx, env.Repo(), env.CompareTarget())
+	targetCommit := getTargetInfo(env.Repo(), env.CompareTarget())
 	if targetCommit == plumbing.ZeroHash {
 		return nil, fmt.Errorf("cannot find target %s", env.CompareTarget())
 	}
@@ -291,23 +291,13 @@ func interrupt(logger Logger, cancel <-chan struct{}) error {
 
 // getTargetInfo returns the hash of the target if found,
 // otherwise returns plumbing.ZeroHash.
-func getTargetInfo(ctx context.Context, repo *git.Repository, target string) plumbing.Hash {
-	commitHash := plumbing.NewHash(target)
-	if !commitHash.IsZero() {
-		return commitHash
+// NOTE: if both a branch and a tag have the same name, it always chooses the branch name.
+func getTargetInfo(repo *git.Repository, target string) plumbing.Hash {
+	hash, err := repo.ResolveRevision(plumbing.Revision(target))
+	if err != nil {
+		return plumbing.ZeroHash
 	}
-
-	brachRef, _ := repo.Reference(plumbing.NewBranchReferenceName(target), false)
-	if brachRef != nil {
-		return brachRef.Hash()
-	}
-
-	tagRef, _ := repo.Reference(plumbing.NewTagReferenceName(target), false)
-	if tagRef != nil {
-		return tagRef.Hash()
-	}
-
-	return plumbing.ZeroHash
+	return *hash
 }
 
 type commander struct {
