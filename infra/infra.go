@@ -112,6 +112,10 @@ func main() {
 	e := eks.New()
 	k8sEKS := app.Command("eks", "Amazon Elastic Kubernetes Service - https://aws.amazon.com/eks").
 		Action(e.NewEKSClient)
+	k8sEKS.Flag("auth", "filename which consist eks credentials.").
+		PlaceHolder("service-account.json").
+		Short("a").
+		StringVar(&e.AuthFilename)
 	k8sEKS.Flag("file", "yaml file or folder  that describes the parameters for the object that will be deployed.").
 		Required().
 		Short('f').
@@ -119,6 +123,13 @@ func main() {
 	k8sEKS.Flag("vars", "When provided it will substitute the token holders in the yaml file. Follows the standard golang template formating - {{ .hashStable }}.").
 		Short('v').
 		StringMapVar(&e.DeploymentVars)
+	k8sEKS.Flag("rangeVars", "Similar to vars but for range values which is stringified with seperator.").
+		Short('r').
+		StringMapVar(&e.DeploymentRangeVars)
+	k8sEKS.Flag("sep", "Separator helps to split stringified list into corresponding ranges. Default separator is `_`.").
+		Short('s').
+		Default("_").
+		StringVar(&e.Separator)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error parsing commandline arguments"))
