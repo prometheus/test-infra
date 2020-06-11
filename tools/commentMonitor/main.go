@@ -108,8 +108,7 @@ func extractCommand(s string) string {
 func checkCommandPrefix(command, prefixStrings string) bool {
 	prefixes := strings.Split(prefixStrings, ",")
 	for _, p := range prefixes {
-		i := strings.Index(command, p)
-		if i == 0 {
+		if strings.HasPrefix(command, p) {
 			return true
 		}
 	}
@@ -173,7 +172,7 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		// Validate regex.
 		if !cmClient.validateRegex(command) {
 			log.Println("invalid command syntax: ", command)
-			if err := cmClient.ghClient.postComment(ctx, "command syntax invalid"); err != nil {
+			if err := cmClient.ghClient.postComment("command syntax invalid"); err != nil {
 				log.Printf("%v : couldn't post comment", err)
 			}
 			http.Error(w, "command syntax invalid", http.StatusBadRequest)
@@ -181,7 +180,7 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		}
 
 		// Verify user.
-		err = cmClient.verifyUser(ctx, c.verifyUserDisabled)
+		err = cmClient.verifyUser(c.verifyUserDisabled)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "user not allowed to run command", http.StatusForbidden)
@@ -189,7 +188,7 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		}
 
 		// Extract args.
-		err = cmClient.extractArgs(ctx, command)
+		err = cmClient.extractArgs(command)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "could not extract arguments", http.StatusBadRequest)
@@ -197,7 +196,7 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		}
 
 		// Post generated comment to GitHub pr.
-		err = cmClient.generateAndPostComment(ctx)
+		err = cmClient.generateAndPostComment()
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "could not post comment to GitHub", http.StatusBadRequest)
@@ -205,7 +204,7 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		}
 
 		// Set label to GitHub pr.
-		err = cmClient.postLabel(ctx)
+		err = cmClient.postLabel()
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "could not set label to GitHub", http.StatusBadRequest)
