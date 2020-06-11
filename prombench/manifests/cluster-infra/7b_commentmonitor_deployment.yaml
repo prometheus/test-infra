@@ -26,8 +26,6 @@ spec:
         env:
         - name: DOMAIN_NAME
           value: {{ .DOMAIN_NAME }}
-        - name: LABEL_NAME
-          value: prombench
         - name: GITHUB_TOKEN
           valueFrom:
             secretKeyRef:
