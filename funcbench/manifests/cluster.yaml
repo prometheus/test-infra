@@ -10,3 +10,5 @@ cluster:
         machinetype: n1-highmem-4
         imagetype: COS
         disksizegb: 100
+        labels:
+          node-name: funcbench-{{ .PR_NUMBER }}

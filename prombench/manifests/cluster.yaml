@@ -4,8 +4,6 @@ cluster:
   name: {{ .CLUSTER_NAME }}
   initialclusterversion: 1.14
   nodepools:
-  # GKE creates a label on every node in a pool
-  # cloud.google.com/gke-nodepool: <NODEPOOL_NAME>
   # This node-pool will be used for running monitoring components
   - name: main-node
     initialnodecount: 1
@@ -13,3 +11,5 @@ cluster:
       machinetype: n1-standard-4
       imagetype: COS
       disksizegb: 300
+      labels:
+        node-name: main-node

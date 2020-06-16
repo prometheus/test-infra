@@ -121,7 +121,7 @@ spec:
             successThreshold: 1
             timeoutSeconds: 1
       nodeSelector:
-        cloud.google.com/gke-nodepool: main-node
+        node-name: main-node
       tolerations:
         - key: node-role.kubernetes.io/master
           effect: NoSchedule
