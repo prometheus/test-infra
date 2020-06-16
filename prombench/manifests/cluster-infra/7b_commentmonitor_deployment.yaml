@@ -49,7 +49,7 @@ spec:
           name: comment-monitor-eventmap
       terminationGracePeriodSeconds: 300
       nodeSelector:
-        cloud.google.com/gke-nodepool: main-node
+        node-name: main-node
 ---
 apiVersion: v1
 kind: Service

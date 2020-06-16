@@ -13,6 +13,7 @@ cluster:
       localssdcount: 1  #SSD is used to give fast-lookup to Prometheus servers being benchmarked
       labels:
         isolation: prometheus
+        node-name: prometheus-{{ .PR_NUMBER }}
   - name: nodes-{{ .PR_NUMBER }}
     initialnodecount: 1
     config:
@@ -22,3 +23,4 @@ cluster:
       localssdcount: 0  #use standard HDD. SSD not needed for fake-webservers.
       labels:
         isolation: none
+        node-name: nodes-{{ .PR_NUMBER }}
