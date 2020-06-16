@@ -41,7 +41,7 @@ For example, the following regex will create an argument named `RELEASE` with th
 #### Usage and examples:
 [embedmd]:# (commentMonitor-flags.txt)
 ```txt
-usage: commentMonitor --command-prefixes=COMMAND-PREFIXES [<flags>]
+usage: commentMonitor [<flags>]
 
 commentMonitor GithubAction - Post and monitor GitHub comments.
 
@@ -54,9 +54,8 @@ Flags:
       --eventmap="./eventmap.yml"
                         Filepath to eventmap file.
       --port="8080"     port number to run webhook in.
-      --command-prefixes=COMMAND-PREFIXES
-                        Comma separated list of command prefixes.
-                        Eg."/prombench,/funcbench"
+      --command-prefix=COMMAND-PREFIX ...
+                        Specify allowed command prefix. Eg."/prombench"
 
 ```
 ### Building Docker Image

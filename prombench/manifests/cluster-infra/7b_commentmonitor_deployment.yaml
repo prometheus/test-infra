@@ -20,6 +20,8 @@ spec:
         args:
         - "--eventmap=/etc/cm/eventmap.yml"
         - "--webhooksecretfile=/etc/github/whsecret"
+        - "--command-prefix=/prombench"
+        - "--command-prefix=/funcbench"
         name: comment-monitor
         env:
         - name: DOMAIN_NAME

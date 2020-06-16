@@ -32,7 +32,7 @@ type commentMonitorConfig struct {
 	verifyUserDisabled bool
 	eventMapFilePath   string
 	whSecretFilePath   string
-	commandPrefixes    string
+	commandPrefixes    []string
 	whSecret           []byte
 	eventMap           webhookEventMaps
 	port               string
@@ -64,9 +64,8 @@ func main() {
 	app.Flag("port", "port number to run webhook in.").
 		Default("8080").
 		StringVar(&cmConfig.port)
-	app.Flag("command-prefixes", `Comma separated list of command prefixes. Eg."/prombench,/funcbench" `).
-		Required().
-		StringVar(&cmConfig.commandPrefixes)
+	app.Flag("command-prefix", `Specify allowed command prefix. Eg."/prombench" `).
+		StringsVar(&cmConfig.commandPrefixes)
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	mux := http.NewServeMux()
@@ -105,8 +104,7 @@ func extractCommand(s string) string {
 	return s
 }
 
-func checkCommandPrefix(command, prefixStrings string) bool {
-	prefixes := strings.Split(prefixStrings, ",")
+func checkCommandPrefix(command string, prefixes []string) bool {
 	for _, p := range prefixes {
 		if strings.HasPrefix(command, p) {
 			return true
