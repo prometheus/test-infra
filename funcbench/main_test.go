@@ -15,6 +15,12 @@ package main
 
 import (
 	"testing"
+
+	fixtures "gopkg.in/src-d/go-git-fixtures.v3"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
+	"gopkg.in/src-d/go-git.v4/plumbing/cache"
+	"gopkg.in/src-d/go-git.v4/storage/filesystem"
 )
 
 func TestMarkdownFormatting(t *testing.T) {
@@ -47,5 +53,31 @@ BenchmarkBufferedSeriesIterator-8 0 0 +0.00%`
 	formattedTable := formatCommentToMD(rawTable)
 	if formattedTable != expectedTable {
 		t.Errorf("Output did not match.\ngot:\n%#v\nwant:\n%#v", formattedTable, expectedTable)
+	}
+}
+
+func TestGetTargetInfo(t *testing.T) {
+	_ = fixtures.Init()
+	f := fixtures.Basic().One()
+	sto := filesystem.NewStorage(f.DotGit(), cache.NewObjectLRUDefault())
+	r, err := git.Open(sto, f.DotGit())
+	if err != nil {
+		t.Errorf("error when open repository: %s", err)
+	}
+
+	testCases := map[string]string{
+		"notFound": plumbing.ZeroHash.String(),
+		"HEAD":     "6ecf0ef2c2dffb796033e5a02219af86ec6584e5",
+		"master":   "6ecf0ef2c2dffb796033e5a02219af86ec6584e5",
+		"branch":   "e8d3ffab552895c19b9fcf7aa264d277cde33881",
+		"v1.0.0":   "6ecf0ef2c2dffb796033e5a02219af86ec6584e5",
+		"918c48b83bd081e863dbe1b80f8998f058cd8294": "918c48b83bd081e863dbe1b80f8998f058cd8294",
+	}
+
+	for target, hash := range testCases {
+		commit := getTargetInfo(r, target)
+		if commit.String() != hash {
+			t.Errorf("error when get target %s, expect %s, got %s", target, hash, commit)
+		}
 	}
 }
