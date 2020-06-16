@@ -232,7 +232,7 @@ spec:
           claimName: prometheus-meta
       terminationGracePeriodSeconds: 300
       nodeSelector:
-        node-type: main-node
+        node-name: main-node
 ---
 apiVersion: v1
 kind: Service

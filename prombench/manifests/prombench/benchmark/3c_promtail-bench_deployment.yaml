@@ -136,7 +136,7 @@ spec:
             successThreshold: 1
             timeoutSeconds: 1
       nodeSelector:
-        node-type: prometheus-{{ .PR_NUMBER }}
+        node-name: prometheus-{{ .PR_NUMBER }}
         isolation: prometheus
       tolerations:
         - key: node-role.kubernetes.io/master
@@ -229,7 +229,7 @@ spec:
             successThreshold: 1
             timeoutSeconds: 1
       nodeSelector:
-        node-type: prometheus-{{ .PR_NUMBER }}
+        node-name: prometheus-{{ .PR_NUMBER }}
         isolation: prometheus
       tolerations:
         - key: node-role.kubernetes.io/master

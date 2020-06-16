@@ -262,7 +262,7 @@ spec:
             successThreshold: 1
             timeoutSeconds: 10
       nodeSelector:
-        node-type: main-node
+        node-name: main-node
 
 ---
 kind: Service

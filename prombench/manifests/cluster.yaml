@@ -12,4 +12,4 @@ cluster:
       imagetype: COS
       disksizegb: 300
       labels:
-        node-type: main-node
+        node-name: main-node

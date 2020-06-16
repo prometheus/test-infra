@@ -87,7 +87,7 @@ spec:
         configMap:
           name: fake-webserver-config-for-scaler
       nodeSelector:
-        node-type: nodes-{{ .PR_NUMBER }}
+        node-name: nodes-{{ .PR_NUMBER }}
         isolation: none
 ---
 apiVersion: apps/v1
@@ -127,7 +127,7 @@ spec:
         configMap:
           name: prometheus-loadgen
       nodeSelector:
-        node-type: nodes-{{ .PR_NUMBER }}
+        node-name: nodes-{{ .PR_NUMBER }}
         isolation: none
 ---
 apiVersion: v1
