@@ -12,7 +12,7 @@ nodegroups:
       minsize: 2
     labels:
       isolation: prometheus
-      node-type: prometheus-{{ .PR_NUMBER }}
+      node-name: prometheus-{{ .PR_NUMBER }}
   - nodegroupname: nodes-{{ .PR_NUMBER }}
     noderole: {{ .NODE_ROLE }}
     disksize: 100
@@ -24,6 +24,6 @@ nodegroups:
       minsize: 1
     labels:
       isolation: none
-      node-type: nodes-{{ .PR_NUMBER }}
+      node-name: nodes-{{ .PR_NUMBER }}
     
 

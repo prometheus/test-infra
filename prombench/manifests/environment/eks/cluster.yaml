@@ -19,7 +19,7 @@ nodegroups:
       maxsize: 1
       minsize: 1
     labels:
-      node-type: main-node
+      node-name: main-node
 
 
     
