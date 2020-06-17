@@ -102,9 +102,9 @@ func (c *commentMonitorClient) extractArgs(command string) error {
 	return nil
 }
 
-func (c commentMonitorClient) postLabel(ctx context.Context) error {
+func (c commentMonitorClient) postLabel() error {
 	if c.label != "" {
-		if err := c.ghClient.createLabel(ctx, c.label); err != nil {
+		if err := c.ghClient.createLabel(c.label); err != nil {
 			return fmt.Errorf("%v : couldn't set label", err)
 		}
 		log.Println("label successfully set")
