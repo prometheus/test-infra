@@ -22,6 +22,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -158,7 +159,8 @@ func main() {
 			}
 
 			// ( ◔_◔)ﾉ Start benchmarking!
-			cmps, err := startBenchmark(ctx, env, newBenchmarker(logger, env, &commander{verbose: cfg.verbose}, cfg.benchTime, cfg.benchTimeout, cfg.resultsDir))
+			benchmarker := newBenchmarker(logger, env, &commander{verbose: cfg.verbose}, cfg.benchTime, cfg.benchTimeout, cfg.resultsDir)
+			cmps, err := startBenchmark(ctx, env, benchmarker)
 			if err != nil {
 				if pErr := env.PostErr(ctx, fmt.Sprintf("%v. Benchmark failed, please check logs.", err)); pErr != nil {
 					return errors.Wrap(pErr, "could not log error")
@@ -168,7 +170,10 @@ func main() {
 
 			// Post results.
 			// TODO (geekodour): probably post some kind of funcbench summary(?)
-			return env.PostResults(ctx, cmps)
+			return env.PostResults(ctx,
+				cmps,
+				fmt.Sprintf("```\n%s\n```", strings.Join(benchmarker.benchmarkArgs, " ")),
+			)
 
 		}, func(err error) {
 			cancel()
