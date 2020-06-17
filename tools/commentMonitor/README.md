@@ -4,7 +4,6 @@ Simple webhook server to parse GitHub comments and take actions based on the com
 Currently it only works with [`issue_comment` event](https://developer.github.com/v3/activity/events/types/#issuecommentevent) coming from PRs.
 
 ### Environment Variables:
-- `LABEL_NAME`: If set, will add the label to the PR.
 - `GITHUB_TOKEN` : GitHub oauth token used for posting comments and settings the label.
 - Any other environment variable used in any of the comment templates in `eventmap.yml`.
 
@@ -19,6 +18,7 @@ Example content of the `eventmap.yml` file:
   regex_string: (?mi)^/prombench\s+cancel\s*$
   comment_template: |
     Benchmark cancel is in progress.
+  label: prombench
 ```
 
 If a GitHub comment matches with `regex_string`, then commentMonitor will trigger a [`repository_dispatch`](https://developer.github.com/v3/repos/#create-a-repository-dispatch-event) with the event type `event_type` and then post a comment to the issue with `comment_template`. The extracted out arguments will be passed to the [`client_payload`](https://developer.github.com/v3/repos/#example-5) of the `repository_dispatch` event.

@@ -43,6 +43,7 @@ type webhookEventMap struct {
 	EventType       string `yaml:"event_type"`
 	CommentTemplate string `yaml:"comment_template"`
 	RegexString     string `yaml:"regex_string"`
+	Label           string `yaml:"label"`
 }
 
 type webhookEventMaps []webhookEventMap
