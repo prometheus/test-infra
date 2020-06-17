@@ -14,6 +14,7 @@
 package eks
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -33,6 +34,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 type Resource = provider.Resource
@@ -214,7 +216,7 @@ func (c *EKS) ClusterDelete(*kingpin.ParseContext) error {
 			ClusterName: req.Cluster.Name,
 		}
 
-		for true {
+		for {
 			resL, err := c.clientEKS.ListNodegroups(reqL)
 			if err != nil {
 				log.Fatalf("listing nodepools err:%v", err)
@@ -455,7 +457,57 @@ func (c *EKS) AllNodeGroupsDeleted(*kingpin.ParseContext) error {
 // NewK8sProvider sets the k8s provider used for deploying k8s manifests
 func (c *EKS) NewK8sProvider(*kingpin.ParseContext) error {
 
-	// TODO: Complete this function
+	clusterName, ok := c.DeploymentVars["CLUSTER_NAME"]
+	if !ok {
+		return fmt.Errorf("missing required CLUSTER_NAME variable")
+	}
+	arnRole, ok := c.DeploymentVars["ROLE_ARN"]
+	if !ok {
+		return fmt.Errorf("missing required CLUSTER_NAME variable")
+	}
+
+	req := &eks.DescribeClusterInput{
+		Name: &clusterName,
+	}
+
+	rep, err := c.clientEKS.DescribeCluster(req)
+	if err != nil {
+		log.Fatalf("failed to get cluster details: %v", err)
+	}
+
+	cluster := clientcmdapi.NewCluster()
+	cluster.CertificateAuthorityData = []byte(rep.Cluster.CertificateAuthority.String())
+	cluster.Server = *rep.Cluster.Endpoint
+
+	clusterContext := clientcmdapi.NewContext()
+	clusterContext.Cluster = "kubernetes"
+	clusterContext.AuthInfo = "aws"
+
+	authInfo := clientcmdapi.NewAuthInfo()
+	authInfo.Exec = &clientcmdapi.ExecConfig{
+		APIVersion: "client.authentication.k8s.io/v1alpha1",
+		Command:    "aws",
+		Args:       []string{"eks", "get-token", "--cluster-name", clusterName, "--role", arnRole},
+		Env: []clientcmdapi.ExecEnvVar{
+			{
+				Name:  "AWS_PROFILE",
+				Value: "prombench",
+			},
+		},
+	}
+
+	config := clientcmdapi.NewConfig()
+	config.AuthInfos["aws"] = authInfo
+	config.Contexts["aws"] = clusterContext
+	config.Clusters["kubernetes"] = cluster
+	config.CurrentContext = "aws"
+	config.Kind = "Config"
+	config.APIVersion = "v1"
+
+	c.k8sProvider, err = k8sProvider.New(context.Background(), config)
+	if err != nil {
+		log.Fatal("k8s provider error", err)
+	}
 
 	return nil
 }

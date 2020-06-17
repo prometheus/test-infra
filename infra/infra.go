@@ -113,8 +113,8 @@ func main() {
 	k8sEKS := app.Command("eks", "Amazon Elastic Kubernetes Service - https://aws.amazon.com/eks").
 		Action(e.NewEKSClient)
 	k8sEKS.Flag("auth", "filename which consist eks credentials.").
-		PlaceHolder("service-account.json").
-		Short("a").
+		PlaceHolder("credentials").
+		Short('a').
 		StringVar(&e.AuthFilename)
 	k8sEKS.Flag("file", "yaml file or folder  that describes the parameters for the object that will be deployed.").
 		Required().
@@ -130,6 +130,35 @@ func main() {
 		Short('s').
 		Default("_").
 		StringVar(&e.Separator)
+
+	// EKS Cluster operations
+	k8sEKSCluster := k8sEKS.Command("cluster", "manage EKS clusters").
+		Action(e.EKSDeploymentParse)
+	k8sEKSCluster.Command("create", "eks cluster create -a credentials -f FileOrFolder").
+		Action(e.ClusterCreate)
+	k8sEKSCluster.Command("delete", "eks cluster delete -a credentials -f FileOrFolder").
+		Action(e.ClusterDelete)
+
+	// Cluster node-pool operations
+	k8sEKSNodeGroup := k8sEKS.Command("nodegroup", "manage EKS clusters nodegroups").
+		Action(e.EKSDeploymentParse)
+	k8sEKSNodeGroup.Command("create", "eks nodegroup create -a credentials -f FileOrFolder").
+		Action(e.NodeGroupCreate)
+	k8sEKSNodeGroup.Command("delete", "eks nodegroup delete -a credentials -f FileOrFolder").
+		Action(e.NodeGroupDelete)
+	k8sEKSNodeGroup.Command("check-running", "eks nodegroup check-running -a credentails -f FileOrFolder").
+		Action(e.AllNodeGroupsRunning)
+	k8sEKSNodeGroup.Command("check-deleted", "eks nodegroup check-deleted -a credentials -f FileOrFolder").
+		Action(e.AllNodeGroupsDeleted)
+
+	// K8s resource operations.
+	k8sEKSResource := k8sEKS.Command("resource", `Apply and delete different k8s resources - deployments, services, config maps etc.Required variables -v PROJECT_ID, -v ZONE: -west1-b -v CLUSTER_NAME`).
+		Action(e.NewK8sProvider).
+		Action(e.K8SDeploymentsParse)
+	k8sEKSResource.Command("apply", "eks resource apply -a credentials -f manifestsFileOrFolder -v PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+		Action(e.ResourceApply)
+	k8sEKSResource.Command("delete", "eks resource delete -a credentials -f manifestsFileOrFolder -v PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+		Action(e.ResourceDelete)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error parsing commandline arguments"))
