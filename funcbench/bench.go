@@ -81,9 +81,17 @@ func (b *Benchmarker) exec(ctx context.Context, pkgRoot string, commit plumbing.
 
 	// TODO(bwplotka): Allow memprofiles.
 	// 'go test' flags: https://golang.org/cmd/go/#hdr-Testing_flags
-	extraArgs := []string{"-benchtime", b.benchTime.String()}
-	extraArgs = append(extraArgs, "-timeout", b.benchTimeout.String())
-	benchCmd := []string{"sh", "-c", strings.Join(append(append([]string{"cd", pkgRoot, "&&", "go", "test", "-run", "^$", "-bench", fmt.Sprintf("^%s$", b.benchFunc), "-benchmem"}, extraArgs...), "./..."), " ")}
+	extraArgs := []string{
+		"go test",
+		"-mod", "vendor",
+		"-run", "^$",
+		"-bench", fmt.Sprintf("^%s$", b.benchFunc),
+		"-benchmem",
+		"-benchtime", b.benchTime.String(),
+		"-timeout", b.benchTimeout.String(),
+		"./...",
+	}
+	benchCmd := []string{"sh", "-c", strings.Join(append([]string{"cd", pkgRoot, "&&"}, extraArgs...), " ")}
 
 	b.logger.Println("Executing benchmark command for", commit.String(), "\n", benchCmd)
 	out, err = b.c.exec(ctx, benchCmd...)
