@@ -21,9 +21,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/google/go-github/v29/github"
-	"golang.org/x/oauth2"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/yaml.v2"
 )
@@ -32,6 +32,7 @@ type commentMonitorConfig struct {
 	verifyUserDisabled bool
 	eventMapFilePath   string
 	whSecretFilePath   string
+	commandPrefixes    []string
 	whSecret           []byte
 	eventMap           webhookEventMaps
 	port               string
@@ -63,30 +64,14 @@ func main() {
 	app.Flag("port", "port number to run webhook in.").
 		Default("8080").
 		StringVar(&cmConfig.port)
+	app.Flag("command-prefix", `Specify allowed command prefix. Eg."/prombench" `).
+		StringsVar(&cmConfig.commandPrefixes)
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", cmConfig.webhookExtract)
 	log.Println("Server is ready to handle requests at", cmConfig.port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", cmConfig.port), mux))
-}
-
-func newGithubClient(ctx context.Context, e *github.IssueCommentEvent) (*githubClient, error) {
-	ghToken := os.Getenv("GITHUB_TOKEN")
-	if ghToken == "" {
-		return nil, fmt.Errorf("env var missing")
-	}
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: ghToken})
-	tc := oauth2.NewClient(ctx, ts)
-	return &githubClient{
-		clt:               github.NewClient(tc),
-		owner:             *e.GetRepo().Owner.Login,
-		repo:              *e.GetRepo().Name,
-		pr:                *e.GetIssue().Number,
-		author:            *e.Sender.Login,
-		authorAssociation: *e.GetComment().AuthorAssociation,
-		commentBody:       *e.GetComment().Body,
-	}, nil
 }
 
 func (c *commentMonitorConfig) loadConfig() error {
@@ -108,6 +93,24 @@ func (c *commentMonitorConfig) loadConfig() error {
 		return err
 	}
 	return nil
+}
+
+func extractCommand(s string) string {
+	s = strings.TrimLeft(s, "\r\n\t ")
+	if i := strings.Index(s, "\n"); i != -1 {
+		s = s[:i]
+	}
+	s = strings.TrimRight(s, "\r\n\t ")
+	return s
+}
+
+func checkCommandPrefix(command string, prefixes []string) bool {
+	for _, p := range prefixes {
+		if strings.HasPrefix(command, p) {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Request) {
@@ -155,15 +158,27 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 			return
 		}
 
-		// Validate regex.
-		if !cmClient.validateRegex() {
-			//log.Println(err) // Don't log on failure.
+		// Strip whitespace.
+		command := extractCommand(cmClient.ghClient.commentBody)
+
+		// test-infra command check.
+		if !checkCommandPrefix(command, c.commandPrefixes) {
 			http.Error(w, "comment validation failed", http.StatusOK)
 			return
 		}
 
+		// Validate regex.
+		if !cmClient.validateRegex(command) {
+			log.Println("invalid command syntax: ", command)
+			if err := cmClient.ghClient.postComment("command syntax invalid"); err != nil {
+				log.Printf("%v : couldn't post comment", err)
+			}
+			http.Error(w, "command syntax invalid", http.StatusBadRequest)
+			return
+		}
+
 		// Verify user.
-		err = cmClient.verifyUser(ctx, c.verifyUserDisabled)
+		err = cmClient.verifyUser(c.verifyUserDisabled)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "user not allowed to run command", http.StatusForbidden)
@@ -171,7 +186,7 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		}
 
 		// Extract args.
-		err = cmClient.extractArgs(ctx)
+		err = cmClient.extractArgs(command)
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "could not extract arguments", http.StatusBadRequest)
@@ -179,7 +194,7 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		}
 
 		// Post generated comment to GitHub pr.
-		err = cmClient.generateAndPostComment(ctx)
+		err = cmClient.generateAndPostComment()
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "could not post comment to GitHub", http.StatusBadRequest)
@@ -187,7 +202,7 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		}
 
 		// Set label to GitHub pr.
-		err = cmClient.postLabel(ctx)
+		err = cmClient.postLabel()
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "could not set label to GitHub", http.StatusBadRequest)

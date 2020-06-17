@@ -14,7 +14,7 @@ Running commentMonitor requires the eventmap file which is specified by the `--e
 The `regex_string`, `event_type` and `comment_template` can be specified in the `eventmap.yml` file.
 
 Example content of the `eventmap.yml` file:
-```
+```yaml
 - event_type: prombench_stop
   regex_string: (?mi)^/prombench\s+cancel\s*$
   comment_template: |
@@ -54,6 +54,8 @@ Flags:
       --eventmap="./eventmap.yml"
                         Filepath to eventmap file.
       --port="8080"     port number to run webhook in.
+      --command-prefix=COMMAND-PREFIX ...
+                        Specify allowed command prefix. Eg."/prombench"
 
 ```
 ### Building Docker Image
