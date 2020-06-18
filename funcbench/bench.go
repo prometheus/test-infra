@@ -33,9 +33,8 @@ import (
 type Benchmarker struct {
 	logger Logger
 
+	benchmarkArgs  []string
 	benchFunc      string
-	benchTime      time.Duration
-	benchTimeout   time.Duration
 	resultCacheDir string
 
 	c    *commander
@@ -44,10 +43,20 @@ type Benchmarker struct {
 
 func newBenchmarker(logger Logger, env Environment, c *commander, benchTime time.Duration, benchTimeout time.Duration, resultCacheDir string) *Benchmarker {
 	return &Benchmarker{
-		logger:         logger,
-		benchFunc:      env.BenchFunc(),
-		benchTime:      benchTime,
-		benchTimeout:   benchTimeout,
+		logger:    logger,
+		benchFunc: env.BenchFunc(),
+		benchmarkArgs: []string{
+			// TODO(bwplotka): Allow memprofiles.
+			// 'go test' flags: https://golang.org/cmd/go/#hdr-Testing_flags
+			"go test",
+			"-mod", "vendor",
+			"-run", "^$",
+			"-bench", fmt.Sprintf("^%s$", env.BenchFunc()),
+			"-benchmem",
+			"-benchtime", benchTime.String(),
+			"-timeout", benchTimeout.String(),
+			"./...",
+		},
 		c:              c,
 		repo:           env.Repo(),
 		resultCacheDir: resultCacheDir,
@@ -79,11 +88,7 @@ func (b *Benchmarker) exec(ctx context.Context, pkgRoot string, commit plumbing.
 		return filepath.Join(b.resultCacheDir, fileName), nil
 	}
 
-	// TODO(bwplotka): Allow memprofiles.
-	// 'go test' flags: https://golang.org/cmd/go/#hdr-Testing_flags
-	extraArgs := []string{"-benchtime", b.benchTime.String()}
-	extraArgs = append(extraArgs, "-timeout", b.benchTimeout.String())
-	benchCmd := []string{"sh", "-c", strings.Join(append(append([]string{"cd", pkgRoot, "&&", "go", "test", "-run", "^$", "-bench", fmt.Sprintf("^%s$", b.benchFunc), "-benchmem"}, extraArgs...), "./..."), " ")}
+	benchCmd := []string{"sh", "-c", strings.Join(append([]string{"cd", pkgRoot, "&&"}, b.benchmarkArgs...), " ")}
 
 	b.logger.Println("Executing benchmark command for", commit.String(), "\n", benchCmd)
 	out, err = b.c.exec(ctx, benchCmd...)
