@@ -24,7 +24,7 @@ if [[ "${CHECK}" == "check" ]]; then
     RESULT=$?
     if [[ "$RESULT" != "0" ]]; then
         cat << EOF
-Docs have discrepancies, do 'make docs' and commit changes:
+Docs have discrepancies, do 'make build docs' and commit changes:
 
 ${DIFF}
 EOF

@@ -17,7 +17,7 @@ docker-manifest:
 	@echo skip manifest creation
 
 .PHONY: docs
-docs: build
+docs:
 	./scripts/genflagdocs.sh
 
 .PHONY: docs-check

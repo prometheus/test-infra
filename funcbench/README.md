@@ -12,8 +12,7 @@ funcbench currently supports two modes, Local and GitHub. Running it in the Gith
 
 > Clean git state is required.
 
-[embedmd]: # "funcbench-flags.txt"
-
+[embedmd]:# (funcbench-flags.txt)
 ```txt
 usage: funcbench [<flags>] <target> [<bench-func-regex>]
 
@@ -47,11 +46,12 @@ Flags:
                              longer than duration d, panic.
 
 Args:
-  <target>              Can be one of '.', branch name or commit SHA of the
-                        branch to compare against. If set to '.', branch/commit
-                        is the same as the current one; funcbench will run once
-                        and try to compare between 2 sub-benchmarks. Errors out
-                        if there are no sub-benchmarks.
+  <target>              Can be one of '.', tag name, branch name or commit SHA
+                        of the branch to compare against. If set to '.',
+                        branch/commit is the same as the current one; funcbench
+                        will run once and try to compare between 2
+                        sub-benchmarks. Errors out if there are no
+                        sub-benchmarks.
   [<bench-func-regex>]  Function regex to use for benchmark.Supports RE2 regexp
                         and is fully anchored, by default will run all
                         benchmarks.

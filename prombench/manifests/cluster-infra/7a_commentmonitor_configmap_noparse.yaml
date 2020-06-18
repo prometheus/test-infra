@@ -6,6 +6,7 @@ data:
   eventmap.yml: |
     - event_type: prombench_start
       regex_string: (?mi)^/prombench\s*(?P<RELEASE>master|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
+      label: prombench
       comment_template: |
         ⏱️ Welcome to Prometheus Benchmarking Tool. ⏱️
 
@@ -51,6 +52,7 @@ data:
 
     - event_type: funcbench_start
       regex_string: (?m)^/funcbench[[:blank:]]+(?P<BRANCH>[\w\-\/\.]+)[[:blank:]]*(?P<BENCH_FUNC_REGEX>(?:Benchmark\w*)?(?:\.\*)?)?[[:blank:]]*$
+      label: funcbench
       comment_template: |
         ⏱️ Welcome to Funcbench Tool. ⏱️
 
