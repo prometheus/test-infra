@@ -1,17 +1,21 @@
 cluster:
   name: {{ .CLUSTER_NAME }}
   version: 1.14
-  roleArn: {{ .ROLE_ARN }}
-  resourcesvpconfig:
+  rolearn: {{ .ROLE_ARN }}
+  resourcesvpcconfig:
     endpointpublicaccess: true
     subnetids:
-      {{ range $subnet_id := get_range .SUBNET_IDS .SEPERATOR }}
-      - {{ $subnet_id }}
+      {{ range $subnetId := get_range .SUBNET_IDS .SEPERATOR }}
+      - {{ $subnetId }}
       {{ end }}
 nodegroups:
   - nodegroupname: main-node
     noderole: {{ .NODE_ROLE }}
     disksize: 300
+    subnets:
+      {{ range $subnetId := get_range .SUBNET_IDS .SEPERATOR }}
+      - {{ $subnetId }}
+      {{ end }}
     instancetypes:
       - t3.medium
     scalingconfig:
