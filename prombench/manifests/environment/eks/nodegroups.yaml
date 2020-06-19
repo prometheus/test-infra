@@ -4,6 +4,10 @@ nodegroups:
   - nodegroupname: prometheus-{{ .PR_NUMBER }}
     noderole: {{ .NODE_ROLE }}
     disksize: 100
+    subnets:
+      {{ range $subnetId := get_range .SUBNET_IDS .SEPERATOR }}
+      - {{ $subnetId }}
+      {{ end }}
     instancetypes:
       - t3.medium #change this so it matches with gke 
     scalingconfig:
@@ -16,6 +20,10 @@ nodegroups:
   - nodegroupname: nodes-{{ .PR_NUMBER }}
     noderole: {{ .NODE_ROLE }}
     disksize: 100
+    subnets:
+      {{ range $subnetId := get_range .SUBNET_IDS .SEPERATOR }}
+      - {{ $subnetId }}
+      {{ end }}
     instancetypes:
       - t3.medium #change this so it matches with gke
     scalingconfig:
