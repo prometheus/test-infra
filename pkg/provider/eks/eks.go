@@ -15,6 +15,7 @@ package eks
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"os"
@@ -66,6 +67,8 @@ type EKS struct {
 	eksResources []Resource
 	// K8s resource.runtime objects after parsing the template variables, grouped by filename.
 	k8sResources []k8sProvider.Resource
+
+	ctx context.Context
 }
 
 // New is the EKS constructor
@@ -89,6 +92,7 @@ func (c *EKS) NewEKSClient(*kingpin.ParseContext) error {
 	})
 
 	c.clientEKS = cl
+	c.ctx = context.Background()
 	return nil
 }
 
@@ -161,7 +165,7 @@ func (c *EKS) ClusterCreate(*kingpin.ParseContext) error {
 			log.Fatalf("Error parsing the cluster deployment file %s:%v", deployment.FileName, err)
 		}
 
-		log.Printf("Cluster create request: name:'%v'", *req.Cluster.Name)
+		log.Printf("Cluster create request: name:'%s'", *req.Cluster.Name)
 		_, err := c.clientEKS.CreateCluster(&req.Cluster)
 		if err != nil {
 			log.Fatalf("Couldn't create cluster '%v', file:%v ,err: %v", *req.Cluster.Name, deployment.FileName, err)
@@ -462,14 +466,11 @@ func (c *EKS) AllNodeGroupsDeleted(*kingpin.ParseContext) error {
 // NewK8sProvider sets the k8s provider used for deploying k8s manifests
 func (c *EKS) NewK8sProvider(*kingpin.ParseContext) error {
 
-	clusterName, ok := c.DeploymentVars["CLUSTER_NAME"]
-	if !ok {
-		return fmt.Errorf("missing required CLUSTER_NAME variable")
-	}
-	arnRole, ok := c.DeploymentVars["ROLE_ARN"]
-	if !ok {
-		return fmt.Errorf("missing required CLUSTER_NAME variable")
-	}
+	clusterName := c.DeploymentVars["CLUSTER_NAME"]
+	// if !ok {
+	// 	return fmt.Errorf("missing required CLUSTER_NAME variable")
+	// }
+	region := c.DeploymentVars["REGION"]
 
 	req := &eks.DescribeClusterInput{
 		Name: &clusterName,
@@ -480,36 +481,37 @@ func (c *EKS) NewK8sProvider(*kingpin.ParseContext) error {
 		log.Fatalf("failed to get cluster details: %v", err)
 	}
 
+	arnRole := *rep.Cluster.Arn
+
+	caCert, err := base64.StdEncoding.DecodeString(*rep.Cluster.CertificateAuthority.Data)
+	if err != nil {
+		log.Fatalf("failed to decode certificate: %v", err.Error())
+	}
+
 	cluster := clientcmdapi.NewCluster()
-	cluster.CertificateAuthorityData = []byte(rep.Cluster.CertificateAuthority.String())
+	cluster.CertificateAuthorityData = []byte(caCert)
 	cluster.Server = *rep.Cluster.Endpoint
 
 	clusterContext := clientcmdapi.NewContext()
-	clusterContext.Cluster = "kubernetes"
-	clusterContext.AuthInfo = "aws"
+	clusterContext.Cluster = arnRole
+	clusterContext.AuthInfo = arnRole
 
 	authInfo := clientcmdapi.NewAuthInfo()
 	authInfo.Exec = &clientcmdapi.ExecConfig{
 		APIVersion: "client.authentication.k8s.io/v1alpha1",
 		Command:    "aws",
-		Args:       []string{"eks", "get-token", "--cluster-name", clusterName, "--role", arnRole},
-		Env: []clientcmdapi.ExecEnvVar{
-			{
-				Name:  "AWS_PROFILE",
-				Value: "prombench",
-			},
-		},
+		Args:       []string{"--region", region, "eks", "get-token", "--cluster-name", clusterName},
 	}
 
 	config := clientcmdapi.NewConfig()
-	config.AuthInfos["aws"] = authInfo
-	config.Contexts["aws"] = clusterContext
-	config.Clusters["kubernetes"] = cluster
-	config.CurrentContext = "aws"
+	config.AuthInfos[arnRole] = authInfo
+	config.Contexts[arnRole] = clusterContext
+	config.Clusters[arnRole] = cluster
+	config.CurrentContext = arnRole
 	config.Kind = "Config"
 	config.APIVersion = "v1"
 
-	c.k8sProvider, err = k8sProvider.New(context.Background(), config)
+	c.k8sProvider, err = k8sProvider.New(c.ctx, config)
 	if err != nil {
 		log.Fatal("k8s provider error", err)
 	}
