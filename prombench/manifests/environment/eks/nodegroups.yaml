@@ -9,7 +9,7 @@ nodegroups:
       - {{ $subnetId }}
       {{ end }}
     instancetypes:
-      - t3.medium #change this so it matches with gke 
+      - m5d.2xlarge 
     scalingconfig:
       desiredsize: 2
       maxsize: 2
@@ -25,7 +25,7 @@ nodegroups:
       - {{ $subnetId }}
       {{ end }}
     instancetypes:
-      - t3.medium #change this so it matches with gke
+      - c6g.4xlarge
     scalingconfig:
       desiredsize: 1
       maxsize: 1

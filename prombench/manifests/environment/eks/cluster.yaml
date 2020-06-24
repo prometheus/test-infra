@@ -17,7 +17,7 @@ nodegroups:
       - {{ $subnetId }}
       {{ end }}
     instancetypes:
-      - t3.medium
+      - t3.xlarge
     scalingconfig:
       desiredsize: 1
       maxsize: 1
