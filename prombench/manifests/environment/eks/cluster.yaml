@@ -24,6 +24,3 @@ nodegroups:
       minsize: 1
     labels:
       node-name: main-node
-
-
-    
