@@ -33,5 +33,3 @@ nodegroups:
     labels:
       isolation: none
       node-name: nodes-{{ .PR_NUMBER }}
-    
-
