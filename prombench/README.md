@@ -49,7 +49,7 @@ export AUTH_FILE=<path to service-account.json>
   - With permissions: `public_repo`, `read:org`, `write:discussion`.
 
 ```
-export GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL=<client-email present in service-account.json>
+export SERVICEACCOUNT_CLIENT_EMAIL=<client-email present in service-account.json>
 export GRAFANA_ADMIN_PASSWORD=password
 export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom domain or an empty string when not used with the Github integration.
 export OAUTH_TOKEN=<generated token from github or set to an empty string " ">
@@ -64,7 +64,7 @@ export GITHUB_REPO=prometheus
 ../infra/infra gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID -v ZONE:$ZONE \
     -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
     -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
-    -v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:$GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL \
+    -v SERVICEACCOUNT_CLIENT_EMAIL:SERVICEACCOUNT_CLIENT_EMAIL \
     -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
     -v WH_SECRET="$(printf $WH_SECRET | base64 -w 0)" \
     -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)" \
