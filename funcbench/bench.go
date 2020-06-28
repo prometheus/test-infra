@@ -14,7 +14,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
@@ -77,25 +76,28 @@ func (b *Benchmarker) benchOutFileName(commit plumbing.Hash) (string, error) {
 	return fmt.Sprintf("%s-%s.out", bb.String(), commit.String()), nil
 }
 
-func (b *Benchmarker) exec(ctx context.Context, pkgRoot string, commit plumbing.Hash) (out string, err error) {
+func (b *Benchmarker) exec(pkgRoot string, commit plumbing.Hash) (string, error) {
 	fileName, err := b.benchOutFileName(commit)
 	if err != nil {
 		return "", err
 	}
 
+	// try to get result from cache
 	if _, err := ioutil.ReadFile(filepath.Join(b.resultCacheDir, fileName)); err == nil {
 		fmt.Println("Found previous results for ", fileName, b.benchFunc, "Reusing.")
 		return filepath.Join(b.resultCacheDir, fileName), nil
 	}
 
+	// TODO switch working directory first
 	benchCmd := []string{"sh", "-c", strings.Join(append([]string{"cd", pkgRoot, "&&"}, b.benchmarkArgs...), " ")}
 
 	b.logger.Println("Executing benchmark command for", commit.String(), "\n", benchCmd)
-	out, err = b.c.exec(ctx, benchCmd...)
+	out, err := b.c.exec(benchCmd...)
 	if err != nil {
 		return "", errors.Wrap(err, "benchmark ended with an error.")
 	}
 
+	// write result to cache
 	fn := filepath.Join(b.resultCacheDir, fileName)
 	if b.resultCacheDir != "" {
 		if err := os.MkdirAll(b.resultCacheDir, os.ModePerm); err != nil {

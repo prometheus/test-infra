@@ -159,8 +159,8 @@ func main() {
 			}
 
 			// ( ◔_◔)ﾉ Start benchmarking!
-			benchmarker := newBenchmarker(logger, env, &commander{verbose: cfg.verbose}, cfg.benchTime, cfg.benchTimeout, cfg.resultsDir)
-			cmps, err := startBenchmark(ctx, env, benchmarker)
+			benchmarker := newBenchmarker(logger, env, &commander{verbose: cfg.verbose, ctx: ctx}, cfg.benchTime, cfg.benchTimeout, cfg.resultsDir)
+			cmps, err := startBenchmark(env, benchmarker)
 			if err != nil {
 				if pErr := env.PostErr(fmt.Sprintf("%v. Benchmark failed, please check logs.", err)); pErr != nil {
 					return errors.Wrap(pErr, "could not log error")
@@ -202,7 +202,6 @@ func main() {
 // 4. Execute benchmark against packages in the new(target) worktree.
 // 5. Return compared results.
 func startBenchmark(
-	ctx context.Context,
 	env Environment,
 	bench *Benchmarker,
 ) ([]BenchCmp, error) {
@@ -215,13 +214,14 @@ func startBenchmark(
 		return nil, errors.Wrap(err, "get head")
 	}
 
-	if _, err := bench.c.exec(ctx, "sh", "-c", "git update-index -q --ignore-submodules --refresh && git diff-files --quiet --ignore-submodules --"); err != nil {
+	// TODO move it into env? since GitHub env doesn't need this check.
+	if _, err := bench.c.exec("sh", "-c", "git update-index -q --ignore-submodules --refresh && git diff-files --quiet --ignore-submodules --"); err != nil {
 		return nil, errors.Wrap(err, "not clean worktree")
 	}
 
 	if env.CompareTarget() == "." {
 		bench.logger.Println("Assuming sub-benchmarks comparison.")
-		subResult, err := bench.exec(ctx, wt.Filesystem.Root(), ref.Hash())
+		subResult, err := bench.exec(wt.Filesystem.Root(), ref.Hash())
 		if err != nil {
 			return nil, errors.Wrap(err, "execute sub-benchmark")
 		}
@@ -248,28 +248,29 @@ func startBenchmark(
 	bench.logger.Println("Assuming comparing with target (clean workdir will be checked.)")
 
 	// Execute benchmark A.
-	newResult, err := bench.exec(ctx, wt.Filesystem.Root(), ref.Hash())
+	newResult, err := bench.exec(wt.Filesystem.Root(), ref.Hash())
 	if err != nil {
 		return nil, errors.Wrapf(err, "execute benchmark for A: %v", ref.Name().String())
 	}
 
+	// TODO move the following part before 'Execute benchmark B.' into a function Benchmarker.switchToWorkTree.
 	// Best effort cleanup and checkout new worktree.
 	if err := os.RemoveAll(cmpWorkTreeDir); err != nil {
 		return nil, errors.Wrapf(err, "delete worktree at %s", cmpWorkTreeDir)
 	}
 
 	// TODO (geekodour): switch to worktree remove once we decide not to support git<2.17
-	if _, err := bench.c.exec(ctx, "git", "worktree", "prune"); err != nil {
+	if _, err := bench.c.exec("git", "worktree", "prune"); err != nil {
 		return nil, errors.Wrap(err, "worktree prune")
 	}
 
 	bench.logger.Println("Checking out (in new workdir):", cmpWorkTreeDir, "commmit", targetCommit.String())
-	if _, err := bench.c.exec(ctx, "git", "worktree", "add", "-f", cmpWorkTreeDir, targetCommit.String()); err != nil {
+	if _, err := bench.c.exec("git", "worktree", "add", "-f", cmpWorkTreeDir, targetCommit.String()); err != nil {
 		return nil, errors.Wrapf(err, "checkout %s in worktree %s", targetCommit.String(), cmpWorkTreeDir)
 	}
 
 	// Execute benchmark B.
-	oldResult, err := bench.exec(ctx, cmpWorkTreeDir, targetCommit)
+	oldResult, err := bench.exec(cmpWorkTreeDir, targetCommit)
 	if err != nil {
 		return nil, errors.Wrapf(err, "execute benchmark for B: %v", env.CompareTarget())
 	}
@@ -307,10 +308,11 @@ func getTargetInfo(repo *git.Repository, target string) plumbing.Hash {
 
 type commander struct {
 	verbose bool
+	ctx     context.Context
 }
 
-func (c *commander) exec(ctx context.Context, command ...string) (string, error) {
-	cmd := exec.CommandContext(ctx, command[0], command[1:]...)
+func (c *commander) exec(command ...string) (string, error) {
+	cmd := exec.CommandContext(c.ctx, command[0], command[1:]...)
 	var b bytes.Buffer
 	cmd.Stdout = &b
 	cmd.Stderr = &b
