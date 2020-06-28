@@ -151,7 +151,7 @@ func main() {
 
 				env, err = newGitHubEnv(ctx, e, ghClient, cfg.workspaceDir)
 				if err != nil {
-					if err := ghClient.postComment(ctx, fmt.Sprintf("%v. Could not setup environment, please check logs.", err)); err != nil {
+					if err := ghClient.postComment(fmt.Sprintf("%v. Could not setup environment, please check logs.", err)); err != nil {
 						return errors.Wrap(err, "could not post error")
 					}
 					return errors.Wrap(err, "environment create")
@@ -162,7 +162,7 @@ func main() {
 			benchmarker := newBenchmarker(logger, env, &commander{verbose: cfg.verbose}, cfg.benchTime, cfg.benchTimeout, cfg.resultsDir)
 			cmps, err := startBenchmark(ctx, env, benchmarker)
 			if err != nil {
-				if pErr := env.PostErr(ctx, fmt.Sprintf("%v. Benchmark failed, please check logs.", err)); pErr != nil {
+				if pErr := env.PostErr(fmt.Sprintf("%v. Benchmark failed, please check logs.", err)); pErr != nil {
 					return errors.Wrap(pErr, "could not log error")
 				}
 				return err
@@ -170,7 +170,7 @@ func main() {
 
 			// Post results.
 			// TODO (geekodour): probably post some kind of funcbench summary(?)
-			return env.PostResults(ctx,
+			return env.PostResults(
 				cmps,
 				fmt.Sprintf("```\n%s\n```", strings.Join(benchmarker.benchmarkArgs, " ")),
 			)
