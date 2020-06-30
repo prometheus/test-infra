@@ -26,6 +26,7 @@ import (
 	"github.com/google/go-github/v29/github"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
+	"golang.org/x/perf/benchstat"
 )
 
 type Environment interface {
@@ -33,7 +34,7 @@ type Environment interface {
 	CompareTarget() string
 
 	PostErr(err string) error
-	PostResults(cmps []BenchCmp, extraInfo ...string) error
+	PostResults(tables []*benchstat.Table, extraInfo ...string) error
 
 	Repo() *git.Repository
 }
@@ -65,9 +66,15 @@ func newLocalEnv(e environment) (Environment, error) {
 
 func (l *Local) PostErr(string) error { return nil } // Noop. We will see error anyway.
 
-func (l *Local) PostResults(cmps []BenchCmp, extraInfo ...string) error {
+func (l *Local) PostResults(tables []*benchstat.Table, extraInfo ...string) error {
 	fmt.Println("Results:")
-	Render(os.Stdout, cmps, true, true, l.compareTarget)
+	var buf bytes.Buffer
+	benchstat.FormatText(&buf, tables)
+
+	if _, err := os.Stdout.Write(buf.Bytes()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -138,11 +145,19 @@ func (g *GitHub) PostErr(err string) error {
 	return nil
 }
 
-func (g *GitHub) PostResults(cmps []BenchCmp, extraInfo ...string) error {
+func (g *GitHub) PostResults(tables []*benchstat.Table, extraInfo ...string) error {
 	b := bytes.Buffer{}
-	Render(&b, cmps, true, true, g.compareTarget)
+	if err := formatMarkdown(&b, tables); err != nil {
+		return err
+	}
+
 	legend := fmt.Sprintf("Old: `%s`\nNew: `PR-%d`", g.compareTarget, g.client.prNumber)
-	result := fmt.Sprintf("<details><summary>Click to check benchmark result</summary>\n\n%s\n%s\n%s</details>", legend, strings.Join(extraInfo, "\n"), formatCommentToMD(b.String()))
+	result := fmt.Sprintf(
+		"<details><summary>Click to check benchmark result</summary>\n\n%s\n%s\n%s</details>",
+		legend,
+		strings.Join(extraInfo, "\n"),
+		b.String(),
+	)
 	return g.client.postComment(result)
 }
 

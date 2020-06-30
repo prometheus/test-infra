@@ -30,6 +30,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/oklog/run"
 	"github.com/pkg/errors"
+	"golang.org/x/perf/benchstat"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -160,7 +161,7 @@ func main() {
 
 			// ( ◔_◔)ﾉ Start benchmarking!
 			benchmarker := newBenchmarker(logger, env, &commander{verbose: cfg.verbose, ctx: ctx}, cfg.benchTime, cfg.benchTimeout, cfg.resultsDir)
-			cmps, err := startBenchmark(env, benchmarker)
+			tables, err := startBenchmark(env, benchmarker)
 			if err != nil {
 				if pErr := env.PostErr(fmt.Sprintf("%v. Benchmark failed, please check logs.", err)); pErr != nil {
 					return errors.Wrap(pErr, "could not log error")
@@ -171,7 +172,7 @@ func main() {
 			// Post results.
 			// TODO (geekodour): probably post some kind of funcbench summary(?)
 			return env.PostResults(
-				cmps,
+				tables,
 				fmt.Sprintf("```\n%s\n```", strings.Join(benchmarker.benchmarkArgs, " ")),
 			)
 
@@ -201,10 +202,7 @@ func main() {
 // 3. Cleanup of worktree in case funcbench was run previously and checkout target worktree.
 // 4. Execute benchmark against packages in the new(target) worktree.
 // 5. Return compared results.
-func startBenchmark(
-	env Environment,
-	bench *Benchmarker,
-) ([]BenchCmp, error) {
+func startBenchmark(env Environment, bench *Benchmarker) ([]*benchstat.Table, error) {
 
 	wt, _ := env.Repo().Worktree()
 	cmpWorkTreeDir := filepath.Join(wt.Filesystem.Root(), "_funcbench-cmp")
@@ -276,11 +274,11 @@ func startBenchmark(
 	}
 
 	// Compare B vs A.
-	cmps, err := bench.compareBenchmarks(oldResult, newResult)
+	tables, err := bench.compareBenchmarks(oldResult, newResult)
 	if err != nil {
 		return nil, errors.Wrap(err, "comparing benchmarks")
 	}
-	return cmps, nil
+	return tables, nil
 }
 
 func interrupt(logger Logger, cancel <-chan struct{}) error {

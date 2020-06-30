@@ -25,7 +25,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/pkg/errors"
-	"golang.org/x/tools/benchmark/parse"
+	"golang.org/x/perf/benchstat"
 )
 
 // TODO: Add unit test.
@@ -82,13 +82,12 @@ func (b *Benchmarker) exec(pkgRoot string, commit plumbing.Hash) (string, error)
 		return "", err
 	}
 
-	// try to get result from cache
 	if _, err := ioutil.ReadFile(filepath.Join(b.resultCacheDir, fileName)); err == nil {
 		fmt.Println("Found previous results for ", fileName, b.benchFunc, "Reusing.")
 		return filepath.Join(b.resultCacheDir, fileName), nil
 	}
 
-	// TODO switch working directory first
+	// TODO Switch to working directory first
 	benchCmd := []string{"sh", "-c", strings.Join(append([]string{"cd", pkgRoot, "&&"}, b.benchmarkArgs...), " ")}
 
 	b.logger.Println("Executing benchmark command for", commit.String(), "\n", benchCmd)
@@ -97,7 +96,6 @@ func (b *Benchmarker) exec(pkgRoot string, commit plumbing.Hash) (string, error)
 		return "", errors.Wrap(err, "benchmark ended with an error.")
 	}
 
-	// write result to cache
 	fn := filepath.Join(b.resultCacheDir, fileName)
 	if b.resultCacheDir != "" {
 		if err := os.MkdirAll(b.resultCacheDir, os.ModePerm); err != nil {
@@ -110,77 +108,25 @@ func (b *Benchmarker) exec(pkgRoot string, commit plumbing.Hash) (string, error)
 	return fn, nil
 }
 
-func parseFile(path string) (parse.Set, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
+func (b *Benchmarker) compareBenchmarks(files ...string) ([]*benchstat.Table, error) {
+	c := &benchstat.Collection{}
+
+	for _, file := range files {
+		f, err := os.Open(file)
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+
+		if err := c.AddFile(file, f); err != nil {
+			return nil, err
+		}
 	}
-	defer f.Close()
-	bb, err := parse.ParseSet(f)
-	if err != nil {
-		return nil, err
-	}
-	return bb, nil
+
+	return c.Tables(), nil
 }
 
-func (b *Benchmarker) compareBenchmarks(beforeFile, afterFile string) ([]BenchCmp, error) {
-	before, err := parseFile(beforeFile)
-	if err != nil {
-		return nil, errors.Wrapf(err, "open %s", beforeFile)
-	}
-
-	after, err := parseFile(afterFile)
-	if err != nil {
-		return nil, errors.Wrapf(err, "open %s", afterFile)
-	}
-
-	// Use benchcmp library directly.
-	// TODO(bwplotka): benchstat is new thing - we might add choice for funcbench to choose from? (:
-	cmps, warnings := Correlate(before, after)
-	for _, warn := range warnings {
-		b.logger.Println(warn)
-	}
-	if len(cmps) == 0 {
-		return nil, errors.New("no repeated benchmarks")
-	}
-
-	return cmps, nil
-}
-
-func (b *Benchmarker) compareSubBenchmarks(string) ([]BenchCmp, error) {
+func (b *Benchmarker) compareSubBenchmarks(string) ([]*benchstat.Table, error) {
 	// TODO(bwplotka): Implement.
 	return nil, errors.New("not implemented")
-}
-
-func formatCommentToMD(rawTable string) string {
-	tableContent := strings.Split(rawTable, "\n")
-	for i := 0; i <= len(tableContent)-1; i++ {
-		e := tableContent[i]
-		switch {
-		case e == "":
-
-		case strings.Contains(e, "ns/op"):
-			e = "| Benchmark | Old ns/op | New ns/op | Delta |"
-			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
-
-		case strings.Contains(e, "MB/s"):
-			e = "| Benchmark | Old MB/s | New MB/s | Speedup |"
-			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
-
-		case strings.Contains(e, "allocs"):
-			e = "| Benchmark | Old allocs | New allocs | Delta |"
-			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
-
-		case strings.Contains(e, "bytes"):
-			e = "| Benchmark | Old bytes | New bytes | Delta |"
-			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
-
-		default:
-			// Replace spaces with "|".
-			e = strings.Join(strings.Fields(e), "|")
-		}
-		tableContent[i] = e
-	}
-	return strings.Join(tableContent, "\n")
-
 }

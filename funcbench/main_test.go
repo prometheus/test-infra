@@ -23,39 +23,6 @@ import (
 	"github.com/go-git/go-git/v5/storage/filesystem"
 )
 
-func TestMarkdownFormatting(t *testing.T) {
-	expectedTable := `| Benchmark | Old ns/op | New ns/op | Delta |
-|-|-|-|-|
-BenchmarkBufferedSeriesIterator-8|15.7|15.6|-0.64%
-
-| Benchmark | Old MB/s | New MB/s | Speedup |
-|-|-|-|-|
-BenchmarkBufferedSeriesIterator-8|78201671850.73|79045143860.06|1.01x
-
-| Benchmark | Old allocs | New allocs | Delta |
-|-|-|-|-|
-BenchmarkBufferedSeriesIterator-8|0|0|+0.00%
-
-| Benchmark | Old bytes | New bytes | Delta |
-|-|-|-|-|
-BenchmarkBufferedSeriesIterator-8|0|0|+0.00%`
-	rawTable := `benchmark master ns/op new ns/op delta
-BenchmarkBufferedSeriesIterator-8 15.7 15.6 -0.64%
-
-benchmark master MB/s new MB/s speedup
-BenchmarkBufferedSeriesIterator-8 78201671850.73 79045143860.06 1.01x
-
-benchmark master allocs new allocs delta
-BenchmarkBufferedSeriesIterator-8 0 0 +0.00%
-
-benchmark master bytes new bytes delta
-BenchmarkBufferedSeriesIterator-8 0 0 +0.00%`
-	formattedTable := formatCommentToMD(rawTable)
-	if formattedTable != expectedTable {
-		t.Errorf("Output did not match.\ngot:\n%#v\nwant:\n%#v", formattedTable, expectedTable)
-	}
-}
-
 func TestGetTargetInfo(t *testing.T) {
 	f := fixtures.Basic().One()
 	sto := filesystem.NewStorage(f.DotGit(), cache.NewObjectLRUDefault())
