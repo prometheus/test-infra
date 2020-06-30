@@ -16,11 +16,11 @@ package main
 import (
 	"testing"
 
-	fixtures "gopkg.in/src-d/go-git-fixtures.v3"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
-	"gopkg.in/src-d/go-git.v4/plumbing/cache"
-	"gopkg.in/src-d/go-git.v4/storage/filesystem"
+	fixtures "github.com/go-git/go-git-fixtures/v4"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/cache"
+	"github.com/go-git/go-git/v5/storage/filesystem"
 )
 
 func TestMarkdownFormatting(t *testing.T) {
@@ -57,7 +57,6 @@ BenchmarkBufferedSeriesIterator-8 0 0 +0.00%`
 }
 
 func TestGetTargetInfo(t *testing.T) {
-	_ = fixtures.Init()
 	f := fixtures.Basic().One()
 	sto := filesystem.NewStorage(f.DotGit(), cache.NewObjectLRUDefault())
 	r, err := git.Open(sto, f.DotGit())
