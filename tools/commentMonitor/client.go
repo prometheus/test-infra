@@ -15,7 +15,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -32,16 +31,18 @@ type commentMonitorClient struct {
 	eventMap        webhookEventMaps
 	eventType       string
 	commentTemplate string
+	label           string
 }
 
 // Set eventType and commentTemplate if
-// regexString is validated against provided commentBody.
-func (c *commentMonitorClient) validateRegex() bool {
+// regexString is validated against provided command.
+func (c *commentMonitorClient) validateRegex(command string) bool {
 	for _, e := range c.eventMap {
 		c.regex = regexp.MustCompile(e.RegexString)
-		if c.regex.MatchString(c.ghClient.commentBody) {
+		if c.regex.MatchString(command) {
 			c.commentTemplate = e.CommentTemplate
 			c.eventType = e.EventType
+			c.label = e.Label
 			log.Println("comment validation successful")
 			return true
 		}
@@ -50,7 +51,7 @@ func (c *commentMonitorClient) validateRegex() bool {
 }
 
 // Verify if user is allowed to perform activity.
-func (c commentMonitorClient) verifyUser(ctx context.Context, verifyUserDisabled bool) error {
+func (c commentMonitorClient) verifyUser(verifyUserDisabled bool) error {
 	if !verifyUserDisabled {
 		var allowed bool
 		allowedAssociations := []string{"COLLABORATOR", "MEMBER", "OWNER"}
@@ -61,7 +62,7 @@ func (c commentMonitorClient) verifyUser(ctx context.Context, verifyUserDisabled
 		}
 		if !allowed {
 			b := fmt.Sprintf("@%s is not a org member nor a collaborator and cannot execute benchmarks.", c.ghClient.author)
-			if err := c.ghClient.postComment(ctx, b); err != nil {
+			if err := c.ghClient.postComment(b); err != nil {
 				return fmt.Errorf("%v : couldn't post comment", err)
 			}
 			return fmt.Errorf("author is not a member or collaborator")
@@ -72,27 +73,28 @@ func (c commentMonitorClient) verifyUser(ctx context.Context, verifyUserDisabled
 }
 
 // Extract args if regexString provided.
-func (c *commentMonitorClient) extractArgs(ctx context.Context) error {
+func (c *commentMonitorClient) extractArgs(command string) error {
 	var err error
 	if c.regex != nil {
-		// Add comment arguments.
-		commentArgs := c.regex.FindStringSubmatch(c.ghClient.commentBody)[1:]
-		commentArgsNames := c.regex.SubexpNames()[1:]
-		for i, argName := range commentArgsNames {
+		// Add command arguments.
+		commandArgs := c.regex.FindStringSubmatch(command)[1:]
+		commandArgsNames := c.regex.SubexpNames()[1:]
+		for i, argName := range commandArgsNames {
 			if argName == "" {
 				return fmt.Errorf("using named groups is mandatory")
 			}
-			c.allArgs[argName] = commentArgs[i]
+			c.allArgs[argName] = commandArgs[i]
 		}
 
 		// Add non-comment arguments if any.
 		c.allArgs["PR_NUMBER"] = strconv.Itoa(c.ghClient.pr)
-		c.allArgs["LAST_COMMIT_SHA"], err = c.ghClient.getLastCommitSHA(ctx)
+		c.allArgs["LAST_COMMIT_SHA"], err = c.ghClient.getLastCommitSHA()
 		if err != nil {
 			return fmt.Errorf("%v: could not fetch SHA", err)
 		}
 
-		err = c.ghClient.createRepositoryDispatch(ctx, c.eventType, c.allArgs)
+		// TODO (geekodour) : We could run this in a seperate method.
+		err = c.ghClient.createRepositoryDispatch(c.eventType, c.allArgs)
 		if err != nil {
 			return fmt.Errorf("%v: could not create repository_dispatch event", err)
 		}
@@ -100,10 +102,9 @@ func (c *commentMonitorClient) extractArgs(ctx context.Context) error {
 	return nil
 }
 
-// Set label to Github pr if LABEL_NAME is set.
-func (c commentMonitorClient) postLabel(ctx context.Context) error {
-	if os.Getenv("LABEL_NAME") != "" {
-		if err := c.ghClient.createLabel(ctx, os.Getenv("LABEL_NAME")); err != nil {
+func (c commentMonitorClient) postLabel() error {
+	if c.label != "" {
+		if err := c.ghClient.createLabel(c.label); err != nil {
 			return fmt.Errorf("%v : couldn't set label", err)
 		}
 		log.Println("label successfully set")
@@ -111,7 +112,7 @@ func (c commentMonitorClient) postLabel(ctx context.Context) error {
 	return nil
 }
 
-func (c commentMonitorClient) generateAndPostComment(ctx context.Context) error {
+func (c commentMonitorClient) generateAndPostComment() error {
 	if c.commentTemplate != "" {
 		// Add all env vars to allArgs.
 		for _, e := range os.Environ() {
@@ -125,7 +126,7 @@ func (c commentMonitorClient) generateAndPostComment(ctx context.Context) error 
 			return err
 		}
 		// Post the comment.
-		if err := c.ghClient.postComment(ctx, buf.String()); err != nil {
+		if err := c.ghClient.postComment(buf.String()); err != nil {
 			return fmt.Errorf("%v : couldn't post generated comment", err)
 		}
 		log.Println("comment successfully posted")

@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/google/go-github/v29/github"
 	"github.com/pkg/errors"
@@ -32,7 +33,7 @@ type Environment interface {
 	CompareTarget() string
 
 	PostErr(ctx context.Context, err string) error
-	PostResults(ctx context.Context, cmps []BenchCmp) error
+	PostResults(ctx context.Context, cmps []BenchCmp, extraInfo ...string) error
 
 	Repo() *git.Repository
 }
@@ -64,7 +65,7 @@ func newLocalEnv(e environment) (Environment, error) {
 
 func (l *Local) PostErr(context.Context, string) error { return nil } // Noop. We will see error anyway.
 
-func (l *Local) PostResults(ctx context.Context, cmps []BenchCmp) error {
+func (l *Local) PostResults(ctx context.Context, cmps []BenchCmp, extraInfo ...string) error {
 	fmt.Println("Results:")
 	Render(os.Stdout, cmps, true, true, l.compareTarget)
 	return nil
@@ -134,11 +135,11 @@ func (g *GitHub) PostErr(ctx context.Context, err string) error {
 	return nil
 }
 
-func (g *GitHub) PostResults(ctx context.Context, cmps []BenchCmp) error {
+func (g *GitHub) PostResults(ctx context.Context, cmps []BenchCmp, extraInfo ...string) error {
 	b := bytes.Buffer{}
 	Render(&b, cmps, true, true, g.compareTarget)
-	legend := fmt.Sprintf("Old: %s\nNew: PR-%d", g.compareTarget, g.client.prNumber)
-	result := fmt.Sprintf("<details><summary>Click to check benchmark result</summary>\n\n%s\n%s</details>", legend, formatCommentToMD(b.String()))
+	legend := fmt.Sprintf("Old: `%s`\nNew: `PR-%d`", g.compareTarget, g.client.prNumber)
+	result := fmt.Sprintf("<details><summary>Click to check benchmark result</summary>\n\n%s\n%s\n%s</details>", legend, strings.Join(extraInfo, "\n"), formatCommentToMD(b.String()))
 	return g.client.postComment(ctx, result)
 }
 

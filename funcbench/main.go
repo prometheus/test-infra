@@ -103,7 +103,7 @@ func main() {
 		"disabled if set to 0. If a test binary runs longer than duration d, panic.").
 		Short('d').Default("2h").DurationVar(&cfg.benchTimeout)
 
-	app.Arg("target", "Can be one of '.', branch name or commit SHA of the branch "+
+	app.Arg("target", "Can be one of '.', tag name, branch name or commit SHA of the branch "+
 		"to compare against. If set to '.', branch/commit is the same as the current one; "+
 		"funcbench will run once and try to compare between 2 sub-benchmarks. "+
 		"Errors out if there are no sub-benchmarks.").
@@ -159,7 +159,8 @@ func main() {
 			}
 
 			// ( ◔_◔)ﾉ Start benchmarking!
-			cmps, err := startBenchmark(ctx, env, newBenchmarker(logger, env, &commander{verbose: cfg.verbose}, cfg.benchTime, cfg.benchTimeout, cfg.resultsDir))
+			benchmarker := newBenchmarker(logger, env, &commander{verbose: cfg.verbose}, cfg.benchTime, cfg.benchTimeout, cfg.resultsDir)
+			cmps, err := startBenchmark(ctx, env, benchmarker)
 			if err != nil {
 				if pErr := env.PostErr(ctx, fmt.Sprintf("%v. Benchmark failed, please check logs.", err)); pErr != nil {
 					return errors.Wrap(pErr, "could not log error")
@@ -169,7 +170,10 @@ func main() {
 
 			// Post results.
 			// TODO (geekodour): probably post some kind of funcbench summary(?)
-			return env.PostResults(ctx, cmps)
+			return env.PostResults(ctx,
+				cmps,
+				fmt.Sprintf("```\n%s\n```", strings.Join(benchmarker.benchmarkArgs, " ")),
+			)
 
 		}, func(err error) {
 			cancel()
@@ -215,14 +219,7 @@ func startBenchmark(
 		return nil, errors.Wrap(err, "not clean worktree")
 	}
 
-	// Get info about target.
-	targetCommit, compareWithItself, err := getTargetInfo(ctx, env.Repo(), env.CompareTarget())
-	if err != nil {
-		return nil, errors.Wrap(err, "getTargetInfo")
-	}
-	bench.logger.Println("Target:", targetCommit.String(), "Current Ref:", ref.Hash().String())
-
-	if compareWithItself {
+	if env.CompareTarget() == "." {
 		bench.logger.Println("Assuming sub-benchmarks comparison.")
 		subResult, err := bench.exec(ctx, wt.Filesystem.Root(), ref.Hash())
 		if err != nil {
@@ -234,6 +231,18 @@ func startBenchmark(
 			return nil, errors.Wrap(err, "comparing sub benchmarks")
 		}
 		return cmps, nil
+	}
+
+	// Get info about target.
+	targetCommit := getTargetInfo(env.Repo(), env.CompareTarget())
+	if targetCommit == plumbing.ZeroHash {
+		return nil, fmt.Errorf("cannot find target %s", env.CompareTarget())
+	}
+
+	bench.logger.Println("Target:", targetCommit.String(), "Current Ref:", ref.Hash().String())
+
+	if targetCommit == ref.Hash() {
+		return nil, fmt.Errorf("target: %s is the same as current ref %s (or is on the same commit); No changes would be expected; Aborting", targetCommit, ref.String())
 	}
 
 	bench.logger.Println("Assuming comparing with target (clean workdir will be checked.)")
@@ -285,33 +294,15 @@ func interrupt(logger Logger, cancel <-chan struct{}) error {
 	}
 }
 
-// getTargetInfo returns the hash of the target,
-// if target is the same as the current ref, set compareWithItself to true.
-func getTargetInfo(ctx context.Context, repo *git.Repository, target string) (ref plumbing.Hash, compareWithItself bool, _ error) {
-	if target == "." {
-		return plumbing.Hash{}, true, nil
-	}
-
-	currRef, err := repo.Head()
+// getTargetInfo returns the hash of the target if found,
+// otherwise returns plumbing.ZeroHash.
+// NOTE: if both a branch and a tag have the same name, it always chooses the branch name.
+func getTargetInfo(repo *git.Repository, target string) plumbing.Hash {
+	hash, err := repo.ResolveRevision(plumbing.Revision(target))
 	if err != nil {
-		return plumbing.ZeroHash, false, err
+		return plumbing.ZeroHash
 	}
-
-	if target == strings.TrimPrefix(currRef.Name().String(), "refs/heads/") || target == currRef.Hash().String() {
-		return currRef.Hash(), true, errors.Errorf("target: %s is the same as current ref %s (or is on the same commit); No changes would be expected; Aborting", target, currRef.String())
-	}
-
-	commitHash := plumbing.NewHash(target)
-	if !commitHash.IsZero() {
-		return commitHash, false, nil
-	}
-
-	targetRef, err := repo.Reference(plumbing.NewBranchReferenceName(target), false)
-	if err != nil {
-		return plumbing.ZeroHash, false, err
-	}
-
-	return targetRef.Hash(), false, nil
+	return *hash
 }
 
 type commander struct {
