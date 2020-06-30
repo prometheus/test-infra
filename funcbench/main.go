@@ -26,11 +26,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/oklog/run"
 	"github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
 type Logger interface {
