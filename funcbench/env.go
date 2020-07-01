@@ -67,7 +67,7 @@ func (l *Local) PostErr(context.Context, string) error { return nil } // Noop. W
 
 func (l *Local) PostResults(ctx context.Context, cmps []BenchCmp, extraInfo ...string) error {
 	fmt.Println("Results:")
-	Render(os.Stdout, cmps, false, false, l.compareTarget)
+	Render(os.Stdout, cmps, true, true, l.compareTarget)
 	return nil
 }
 
@@ -137,7 +137,7 @@ func (g *GitHub) PostErr(ctx context.Context, err string) error {
 
 func (g *GitHub) PostResults(ctx context.Context, cmps []BenchCmp, extraInfo ...string) error {
 	b := bytes.Buffer{}
-	Render(&b, cmps, false, false, g.compareTarget)
+	Render(&b, cmps, true, true, g.compareTarget)
 	legend := fmt.Sprintf("Old: `%s`\nNew: `PR-%d`", g.compareTarget, g.client.prNumber)
 	result := fmt.Sprintf("<details><summary>Click to check benchmark result</summary>\n\n%s\n%s\n%s</details>", legend, strings.Join(extraInfo, "\n"), formatCommentToMD(b.String()))
 	return g.client.postComment(ctx, result)
