@@ -150,6 +150,11 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 	switch e := event.(type) {
 	case *github.IssueCommentEvent:
 
+		if *e.Action != "created" {
+			http.Error(w, "issue_comment type must be 'created'", http.StatusOK)
+			return
+		}
+
 		// Setup github client.
 		ctx := context.Background()
 		cmClient.ghClient, err = newGithubClient(ctx, e)
