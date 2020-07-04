@@ -29,7 +29,7 @@ eventmaps:
 
 Before comments are matched against `regex_string`, they are checked if they start with any of the prefixes mentioned in `prefixes`. If not, the request is simply dropped.  Once a comment matches with `regex_string`, commentMonitor will trigger a [`repository_dispatch` event](https://developer.github.com/v3/repos/#create-a-repository-dispatch-event) with the event type `event_type` and then post a comment to the issue/pr with `comment_template`. The extracted out arguments will be passed to the [`client_payload`](https://developer.github.com/v3/repos/#example-5) of the `repository_dispatch` event.
 
-If the matching with `regex_string` fails, then a comment with the `help_template` for that template is posted back to the corresponding issue/pr.
+If the matching with `regex_string` fails, then a comment with the `help_template` for that prefix is posted back to the corresponding issue/pr.
 
 ### Setting up the GitHub webhook
 - Create a personal access token with the scope `public_repo` and `write:discussion` and set the environment variable `GITHUB_TOKEN` with it.
