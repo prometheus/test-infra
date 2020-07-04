@@ -87,7 +87,7 @@ func (b *Benchmarker) exec(pkgRoot string, commit plumbing.Hash) (string, error)
 		return filepath.Join(b.resultCacheDir, fileName), nil
 	}
 
-	// TODO Switch to working directory first
+	// TODO Switch working directory before entering this function.
 	benchCmd := []string{"sh", "-c", strings.Join(append([]string{"cd", pkgRoot, "&&"}, b.benchmarkArgs...), " ")}
 
 	b.logger.Println("Executing benchmark command for", commit.String(), "\n", benchCmd)

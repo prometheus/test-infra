@@ -71,9 +71,7 @@ func (l *Local) PostResults(tables []*benchstat.Table, extraInfo ...string) erro
 	var buf bytes.Buffer
 	benchstat.FormatText(&buf, tables)
 
-	if _, err := os.Stdout.Write(buf.Bytes()); err != nil {
-		return err
-	}
+	os.Stdout.Write(buf.Bytes())
 
 	return nil
 }
