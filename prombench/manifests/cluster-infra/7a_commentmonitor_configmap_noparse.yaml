@@ -59,7 +59,7 @@ data:
           To restart benchmark: `/prombench restart {{ index . "RELEASE" }}`
 
       - event_type: funcbench_start
-        regex_string: (?m)^/funcbench[[:blank:]]+(?P<BRANCH>[\w\-\/\.]+)[[:blank:]]*(?P<BENCH_FUNC_REGEX>(?:Benchmark\w*)?(?:\.\*)?)?[[:blank:]]*$
+        regex_string: (?m)^/funcbench[[:blank:]]+(?P<BRANCH>[\w\-\/\.]+)[[:blank:]]*(?P<BENCH_FUNC_REGEX>(?:Benchmark\w*)?(?:\.\*)?)?[[:blank:]]*(?P<PACKAGE_PATH>\.(?:/\w+)+)?\s*$
         label: funcbench
         comment_template: |
           ⏱️ Welcome to Funcbench Tool. ⏱️
