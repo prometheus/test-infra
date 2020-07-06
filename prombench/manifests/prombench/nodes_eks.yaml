@@ -9,7 +9,7 @@ nodegroups:
       - {{ $subnetId }}
       {{ end }}
     instancetypes:
-      - m5d.2xlarge 
+      - r5d.2xlarge #This machine has SSD. SSD is used to give fast-lookup to Prometheus servers being benchmarked 
     scalingconfig:
       desiredsize: 2
       maxsize: 2

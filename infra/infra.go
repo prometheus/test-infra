@@ -123,10 +123,10 @@ func main() {
 	k8sEKS.Flag("vars", "When provided it will substitute the token holders in the yaml file. Follows the standard golang template formating - {{ .hashStable }}.").
 		Short('v').
 		StringMapVar(&e.DeploymentVars)
-	k8sEKS.Flag("rangeVars", "Similar to vars but for range values which is stringified with seperator.").
+	k8sEKS.Flag("rangeVars", "Similar to vars, but for specifying range values. Usage `get_range .RANGE_VAR .SEPERATOR`.").
 		Short('r').
 		StringMapVar(&e.DeploymentRangeVars)
-	k8sEKS.Flag("sep", "Separator helps to split stringified list into corresponding ranges. Default separator is `_`.").
+	k8sEKS.Flag("seperator", "The separator used to split rangeVar into a []string. Defaults to `_`.").
 		Short('s').
 		Default("_").
 		StringVar(&e.Separator)
@@ -142,22 +142,22 @@ func main() {
 	// Cluster node-pool operations
 	k8sEKSNodeGroup := k8sEKS.Command("nodegroup", "manage EKS clusters nodegroups").
 		Action(e.EKSDeploymentParse)
-	k8sEKSNodeGroup.Command("create", "eks nodegroup create -a credentials -f FileOrFolder").
+	k8sEKSNodeGroup.Command("create", "eks nodegroup create -a credentials -f FileOrFolder -v REGION:europe-west1-b -v CLUSTER_NAME:test -r SUBNET_IDS: subnetId1_subnetId2_subnetId3").
 		Action(e.NodeGroupCreate)
-	k8sEKSNodeGroup.Command("delete", "eks nodegroup delete -a credentials -f FileOrFolder").
+	k8sEKSNodeGroup.Command("delete", "eks nodegroup delete -a credentials -f FileOrFolder -v REGION:europe-west1-b -v CLUSTER_NAME:test -r SUBNET_IDS: subnetId1_subnetId2_subnetId3").
 		Action(e.NodeGroupDelete)
-	k8sEKSNodeGroup.Command("check-running", "eks nodegroup check-running -a credentails -f FileOrFolder").
+	k8sEKSNodeGroup.Command("check-running", "eks nodegroup check-running -a credentails -f FileOrFolder -v REGION:europe-west1-b -v CLUSTER_NAME:test -r SUBNET_IDS: subnetId1_subnetId2_subnetId3").
 		Action(e.AllNodeGroupsRunning)
-	k8sEKSNodeGroup.Command("check-deleted", "eks nodegroup check-deleted -a credentials -f FileOrFolder").
+	k8sEKSNodeGroup.Command("check-deleted", "eks nodegroup check-deleted -a credentials -f FileOrFolder -v REGION:europe-west1-b -v CLUSTER_NAME:test -r SUBNET_IDS: subnetId1_subnetId2_subnetId3").
 		Action(e.AllNodeGroupsDeleted)
 
 	// K8s resource operations.
-	k8sEKSResource := k8sEKS.Command("resource", `Apply and delete different k8s resources - deployments, services, config maps etc.Required variables -v PROJECT_ID, -v ZONE: -west1-b -v CLUSTER_NAME`).
+	k8sEKSResource := k8sEKS.Command("resource", `Apply and delete different k8s resources - deployments, services, config maps etc.Required variables -v REGION:europe-west1-b -v CLUSTER_NAME:test `).
 		Action(e.NewK8sProvider).
 		Action(e.K8SDeploymentsParse)
-	k8sEKSResource.Command("apply", "eks resource apply -a credentials -f manifestsFileOrFolder -v PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+	k8sEKSResource.Command("apply", "eks resource apply -a credentials -f manifestsFileOrFolder -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(e.ResourceApply)
-	k8sEKSResource.Command("delete", "eks resource delete -a credentials -f manifestsFileOrFolder -v PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+	k8sEKSResource.Command("delete", "eks resource delete -a credentials -f manifestsFileOrFolder -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(e.ResourceDelete)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
