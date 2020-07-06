@@ -9,7 +9,7 @@ require (
 	github.com/google/go-github/v29 v29.0.3
 	github.com/googleapis/gnostic v0.2.0 // indirect
 	github.com/oklog/run v1.0.0
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/alertmanager v0.18.0
 	github.com/prometheus/client_golang v1.0.0
 	github.com/prometheus/common v0.4.1
@@ -24,4 +24,5 @@ require (
 	k8s.io/apiextensions-apiserver v0.18.4
 	k8s.io/apimachinery v0.18.4
 	k8s.io/client-go v0.18.4
+	sigs.k8s.io/kind v0.8.1
 )

@@ -21,6 +21,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/test-infra/pkg/provider/gke"
+	kind "github.com/prometheus/test-infra/pkg/provider/kind"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -65,6 +66,16 @@ func main() {
 	k8sGKENodePool.Command("check-deleted", "gke nodepool check-deleted -a service-account.json -f FileOrFolder").
 		Action(g.AllNodepoolsDeleted)
 
+	k := kind.New()
+	k8sKIND := app.Command("kind", `Kubernetes In Docker (KIND) provider - https://kind.sigs.k8s.io/docs/user/quick-start/`)
+	k8sKIND.Flag("file", "yaml file or folder  that describes the parameters for the object that will be deployed.").
+		Required().
+		Short('f').
+		ExistingFilesOrDirsVar(&k.DeploymentFiles)
+	k8sKIND.Flag("vars", "When provided it will substitute the token holders in the yaml file. Follows the standard golang template formating - {{ .hashStable }}.").
+		Short('v').
+		StringMapVar(&k.DeploymentVars)
+
 	// K8s resource operations.
 	k8sGKEResource := k8sGKE.Command("resource", `Apply and delete different k8s resources - deployments, services, config maps etc.Required variables -v PROJECT_ID, -v ZONE: -west1-b -v CLUSTER_NAME`).
 		Action(g.NewK8sProvider).
@@ -74,10 +85,27 @@ func main() {
 	k8sGKEResource.Command("delete", "gke resource delete -a service-account.json -f manifestsFileOrFolder -v PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(g.ResourceDelete)
 
+	//Cluster operations.
+	k8sKINDCluster := k8sKIND.Command("cluster", "manage KIND clusters").
+		Action(k.KINDDeploymentsParse)
+	//fmt.Println(k8sKINDCluster)
+	k8sKINDCluster.Command("create", "kind cluster create -f FileOrFolder").
+		Action(k.ClusterCreate)
+	k8sKINDCluster.Command("delete", "kind cluster delete -f FileOrFolder").
+		Action(k.ClusterDelete)
+
+	// K8s resource operations.
+	k8sKINDResource := k8sKIND.Command("resource", `Apply and delete different k8s resources - deployments, services, config maps etc.Required variables -v CLUSTER_NAME`).
+		Action(k.NewK8sProvider).
+		Action(k.K8SDeploymentsParse)
+	k8sKINDResource.Command("apply", "kind resource apply -f manifestsFileOrFolder -v PROJECT_ID:test -v CLUSTER_NAME:test -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+		Action(k.ResourceApply)
+	k8sKINDResource.Command("delete", "kind resource delete -f manifestsFileOrFolder -v PROJECT_ID:test -v CLUSTER_NAME:test -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+		Action(k.ResourceDelete)
+
 	if _, err := app.Parse(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error parsing commandline arguments"))
 		app.Usage(os.Args[1:])
 		os.Exit(2)
 	}
-
 }
