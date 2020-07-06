@@ -77,6 +77,10 @@ type GKE struct {
 
 // NewGKEClient sets the GKE client used when performing GKE requests.
 func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
+
+	// Set PROVIDER_SERVICE Deployment variable to  LoadBalancer
+	c.DeploymentVars["PROVIDER_SERVICE"] = "LoadBalancer"
+
 	// Set the auth env variable needed to the gke client.
 	if c.Auth != "" {
 	} else if c.Auth = os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"); c.Auth == "" {
