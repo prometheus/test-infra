@@ -85,25 +85,29 @@ Commands:
     eks cluster delete -a credentials -f FileOrFolder
 
   eks nodegroup create
-    eks nodegroup create -a credentials -f FileOrFolder
+    eks nodegroup create -a credentials -f FileOrFolder -v REGION:europe-west1-b
+    -v CLUSTER_NAME:test -r SUBNET_IDS: subnetId1_subnetId2_subnetId3
 
   eks nodegroup delete
-    eks nodegroup delete -a credentials -f FileOrFolder
+    eks nodegroup delete -a credentials -f FileOrFolder -v REGION:europe-west1-b
+    -v CLUSTER_NAME:test -r SUBNET_IDS: subnetId1_subnetId2_subnetId3
 
   eks nodegroup check-running
-    eks nodegroup check-running -a credentails -f FileOrFolder
+    eks nodegroup check-running -a credentails -f FileOrFolder -v
+    REGION:europe-west1-b -v CLUSTER_NAME:test -r SUBNET_IDS:
+    subnetId1_subnetId2_subnetId3
 
   eks nodegroup check-deleted
-    eks nodegroup check-deleted -a credentials -f FileOrFolder
+    eks nodegroup check-deleted -a credentials -f FileOrFolder -v
+    REGION:europe-west1-b -v CLUSTER_NAME:test -r SUBNET_IDS:
+    subnetId1_subnetId2_subnetId3
 
   eks resource apply
     eks resource apply -a credentials -f manifestsFileOrFolder -v
-    PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
     hashStable:COMMIT1 -v hashTesting:COMMIT2
 
   eks resource delete
     eks resource delete -a credentials -f manifestsFileOrFolder -v
-    PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
     hashStable:COMMIT1 -v hashTesting:COMMIT2
 
 
