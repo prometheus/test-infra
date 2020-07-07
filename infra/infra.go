@@ -88,19 +88,18 @@ func main() {
 	//Cluster operations.
 	k8sKINDCluster := k8sKIND.Command("cluster", "manage KIND clusters").
 		Action(k.KINDDeploymentsParse)
-	//fmt.Println(k8sKINDCluster)
-	k8sKINDCluster.Command("create", "kind cluster create -f FileOrFolder").
+	k8sKINDCluster.Command("create", "kind cluster create -f File -v PR_NUMBER:$PR_NUMBER -v CLUSTER_NAME:$CLUSTER_NAME").
 		Action(k.ClusterCreate)
-	k8sKINDCluster.Command("delete", "kind cluster delete -f FileOrFolder").
+	k8sKINDCluster.Command("delete", "kind cluster delete -f File -v PR_NUMBER:$PR_NUMBER -v CLUSTER_NAME:$CLUSTER_NAME").
 		Action(k.ClusterDelete)
 
 	// K8s resource operations.
-	k8sKINDResource := k8sKIND.Command("resource", `Apply and delete different k8s resources - deployments, services, config maps etc.Required variables -v CLUSTER_NAME`).
+	k8sKINDResource := k8sKIND.Command("resource", `Apply and delete different k8s resources - deployments, services, config maps etc.`).
 		Action(k.NewK8sProvider).
 		Action(k.K8SDeploymentsParse)
-	k8sKINDResource.Command("apply", "kind resource apply -f manifestsFileOrFolder -v PROJECT_ID:test -v CLUSTER_NAME:test -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+	k8sKINDResource.Command("apply", "kind resource apply -f manifestsFileOrFolder -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(k.ResourceApply)
-	k8sKINDResource.Command("delete", "kind resource delete -f manifestsFileOrFolder -v PROJECT_ID:test -v CLUSTER_NAME:test -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+	k8sKINDResource.Command("delete", "kind resource delete -f manifestsFileOrFolder -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(k.ResourceDelete)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
