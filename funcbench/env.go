@@ -136,10 +136,18 @@ func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspac
 	return g, nil
 }
 
-func (g *GitHub) PostErr(err string) error {
-	if err := g.client.postComment(fmt.Sprintf("%v. Benchmark did not complete, please check action logs.", err)); err != nil {
-		return errors.Wrap(err, "posting err")
+func (g *GitHub) PostErr(txt string) error {
+	c := fmt.Sprintf(
+		"Old: `%s`\nNew: `PR-%d`\n%s",
+		g.compareTarget,
+		g.client.prNumber,
+		txt,
+	)
+
+	if err := g.client.postComment(c); err != nil {
+		return err
 	}
+
 	return nil
 }
 

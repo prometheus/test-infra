@@ -163,7 +163,15 @@ func main() {
 			benchmarker := newBenchmarker(logger, env, &commander{verbose: cfg.verbose, ctx: ctx}, cfg.benchTime, cfg.benchTimeout, cfg.resultsDir)
 			tables, err := startBenchmark(env, benchmarker)
 			if err != nil {
-				if pErr := env.PostErr(fmt.Sprintf("%v. Benchmark failed, please check logs.", err)); pErr != nil {
+				pErr := env.PostErr(
+					fmt.Sprintf(
+						"`%s`\n%s.",
+						strings.Join(benchmarker.benchmarkArgs, " "),
+						err.Error(),
+					),
+				)
+
+				if pErr != nil {
 					return errors.Wrap(pErr, "could not log error")
 				}
 				return err

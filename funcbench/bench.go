@@ -130,7 +130,7 @@ func compareBenchmarks(files ...string) ([]*benchstat.Table, error) {
 
 	tables := c.Tables()
 	if tables == nil {
-		return nil, errors.New("didn't match any existing benchmarks.")
+		return nil, errors.New("didn't match any existing benchmarks")
 	}
 
 	return tables, nil
