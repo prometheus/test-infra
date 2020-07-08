@@ -110,10 +110,11 @@ spec:
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
       containers:
-      - image: quay.io/prometheus/node-exporter:v0.16.0
+      - image: quay.io/prometheus/node-exporter:v0.18.0
         args:
         - "--path.procfs=/host/proc"
         - "--path.sysfs=/host/sys"
+        - "--path.rootfs=/host/root"
         name: node-exporter
         ports:
         - containerPort: 9100
@@ -126,6 +127,10 @@ spec:
         - name: sys
           readOnly: true
           mountPath: /host/sys
+        - name: root
+          mountPropagation: HostToContainer
+          mountPath: /host/root
+          readOnly: true
       tolerations:
       - effect: NoSchedule
         operator: Exists
@@ -136,6 +141,9 @@ spec:
       - name: sys
         hostPath:
           path: /sys
+      - name: root
+        hostPath:
+          path: /
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -167,10 +175,11 @@ spec:
       nodeSelector:
         node-name: nodes-{{ .PR_NUMBER }}
       containers:
-      - image: quay.io/prometheus/node-exporter:v0.16.0
+      - image: quay.io/prometheus/node-exporter:v0.18.0
         args:
         - "--path.procfs=/host/proc"
         - "--path.sysfs=/host/sys"
+        - "--path.rootfs=/host/root"
         name: node-exporter
         ports:
         - containerPort: 9100
@@ -183,6 +192,10 @@ spec:
         - name: sys
           readOnly: true
           mountPath: /host/sys
+        - name: root
+          mountPropagation: HostToContainer
+          mountPath: /host/root
+          readOnly: true
       tolerations:
       - effect: NoSchedule
         operator: Exists
@@ -193,6 +206,9 @@ spec:
       - name: sys
         hostPath:
           path: /sys
+      - name: root
+        hostPath:
+          path: /
 ---
 apiVersion: v1
 kind: Service
