@@ -274,10 +274,11 @@ func startBenchmark(env Environment, bench *Benchmarker) ([]*benchstat.Table, er
 	}
 
 	// Compare B vs A.
-	tables, err := bench.compareBenchmarks(oldResult, newResult)
+	tables, err := compareBenchmarks(oldResult, newResult)
 	if err != nil {
 		return nil, errors.Wrap(err, "comparing benchmarks")
 	}
+
 	return tables, nil
 }
 

@@ -108,7 +108,12 @@ func (b *Benchmarker) exec(pkgRoot string, commit plumbing.Hash) (string, error)
 	return fn, nil
 }
 
-func (b *Benchmarker) compareBenchmarks(files ...string) ([]*benchstat.Table, error) {
+func (b *Benchmarker) compareSubBenchmarks(string) ([]*benchstat.Table, error) {
+	// TODO(bwplotka): Implement.
+	return nil, errors.New("not implemented")
+}
+
+func compareBenchmarks(files ...string) ([]*benchstat.Table, error) {
 	c := &benchstat.Collection{}
 
 	for _, file := range files {
@@ -123,10 +128,10 @@ func (b *Benchmarker) compareBenchmarks(files ...string) ([]*benchstat.Table, er
 		}
 	}
 
-	return c.Tables(), nil
-}
+	tables := c.Tables()
+	if tables == nil {
+		return nil, errors.New("didn't match any existing benchmarks.")
+	}
 
-func (b *Benchmarker) compareSubBenchmarks(string) ([]*benchstat.Table, error) {
-	// TODO(bwplotka): Implement.
-	return nil, errors.New("not implemented")
+	return tables, nil
 }

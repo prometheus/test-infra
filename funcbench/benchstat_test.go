@@ -14,6 +14,8 @@ package main
 
 import (
 	"bytes"
+	"io/ioutil"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -59,5 +61,39 @@ BenchmarkParse/expfmt-text/promtestdata.nometa.txt-4                            
 	out := buf.String()
 	if strings.Compare(expected, strings.TrimSpace(out)) != 0 {
 		t.Errorf("Expected:\n%s, but got:\n%s", expected, out)
+	}
+}
+
+func TestResultIsEmpty(t *testing.T) {
+	file1 := `
+ok  	github.com/prometheus/prometheus/tsdb/fileutil	0.323s
+PASS
+BenchmarkIsolation/10-8	445276	2478 ns/op	0 B/op	0 allocs/op
+`
+	file2 := `
+BenchmarkIsolation/100-8	39044	28747 ns/op	6 B/op	0 allocs/op
+`
+	dir, err := ioutil.TempDir("", "test_empty_result")
+	if err != nil {
+		t.Error(err)
+	}
+
+	files := map[string]string{
+		"file1": file1,
+		"file2": file2,
+	}
+
+	names := make([]string, 0)
+	for name, content := range files {
+		f := filepath.Join(dir, name)
+		if err := ioutil.WriteFile(f, []byte(content), 0644); err != nil {
+			t.Error(err)
+			return
+		}
+		names = append(names, f)
+	}
+
+	if _, err := compareBenchmarks(names...); err == nil || !strings.Contains(err.Error(), "match any") {
+		t.Error("Should return an error indicated that no matching benchmarks found.")
 	}
 }
