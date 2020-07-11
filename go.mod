@@ -14,7 +14,7 @@ require (
 	github.com/prometheus/client_golang v1.0.0
 	github.com/prometheus/common v0.4.1
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/tools v0.0.0-20200331025713-a30bf2db82d4
+	golang.org/x/perf v0.0.0-20200318175901-9c9101da8316
 	google.golang.org/api v0.27.0
 	google.golang.org/genproto v0.0.0-20200331122359-1ee6d9798940
 	google.golang.org/grpc v1.28.0
