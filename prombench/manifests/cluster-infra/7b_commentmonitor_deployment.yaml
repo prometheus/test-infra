@@ -18,10 +18,8 @@ spec:
       - image: docker.io/prominfra/comment-monitor:master
         imagePullPolicy: Always
         args:
-        - "--eventmap=/etc/cm/eventmap.yml"
+        - "--config=/etc/cm/config.yml"
         - "--webhooksecretfile=/etc/github/whsecret"
-        - "--command-prefix=/prombench"
-        - "--command-prefix=/funcbench"
         name: comment-monitor
         env:
         - name: DOMAIN_NAME
@@ -35,7 +33,7 @@ spec:
         - name: whsecret
           mountPath: /etc/github
           readOnly: true
-        - name: comment-monitor-eventmap
+        - name: comment-monitor-config
           mountPath: /etc/cm/
         ports:
         - name: cm-port
@@ -44,9 +42,9 @@ spec:
       - name: whsecret
         secret:
           secretName: whsecret
-      - name: comment-monitor-eventmap
+      - name: comment-monitor-config
         configMap:
-          name: comment-monitor-eventmap
+          name: comment-monitor-config
       terminationGracePeriodSeconds: 300
       nodeSelector:
         node-name: main-node

@@ -1,59 +1,67 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: comment-monitor-eventmap
+  name: comment-monitor-config
 data:
-  eventmap.yml: |
-    - event_type: prombench_start
-      regex_string: (?mi)^/prombench\s*(?P<RELEASE>master|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
-      label: prombench
-      comment_template: |
-        ⏱️ Welcome to Prometheus Benchmarking Tool. ⏱️
+  config.yml: |
+    prefixes:
+      - prefix: /prombench
+        help_template: |
+          Incorrect prombench syntax, please find [correct syntax here](https://github.com/prometheus/test-infra/tree/master/prombench#trigger-tests-via-a-github-comment).
+      - prefix: /funcbench
+        help_template: |
+          Incorrect funcbench syntax, please find [correct syntax here](https://github.com/prometheus/test-infra/tree/master/funcbench#triggering-with-github-comments).
+    events:
+      - event_type: prombench_start
+        regex_string: (?mi)^/prombench\s*(?P<RELEASE>master|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
+        label: prombench
+        comment_template: |
+          ⏱️ Welcome to Prometheus Benchmarking Tool. ⏱️
 
-        **Compared versions:** [**`PR-{{ index . "PR_NUMBER" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-pr) and [**`{{ index . "RELEASE" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-release)
+          **Compared versions:** [**`PR-{{ index . "PR_NUMBER" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-pr) and [**`{{ index . "RELEASE" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-release)
 
-        After successful deployment, the benchmarking metrics can be viewed at:
+          After successful deployment, the benchmarking metrics can be viewed at:
 
-        - [Prometheus Meta](http://{{ index . "DOMAIN_NAME" }}/prometheus-meta/graph?g0.expr={namespace%3D"prombench-{{ index . "PR_NUMBER" }}"}&g0.tab=1)
-        - [Prombench Dashboard](http://{{ index . "DOMAIN_NAME" }}/grafana/d/7gmLoNDmz/prombench?orgId=1&var-pr-number={{ index . "PR_NUMBER" }})
-        - [Grafana Explorer, Loki logs](http://{{ index . "DOMAIN_NAME" }}/grafana/explore?orgId=1&left=["now-6h","now","loki-meta",{},{"mode":"Logs"},{"ui":[true,true,true,"none"]}])
+          - [Prometheus Meta](http://{{ index . "DOMAIN_NAME" }}/prometheus-meta/graph?g0.expr={namespace%3D"prombench-{{ index . "PR_NUMBER" }}"}&g0.tab=1)
+          - [Prombench Dashboard](http://{{ index . "DOMAIN_NAME" }}/grafana/d/7gmLoNDmz/prombench?orgId=1&var-pr-number={{ index . "PR_NUMBER" }})
+          - [Grafana Explorer, Loki logs](http://{{ index . "DOMAIN_NAME" }}/grafana/explore?orgId=1&left=["now-6h","now","loki-meta",{},{"mode":"Logs"},{"ui":[true,true,true,"none"]}])
 
-        **Other Commands:**
-        To stop benchmark: `/prombench cancel`
-        To restart benchmark: `/prombench restart {{ index . "RELEASE" }}`
+          **Other Commands:**
+          To stop benchmark: `/prombench cancel`
+          To restart benchmark: `/prombench restart {{ index . "RELEASE" }}`
 
-    - event_type: prombench_stop
-      regex_string: (?mi)^/prombench\s+cancel\s*$
-      comment_template: |
-        Benchmark cancel is in progress.
+      - event_type: prombench_stop
+        regex_string: (?mi)^/prombench\s+cancel\s*$
+        comment_template: |
+          Benchmark cancel is in progress.
 
-    - event_type: noop
-      regex_string: (?mi)^/prombench\s*$
-      comment_template: |
-        Please add the version number to compare against.
-        Eg. `/prombench master`, `/prombench v2.12.0`
+      - event_type: noop
+        regex_string: (?mi)^/prombench\s*$
+        comment_template: |
+          Please add the version number to compare against.
+          Eg. `/prombench master`, `/prombench v2.12.0`
 
-    - event_type: prombench_restart
-      regex_string: (?mi)^/prombench\s+restart\s+(?P<RELEASE>master|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
-      comment_template: |
-        ⏱️ Welcome to Prometheus Benchmarking Tool. ⏱️
+      - event_type: prombench_restart
+        regex_string: (?mi)^/prombench\s+restart\s+(?P<RELEASE>master|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
+        comment_template: |
+          ⏱️ Welcome to Prometheus Benchmarking Tool. ⏱️
 
-        **Compared versions:** [**`PR-{{ index . "PR_NUMBER" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-pr) and [**`{{ index . "RELEASE" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-release)
+          **Compared versions:** [**`PR-{{ index . "PR_NUMBER" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-pr) and [**`{{ index . "RELEASE" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-release)
 
-        After successful deployment, the benchmarking metrics can be viewed at:
+          After successful deployment, the benchmarking metrics can be viewed at:
 
-        - [Prometheus Meta](http://{{ index . "DOMAIN_NAME" }}/prometheus-meta/graph?g0.expr={namespace%3D"prombench-{{ index . "PR_NUMBER" }}"}&g0.tab=1)
-        - [Prombench Dashboard](http://{{ index . "DOMAIN_NAME" }}/grafana/d/7gmLoNDmz/prombench?orgId=1&var-pr-number={{ index . "PR_NUMBER" }})
-        - [Grafana Exlorer, Loki logs](http://{{ index . "DOMAIN_NAME" }}/grafana/explore?orgId=1&left=["now-6h","now","loki-meta",{},{"mode":"Logs"},{"ui":[true,true,true,"none"]}])
+          - [Prometheus Meta](http://{{ index . "DOMAIN_NAME" }}/prometheus-meta/graph?g0.expr={namespace%3D"prombench-{{ index . "PR_NUMBER" }}"}&g0.tab=1)
+          - [Prombench Dashboard](http://{{ index . "DOMAIN_NAME" }}/grafana/d/7gmLoNDmz/prombench?orgId=1&var-pr-number={{ index . "PR_NUMBER" }})
+          - [Grafana Exlorer, Loki logs](http://{{ index . "DOMAIN_NAME" }}/grafana/explore?orgId=1&left=["now-6h","now","loki-meta",{},{"mode":"Logs"},{"ui":[true,true,true,"none"]}])
 
-        **Other Commands:**
-        To stop benchmark: `/prombench cancel`
-        To restart benchmark: `/prombench restart {{ index . "RELEASE" }}`
+          **Other Commands:**
+          To stop benchmark: `/prombench cancel`
+          To restart benchmark: `/prombench restart {{ index . "RELEASE" }}`
 
-    - event_type: funcbench_start
-      regex_string: (?m)^/funcbench[[:blank:]]+(?P<BRANCH>[\w\-\/\.]+)[[:blank:]]*(?P<BENCH_FUNC_REGEX>(?:Benchmark\w*)?(?:\.\*)?)?[[:blank:]]*$
-      label: funcbench
-      comment_template: |
-        ⏱️ Welcome to Funcbench Tool. ⏱️
+      - event_type: funcbench_start
+        regex_string: (?m)^/funcbench[[:blank:]]+(?P<BRANCH>[\w\-\/\.]+)[[:blank:]]*(?P<BENCH_FUNC_REGEX>(?:Benchmark\w*)?(?:\.\*)?)?[[:blank:]]*$
+        label: funcbench
+        comment_template: |
+          ⏱️ Welcome to Funcbench Tool. ⏱️
 
-        Running benchmark `{{ index . "BENCH_FUNC_REGEX"}}` on **`PR-{{ index . "PR_NUMBER" }}`** vs **`{{ index . "BRANCH" }}`**
+          Running benchmark `{{ index . "BENCH_FUNC_REGEX"}}` on **`PR-{{ index . "PR_NUMBER" }}`** vs **`{{ index . "BRANCH" }}`**
