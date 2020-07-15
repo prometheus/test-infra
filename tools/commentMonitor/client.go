@@ -28,7 +28,7 @@ type commentMonitorClient struct {
 	ghClient           *githubClient
 	allArgs            map[string]string
 	regex              *regexp.Regexp
-	eventMap           []webhookEventMap
+	events             []webhookEvent
 	prefixes           []commandPrefix
 	prefixHelpTemplate string
 	eventType          string
@@ -39,7 +39,7 @@ type commentMonitorClient struct {
 // Set eventType and commentTemplate if
 // regexString is validated against provided command.
 func (c *commentMonitorClient) validateRegex(command string) bool {
-	for _, e := range c.eventMap {
+	for _, e := range c.events {
 		c.regex = regexp.MustCompile(e.RegexString)
 		if c.regex.MatchString(command) {
 			c.commentTemplate = e.CommentTemplate

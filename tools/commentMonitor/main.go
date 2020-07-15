@@ -42,7 +42,7 @@ type commandPrefix struct {
 	HelpTemplate string `yaml:"help_template"`
 }
 
-type webhookEventMap struct {
+type webhookEvent struct {
 	EventType       string `yaml:"event_type"`
 	CommentTemplate string `yaml:"comment_template"`
 	RegexString     string `yaml:"regex_string"`
@@ -50,8 +50,8 @@ type webhookEventMap struct {
 }
 
 type configFile struct {
-	Prefixes         []commandPrefix   `yaml:"prefixes"`
-	WebhookEventMaps []webhookEventMap `yaml:"eventmaps"`
+	Prefixes      []commandPrefix `yaml:"prefixes"`
+	WebhookEvents []webhookEvent  `yaml:"events"`
 }
 
 func main() {
@@ -89,7 +89,7 @@ func (c *commentMonitorConfig) loadConfig() error {
 	if err != nil {
 		return fmt.Errorf("cannot unmarshal data: %v", err)
 	}
-	if len(c.configFile.WebhookEventMaps) == 0 || len(c.configFile.Prefixes) == 0 {
+	if len(c.configFile.WebhookEvents) == 0 || len(c.configFile.Prefixes) == 0 {
 		return fmt.Errorf("empty eventmap or prefix list")
 	}
 	// Get webhook secret.
@@ -131,7 +131,7 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 	// Setup commentMonitor client.
 	cmClient := commentMonitorClient{
 		allArgs:  make(map[string]string),
-		eventMap: c.configFile.WebhookEventMaps,
+		events:   c.configFile.WebhookEvents,
 		prefixes: c.configFile.Prefixes,
 	}
 
