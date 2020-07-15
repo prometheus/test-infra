@@ -14,7 +14,7 @@ funcbench currently supports two modes, Local and GitHub. Running it in the Gith
 
 [embedmd]:# (funcbench-flags.txt)
 ```txt
-usage: funcbench [<flags>] <target> [<bench-func-regex>]
+usage: funcbench [<flags>] <target> [<bench-func-regex>] [<packagepath>]
 
 Benchmark and compare your Go code between sub benchmarks or commits.
 
@@ -55,6 +55,8 @@ Args:
   [<bench-func-regex>]  Function regex to use for benchmark.Supports RE2 regexp
                         and is fully anchored, by default will run all
                         benchmarks.
+  [<packagepath>]       Package to run benchmark against. Eg. ./tsdb, defaults
+                        to ./...
 
 ```
 
@@ -72,13 +74,11 @@ The syntax is: `/funcbench <branch> <benchmark function regex>`
 Examples:
 
 - `/funcbench master BenchmarkQuery.*` - compare all the benchmarks mathching `BenchmarkQuery.*` for branch master vs the PR.
-
 - `/funcbench feature-branch` or `/funcbench feature-branch .*` - compare all the benchmarks on feature-branch vs the PR.
+- `/funcbench tag-name BenchmarkQuery.* ./tsdb` - compare all the benchmarks mathching `BenchmarkQuery.*` for feature-branch vs the PR in package `./tsdb`.
+- Multiline:
+```
+/funcbench old_branch .*
 
-- You can even add some comments along with the command.
-
-  ```
-  /funcbench old_branch .*
-
-  The old_branch performs poorly, I bet mine are much better.
-  ```
+The old_branch performs poorly, I bet mine are much better.
+```
