@@ -67,7 +67,6 @@ export GITHUB_REPO=prometheus
     -v GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL:$GCLOUD_SERVICEACCOUNT_CLIENT_EMAIL \
     -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
     -v WH_SECRET="$(printf $WH_SECRET | base64 -w 0)" \
-    -v GKE_AUTH="$(cat $AUTH_FILE | base64 -w 0)" \
     -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
     -f manifests/cluster-infra
 ```
