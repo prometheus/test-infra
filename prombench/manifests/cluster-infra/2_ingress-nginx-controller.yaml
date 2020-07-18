@@ -275,7 +275,7 @@ metadata:
     app.kubernetes.io/part-of: ingress-nginx
 spec:
   externalTrafficPolicy: Local
-  type: "{{ .PROVIDER_SERVICE }}"
+  type: "{{ .NGINX_SERVICE_TYPE }}"
   selector:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx

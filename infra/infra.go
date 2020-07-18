@@ -38,12 +38,16 @@ func main() {
 		Short('a').
 		StringVar(&g.Auth)
 	k8sGKE.Flag("file", "yaml file or folder  that describes the parameters for the object that will be deployed.").
-		Required().
 		Short('f').
 		ExistingFilesOrDirsVar(&g.DeploymentFiles)
 	k8sGKE.Flag("vars", "When provided it will substitute the token holders in the yaml file. Follows the standard golang template formating - {{ .hashStable }}.").
 		Short('v').
 		StringMapVar(&g.DeploymentVars)
+
+	k8sGKEShow := k8sGKE.Command("show", "show GKE related infomation").
+		Action(g.GKEDeploymentsParse)
+	k8sGKEShow.Command("deploymentvars", "gke show deploymentvars -a service-account.json").
+		Action(g.GetDefaultDeploymentVars)
 
 	// Cluster operations.
 	k8sGKECluster := k8sGKE.Command("cluster", "manage GKE clusters").

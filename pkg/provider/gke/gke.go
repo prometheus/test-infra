@@ -44,8 +44,12 @@ import (
 
 // New is the GKE constructor.
 func New() *GKE {
+	DeploymentVars := make(map[string]string)
+	// Set PROVIDER_SERVICE Deployment variable to  LoadBalancer
+	DeploymentVars["NGINX_SERVICE_TYPE"] = "LoadBalancer"
+
 	return &GKE{
-		DeploymentVars: make(map[string]string),
+		DeploymentVars: DeploymentVars,
 	}
 }
 
@@ -77,10 +81,6 @@ type GKE struct {
 
 // NewGKEClient sets the GKE client used when performing GKE requests.
 func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
-
-	// Set PROVIDER_SERVICE Deployment variable to  LoadBalancer
-	c.DeploymentVars["PROVIDER_SERVICE"] = "LoadBalancer"
-
 	// Set the auth env variable needed to the gke client.
 	if c.Auth != "" {
 	} else if c.Auth = os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"); c.Auth == "" {
@@ -578,6 +578,15 @@ func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
 func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 	if err := c.k8sProvider.ResourceDelete(c.k8sResources); err != nil {
 		log.Fatal("error while deleting objects from a manifest file err:", err)
+	}
+	return nil
+}
+
+// GetDefaultDeploymentVars shows default deployment var
+func (c *GKE) GetDefaultDeploymentVars(parseContext *kingpin.ParseContext) error {
+	fmt.Print("Key : Value \n")
+	for key, value := range c.DeploymentVars {
+		fmt.Print(key, " : ", value, "\n")
 	}
 	return nil
 }

@@ -23,6 +23,9 @@ Commands:
   help [<command>...]
     Show help.
 
+  gke show deploymentvars
+    gke show deploymentvars -a service-account.json
+
   gke cluster create
     gke cluster create -a service-account.json -f FileOrFolder
 
