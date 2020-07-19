@@ -69,9 +69,11 @@ type EKS struct {
 
 // New is the EKS constructor
 func New() *EKS {
-	return &EKS{
+	eks := &EKS{
 		DeploymentVars: make(map[string]string),
 	}
+	eks.DeploymentVars["SEPARATOR"] = ","
+	return eks
 }
 
 // NewEKSClient sets the EKS client used when performing the GKE requests.

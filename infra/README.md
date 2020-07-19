@@ -86,21 +86,23 @@ Commands:
 
   eks nodegroup create
     eks nodegroup create -a credentials -f FileOrFolder -v REGION:europe-west1-b
-    -v CLUSTER_NAME:test -r SUBNET_IDS: subnetId1_subnetId2_subnetId3
+    -v CLUSTER_NAME:test -v SUBNET_IDS: subnetId1,subnetId2,subnetId3 -v
+    SEPARATOR:,
 
   eks nodegroup delete
     eks nodegroup delete -a credentials -f FileOrFolder -v REGION:europe-west1-b
-    -v CLUSTER_NAME:test -r SUBNET_IDS: subnetId1_subnetId2_subnetId3
+    -v CLUSTER_NAME:test -v SUBNET_IDS: subnetId1,subnetId2,subnetId3 -v
+    SEPARATOR:,
 
   eks nodegroup check-running
     eks nodegroup check-running -a credentails -f FileOrFolder -v
-    REGION:europe-west1-b -v CLUSTER_NAME:test -r SUBNET_IDS:
-    subnetId1_subnetId2_subnetId3
+    REGION:europe-west1-b -v CLUSTER_NAME:test -v SUBNET_IDS:
+    subnetId1,subnetId2,subnetId3 -v SEPARATOR:,
 
   eks nodegroup check-deleted
     eks nodegroup check-deleted -a credentials -f FileOrFolder -v
-    REGION:europe-west1-b -v CLUSTER_NAME:test -r SUBNET_IDS:
-    subnetId1_subnetId2_subnetId3
+    REGION:europe-west1-b -v CLUSTER_NAME:test -v SUBNET_IDS:
+    subnetId1,subnetId2,subnetId3 -v SEPARATOR:,
 
   eks resource apply
     eks resource apply -a credentials -f manifestsFileOrFolder -v
