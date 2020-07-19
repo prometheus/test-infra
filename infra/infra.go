@@ -40,7 +40,8 @@ func main() {
 		StringMapVar(&dr.FlagDeploymentVars)
 
 	g := gke.New(dr)
-	k8sGKE := app.Command("gke", `Google container engine provider - https://cloud.google.com/kubernetes-engine/`)
+	k8sGKE := app.Command("gke", `Google container engine provider - https://cloud.google.com/kubernetes-engine/`).
+		Action(g.SetupGKEDeploymentResources)
 	k8sGKE.Flag("auth", "json authentication for the project. Accepts a filepath or an env variable that inlcudes tha json data. If not set the tool will use the GOOGLE_APPLICATION_CREDENTIALS env variable (export GOOGLE_APPLICATION_CREDENTIALS=service-account.json). https://cloud.google.com/iam/docs/creating-managing-service-account-keys.").
 		PlaceHolder("service-account.json").
 		Short('a').

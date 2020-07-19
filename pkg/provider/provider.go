@@ -42,8 +42,8 @@ type DeploymentResource struct {
 }
 
 // NewDeploymentResource returns DeploymentResource with default values.
-func NewDeploymentResource() DeploymentResource {
-	return DeploymentResource{
+func NewDeploymentResource() *DeploymentResource {
+	return &DeploymentResource{
 		DeploymentFiles:       []string{},
 		FlagDeploymentVars:    map[string]string{},
 		DefaultDeploymentVars: map[string]string{},

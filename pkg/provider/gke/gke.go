@@ -42,15 +42,9 @@ import (
 )
 
 // New is the GKE constructor.
-func New(dr provider.DeploymentResource) *GKE {
-	// The next one in order will override the previous.
-	res := provider.MergeDeploymentVars(
-		dr.DefaultDeploymentVars,
-		dr.FlagDeploymentVars,
-	)
+func New(dr *provider.DeploymentResource) *GKE {
 	return &GKE{
-		DeploymentVars:  res,
-		DeploymentFiles: dr.DeploymentFiles,
+		DeploymentResource: dr,
 	}
 }
 
@@ -67,10 +61,12 @@ type GKE struct {
 	clientGKE *gke.ClusterManagerClient
 	// The k8s provider used when we work with the manifest files.
 	k8sProvider *k8sProvider.K8s
-	// DeploymentFiles files provided from the cli.
+	// Final DeploymentFiles files.
 	DeploymentFiles []string
-	// Variables to substitute in the DeploymentFiles.
+	// Final DeploymentVars.
 	DeploymentVars map[string]string
+	// DeployResource to construct DeploymentVars and DeploymentFiles
+	DeploymentResource *provider.DeploymentResource
 	// Content bytes after parsing the template variables, grouped by filename.
 	gkeResources []Resource
 	// K8s resource.runtime objects after parsing the template variables, grouped by filename.
@@ -129,6 +125,17 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	}
 	c.clientGKE = cl
 	c.ctx = context.Background()
+
+	return nil
+}
+
+// SetupGKEDeploymentResources Sets up DeploymentVars and DeploymentFiles
+func (c *GKE) SetupGKEDeploymentResources(*kingpin.ParseContext) error {
+	c.DeploymentFiles = c.DeploymentResource.DeploymentFiles
+	c.DeploymentVars = provider.MergeDeploymentVars(
+		c.DeploymentResource.DefaultDeploymentVars,
+		c.DeploymentResource.FlagDeploymentVars,
+	)
 	return nil
 }
 
