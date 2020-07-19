@@ -43,8 +43,14 @@ import (
 
 // New is the GKE constructor.
 func New(dr provider.DeploymentResource) *GKE {
+	// The next one in order will override the previous.
+	res := provider.MergeDeploymentVars(
+		dr.DefaultDeploymentVars,
+		dr.FlagDeploymentVars,
+	)
 	return &GKE{
-		DeploymentVars: dr.DeploymentVars,
+		DeploymentVars:  res,
+		DeploymentFiles: dr.DeploymentFiles,
 	}
 }
 

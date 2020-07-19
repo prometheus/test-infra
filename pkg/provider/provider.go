@@ -35,15 +35,18 @@ const (
 type DeploymentResource struct {
 	// DeploymentFiles files provided from the cli.
 	DeploymentFiles []string
-	// Variables to substitute in the DeploymentFiles.
-	DeploymentVars map[string]string
+	// DeploymentVars provided from the cli.
+	FlagDeploymentVars map[string]string
+	// Default DeploymentVars.
+	DefaultDeploymentVars map[string]string
 }
 
-// DefaultDeploymentResource returns DeploymentResource with default values.
-func DefaultDeploymentResource() DeploymentResource {
+// NewDeploymentResource returns DeploymentResource with default values.
+func NewDeploymentResource() DeploymentResource {
 	return DeploymentResource{
-		DeploymentFiles: []string{},
-		DeploymentVars:  map[string]string{},
+		DeploymentFiles:       []string{},
+		FlagDeploymentVars:    map[string]string{},
+		DefaultDeploymentVars: map[string]string{},
 	}
 }
 
@@ -121,4 +124,15 @@ func DeploymentsParse(deploymentFiles []string, deploymentVars map[string]string
 		deploymentObjects = append(deploymentObjects, Resource{FileName: name, Content: content})
 	}
 	return deploymentObjects, nil
+}
+
+// MergeDeploymentVars merges multiple maps based on the order.
+func MergeDeploymentVars(ms ...map[string]string) map[string]string {
+	res := map[string]string{}
+	for _, m := range ms {
+		for k, v := range m {
+			res[k] = v
+		}
+	}
+	return res
 }

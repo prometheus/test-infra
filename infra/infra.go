@@ -28,7 +28,7 @@ import (
 func main() {
 	log.SetFlags(log.Ltime | log.Lshortfile)
 
-	dr := provider.DefaultDeploymentResource()
+	dr := provider.NewDeploymentResource()
 
 	app := kingpin.New(filepath.Base(os.Args[0]), "The prometheus/test-infra deployment tool")
 	app.HelpFlag.Short('h')
@@ -37,7 +37,7 @@ func main() {
 		ExistingFilesOrDirsVar(&dr.DeploymentFiles)
 	app.Flag("vars", "When provided it will substitute the token holders in the yaml file. Follows the standard golang template formating - {{ .hashStable }}.").
 		Short('v').
-		StringMapVar(&dr.DeploymentVars)
+		StringMapVar(&dr.FlagDeploymentVars)
 
 	g := gke.New(dr)
 	k8sGKE := app.Command("gke", `Google container engine provider - https://cloud.google.com/kubernetes-engine/`)
