@@ -42,9 +42,9 @@ import (
 )
 
 // New is the GKE constructor.
-func New() *GKE {
+func New(dr provider.DeploymentResource) *GKE {
 	return &GKE{
-		DeploymentVars: make(map[string]string),
+		DeploymentVars: dr.DeploymentVars,
 	}
 }
 
@@ -64,7 +64,6 @@ type GKE struct {
 	// DeploymentFiles files provided from the cli.
 	DeploymentFiles []string
 	// Variables to substitute in the DeploymentFiles.
-	// These are also used when the command requires some variables that are not provided by the deployment file.
 	DeploymentVars map[string]string
 	// Content bytes after parsing the template variables, grouped by filename.
 	gkeResources []Resource

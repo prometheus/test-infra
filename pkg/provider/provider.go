@@ -31,6 +31,22 @@ const (
 	globalRetryTime  = 10 * time.Second
 )
 
+// DeploymentResource holds list of variables and corresponding files.
+type DeploymentResource struct {
+	// DeploymentFiles files provided from the cli.
+	DeploymentFiles []string
+	// Variables to substitute in the DeploymentFiles.
+	DeploymentVars map[string]string
+}
+
+// DefaultDeploymentResource returns DeploymentResource with default values.
+func DefaultDeploymentResource() DeploymentResource {
+	return DeploymentResource{
+		DeploymentFiles: []string{},
+		DeploymentVars:  map[string]string{},
+	}
+}
+
 // Resource holds the file content after parsing the template variables.
 type Resource struct {
 	FileName string

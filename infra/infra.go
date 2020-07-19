@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/test-infra/pkg/provider"
 	"github.com/prometheus/test-infra/pkg/provider/gke"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -27,21 +28,23 @@ import (
 func main() {
 	log.SetFlags(log.Ltime | log.Lshortfile)
 
+	dr := provider.DefaultDeploymentResource()
+
 	app := kingpin.New(filepath.Base(os.Args[0]), "The prometheus/test-infra deployment tool")
 	app.HelpFlag.Short('h')
+	app.Flag("file", "yaml file or folder  that describes the parameters for the object that will be deployed.").
+		Short('f').
+		ExistingFilesOrDirsVar(&dr.DeploymentFiles)
+	app.Flag("vars", "When provided it will substitute the token holders in the yaml file. Follows the standard golang template formating - {{ .hashStable }}.").
+		Short('v').
+		StringMapVar(&dr.DeploymentVars)
 
-	g := gke.New()
+	g := gke.New(dr)
 	k8sGKE := app.Command("gke", `Google container engine provider - https://cloud.google.com/kubernetes-engine/`)
 	k8sGKE.Flag("auth", "json authentication for the project. Accepts a filepath or an env variable that inlcudes tha json data. If not set the tool will use the GOOGLE_APPLICATION_CREDENTIALS env variable (export GOOGLE_APPLICATION_CREDENTIALS=service-account.json). https://cloud.google.com/iam/docs/creating-managing-service-account-keys.").
 		PlaceHolder("service-account.json").
 		Short('a').
 		StringVar(&g.Auth)
-	k8sGKE.Flag("file", "yaml file or folder  that describes the parameters for the object that will be deployed.").
-		Short('f').
-		ExistingFilesOrDirsVar(&g.DeploymentFiles)
-	k8sGKE.Flag("vars", "When provided it will substitute the token holders in the yaml file. Follows the standard golang template formating - {{ .hashStable }}.").
-		Short('v').
-		StringMapVar(&g.DeploymentVars)
 
 	// Cluster operations.
 	k8sGKECluster := k8sGKE.Command("cluster", "manage GKE clusters").
