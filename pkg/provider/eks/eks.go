@@ -59,10 +59,6 @@ type EKS struct {
 	// Variables to substitute in the DeploymentFiles.
 	// These are also used when the command requires some variables that are not provided by the deployment file.
 	DeploymentVars map[string]string
-	// These works in the same way as DelpoymentVars but they are used to pass on stringified range value to deployment file.
-	DeploymentRangeVars map[string]string
-	// These string is used to split DeploymentRangeVars in to their corresponding lists.
-	Separator string
 	// Content bytes after parsing the template variables, grouped by filename.
 	eksResources []Resource
 	// K8s resource.runtime objects after parsing the template variables, grouped by filename.
@@ -74,8 +70,7 @@ type EKS struct {
 // New is the EKS constructor
 func New() *EKS {
 	return &EKS{
-		DeploymentVars:      make(map[string]string),
-		DeploymentRangeVars: make(map[string]string),
+		DeploymentVars: make(map[string]string),
 	}
 }
 
@@ -96,23 +91,11 @@ func (c *EKS) NewEKSClient(*kingpin.ParseContext) error {
 	return nil
 }
 
-func (c *EKS) eksDeploymentVars() map[string]string {
-	deployVars := c.DeploymentVars
-
-	for key, rangeVars := range c.DeploymentRangeVars {
-		deployVars[key] = rangeVars
-	}
-
-	deployVars["SEPERATOR"] = c.Separator
-
-	return deployVars
-}
-
 // EKSDeploymentParse parses the cluster/nodegroups deployment file and saves the result as bytes grouped by the filename.
 // Any variables passed to the cli will be replaced in the resource files following the golang text template format.
 func (c *EKS) EKSDeploymentParse(*kingpin.ParseContext) error {
 
-	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.eksDeploymentVars())
+	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
 	if err != nil {
 		log.Fatalf("Couldn't parse deployment files: %v", err)
 	}

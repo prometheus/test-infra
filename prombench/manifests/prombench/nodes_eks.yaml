@@ -5,7 +5,7 @@ nodegroups:
     noderole: {{ .NODE_ROLE }}
     disksize: 100
     subnets:
-      {{ range $subnetId := get_range .SUBNET_IDS .SEPERATOR }}
+      {{ range $subnetId := split .SUBNET_IDS .SEPARATOR }}
       - {{ $subnetId }}
       {{ end }}
     instancetypes:
@@ -21,7 +21,7 @@ nodegroups:
     noderole: {{ .NODE_ROLE }}
     disksize: 100
     subnets:
-      {{ range $subnetId := get_range .SUBNET_IDS .SEPERATOR }}
+      {{ range $subnetId := split .SUBNET_IDS .SEPARATOR }}
       - {{ $subnetId }}
       {{ end }}
     instancetypes:

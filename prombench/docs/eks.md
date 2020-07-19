@@ -18,17 +18,17 @@ Run prombench tests in [Elastic Kubernetes Service](https://aws.amazon.com/eks/)
 - Set the following environment variables and deploy the cluster.
 
 ```
-export CREDENTIALS=<path to credentials file of aws with prombench profile>
+export AUTH_FILE=<path to credentials file of aws with prombench profile>
 export CLUSTER_NAME=prombench
 export REGION=us-east1-b
 export NODE_ROLE=<Amazon EKS worker node IAM role ARN>
 export ROLE_ARN=<Amazon EKS cluster role ARN>
-export SEPERATOR=_
-export SUBNET_IDS=SUBNETID1_SUBNETID2_SUBNETID3
+export SEPARATOR=,
+export SUBNET_IDS=SUBNETID1,SUBNETID2,SUBNETID3
 
-../infra/infra gke cluster create -a $CREDENTIALS -v REGION:$REGION \
-    -v NODE_ROLE:$NODE_ROLE -v ROLE_ARN:$ROLE_ARN -v SUBNET_IDS:$SUBNET_IDS -v CLUSTER_NAME:$CLUSTER_NAME \
-    -f manifests/cluster.yaml
+../infra/infra eks cluster create -a $AUTH_FILE -v REGION:$REGION \
+    -v NODE_ROLE:$NODE_ROLE -v ROLE_ARN:$ROLE_ARN -v SUBNET_IDS:$SUBNET_IDS -v SEPARATOR:$SEPARATOR -v CLUSTER_NAME:$CLUSTER_NAME \
+    -f manifests/cluster_eks.yaml
 ```
 
 
@@ -54,7 +54,7 @@ export GITHUB_REPO=prometheus
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Loki, Grafana, Alertmanager & Github Notifier.
 
 ```
-../infra/infra eks resource apply -a $CREDENTIALS -v REGION:$REGION \
+../infra/infra eks resource apply -a $AUTH_FILE -v REGION:$REGION \
     -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
     -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
     -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
@@ -87,9 +87,9 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 - Create the nodegroups for the k8s objects
 
 ```
-../infra/infra eks nodegroups create -a $CREDENTIALS \
-    -v REGION:$REGION -v NODE_ROLE:$NODE_ROLE -v ROLE_ARN:$ROLE_ARN -r SUBNET_IDS:$SUBNET_IDS -v CLUSTER_NAME:$CLUSTER_NAME \
-    -v PR_NUMBER:$PR_NUMBER -f manifests/environment/gke/nodepools.yaml
+../infra/infra eks nodegroups create -a $AUTH_FILE \
+    -v REGION:$REGION -v NODE_ROLE:$NODE_ROLE -v ROLE_ARN:$ROLE_ARN -v SUBNET_IDS:$SUBNET_IDS -v SEPARATOR:$SEPARATOR -v CLUSTER_NAME:$CLUSTER_NAME \
+    -v PR_NUMBER:$PR_NUMBER -f manifests/prombench/nodepools_eks.yaml
 ```
 
 - Deploy the k8s objects

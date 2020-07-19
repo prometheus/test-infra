@@ -8,8 +8,8 @@ It is designed to support adding more k8s providers.
 ## Overview of the manifest files
 
 The `/manifest` directory contains all the kubernetes manifest files.
-
 - `cluster_gke.yaml` : This is used to create the Main Node in gke.
+- `cluster_eks.yaml` : This is used to create the Main Node in eks.
 - `cluster-infra/` : These are the persistent components of the Main Node.
 - `prombench/` : These resources are created and destroyed for each prombench test.
 

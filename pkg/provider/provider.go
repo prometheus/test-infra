@@ -84,8 +84,8 @@ func applyTemplateVars(content []byte, deploymentVars map[string]string) ([]byte
 		"normalise": func(t string) string {
 			return strings.Replace(t, ".", "-", -1)
 		},
-		"get_range": func(rangeVars, seperator string) []string {
-			return strings.Split(rangeVars, seperator)
+		"split": func(rangeVars, separator string) []string {
+			return strings.Split(rangeVars, separator)
 		},
 	})
 	if err := template.Must(t.Parse(string(content))).Execute(fileContentParsed, deploymentVars); err != nil {
