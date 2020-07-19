@@ -25,6 +25,9 @@ spec:
           - "{{ .BENCH_FUNC_REGEX }}"
         env:
           - name: GITHUB_TOKEN
-            value: "{{ .GITHUB_TOKEN }}"
+            valueFrom:
+              secretKeyRef:
+                name: github-token
+                key: token
       nodeSelector:
         node-name: funcbench-{{ .PR_NUMBER }}
