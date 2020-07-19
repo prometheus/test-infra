@@ -28,8 +28,9 @@ resource_apply:
 resource_delete:
 	$(INFRA_CMD) gke resource delete -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:funcbench-${PR_NUMBER} \
-		-v PR_NUMBER:${PR_NUMBER} -v GITHUB_TOKEN:${GITHUB_TOKEN} \
+		-v PR_NUMBER:${PR_NUMBER} \
 		-v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
 		-v BRANCH:${BRANCH} -v BENCH_FUNC_REGEX:${BENCH_FUNC_REGEX} \
-		-f manifests/benchmark/2_job.yaml \
+		-f manifests/benchmark/3_job.yaml \
+		-f manifests/benchmark/2_secrets.yaml \
 		-f manifests/benchmark/1_namespace.yaml
