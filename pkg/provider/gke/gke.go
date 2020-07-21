@@ -129,8 +129,8 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	return nil
 }
 
-// SetupGKEDeploymentResources Sets up DeploymentVars and DeploymentFiles
-func (c *GKE) SetupGKEDeploymentResources(*kingpin.ParseContext) error {
+// SetupDeploymentResources Sets up DeploymentVars and DeploymentFiles
+func (c *GKE) SetupDeploymentResources(*kingpin.ParseContext) error {
 	c.DeploymentFiles = c.DeploymentResource.DeploymentFiles
 	c.DeploymentVars = provider.MergeDeploymentVars(
 		c.DeploymentResource.DefaultDeploymentVars,
@@ -198,8 +198,7 @@ func (c *GKE) K8SDeploymentsParse(*kingpin.ParseContext) error {
 func (c *GKE) checkDeploymentVarsAndFiles() error {
 	reqDepVars := []string{"PROJECT_ID", "ZONE", "CLUSTER_NAME"}
 	for _, k := range reqDepVars {
-		v := c.DeploymentVars[k]
-		if v == "" {
+		if v, ok := c.DeploymentVars[k]; !ok || v == "" {
 			return fmt.Errorf("missing required %v variable", k)
 		}
 	}
