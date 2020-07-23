@@ -17,7 +17,13 @@ usage: infra [<flags>] <command> [<args> ...]
 The prometheus/test-infra deployment tool
 
 Flags:
-  -h, --help  Show context-sensitive help (also try --help-long and --help-man).
+  -h, --help           Show context-sensitive help (also try --help-long and
+                       --help-man).
+  -f, --file=FILE ...  yaml file or folder that describes the parameters for the
+                       object that will be deployed.
+  -v, --vars=VARS ...  When provided it will substitute the token holders in the
+                       yaml file. Follows the standard golang template formating
+                       - {{ .hashStable }}.
 
 Commands:
   help [<command>...]

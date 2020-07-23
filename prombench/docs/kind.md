@@ -16,7 +16,7 @@ Run prombench tests in [Kubernetes In Docker](https://kind.sigs.k8s.io/).
 export CLUSTER_NAME=prombench
 export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 
-../infra/infra kind cluster create -v PR_NUMBER:PR_NUMBER -v CLUSTER_NAME:$CLUSTER_NAME \
+../infra/infra kind cluster create -v PR_NUMBER:$PR_NUMBER -v CLUSTER_NAME:$CLUSTER_NAME \
     -f manifests/cluster_kind.yaml
 ```
 
@@ -38,6 +38,7 @@ export OAUTH_TOKEN=<generated token from github or set to an empty string " ">
 export WH_SECRET=<github webhook secret>
 export GITHUB_ORG=prometheus
 export GITHUB_REPO=prometheus
+export SERVICEACCOUNT_CLIENT_EMAIL=<Your Email address>
 ```
 
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Loki, Grafana, Alertmanager & Github Notifier.
@@ -48,6 +49,7 @@ export GITHUB_REPO=prometheus
     -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
     -v WH_SECRET="$(printf $WH_SECRET | base64 -w 0)" \
     -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
+    -v SERVICEACCOUNT_CLIENT_EMAIL:$SERVICEACCOUNT_CLIENT_EMAIL \
     -f manifests/cluster-infra
 ```
 
