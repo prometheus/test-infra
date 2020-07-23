@@ -20,20 +20,21 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/google/go-github/v29/github"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/config"
-	"gopkg.in/src-d/go-git.v4/plumbing"
+	"golang.org/x/perf/benchstat"
 )
 
 type Environment interface {
 	BenchFunc() string
 	CompareTarget() string
 
-	PostErr(ctx context.Context, err string) error
-	PostResults(ctx context.Context, cmps []BenchCmp, extraInfo ...string) error
+	PostErr(err string) error
+	PostResults(tables []*benchstat.Table, extraInfo ...string) error
 
 	Repo() *git.Repository
 }
@@ -63,11 +64,15 @@ func newLocalEnv(e environment) (Environment, error) {
 	return &Local{environment: e, repo: r}, nil
 }
 
-func (l *Local) PostErr(context.Context, string) error { return nil } // Noop. We will see error anyway.
+func (l *Local) PostErr(string) error { return nil } // Noop. We will see error anyway.
 
-func (l *Local) PostResults(ctx context.Context, cmps []BenchCmp, extraInfo ...string) error {
+func (l *Local) PostResults(tables []*benchstat.Table, extraInfo ...string) error {
 	fmt.Println("Results:")
-	Render(os.Stdout, cmps, false, false, l.compareTarget)
+	var buf bytes.Buffer
+	benchstat.FormatText(&buf, tables)
+
+	os.Stdout.Write(buf.Bytes())
+
 	return nil
 }
 
@@ -79,6 +84,8 @@ type GitHub struct {
 
 	repo   *git.Repository
 	client *gitHubClient
+
+	ctx context.Context
 }
 
 func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspace string) (Environment, error) {
@@ -98,6 +105,7 @@ func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspac
 		environment: e,
 		repo:        r,
 		client:      gc,
+		ctx:         ctx,
 	}
 
 	if err := os.Setenv("CGO_ENABLED", "0"); err != nil {
@@ -128,19 +136,35 @@ func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspac
 	return g, nil
 }
 
-func (g *GitHub) PostErr(ctx context.Context, err string) error {
-	if err := g.client.postComment(ctx, fmt.Sprintf("%v. Benchmark did not complete, please check action logs.", err)); err != nil {
-		return errors.Wrap(err, "posting err")
+func (g *GitHub) PostErr(txt string) error {
+	c := fmt.Sprintf(
+		"Old: `%s`\nNew: `PR-%d`\n%s",
+		g.compareTarget,
+		g.client.prNumber,
+		txt,
+	)
+
+	if err := g.client.postComment(c); err != nil {
+		return err
 	}
+
 	return nil
 }
 
-func (g *GitHub) PostResults(ctx context.Context, cmps []BenchCmp, extraInfo ...string) error {
+func (g *GitHub) PostResults(tables []*benchstat.Table, extraInfo ...string) error {
 	b := bytes.Buffer{}
-	Render(&b, cmps, false, false, g.compareTarget)
+	if err := formatMarkdown(&b, tables); err != nil {
+		return err
+	}
+
 	legend := fmt.Sprintf("Old: `%s`\nNew: `PR-%d`", g.compareTarget, g.client.prNumber)
-	result := fmt.Sprintf("<details><summary>Click to check benchmark result</summary>\n\n%s\n%s\n%s</details>", legend, strings.Join(extraInfo, "\n"), formatCommentToMD(b.String()))
-	return g.client.postComment(ctx, result)
+	result := fmt.Sprintf(
+		"<details><summary>Click to check benchmark result</summary>\n\n%s\n%s\n%s</details>",
+		legend,
+		strings.Join(extraInfo, "\n"),
+		b.String(),
+	)
+	return g.client.postComment(result)
 }
 
 func (g *GitHub) Repo() *git.Repository { return g.repo }
@@ -151,6 +175,7 @@ type gitHubClient struct {
 	prNumber  int
 	client    *github.Client
 	nocomment bool
+	ctx       context.Context
 }
 
 func newGitHubClient(ctx context.Context, owner, repo string, prNumber int, nocomment bool) (*gitHubClient, error) {
@@ -166,16 +191,17 @@ func newGitHubClient(ctx context.Context, owner, repo string, prNumber int, noco
 		repo:      repo,
 		prNumber:  prNumber,
 		nocomment: nocomment,
+		ctx:       ctx,
 	}
 	return &c, nil
 }
 
-func (c *gitHubClient) postComment(ctx context.Context, comment string) error {
+func (c *gitHubClient) postComment(comment string) error {
 	if c.nocomment {
 		return nil
 	}
 
 	issueComment := &github.IssueComment{Body: github.String(comment)}
-	_, _, err := c.client.Issues.CreateComment(ctx, c.owner, c.repo, c.prNumber, issueComment)
+	_, _, err := c.client.Issues.CreateComment(c.ctx, c.owner, c.repo, c.prNumber, issueComment)
 	return err
 }

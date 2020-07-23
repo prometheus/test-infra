@@ -16,7 +16,6 @@ package gke
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -43,13 +42,13 @@ import (
 )
 
 // New is the GKE constructor.
-func New() *GKE {
-	DeploymentVars := make(map[string]string)
-	// Set PROVIDER_SERVICE Deployment variable to  LoadBalancer
-	DeploymentVars["NGINX_SERVICE_TYPE"] = "LoadBalancer"
+func New(dr *provider.DeploymentResource) *GKE {
+
+	// Set SERVICEACCOUNT_CLIENT_EMAIL to LoadBalancer.
+	dr.FlagDeploymentVars["NGINX_SERVICE_TYPE"] = "LoadBalancer"
 
 	return &GKE{
-		DeploymentVars: DeploymentVars,
+		DeploymentResource: dr,
 	}
 }
 
@@ -66,11 +65,12 @@ type GKE struct {
 	clientGKE *gke.ClusterManagerClient
 	// The k8s provider used when we work with the manifest files.
 	k8sProvider *k8sProvider.K8s
-	// DeploymentFiles files provided from the cli.
+	// Final DeploymentFiles files.
 	DeploymentFiles []string
-	// Variables to substitute in the DeploymentFiles.
-	// These are also used when the command requires some variables that are not provided by the deployment file.
+	// Final DeploymentVars.
 	DeploymentVars map[string]string
+	// DeployResource to construct DeploymentVars and DeploymentFiles
+	DeploymentResource *provider.DeploymentResource
 	// Content bytes after parsing the template variables, grouped by filename.
 	gkeResources []Resource
 	// K8s resource.runtime objects after parsing the template variables, grouped by filename.
@@ -118,6 +118,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	// Set the auth env variable needed to the k8s client.
 	// The client looks for this special variable name and it is the only way to set the auth for now.
 	// TODO: Remove when the client supports an auth config option in NewDefaultClientConfig.
+	// https://github.com/kubernetes/kubernetes/pull/80303
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", saFile.Name())
 
 	opts := option.WithCredentialsJSON([]byte(c.Auth))
@@ -128,13 +129,26 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	}
 	c.clientGKE = cl
 	c.ctx = context.Background()
+
+	return nil
+}
+
+// SetupDeploymentResources Sets up DeploymentVars and DeploymentFiles
+func (c *GKE) SetupDeploymentResources(*kingpin.ParseContext) error {
+	c.DeploymentFiles = c.DeploymentResource.DeploymentFiles
+	c.DeploymentVars = provider.MergeDeploymentVars(
+		c.DeploymentResource.DefaultDeploymentVars,
+		c.DeploymentResource.FlagDeploymentVars,
+	)
 	return nil
 }
 
 // GKEDeploymentsParse parses the cluster/nodepool deployment files and saves the result as bytes grouped by the filename.
 // Any variables passed to the cli will be replaced in the resources files following the golang text template format.
 func (c *GKE) GKEDeploymentsParse(*kingpin.ParseContext) error {
-	c.setProjectID()
+	if err := c.checkDeploymentVarsAndFiles(); err != nil {
+		return err
+	}
 
 	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
 	if err != nil {
@@ -148,7 +162,9 @@ func (c *GKE) GKEDeploymentsParse(*kingpin.ParseContext) error {
 // K8SDeploymentsParse parses the k8s objects deployment files and saves the result as k8s objects grouped by the filename.
 // Any variables passed to the cli will be replaced in the resources files following the golang text template format.
 func (c *GKE) K8SDeploymentsParse(*kingpin.ParseContext) error {
-	c.setProjectID()
+	if err := c.checkDeploymentVarsAndFiles(); err != nil {
+		return err
+	}
 
 	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
 	if err != nil {
@@ -182,19 +198,18 @@ func (c *GKE) K8SDeploymentsParse(*kingpin.ParseContext) error {
 	return nil
 }
 
-// setProjectID either from the cli arg or read it from the auth data.
-func (c *GKE) setProjectID() {
-	if v, ok := c.DeploymentVars["PROJECT_ID"]; !ok || v == "" {
-		d := make(map[string]interface{})
-		if err := json.Unmarshal([]byte(c.Auth), &d); err != nil {
-			log.Fatalf("Couldn't parse auth file: %v", err)
+// checkDeploymentVarsAndFiles checks whether the requied deployment vars are passed.
+func (c *GKE) checkDeploymentVarsAndFiles() error {
+	reqDepVars := []string{"PROJECT_ID", "ZONE", "CLUSTER_NAME"}
+	for _, k := range reqDepVars {
+		if v, ok := c.DeploymentVars[k]; !ok || v == "" {
+			return fmt.Errorf("missing required %v variable", k)
 		}
-		v, ok := d["project_id"].(string)
-		if !ok {
-			log.Fatal("Couldn't get project id from the auth file")
-		}
-		c.DeploymentVars["PROJECT_ID"] = v
 	}
+	if len(c.DeploymentFiles) == 0 {
+		return fmt.Errorf("missing deployment file(s)")
+	}
+	return nil
 }
 
 // ClusterCreate create a new cluster or applies changes to an existing cluster.
@@ -505,24 +520,11 @@ func (c *GKE) AllNodepoolsDeleted(*kingpin.ParseContext) error {
 
 // NewK8sProvider sets the k8s provider used for deploying k8s manifests.
 func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
-	projectID, ok := c.DeploymentVars["PROJECT_ID"]
-	if !ok {
-		return fmt.Errorf("missing required PROJECT_ID variable")
-	}
-	zone, ok := c.DeploymentVars["ZONE"]
-	if !ok {
-		return fmt.Errorf("missing required ZONE variable")
-	}
-	clusterID, ok := c.DeploymentVars["CLUSTER_NAME"]
-	if !ok {
-		return fmt.Errorf("missing required CLUSTER_NAME variable")
-	}
-
 	// Get the authentication certificate for the cluster using the GKE client.
 	req := &containerpb.GetClusterRequest{
-		ProjectId: projectID,
-		Zone:      zone,
-		ClusterId: clusterID,
+		ProjectId: c.DeploymentVars["PROJECT_ID"],
+		Zone:      c.DeploymentVars["ZONE"],
+		ClusterId: c.DeploymentVars["CLUSTER_NAME"],
 	}
 	rep, err := c.clientGKE.GetCluster(c.ctx, req)
 	if err != nil {
@@ -578,15 +580,6 @@ func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
 func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 	if err := c.k8sProvider.ResourceDelete(c.k8sResources); err != nil {
 		log.Fatal("error while deleting objects from a manifest file err:", err)
-	}
-	return nil
-}
-
-// GetDefaultDeploymentVars shows default deployment var
-func (c *GKE) GetDefaultDeploymentVars(parseContext *kingpin.ParseContext) error {
-	fmt.Print("Key : Value \n")
-	for key, value := range c.DeploymentVars {
-		fmt.Print(key, " : ", value, "\n")
 	}
 	return nil
 }

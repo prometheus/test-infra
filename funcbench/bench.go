@@ -14,7 +14,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
@@ -23,10 +22,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/pkg/errors"
-	"golang.org/x/tools/benchmark/parse"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
+	"golang.org/x/perf/benchstat"
 )
 
 // TODO: Add unit test.
@@ -77,7 +76,7 @@ func (b *Benchmarker) benchOutFileName(commit plumbing.Hash) (string, error) {
 	return fmt.Sprintf("%s-%s.out", bb.String(), commit.String()), nil
 }
 
-func (b *Benchmarker) exec(ctx context.Context, pkgRoot string, commit plumbing.Hash) (out string, err error) {
+func (b *Benchmarker) exec(pkgRoot string, commit plumbing.Hash) (string, error) {
 	fileName, err := b.benchOutFileName(commit)
 	if err != nil {
 		return "", err
@@ -88,10 +87,11 @@ func (b *Benchmarker) exec(ctx context.Context, pkgRoot string, commit plumbing.
 		return filepath.Join(b.resultCacheDir, fileName), nil
 	}
 
+	// TODO Switch working directory before entering this function.
 	benchCmd := []string{"sh", "-c", strings.Join(append([]string{"cd", pkgRoot, "&&"}, b.benchmarkArgs...), " ")}
 
 	b.logger.Println("Executing benchmark command for", commit.String(), "\n", benchCmd)
-	out, err = b.c.exec(ctx, benchCmd...)
+	out, err := b.c.exec(benchCmd...)
 	if err != nil {
 		return "", errors.Wrap(err, "benchmark ended with an error.")
 	}
@@ -108,77 +108,30 @@ func (b *Benchmarker) exec(ctx context.Context, pkgRoot string, commit plumbing.
 	return fn, nil
 }
 
-func parseFile(path string) (parse.Set, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	bb, err := parse.ParseSet(f)
-	if err != nil {
-		return nil, err
-	}
-	return bb, nil
-}
-
-func (b *Benchmarker) compareBenchmarks(beforeFile, afterFile string) ([]BenchCmp, error) {
-	before, err := parseFile(beforeFile)
-	if err != nil {
-		return nil, errors.Wrapf(err, "open %s", beforeFile)
-	}
-
-	after, err := parseFile(afterFile)
-	if err != nil {
-		return nil, errors.Wrapf(err, "open %s", afterFile)
-	}
-
-	// Use benchcmp library directly.
-	// TODO(bwplotka): benchstat is new thing - we might add choice for funcbench to choose from? (:
-	cmps, warnings := Correlate(before, after)
-	for _, warn := range warnings {
-		b.logger.Println(warn)
-	}
-	if len(cmps) == 0 {
-		return nil, errors.New("no repeated benchmarks")
-	}
-
-	return cmps, nil
-}
-
-func (b *Benchmarker) compareSubBenchmarks(string) ([]BenchCmp, error) {
+func (b *Benchmarker) compareSubBenchmarks(string) ([]*benchstat.Table, error) {
 	// TODO(bwplotka): Implement.
 	return nil, errors.New("not implemented")
 }
 
-func formatCommentToMD(rawTable string) string {
-	tableContent := strings.Split(rawTable, "\n")
-	for i := 0; i <= len(tableContent)-1; i++ {
-		e := tableContent[i]
-		switch {
-		case e == "":
+func compareBenchmarks(files ...string) ([]*benchstat.Table, error) {
+	c := &benchstat.Collection{}
 
-		case strings.Contains(e, "ns/op"):
-			e = "| Benchmark | Old ns/op | New ns/op | Delta |"
-			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
-
-		case strings.Contains(e, "MB/s"):
-			e = "| Benchmark | Old MB/s | New MB/s | Speedup |"
-			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
-
-		case strings.Contains(e, "allocs"):
-			e = "| Benchmark | Old allocs | New allocs | Delta |"
-			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
-
-		case strings.Contains(e, "bytes"):
-			e = "| Benchmark | Old bytes | New bytes | Delta |"
-			tableContent = append(tableContent[:i+1], append([]string{"|-|-|-|-|"}, tableContent[i+1:]...)...)
-
-		default:
-			// Replace spaces with "|".
-			e = strings.Join(strings.Fields(e), "|")
+	for _, file := range files {
+		f, err := os.Open(file)
+		if err != nil {
+			return nil, err
 		}
-		tableContent[i] = e
-	}
-	return strings.Join(tableContent, "\n")
+		defer f.Close()
 
+		if err := c.AddFile(file, f); err != nil {
+			return nil, err
+		}
+	}
+
+	tables := c.Tables()
+	if tables == nil {
+		return nil, errors.New("didn't match any existing benchmarks")
+	}
+
+	return tables, nil
 }

@@ -35,7 +35,13 @@ func TestExtractCommand(t *testing.T) {
 	}
 }
 func TestCheckCommandPrefix(t *testing.T) {
-	prefixes := []string{"/funcbench", "/prombench", "/somebench"}
+	cmClient := commentMonitorClient{
+		prefixes: []commandPrefix{
+			{"/funcbench", "help"},
+			{"/prombench", "help"},
+			{"/somebench", "help"},
+		},
+	}
 	testCases := []struct {
 		command string
 		valid   bool
@@ -47,7 +53,7 @@ func TestCheckCommandPrefix(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.command, func(t *testing.T) {
-			if checkCommandPrefix(tc.command, prefixes) != tc.valid {
+			if cmClient.checkCommandPrefix(tc.command) != tc.valid {
 				t.Errorf("want %v, got %v", tc.valid, !tc.valid)
 			}
 		})
