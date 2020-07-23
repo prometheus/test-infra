@@ -31,6 +31,25 @@ const (
 	globalRetryTime  = 10 * time.Second
 )
 
+// DeploymentResource holds list of variables and corresponding files.
+type DeploymentResource struct {
+	// DeploymentFiles files provided from the cli.
+	DeploymentFiles []string
+	// DeploymentVars provided from the cli.
+	FlagDeploymentVars map[string]string
+	// Default DeploymentVars.
+	DefaultDeploymentVars map[string]string
+}
+
+// NewDeploymentResource returns DeploymentResource with default values.
+func NewDeploymentResource() *DeploymentResource {
+	return &DeploymentResource{
+		DeploymentFiles:       []string{},
+		FlagDeploymentVars:    map[string]string{},
+		DefaultDeploymentVars: map[string]string{},
+	}
+}
+
 // Resource holds the file content after parsing the template variables.
 type Resource struct {
 	FileName string
@@ -105,4 +124,15 @@ func DeploymentsParse(deploymentFiles []string, deploymentVars map[string]string
 		deploymentObjects = append(deploymentObjects, Resource{FileName: name, Content: content})
 	}
 	return deploymentObjects, nil
+}
+
+// MergeDeploymentVars merges multiple maps based on the order.
+func MergeDeploymentVars(ms ...map[string]string) map[string]string {
+	res := map[string]string{}
+	for _, m := range ms {
+		for k, v := range m {
+			res[k] = v
+		}
+	}
+	return res
 }
