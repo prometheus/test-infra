@@ -25,25 +25,37 @@ import (
 )
 
 type commentMonitorClient struct {
-	ghClient        *githubClient
-	allArgs         map[string]string
-	regex           *regexp.Regexp
-	eventMap        webhookEventMaps
-	eventType       string
-	commentTemplate string
-	label           string
+	ghClient           *githubClient
+	allArgs            map[string]string
+	regex              *regexp.Regexp
+	events             []webhookEvent
+	prefixes           []commandPrefix
+	prefixHelpTemplate string
+	eventType          string
+	commentTemplate    string
+	label              string
 }
 
 // Set eventType and commentTemplate if
 // regexString is validated against provided command.
 func (c *commentMonitorClient) validateRegex(command string) bool {
-	for _, e := range c.eventMap {
+	for _, e := range c.events {
 		c.regex = regexp.MustCompile(e.RegexString)
 		if c.regex.MatchString(command) {
 			c.commentTemplate = e.CommentTemplate
 			c.eventType = e.EventType
 			c.label = e.Label
 			log.Println("comment validation successful")
+			return true
+		}
+	}
+	return false
+}
+
+func (c *commentMonitorClient) checkCommandPrefix(command string) bool {
+	for _, p := range c.prefixes {
+		if strings.HasPrefix(command, p.Prefix) {
+			c.prefixHelpTemplate = p.HelpTemplate
 			return true
 		}
 	}
@@ -112,8 +124,15 @@ func (c commentMonitorClient) postLabel() error {
 	return nil
 }
 
-func (c commentMonitorClient) generateAndPostComment() error {
-	if c.commentTemplate != "" {
+func (c commentMonitorClient) generateAndPostSuccessComment() error {
+	return c.generateAndPostComment(c.commentTemplate)
+}
+func (c commentMonitorClient) generateAndPostErrorComment() error {
+	return c.generateAndPostComment(c.prefixHelpTemplate)
+}
+
+func (c commentMonitorClient) generateAndPostComment(commentTemplate string) error {
+	if commentTemplate != "" {
 		// Add all env vars to allArgs.
 		for _, e := range os.Environ() {
 			tmp := strings.Split(e, "=")
@@ -121,8 +140,8 @@ func (c commentMonitorClient) generateAndPostComment() error {
 		}
 		// Generate the comment template.
 		var buf bytes.Buffer
-		commentTemplate := template.Must(template.New("Comment").Parse(c.commentTemplate))
-		if err := commentTemplate.Execute(&buf, c.allArgs); err != nil {
+		ct := template.Must(template.New("Comment").Parse(commentTemplate))
+		if err := ct.Execute(&buf, c.allArgs); err != nil {
 			return err
 		}
 		// Post the comment.
