@@ -66,6 +66,7 @@ docker build -t prominfra/funcbench:master .
 ```
 
 ## Triggering with GitHub comments
+<!-- If you change the heading, please change the anchor at 7a_commentmonitor_configmap_noparse.yaml aswell. -->
 
 The benchmark can be triggered by creating a comment in a PR which specifies a branch to compare. The results are then posted back to the PR as a comment. The Github Actions workflow for funcbench [can be found here](https://github.com/prometheus/prometheus/blob/master/.github/workflows/funcbench.yml).
 

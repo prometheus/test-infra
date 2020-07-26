@@ -94,6 +94,7 @@ cat $AUTH_FILE | base64 -w 0
 ## Usage
 
 ### Trigger tests via a Github comment.
+<!-- If you change the heading, please change the anchor at 7a_commentmonitor_configmap_noparse.yaml aswell. -->
 
 ---
 
