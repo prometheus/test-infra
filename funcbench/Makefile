@@ -22,6 +22,7 @@ resource_apply:
 		-v PR_NUMBER:${PR_NUMBER} -v GITHUB_TOKEN:${GITHUB_TOKEN} \
 		-v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
 		-v BRANCH:${BRANCH} -v BENCH_FUNC_REGEX:${BENCH_FUNC_REGEX} \
+		-v PACKAGE_PATH:${PACKAGE_PATH} \
 		-f manifests/benchmark
 
 # Removal of namespace should be at the end, after all other resources get removed.
@@ -31,6 +32,7 @@ resource_delete:
 		-v PR_NUMBER:${PR_NUMBER} -v GITHUB_TOKEN:${GITHUB_TOKEN} \
 		-v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
 		-v BRANCH:${BRANCH} -v BENCH_FUNC_REGEX:${BENCH_FUNC_REGEX} \
+		-v PACKAGE_PATH:${PACKAGE_PATH} \
 		-f manifests/benchmark/3_job.yaml \
 		-f manifests/benchmark/2_secrets.yaml \
 		-f manifests/benchmark/1_namespace.yaml
