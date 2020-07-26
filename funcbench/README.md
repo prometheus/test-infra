@@ -70,16 +70,16 @@ docker build -t prominfra/funcbench:master .
 
 The benchmark can be triggered by creating a comment in a PR which specifies a branch to compare. The results are then posted back to the PR as a comment. The Github Actions workflow for funcbench [can be found here](https://github.com/prometheus/prometheus/blob/master/.github/workflows/funcbench.yml).
 
-The syntax is: `/funcbench <branch> <benchmark function regex>`
+The syntax is: `/funcbench <branch/tag/commit> <benchmark function regex>`, see [used regex here.](https://github.com/prometheus/test-infra/blob/master/prombench/manifests/cluster-infra/7a_commentmonitor_configmap_noparse.yaml)
 
-Examples:
+|Command|Explanation|
+|---|--|
+|`/funcbench master BenchmarkQuery.*`| Compare all the benchmarks matching `BenchmarkQuery.*` for branch master vs the PR|
+|`/funcbench feature-branch` or `/funcbench tag-name .*`| Compare all the benchmarks on feature-branch/tag-name vs the PR|
+|`/funcbench master BenchmarkQuery.* ./tsdb` | Compare all the benchmarks matching `BenchmarkQuery.*` for master vs the PR in package `./tsdb` |
+|<code>/funcbench old_branch .*<br/>The old_branch performs poorly, I bet mine are much better.<code>|Multiline commands work|
 
-- `/funcbench master BenchmarkQuery.*` - compare all the benchmarks mathching `BenchmarkQuery.*` for branch master vs the PR.
-- `/funcbench feature-branch` or `/funcbench feature-branch .*` - compare all the benchmarks on feature-branch vs the PR.
-- `/funcbench tag-name BenchmarkQuery.* ./tsdb` - compare all the benchmarks mathching `BenchmarkQuery.*` for feature-branch vs the PR in package `./tsdb`.
-- Multiline:
-```
-/funcbench old_branch .*
-
-The old_branch performs poorly, I bet mine are much better.
-```
+> **Notes:**
+>
+> - Editing/Deleting a comment will not re-trigger the workflow of starting/stopping a benchmark. Only creating a comment starts a benchmark.
+> - In case of funcbench, it automatically cleans up. So, no explicit stop command required.
