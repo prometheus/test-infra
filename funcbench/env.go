@@ -32,6 +32,7 @@ import (
 type Environment interface {
 	BenchFunc() string
 	CompareTarget() string
+	SetHashStrings(compareTargetHash, repoHeadHashString string)
 
 	PostErr(err string) error
 	PostResults(tables []*benchstat.Table, extraInfo ...string) error
@@ -42,12 +43,18 @@ type Environment interface {
 type environment struct {
 	logger Logger
 
-	benchFunc     string
-	compareTarget string
+	benchFunc               string
+	compareTarget           string
+	compareTargetHashString string
+	repoHeadHashString      string
 }
 
 func (e environment) BenchFunc() string     { return e.benchFunc }
 func (e environment) CompareTarget() string { return e.compareTarget }
+func (e *environment) SetHashStrings(compareTargetHash, repoHeadHashString string) {
+	e.compareTargetHashString = compareTargetHash
+	e.repoHeadHashString = repoHeadHashString
+}
 
 type Local struct {
 	environment
@@ -67,7 +74,12 @@ func newLocalEnv(e environment) (Environment, error) {
 func (l *Local) PostErr(string) error { return nil } // Noop. We will see error anyway.
 
 func (l *Local) PostResults(tables []*benchstat.Table, extraInfo ...string) error {
-	fmt.Println("Results:")
+	legend := fmt.Sprintf("Old: %s\nNew: %s",
+		l.compareTargetHashString,
+		l.repoHeadHashString,
+	)
+	fmt.Printf("Results:\n%s\n", legend)
+
 	var buf bytes.Buffer
 	benchstat.FormatText(&buf, tables)
 
@@ -157,7 +169,12 @@ func (g *GitHub) PostResults(tables []*benchstat.Table, extraInfo ...string) err
 		return err
 	}
 
-	legend := fmt.Sprintf("Old: `%s`\nNew: `PR-%d`", g.compareTarget, g.client.prNumber)
+	legend := fmt.Sprintf("Old: `%s`/`%s`\nNew: `PR-%d`/`%s`",
+		g.compareTarget,
+		g.compareTargetHashString,
+		g.client.prNumber,
+		g.repoHeadHashString,
+	)
 	result := fmt.Sprintf(
 		"<details><summary>Click to check benchmark result</summary>\n\n%s\n%s\n%s</details>",
 		legend,

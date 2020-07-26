@@ -292,6 +292,9 @@ func startBenchmark(env Environment, bench *Benchmarker) ([]*benchstat.Table, er
 		return nil, errors.Wrap(err, "comparing benchmarks")
 	}
 
+	// Save hashes for info about benchmark.
+	env.SetHashStrings(targetCommit.String(), ref.Hash().String())
+
 	return tables, nil
 }
 
