@@ -113,7 +113,7 @@ func main() {
 	k8sEKS := app.Command("eks", "Amazon Elastic Kubernetes Service - https://aws.amazon.com/eks").
 		Action(e.SetupDeploymentResources)
 	k8sEKS.Flag("auth", "filename which consist eks credentials.").
-		PlaceHolder("credentials").
+		PlaceHolder("authFile").
 		Short('a').
 		StringVar(&e.Auth)
 
@@ -124,9 +124,9 @@ func main() {
 	k8sEKSCluster := k8sEKS.Command("cluster", "manage EKS clusters").
 		Action(e.NewEKSClient).
 		Action(e.EKSDeploymentParse)
-	k8sEKSCluster.Command("create", "eks cluster create -a credentials -f FileOrFolder").
+	k8sEKSCluster.Command("create", "eks cluster create -a authFile -f FileOrFolder").
 		Action(e.ClusterCreate)
-	k8sEKSCluster.Command("delete", "eks cluster delete -a credentials -f FileOrFolder").
+	k8sEKSCluster.Command("delete", "eks cluster delete -a authFile -f FileOrFolder").
 		Action(e.ClusterDelete)
 
 	// Cluster node-pool operations
@@ -149,7 +149,7 @@ func main() {
 		Action(e.NewK8sProvider)
 	k8sEKSResource.Command("apply", "eks resource apply -a credentials -f manifestsFileOrFolder -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(e.ResourceApply)
-	k8sEKSResource.Command("delete", "eks resource delete -a credentials -f manifestsFileOrFolder -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+	k8sEKSResource.Command("delete", "eks resource delete -a authFile -f manifestsFileOrFolder -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(e.ResourceDelete)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {

@@ -1,10 +1,7 @@
 INFRA_CMD        ?= ../infra/infra
-
 PROVIDER 		 ?= gke
 
-ifeq ($(PROVIDER),)
-PROVIDER = gke
-endif
+PROVIDER 		 ?= gke
 
 .PHONY: deploy clean
 deploy: node_create resource_apply

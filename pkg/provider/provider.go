@@ -28,7 +28,7 @@ import (
 const (
 	EKSRetryCount    = 100
 	GlobalRetryCount = 50
-	Separator        = "---"
+	Separator        = ","
 	globalRetryTime  = 10 * time.Second
 )
 
