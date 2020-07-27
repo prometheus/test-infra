@@ -19,6 +19,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -101,10 +102,22 @@ type GitHub struct {
 }
 
 func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspace string) (Environment, error) {
-	r, err := git.PlainCloneContext(ctx, fmt.Sprintf("%s/%s", workspace, gc.repo), false, &git.CloneOptions{
-		URL:      fmt.Sprintf("https://github.com/%s/%s.git", gc.owner, gc.repo),
-		Progress: os.Stdout,
-	})
+
+	var r *git.Repository
+	var err error
+	// Retry 10 times.
+	for i := 1; i <= 10; i++ {
+		// TODO: (geekodour) should clear workspace.
+		e.logger.Println("Cloning ", gc.owner, ":", gc.repo, " is in progress. Checking in ", 10)
+		time.Sleep(10 * time.Second)
+		r, err = git.PlainCloneContext(ctx, fmt.Sprintf("%s/%s", workspace, gc.repo), false, &git.CloneOptions{
+			URL:      fmt.Sprintf("https://github.com/%s/%s.git", gc.owner, gc.repo),
+			Progress: os.Stdout,
+		})
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		return nil, errors.Wrap(err, "clone git repository")
 	}

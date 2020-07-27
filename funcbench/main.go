@@ -77,7 +77,6 @@ func main() {
 		* For BenchmarkFunc.*, compare between sub-benchmarks of same benchmark on current commit: ./funcbench -v . BenchmarkFunc.*
 		* For BenchmarkFuncName, compare pr#35 with master: ./funcbench --nocomment --github-pr="35" master BenchmarkFuncName`,
 	)
-
 	// Options.
 	app.HelpFlag.Short('h')
 	app.Flag("verbose", "Verbose mode. Errors includes trace and commands output are logged.").
@@ -170,7 +169,7 @@ func main() {
 			if err != nil {
 				pErr := env.PostErr(
 					fmt.Sprintf(
-						"`%s`\n%s.",
+						"```\n%s\n```\n%s",
 						strings.Join(benchmarker.benchmarkArgs, " "),
 						err.Error(),
 					),
@@ -340,7 +339,9 @@ func (c *commander) exec(command ...string) (string, error) {
 	if err := cmd.Run(); err != nil {
 		out := b.String()
 		if c.verbose {
-			out = ""
+			out = fmt.Sprintf("<details><summary>Error log</summary>\n```\n%s\n```\n</details>", out)
+			// FIX : this does not make sense in the CLI.
+			// Maybe just add Loki already.
 		}
 		return "", errors.Errorf("error: %v; Command out: %s", err, out)
 	}
