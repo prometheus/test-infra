@@ -11,10 +11,19 @@ Run prombench tests in [Elastic Kubernetes Service](https://aws.amazon.com/eks/)
 
 ---
 
-- Create [security credentials](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html) on AWS.
-- Create a [VPC](https://docs.aws.amazon.com/eks/latest/userguide/network_reqs.html) with public subnets.
-- Create a [service role](https://docs.aws.amazon.com/eks/latest/userguide/service_IAM_role.html) with Amazon EKS cluster role.
-- Create a [Amazon EKS worker node IAM role](https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html).
+- Create [security credentials](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html) on AWS. Create a credentials file as follows
+```toml
+[credentials]
+aws_access_key_id = <Amazon access key>
+aws_secret_access_key = <Amazon access secret>
+```
+- Create a [VPC](https://docs.aws.amazon.com/eks/latest/userguide/create-public-private-vpc.html) with public subnets.
+- Create a [Amazon EKS cluster role](https://docs.aws.amazon.com/eks/latest/userguide/service_IAM_role.html) with following policies:
+    - AmazonEKSclusterPolicy 
+- Create a [Amazon EKS worker node role](https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html) with following policies:
+    - AmazonEKSWorkerNodePolicy
+    - AmazonEKS_CNI_Policy
+    - AmazonEC2ContainerRegistryReadOnly
 - Set the following environment variables and deploy the cluster.
 
 ```
