@@ -27,6 +27,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	awsSession "github.com/aws/aws-sdk-go/aws/session"
+	cloudFormation "github.com/aws/aws-sdk-go/service/cloudformation"
 	eks "github.com/aws/aws-sdk-go/service/eks"
 	"github.com/pkg/errors"
 	k8sProvider "github.com/prometheus/test-infra/pkg/provider/k8s"
@@ -57,6 +58,8 @@ type EKS struct {
 	clientEKS *eks.EKS
 	// The aws session used in abstraction of aws credentials.
 	sessionAWS *awsSession.Session
+	// The cloudFormation client used when performing CloudFormation requests.
+	clientCF *cloudFormation.CloudFormation
 	// The k8s provider used when we work with the manifest files.
 	k8sProvider *k8sProvider.K8s
 	// Final DeploymentFiles files.
@@ -118,7 +121,10 @@ func (c *EKS) NewEKSClient(*kingpin.ParseContext) error {
 	}))
 
 	c.sessionAWS = awsSess
+
 	c.clientEKS = eks.New(awsSess)
+	c.clientCF = cloudFormation.New(awsSess)
+
 	c.ctx = context.Background()
 	return nil
 }
@@ -201,6 +207,88 @@ func (c *EKS) K8SDeploymentsParse(*kingpin.ParseContext) error {
 		}
 	}
 	return nil
+}
+
+// StackCreate creates a new vpc and prints desired subnetIds.
+func (c *EKS) StackCreate(*kingpin.ParseContext) error {
+	stackName := fmt.Sprintf("%s-vpc", c.DeploymentVars["CLUSTER_NAME"])
+	req := &cloudFormation.CreateStackInput{
+		StackName: aws.String(stackName),
+		Tags: []*cloudFormation.Tag{
+			{
+				Key:   aws.String(fmt.Sprintf("kubernetes.io/cluster/%s", c.DeploymentVars["CLUSTER_NAME"])),
+				Value: aws.String("shared"),
+			},
+		},
+	}
+
+	log.Printf("Stack create request: name:'%s'", *req.StackName)
+
+	_, err := c.clientCF.CreateStack(req)
+	if err != nil {
+		log.Fatalf("Couldn't create stack '%s' ,err: %s", *req.StackName, err)
+	}
+
+	err = provider.RetryUntilTrue(
+		fmt.Sprintf("creating stack:%v", *req.StackName),
+		provider.GlobalRetryCount,
+		func() (bool, error) { return c.clusterRunning(*req.StackName) },
+	)
+
+	if err != nil {
+		log.Fatalf("creating cluster err:%v", err)
+	}
+
+	subnetIds, err := c.showSubnetIds(*req.StackName)
+
+	if err != nil {
+		log.Fatalf("error in displaying subnetIds, err:%v", err)
+	}
+
+	fmt.Printf("SubnetIds with defined separator is as follows: %s", strings.Join(subnetIds, c.DeploymentVars["SEPARATOR"]))
+
+	return nil
+}
+
+// stackCreated checks whether stack has been created.
+func (c *EKS) stackCreated(name string) (bool, error) {
+	req := &cloudFormation.DescribeStacksInput{
+		StackName: aws.String(name),
+	}
+	stackRes, err := c.clientCF.DescribeStacks(req)
+	if err != nil {
+		return false, fmt.Errorf("Couldn't get stack status: %v", err)
+	}
+	if *stackRes.Stacks[0].StackStatus == cloudFormation.StackStatusCreateFailed {
+		return false, fmt.Errorf("Stack not in a status to become ready - %s", *stackRes.Stacks[0].StackStatus)
+	}
+	if *stackRes.Stacks[0].StackStatus == cloudFormation.StackStatusCreateComplete {
+		return true, nil
+	}
+	log.Printf("Stack '%s' status: %s", name, *stackRes.Stacks[0].StackStatus)
+	return false, nil
+}
+
+func (c *EKS) showSubnetIds(name string) ([]string, error) {
+	req := &cloudFormation.DescribeStacksInput{
+		StackName: aws.String(name),
+	}
+	stackRes, err := c.clientCF.DescribeStacks(req)
+
+	if err != nil {
+		return []string{}, err
+	}
+
+	if *stackRes.Stacks[0].StackStatus == cloudFormation.StackStatusCreateComplete {
+		stackOutputs := stackRes.Stacks[0].Outputs
+		for _, output := range stackOutputs {
+			if *output.OutputKey == "SubnetIds" {
+				return strings.Split(*output.OutputValue, ","), nil
+			}
+		}
+	}
+
+	return []string{}, nil
 }
 
 // ClusterCreate create a new cluster or applies changes to an existing cluster.
