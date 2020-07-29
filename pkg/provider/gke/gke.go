@@ -44,7 +44,7 @@ import (
 // New is the GKE constructor.
 func New(dr *provider.DeploymentResource) *GKE {
 
-	// Set SERVICEACCOUNT_CLIENT_EMAIL to LoadBalancer.
+	// Set NGINX_SERVICE_TYPE to LoadBalancer.
 	dr.DefaultDeploymentVars["NGINX_SERVICE_TYPE"] = "LoadBalancer"
 
 	return &GKE{
