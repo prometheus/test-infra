@@ -141,7 +141,7 @@ func MergeDeploymentVars(ms ...map[string]string) map[string]string {
 // GetDefaultDeploymentVars shows default deployment variables.
 func (dr *DeploymentResource) GetDefaultDeploymentVars(parseContext *kingpin.ParseContext) error {
 	fmt.Print("-------------------\n   DeploymentVars   \n------------------- \n")
-	for key, value := range dr.FlagDeploymentVars {
+	for key, value := range dr.DefaultDeploymentVars {
 		fmt.Print(key, " : ", value, "\n")
 	}
 

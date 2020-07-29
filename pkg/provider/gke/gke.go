@@ -45,7 +45,7 @@ import (
 func New(dr *provider.DeploymentResource) *GKE {
 
 	// Set SERVICEACCOUNT_CLIENT_EMAIL to LoadBalancer.
-	dr.FlagDeploymentVars["NGINX_SERVICE_TYPE"] = "LoadBalancer"
+	dr.DefaultDeploymentVars["NGINX_SERVICE_TYPE"] = "LoadBalancer"
 
 	return &GKE{
 		DeploymentResource: dr,
