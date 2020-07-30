@@ -1,9 +1,5 @@
 INFRA_CMD        ?= ../infra/infra
 
-ifeq ($(AUTH_FILE),)
-AUTH_FILE = /etc/serviceaccount/service-account.json
-endif
-
 .PHONY: deploy clean
 deploy: nodepool_create resource_apply
 # GCP sometimes takes longer than 30 tries when trying to delete nodepools
