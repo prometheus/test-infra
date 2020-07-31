@@ -250,6 +250,33 @@ func (c *EKS) StackCreate(*kingpin.ParseContext) error {
 	return nil
 }
 
+// StackDelete deletes vpc stack.
+func (c *EKS) StackDelete(*kingpin.ParseContext) error {
+	stackName := fmt.Sprintf("%s-vpc", c.DeploymentVars["CLUSTER_NAME"])
+	req := &cloudFormation.DeleteStackInput{
+		StackName: aws.String(stackName),
+	}
+
+	log.Printf("Delete stack request: name: '%s'", *req.StackName)
+
+	_, err := c.clientCF.DeleteStack(req)
+	if err != nil {
+		log.Fatalf("Couldn't delete stack '%s' ,err: %s", *req.StackName, err)
+	}
+
+	err = provider.RetryUntilTrue(
+		fmt.Sprintf("deleting stack: %s", *req.StackName),
+		provider.GlobalRetryCount,
+		func() (bool, error) { return c.stackDeleted(*req.StackName) },
+	)
+
+	if err != nil {
+		log.Fatalf("deleting stack err:%v", err)
+	}
+
+	return nil
+}
+
 // stackCreated checks whether stack has been created.
 func (c *EKS) stackCreated(name string) (bool, error) {
 	req := &cloudFormation.DescribeStacksInput{
@@ -269,6 +296,25 @@ func (c *EKS) stackCreated(name string) (bool, error) {
 	return false, nil
 }
 
+// stackDeleted checks whether stack has been deleted.
+func (c *EKS) stackDeleted(name string) (bool, error) {
+	req := &cloudFormation.DescribeStacksInput{
+		StackName: aws.String(name),
+	}
+	stackRes, err := c.clientCF.DescribeStacks(req)
+	if err != nil {
+		return false, fmt.Errorf("Couldn't get stack status: %v", err)
+	}
+	if *stackRes.Stacks[0].StackStatus == cloudFormation.StackStatusDeleteFailed {
+		return false, fmt.Errorf("Stack delete failed - %s", *stackRes.Stacks[0].StackStatus)
+	}
+	if len(stackRes.Stacks) == 0 {
+		return true, nil
+	}
+	log.Printf("Stack '%s' status: %s", name, *stackRes.Stacks[0].StackStatus)
+	return false, nil
+}
+
 func (c *EKS) showSubnetIds(name string) ([]string, error) {
 	req := &cloudFormation.DescribeStacksInput{
 		StackName: aws.String(name),
@@ -279,11 +325,13 @@ func (c *EKS) showSubnetIds(name string) ([]string, error) {
 		return []string{}, err
 	}
 
-	if *stackRes.Stacks[0].StackStatus == cloudFormation.StackStatusCreateComplete {
-		stackOutputs := stackRes.Stacks[0].Outputs
-		for _, output := range stackOutputs {
-			if *output.OutputKey == "SubnetIds" {
-				return strings.Split(*output.OutputValue, ","), nil
+	for _, stack := range stackRes.Stacks {
+		if *stack.StackStatus == cloudFormation.StackStatusCreateComplete {
+			stackOutputs := stack.Outputs
+			for _, output := range stackOutputs {
+				if *output.OutputKey == "SubnetIds" {
+					return strings.Split(*output.OutputValue, ","), nil
+				}
 			}
 		}
 	}
