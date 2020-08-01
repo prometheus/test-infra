@@ -107,10 +107,12 @@ func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspac
 	var err error
 	// Retry 10 times.
 	for i := 1; i <= 10; i++ {
-		// TODO: (geekodour) should clear workspace.
+		if err := os.RemoveAll(filepath.Join(workspace, gc.repo)); err != nil {
+			return nil, err
+		}
 		e.logger.Println("Cloning ", gc.owner, ":", gc.repo, " is in progress. Checking in ", 10)
 		time.Sleep(10 * time.Second)
-		r, err = git.PlainCloneContext(ctx, fmt.Sprintf("%s/%s", workspace, gc.repo), false, &git.CloneOptions{
+		r, err = git.PlainCloneContext(ctx, filepath.Join(workspace, gc.repo), false, &git.CloneOptions{
 			URL:      fmt.Sprintf("https://github.com/%s/%s.git", gc.owner, gc.repo),
 			Progress: os.Stdout,
 		})
