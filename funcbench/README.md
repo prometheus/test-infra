@@ -70,17 +70,18 @@ docker build -t prominfra/funcbench:master .
 
 The benchmark can be triggered by creating a comment in a PR which specifies a branch to compare. The results are then posted back to the PR as a comment. The Github Actions workflow for funcbench [can be found here](https://github.com/prometheus/prometheus/blob/master/.github/workflows/funcbench.yml).
 
-The syntax is: `/funcbench <branch/tag/commit> <benchmark function regex>`, see [used regex here.](https://github.com/prometheus/test-infra/blob/master/prombench/manifests/cluster-infra/7a_commentmonitor_configmap_noparse.yaml)
+The syntax is: `/funcbench <branch/tag/commit> <benchmark function regex>`.
 
-
-
+- See [used regex for comment here.](https://github.com/prometheus/test-infra/blob/master/prombench/manifests/cluster-infra/7a_commentmonitor_configmap_noparse.yaml)
+- The `<benchmark function regex>` expects the `Benchmark` prefix. It is anchored and passed to `go test` command, so need to anchor it in the comment.
 
 
 |Command|Explanation|
 |---|--|
-|`/funcbench master BenchmarkQuery.*`| Compare all the benchmarks matching `BenchmarkQuery.*` for branch master vs the PR|
+|`/funcbench master BenchmarkQuery.*`| Compare all the benchmarks matching `BenchmarkQuery.*` for master vs the PR|
 |`/funcbench feature-branch` or `/funcbench tag-name .*`| Compare all the benchmarks on feature-branch/tag-name vs the PR|
-|`/funcbench master BenchmarkQuery.* ./tsdb` | Compare all the benchmarks matching `BenchmarkQuery.*` for master vs the PR in package `./tsdb` |
+|`/funcbench master BenchmarkQuery.* ./tsdb` | Compare all the benchmarks matching `BenchmarkQuery.*` for master vs the PR in package `./tsdb`|
+|`/funcbench master Benchmark(?:Isolation.*|QuerierSelect) ./tsdb` | Compare all benchmarks matching `Benchmark(?:Isolation.*|QuerierSelect)` for master vs the PR|
 
 
 > **Notes:**

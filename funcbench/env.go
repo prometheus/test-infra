@@ -26,6 +26,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/google/go-github/v29/github"
 	"github.com/pkg/errors"
+	"github.com/prometheus/test-infra/pkg/provider"
 	"golang.org/x/oauth2"
 	"golang.org/x/perf/benchstat"
 )
@@ -110,8 +111,8 @@ func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspac
 		if err := os.RemoveAll(filepath.Join(workspace, gc.repo)); err != nil {
 			return nil, err
 		}
-		e.logger.Println("Cloning ", gc.owner, ":", gc.repo, " is in progress. Checking in ", 10)
-		time.Sleep(10 * time.Second)
+		e.logger.Println("Cloning ", gc.owner, ":", gc.repo, " is in progress. Checking in ", provider.GlobalRetryTime)
+		time.Sleep(provider.GlobalRetryTime)
 		r, err = git.PlainCloneContext(ctx, filepath.Join(workspace, gc.repo), false, &git.CloneOptions{
 			URL:      fmt.Sprintf("https://github.com/%s/%s.git", gc.owner, gc.repo),
 			Progress: os.Stdout,

@@ -28,7 +28,7 @@ import (
 const (
 	GlobalRetryCount = 50
 	Separator        = "---"
-	globalRetryTime  = 10 * time.Second
+	GlobalRetryTime  = 10 * time.Second
 )
 
 // DeploymentResource holds list of variables and corresponding files.
@@ -59,11 +59,11 @@ type Resource struct {
 // RetryUntilTrue returns when there is an error or the requested operation returns true.
 func RetryUntilTrue(name string, retryCount int, fn func() (bool, error)) error {
 	for i := 1; i <= retryCount; i++ {
-		time.Sleep(globalRetryTime)
+		time.Sleep(GlobalRetryTime)
 		if ready, err := fn(); err != nil {
 			return err
 		} else if !ready {
-			log.Printf("Request for '%v' is in progress. Checking in %v", name, globalRetryTime)
+			log.Printf("Request for '%v' is in progress. Checking in %v", name, GlobalRetryTime)
 			continue
 		}
 		log.Printf("Request for '%v' is done!", name)
