@@ -31,6 +31,7 @@ type commentMonitorClient struct {
 	events             []webhookEvent
 	prefixes           []commandPrefix
 	prefixHelpTemplate string
+	prefixVerifyUser   bool
 	eventType          string
 	commentTemplate    string
 	label              string
@@ -56,6 +57,7 @@ func (c *commentMonitorClient) checkCommandPrefix(command string) bool {
 	for _, p := range c.prefixes {
 		if strings.HasPrefix(command, p.Prefix) {
 			c.prefixHelpTemplate = p.HelpTemplate
+			c.prefixVerifyUser = p.VerifyUser
 			return true
 		}
 	}
@@ -63,8 +65,8 @@ func (c *commentMonitorClient) checkCommandPrefix(command string) bool {
 }
 
 // Verify if user is allowed to perform activity.
-func (c commentMonitorClient) verifyUser(verifyUserDisabled bool) error {
-	if !verifyUserDisabled {
+func (c commentMonitorClient) verifyUser() error {
+	if c.prefixVerifyUser {
 		var allowed bool
 		allowedAssociations := []string{"COLLABORATOR", "MEMBER", "OWNER"}
 		for _, a := range allowedAssociations {
