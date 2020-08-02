@@ -29,6 +29,9 @@ Commands:
   help [<command>...]
     Show help.
 
+  gke info
+    gke info -v hashStable:COMMIT1 -v hashTesting:COMMIT2
+
   gke cluster create
     gke cluster create -a service-account.json -f FileOrFolder
 
