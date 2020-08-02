@@ -43,10 +43,6 @@ import (
 
 // New is the GKE constructor.
 func New(dr *provider.DeploymentResource) *GKE {
-
-	// Set NGINX_SERVICE_TYPE to LoadBalancer.
-	dr.DefaultDeploymentVars["NGINX_SERVICE_TYPE"] = "LoadBalancer"
-
 	return &GKE{
 		DeploymentResource: dr,
 	}
@@ -581,5 +577,15 @@ func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 	if err := c.k8sProvider.ResourceDelete(c.k8sResources); err != nil {
 		log.Fatal("error while deleting objects from a manifest file err:", err)
 	}
+	return nil
+}
+
+// GetDeploymentVars shows deployment variables.
+func (c *GKE) GetDeploymentVars(parseContext *kingpin.ParseContext) error {
+	fmt.Print("-------------------\n   DeploymentVars   \n------------------- \n")
+	for key, value := range c.DeploymentVars {
+		fmt.Println(key, " : ", value)
+	}
+
 	return nil
 }

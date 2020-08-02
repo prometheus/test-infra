@@ -16,7 +16,6 @@ package provider
 import (
 	"bytes"
 	"fmt"
-	"gopkg.in/alecthomas/kingpin.v2"
 	"io/ioutil"
 	"log"
 	"os"
@@ -45,9 +44,11 @@ type DeploymentResource struct {
 // NewDeploymentResource returns DeploymentResource with default values.
 func NewDeploymentResource() *DeploymentResource {
 	return &DeploymentResource{
-		DeploymentFiles:       []string{},
-		FlagDeploymentVars:    map[string]string{},
-		DefaultDeploymentVars: map[string]string{},
+		DeploymentFiles:    []string{},
+		FlagDeploymentVars: map[string]string{},
+		DefaultDeploymentVars: map[string]string{
+			"NGINX_SERVICE_TYPE": "LoadBalancer",
+		},
 	}
 }
 
@@ -136,14 +137,4 @@ func MergeDeploymentVars(ms ...map[string]string) map[string]string {
 		}
 	}
 	return res
-}
-
-// GetDefaultDeploymentVars shows default deployment variables.
-func (dr *DeploymentResource) GetDefaultDeploymentVars(parseContext *kingpin.ParseContext) error {
-	fmt.Print("-------------------\n   DeploymentVars   \n------------------- \n")
-	for key, value := range dr.DefaultDeploymentVars {
-		fmt.Print(key, " : ", value, "\n")
-	}
-
-	return nil
 }

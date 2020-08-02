@@ -47,9 +47,8 @@ func main() {
 		Short('a').
 		StringVar(&g.Auth)
 
-	k8sGKEShow := k8sGKE.Command("info", "show GKE related infomation")
-	k8sGKEShow.Command("deploymentvars", "gke info deploymentvars").
-		Action(dr.GetDefaultDeploymentVars)
+	k8sGKE.Command("info", "gke info -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+		Action(g.GetDeploymentVars)
 
 	// Cluster operations.
 	k8sGKECluster := k8sGKE.Command("cluster", "manage GKE clusters").
