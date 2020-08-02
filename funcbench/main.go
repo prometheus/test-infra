@@ -163,8 +163,11 @@ func main() {
 			}
 
 			// ( ◔_◔)ﾉ Start benchmarking!
-			benchmarker := newBenchmarker(logger, env, &commander{verbose: cfg.verbose, ctx: ctx},
-				cfg.benchTime, cfg.benchTimeout, cfg.resultsDir, cfg.packagePath)
+			benchmarker := newBenchmarker(logger, env,
+				&commander{env: env, verbose: cfg.verbose, ctx: ctx},
+				cfg.benchTime, cfg.benchTimeout, cfg.resultsDir,
+				cfg.packagePath,
+			)
 			tables, err := startBenchmark(env, benchmarker)
 			if err != nil {
 				pErr := env.PostErr(
@@ -322,6 +325,7 @@ func getTargetInfo(repo *git.Repository, target string) plumbing.Hash {
 
 type commander struct {
 	verbose bool
+	env     Environment
 	ctx     context.Context
 }
 
@@ -339,9 +343,12 @@ func (c *commander) exec(command ...string) (string, error) {
 	if err := cmd.Run(); err != nil {
 		out := b.String()
 		if c.verbose {
-			out = fmt.Sprintf("<details><summary>Error log</summary>\n```\n%s\n```\n</details>", out)
-			// FIX : this does not make sense in the CLI.
-			// Maybe just add Loki already.
+			_, ok := c.env.(*GitHub)
+			if ok {
+				out = fmt.Sprintf("<details><summary>Error:</summary>\n```\n%s\n```\n</details>", out)
+			} else {
+				out = ""
+			}
 		}
 		return "", errors.Errorf("error: %v; Command out: %s", err, out)
 	}
