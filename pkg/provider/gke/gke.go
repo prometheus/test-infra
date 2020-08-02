@@ -579,3 +579,13 @@ func (c *GKE) ResourceDelete(*kingpin.ParseContext) error {
 	}
 	return nil
 }
+
+// GetDeploymentVars shows deployment variables.
+func (c *GKE) GetDeploymentVars(parseContext *kingpin.ParseContext) error {
+	fmt.Print("-------------------\n   DeploymentVars   \n------------------- \n")
+	for key, value := range c.DeploymentVars {
+		fmt.Println(key, " : ", value)
+	}
+
+	return nil
+}

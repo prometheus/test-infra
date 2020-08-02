@@ -44,9 +44,11 @@ type DeploymentResource struct {
 // NewDeploymentResource returns DeploymentResource with default values.
 func NewDeploymentResource() *DeploymentResource {
 	return &DeploymentResource{
-		DeploymentFiles:       []string{},
-		FlagDeploymentVars:    map[string]string{},
-		DefaultDeploymentVars: map[string]string{},
+		DeploymentFiles:    []string{},
+		FlagDeploymentVars: map[string]string{},
+		DefaultDeploymentVars: map[string]string{
+			"NGINX_SERVICE_TYPE": "LoadBalancer",
+		},
 	}
 }
 
