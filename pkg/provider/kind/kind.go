@@ -47,6 +47,8 @@ type KIND struct {
 	// Variables to substitute in the DeploymentFiles.
 	// These are also used when the command requires some variables that are not provided by the deployment file.
 	DeploymentVars map[string]string
+	// DeployResource to construct DeploymentVars and DeploymentFiles
+	DeploymentResource *provider.DeploymentResource
 	// Content bytes after parsing the template variables, grouped by filename.
 	kindResources []Resource
 	// K8s resource.runtime objects after parsing the template variables, grouped by filename.
@@ -55,14 +57,24 @@ type KIND struct {
 	ctx context.Context
 }
 
-func New() *KIND {
+func New(dr *provider.DeploymentResource) *KIND {
 	return &KIND{
-		DeploymentVars: make(map[string]string),
+		DeploymentResource: dr,
 		kindProvider: cluster.NewProvider(
 			cluster.ProviderWithLogger(cmd.NewLogger()),
 		),
 		ctx: context.Background(),
 	}
+}
+
+// SetupDeploymentResources Sets up DeploymentVars and DeploymentFiles
+func (c *KIND) SetupDeploymentResources(*kingpin.ParseContext) error {
+	c.DeploymentFiles = c.DeploymentResource.DeploymentFiles
+	c.DeploymentVars = provider.MergeDeploymentVars(
+		c.DeploymentResource.DefaultDeploymentVars,
+		c.DeploymentResource.FlagDeploymentVars,
+	)
+	return nil
 }
 
 // KINDDeploymentsParse parses the environment/kind deployment files and saves the result as bytes grouped by the filename.
@@ -132,7 +144,7 @@ func (c *KIND) ClusterDelete(*kingpin.ParseContext) error {
 		return fmt.Errorf("missing required CLUSTER_NAME variable")
 	}
 
-	err := c.kindProvider.Delete(clusterName, "/home/raj/.kube/config")
+	err := c.kindProvider.Delete(clusterName, homedir.HomeDir()+"/.kube/config")
 	if err != nil {
 		log.Fatalf("creating cluster err:%v", err)
 	}

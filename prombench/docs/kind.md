@@ -20,7 +20,10 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
     -f manifests/cluster_kind.yaml
 ```
 
-
+- Remove taint(node-role.kubernetes.io/master) from prombench-control-plane node for deploying nginx-ingress-controller
+```
+kubectl taint nodes prombench-control-plane node-role.kubernetes.io/master-
+```
 ### Deploy monitoring components
 
 
@@ -33,14 +36,13 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 
 ```
 export GRAFANA_ADMIN_PASSWORD=password
-export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom domain or an empty string when not used with the Github integration.
+export DOMAIN_NAME=prombench.prometheus.io # Can be set to any other custom domain or an empty string when not used with the Github integration.
 export OAUTH_TOKEN=<generated token from github or set to an empty string " ">
 export WH_SECRET=<github webhook secret>
 export GITHUB_ORG=prometheus
 export GITHUB_REPO=prometheus
 export SERVICEACCOUNT_CLIENT_EMAIL=<Your Email address>
 ```
-
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Loki, Grafana, Alertmanager & Github Notifier.
 
 ```

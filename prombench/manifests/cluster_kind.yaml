@@ -2,10 +2,9 @@ kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
   - role: control-plane
-  - role: worker
     kubeadmConfigPatches:
       - |
-        kind: JoinConfiguration
+        kind: InitConfiguration
         nodeRegistration:
           kubeletExtraArgs:
             node-labels: "node-name=main-node"
