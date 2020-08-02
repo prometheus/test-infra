@@ -58,6 +58,7 @@ type KIND struct {
 }
 
 func New(dr *provider.DeploymentResource) *KIND {
+	dr.DefaultDeploymentVars["NGINX_SERVICE_TYPE"] = "NodePort"
 	return &KIND{
 		DeploymentResource: dr,
 		kindProvider: cluster.NewProvider(

@@ -22,10 +22,10 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 
 - Remove taint(node-role.kubernetes.io/master) from prombench-control-plane node for deploying nginx-ingress-controller
 ```
-kubectl taint nodes prombench-control-plane node-role.kubernetes.io/master-
+kubectl taint nodes $CLUSTER_NAME-control-plane node-role.kubernetes.io/master-
 ```
-### Deploy monitoring components
 
+### Deploy monitoring components
 
 > Collecting, monitoring and displaying the test results and logs
 ---
