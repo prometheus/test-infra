@@ -49,7 +49,7 @@ func NewDeploymentResource() *DeploymentResource {
 		DefaultDeploymentVars: map[string]string{
 			"NGINX_SERVICE_TYPE":        "LoadBalancer",
 			"LOADGEN_SCALE_UP_REPLICAS": "10",
-			"SEPARATOR":          ",",
+			"SEPARATOR":                 ",",
 		},
 	}
 }
