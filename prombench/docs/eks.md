@@ -11,11 +11,10 @@ Run prombench tests in [Elastic Kubernetes Service](https://aws.amazon.com/eks/)
 
 ---
 
-- Create [security credentials](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html) on AWS. Create a credentials file as follows
-```toml
-[credentials]
-aws_access_key_id = <Amazon access key>
-aws_secret_access_key = <Amazon access secret>
+- Create [security credentials](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html) on AWS. Put the credentials into a `yaml` file as follows:
+```yaml
+accesskeyid: <Amazon access key>
+secretaccesskey: <Amazon access secret>
 ```
 - Create a [VPC](https://docs.aws.amazon.com/eks/latest/userguide/create-public-private-vpc.html) with public subnets.
 - Create a [Amazon EKS cluster role](https://docs.aws.amazon.com/eks/latest/userguide/service_IAM_role.html) with following policies:
@@ -26,17 +25,19 @@ aws_secret_access_key = <Amazon access secret>
     - AmazonEC2ContainerRegistryReadOnly
 - Set the following environment variables and deploy the cluster.
 
-```
-export AUTH_FILE=<path to credentials file of aws with prombench profile>
+```shell
+export AUTH_FILE=<path to toml credentials file that was created in the last step>
 export CLUSTER_NAME=prombench
-export REGION=us-east1-b
-export NODE_ROLE=<Amazon EKS worker node IAM role ARN>
-export ROLE_ARN=<Amazon EKS cluster role ARN>
-export SEPARATOR=,
-export SUBNET_IDS=SUBNETID1,SUBNETID2,SUBNETID3
+export ZONE=us-east-1
+export EKS_WORKER_ROLE_ARN=<Amazon EKS worker node IAM role ARN>
+export EKS_CLUSTER_ROLE_ARN=<Amazon EKS cluster role ARN>
+# By default SEPARATOR DeploymentVar is set to `,` but you can override it by exporting and
+# then passing it with the -v flag. It is used to split DeploymentVar into a slice.
+export SEPARATOR=, 
+export EKS_SUBNET_IDS=SUBNETID1,SUBNETID2,SUBNETID3
 
-../infra/infra eks cluster create -a $AUTH_FILE -v REGION:$REGION \
-    -v NODE_ROLE:$NODE_ROLE -v ROLE_ARN:$ROLE_ARN -v SUBNET_IDS:$SUBNET_IDS -v SEPARATOR:$SEPARATOR -v CLUSTER_NAME:$CLUSTER_NAME \
+../infra/infra eks cluster create -a $AUTH_FILE -v ZONE:$ZONE \
+    -v EKS_WORKER_ROLE_ARN:$EKS_WORKER_ROLE_ARN -v EKS_CLUSTER_ROLE_ARN:$EKS_CLUSTER_ROLE_ARN -v EKS_SUBNET_IDS:$EKS_SUBNET_IDS -v CLUSTER_NAME:$CLUSTER_NAME \
     -f manifests/cluster_eks.yaml
 ```
 

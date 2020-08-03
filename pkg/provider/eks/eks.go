@@ -84,8 +84,8 @@ func (c *EKS) NewEKSClient(*kingpin.ParseContext) error {
 	}
 
 	cl := eks.New(awsSession.Must(awsSession.NewSession()), &aws.Config{
-		Credentials: credentials.NewSharedCredentials(c.AuthFilename, "prombench"),
-		Region:      aws.String(c.DeploymentVars["REGION"]),
+		Credentials: credentials.NewSharedCredentials(c.AuthFilename, "credentials"),
+		Region:      aws.String(c.DeploymentVars["ZONE"]),
 	})
 
 	c.clientEKS = cl
@@ -93,9 +93,36 @@ func (c *EKS) NewEKSClient(*kingpin.ParseContext) error {
 	return nil
 }
 
+// checkDeploymentVarsAndFiles checks whether the requied deployment vars are passed.
+func (c *EKS) checkDeploymentVarsAndFiles() error {
+	reqDepVars := []string{"ZONE", "CLUSTER_NAME"}
+	for _, k := range reqDepVars {
+		if v, ok := c.DeploymentVars[k]; !ok || v == "" {
+			return fmt.Errorf("missing required %v variable", k)
+		}
+	}
+	if len(c.DeploymentFiles) == 0 {
+		return fmt.Errorf("missing deployment file(s)")
+	}
+	return nil
+}
+
+// SetupDeploymentResources Sets up DeploymentVars and DeploymentFiles
+func (c *EKS) SetupDeploymentResources(*kingpin.ParseContext) error {
+	c.DeploymentFiles = c.DeploymentResource.DeploymentFiles
+	c.DeploymentVars = provider.MergeDeploymentVars(
+		c.DeploymentResource.DefaultDeploymentVars,
+		c.DeploymentResource.FlagDeploymentVars,
+	)
+	return nil
+}
+
 // EKSDeploymentParse parses the cluster/nodegroups deployment file and saves the result as bytes grouped by the filename.
 // Any variables passed to the cli will be replaced in the resource files following the golang text template format.
 func (c *EKS) EKSDeploymentParse(*kingpin.ParseContext) error {
+	if err := c.checkDeploymentVarsAndFiles(); err != nil {
+		return err
+	}
 
 	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
 	if err != nil {
@@ -109,6 +136,10 @@ func (c *EKS) EKSDeploymentParse(*kingpin.ParseContext) error {
 // K8SDeploymentsParse parses the k8s objects deployment files and saves the result as k8s objects grouped by the filename.
 // Any variables passed to the cli will be replaced in the resources files following the golang text template format.
 func (c *EKS) K8SDeploymentsParse(*kingpin.ParseContext) error {
+	if err := c.checkDeploymentVarsAndFiles(); err != nil {
+		return err
+	}
+
 	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
 	if err != nil {
 		log.Fatalf("Couldn't parse deployment files: %v", err)
@@ -452,10 +483,7 @@ func (c *EKS) AllNodeGroupsDeleted(*kingpin.ParseContext) error {
 func (c *EKS) NewK8sProvider(*kingpin.ParseContext) error {
 
 	clusterName := c.DeploymentVars["CLUSTER_NAME"]
-	// if !ok {
-	// 	return fmt.Errorf("missing required CLUSTER_NAME variable")
-	// }
-	region := c.DeploymentVars["REGION"]
+	region := c.DeploymentVars["ZONE"]
 
 	req := &eks.DescribeClusterInput{
 		Name: &clusterName,

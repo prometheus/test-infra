@@ -12,11 +12,12 @@ deploy: node_create resource_apply
 # if k8s resources are not already cleared
 clean: resource_delete node_delete
 
-node_create:
-	${INFRA_CMD} ${PROVIDER} node create -a ${AUTH_FILE} \
+nodepool_create:
+	${INFRA_CMD} ${PROVIDER} nodes create -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v GKE_PROJECT_ID:${GKE_PROJECT_ID} \
-		-v REGION:${REGION} -v NODE_ROLE:${NODE_ROLE} -v ROLE_ARN:${ROLE_ARN} -r SUBNET_IDS:${SUBNET_IDS} \
-		-v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} 
+		-v EKS_WORKER_ROLE_ARN:${EKS_WORKER_ROLE_ARN} -v EKS_CLUSTER_ROLE_ARN:${EKS_CLUSTER_ROLE_ARN} \
+		-v EKS_SUBNET_IDS:${EKS_SUBNET_IDS} -v SEPARATOR:${SEPARATOR} \
+		-v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \ 
 		-f manifests/prombench/nodes_${PROVIDER}.yaml
 
 resource_apply:
@@ -37,23 +38,26 @@ resource_delete:
 		-f manifests/prombench/benchmark/1c_cluster-role-binding.yaml \
 		-f manifests/prombench/benchmark/1a_namespace.yaml
 
-node_delete:
-	$(INFRA_CMD) ${PROVIDER} node delete -a ${AUTH_FILE} \
+nodepool_delete:
+	$(INFRA_CMD) ${PROVIDER} nodes delete -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v GKE_PROJECT_ID:${GKE_PROJECT_ID} \
-		-v REGION:${REGION} -v NODE_ROLE:${NODE_ROLE} -v ROLE_ARN:${ROLE_ARN} -r SUBNET_IDS:${SUBNET_IDS} \
+		-v EKS_WORKER_ROLE_ARN:${EKS_WORKER_ROLE_ARN} -v EKS_CLUSTER_ROLE_ARN:${EKS_CLUSTER_ROLE_ARN} \
+		-v EKS_SUBNET_IDS:${EKS_SUBNET_IDS} -v SEPARATOR:${SEPARATOR} \
 		-v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
 		-f manifests/prombench/nodes_${PROVIDER}.yaml
 
-all_nodes_running:
-	$(INFRA_CMD) ${PROVIDER} node check-running -a ${AUTH_FILE} \
+all_nodepools_running:
+	$(INFRA_CMD) ${PROVIDER} nodes check-running -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v GKE_PROJECT_ID:${GKE_PROJECT_ID} \
-		-v REGION:${REGION} -v NODE_ROLE:${NODE_ROLE} -v ROLE_ARN:${ROLE_ARN} -r SUBNET_IDS:${SUBNET_IDS} \
+		-v EKS_WORKER_ROLE_ARN:${EKS_WORKER_ROLE_ARN} -v EKS_CLUSTER_ROLE_ARN:${EKS_CLUSTER_ROLE_ARN} \
+		-v EKS_SUBNET_IDS:${EKS_SUBNET_IDS} -v SEPARATOR:${SEPARATOR} \
 		-v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
 		-f manifests/prombench/nodes_${PROVIDER}.yaml	
 
-all_nodes_deleted:
-	$(INFRA_CMD) ${PROVIDER} node check-deleted -a ${AUTH_FILE} \
+all_nodepools_deleted:
+	$(INFRA_CMD) ${PROVIDER} nodes check-deleted -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v GKE_PROJECT_ID:${GKE_PROJECT_ID} \
-		-v REGION:${REGION} -v NODE_ROLE:${NODE_ROLE} -v ROLE_ARN:${ROLE_ARN} -r SUBNET_IDS:${SUBNET_IDS} \
+		-v EKS_WORKER_ROLE_ARN:${EKS_WORKER_ROLE_ARN} -v EKS_CLUSTER_ROLE_ARN:${EKS_CLUSTER_ROLE_ARN} \
+		-v EKS_SUBNET_IDS:${EKS_SUBNET_IDS} -v SEPARATOR:${SEPARATOR} \
 		-v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
 		-f manifests/prombench/nodes_${PROVIDER}.yaml
