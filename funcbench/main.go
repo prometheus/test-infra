@@ -345,7 +345,7 @@ func (c *commander) exec(command ...string) (string, error) {
 		if c.verbose {
 			_, ok := c.env.(*GitHub)
 			if ok {
-				out = fmt.Sprintf("<details><summary>Error:</summary>\n```\n%s\n```\n</details>", out)
+				out = fmt.Sprintf("<details><summary>Error:</summary>\n```\n%v\n```\n</details>", out)
 			} else {
 				out = ""
 			}

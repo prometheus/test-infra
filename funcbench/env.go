@@ -26,7 +26,6 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/google/go-github/v29/github"
 	"github.com/pkg/errors"
-	"github.com/prometheus/test-infra/pkg/provider"
 	"golang.org/x/oauth2"
 	"golang.org/x/perf/benchstat"
 )
@@ -106,13 +105,14 @@ func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspac
 
 	var r *git.Repository
 	var err error
+	retryTime := 10 * time.Second
 	// Retry 10 times.
 	for i := 1; i <= 10; i++ {
 		if err := os.RemoveAll(filepath.Join(workspace, gc.repo)); err != nil {
 			return nil, err
 		}
-		e.logger.Println("Cloning ", gc.owner, ":", gc.repo, " is in progress. Checking in ", provider.GlobalRetryTime)
-		time.Sleep(provider.GlobalRetryTime)
+		e.logger.Println("Cloning ", gc.owner, ":", gc.repo, " is in progress. Checking in ", retryTime)
+		time.Sleep(retryTime)
 		r, err = git.PlainCloneContext(ctx, filepath.Join(workspace, gc.repo), false, &git.CloneOptions{
 			URL:      fmt.Sprintf("https://github.com/%s/%s.git", gc.owner, gc.repo),
 			Progress: os.Stdout,
@@ -166,7 +166,7 @@ func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspac
 
 func (g *GitHub) PostErr(txt string) error {
 	c := fmt.Sprintf(
-		"Old: `%s`\nNew: `PR-%d`\n%s",
+		"Old: `%v`\nNew: `PR-%v`\n%v",
 		g.compareTarget,
 		g.client.prNumber,
 		txt,
@@ -185,7 +185,7 @@ func (g *GitHub) PostResults(tables []*benchstat.Table, extraInfo ...string) err
 		return err
 	}
 
-	legend := fmt.Sprintf("Old: `%s`/`%s`\nNew: `PR-%d`/`%s`",
+	legend := fmt.Sprintf("Old: `%v`/`%v`\nNew: `PR-%v`/`%v`",
 		g.compareTarget,
 		g.compareTargetHashString,
 		g.client.prNumber,
