@@ -52,12 +52,12 @@ Commands:
 
   gke resource apply
     gke resource apply -a service-account.json -f manifestsFileOrFolder -v
-    GKE_PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
+    PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
     hashStable:COMMIT1 -v hashTesting:COMMIT2
 
   gke resource delete
     gke resource delete -a service-account.json -f manifestsFileOrFolder -v
-    GKE_PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
+    PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
     hashStable:COMMIT1 -v hashTesting:COMMIT2
 
   kind info
@@ -83,10 +83,10 @@ Commands:
     eks info -v hashStable:COMMIT1 -v hashTesting:COMMIT2
 
   eks cluster create
-    eks cluster create -a credentials -f FileOrFolder
+    eks cluster create -a authFile -f FileOrFolder
 
   eks cluster delete
-    eks cluster delete -a credentials -f FileOrFolder
+    eks cluster delete -a authFile -f FileOrFolder
 
   eks nodes create
     eks nodes create -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v
@@ -105,63 +105,11 @@ Commands:
     CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3
 
   eks resource apply
-    eks resource apply -a credentials -f manifestsFileOrFolder -v
-    hashStable:COMMIT1 -v hashTesting:COMMIT2
-
-  eks resource delete
-    eks resource delete -a credentials -f manifestsFileOrFolder -v
-    hashStable:COMMIT1 -v hashTesting:COMMIT2
-
-  eks cluster create
-    eks cluster create -a authFile -f FileOrFolder
-
-  eks cluster delete
-    eks cluster delete -a authFile -f FileOrFolder
-
-  eks nodegroup create
-<<<<<<< HEAD
-    eks nodegroup create -a credentials -f FileOrFolder
-
-  eks nodegroup delete
-    eks nodegroup delete -a credentials -f FileOrFolder
-
-  eks nodegroup check-running
-    eks nodegroup check-running -a credentails -f FileOrFolder
-
-  eks nodegroup check-deleted
-    eks nodegroup check-deleted -a credentials -f FileOrFolder
-
-  eks resource apply
-    eks resource apply -a credentials -f manifestsFileOrFolder -v
-    PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
-    hashStable:COMMIT1 -v hashTesting:COMMIT2
-
-  eks resource delete
-    eks resource delete -a credentials -f manifestsFileOrFolder -v
-    PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
-=======
-    eks nodegroup create -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v
-    CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3
-
-  eks nodegroup delete
-    eks nodegroup delete -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v
-    CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3
-
-  eks nodegroup check-running
-    eks nodegroup check-running -a credentails -f FileOrFolder -v ZONE:eu-west-1
-    -v CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3
-
-  eks nodegroup check-deleted
-    eks nodegroup check-deleted -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v
-    CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3
-
-  eks resource apply
     eks resource apply -a authFile -f manifestsFileOrFolder -v
     hashStable:COMMIT1 -v hashTesting:COMMIT2
 
   eks resource delete
     eks resource delete -a authFile -f manifestsFileOrFolder -v
->>>>>>> apply required changes
     hashStable:COMMIT1 -v hashTesting:COMMIT2
 
 
