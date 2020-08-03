@@ -17,8 +17,10 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -47,18 +49,19 @@ type eksCluster struct {
 
 // EKS holds the fields used to generate an API request.
 type EKS struct {
-	AuthFilename string
+	Auth string
 
 	ClusterName string
 	// The eks client used when performing EKS requests.
 	clientEKS *eks.EKS
 	// The k8s provider used when we work with the manifest files.
 	k8sProvider *k8sProvider.K8s
-	// DeploymentFiles files provided from the cli.
+	// Final DeploymentFiles files.
 	DeploymentFiles []string
-	// Variables to substitute in the DeploymentFiles.
-	// These are also used when the command requires some variables that are not provided by the deployment file.
+	// Final DeploymentVars.
 	DeploymentVars map[string]string
+	// DeployResource to construct DeploymentVars and DeploymentFiles
+	DeploymentResource *provider.DeploymentResource
 	// Content bytes after parsing the template variables, grouped by filename.
 	eksResources []Resource
 	// K8s resource.runtime objects after parsing the template variables, grouped by filename.
@@ -68,23 +71,48 @@ type EKS struct {
 }
 
 // New is the EKS constructor
-func New() *EKS {
+func New(dr *provider.DeploymentResource) *EKS {
 	eks := &EKS{
-		DeploymentVars: make(map[string]string),
+		DeploymentResource: dr,
 	}
-	eks.DeploymentVars["SEPARATOR"] = ","
 	return eks
 }
 
 // NewEKSClient sets the EKS client used when performing the GKE requests.
 func (c *EKS) NewEKSClient(*kingpin.ParseContext) error {
-	if c.AuthFilename != "" {
-	} else if c.AuthFilename = os.Getenv("AWS_APPLICATION_CREDENTIALS"); c.AuthFilename == "" {
+	if c.Auth != "" {
+	} else if c.Auth = os.Getenv("AWS_APPLICATION_CREDENTIALS"); c.Auth == "" {
 		return errors.Errorf("no auth provided set the auth flag or the AWS_APPLICATION_CREDENTIALS env variable")
 	}
 
+	// When the auth variable points to a file
+	// put the file content in the variable.
+	if content, err := ioutil.ReadFile(c.Auth); err == nil {
+		c.Auth = string(content)
+	}
+
+	// Check if auth data is base64 encoded and decode it.
+	encoded, err := regexp.MatchString("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$", c.Auth)
+	if err != nil {
+		return err
+	}
+	if encoded {
+		auth, err := base64.StdEncoding.DecodeString(c.Auth)
+		if err != nil {
+			return errors.Wrap(err, "could not decode auth data")
+		}
+		c.Auth = string(auth)
+	}
+
+	credValue := &credentials.Value{}
+	if err = yamlGo.UnmarshalStrict([]byte(c.Auth), credValue); err != nil {
+		return errors.Wrap(err, "could not get credential values")
+	}
+
+	fmt.Print("drumil", credValue)
+
 	cl := eks.New(awsSession.Must(awsSession.NewSession()), &aws.Config{
-		Credentials: credentials.NewSharedCredentials(c.AuthFilename, "credentials"),
+		Credentials: credentials.NewStaticCredentialsFromCreds(*credValue),
 		Region:      aws.String(c.DeploymentVars["ZONE"]),
 	})
 
@@ -97,7 +125,7 @@ func (c *EKS) NewEKSClient(*kingpin.ParseContext) error {
 func (c *EKS) checkDeploymentVarsAndFiles() error {
 	reqDepVars := []string{"ZONE", "CLUSTER_NAME"}
 	for _, k := range reqDepVars {
-		if v, ok := c.DeploymentVars[k]; !ok || v == "" {
+		if v := c.DeploymentVars[k]; v == "" {
 			return fmt.Errorf("missing required %v variable", k)
 		}
 	}
@@ -545,5 +573,15 @@ func (c *EKS) ResourceDelete(*kingpin.ParseContext) error {
 	if err := c.k8sProvider.ResourceDelete(c.k8sResources); err != nil {
 		log.Fatal("error while deleting objects from a manifest file err:", err)
 	}
+	return nil
+}
+
+// GetDeploymentVars shows deployment variables.
+func (c *EKS) GetDeploymentVars(*kingpin.ParseContext) error {
+	fmt.Print("-------------------\n   DeploymentVars   \n------------------- \n")
+	for key, value := range c.DeploymentVars {
+		fmt.Println(key, " : ", value)
+	}
+
 	return nil
 }
