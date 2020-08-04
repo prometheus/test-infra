@@ -81,7 +81,7 @@ The syntax is: `/funcbench <branch|tag|commit> <benchmark function regex>`.
 |`/funcbench master BenchmarkQuery.*`| Compare all the benchmarks matching `BenchmarkQuery.*` for master vs the PR|
 |`/funcbench feature-branch` or `/funcbench tag-name .*`| Compare all the benchmarks on feature-branch/tag-name vs the PR|
 |`/funcbench master BenchmarkQuery.* ./tsdb` | Compare all the benchmarks matching `BenchmarkQuery.*` for master vs the PR in package `./tsdb`|
-|`/funcbench master Benchmark(?:Isolation.*|QuerierSelect) ./tsdb` | Compare all benchmarks matching `Benchmark(?:Isolation.*|QuerierSelect)` for master vs the PR|
+|`/funcbench master Benchmark(?:Isolation.*\|QuerierSelect) ./tsdb` | Compare all benchmarks matching `Benchmark(?:Isolation.*\|QuerierSelect)` for master vs the PR|
 
 
 > **Notes:**
