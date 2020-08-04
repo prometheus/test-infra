@@ -37,9 +37,9 @@ func TestExtractCommand(t *testing.T) {
 func TestCheckCommandPrefix(t *testing.T) {
 	cmClient := commentMonitorClient{
 		prefixes: []commandPrefix{
-			{"/funcbench", "help"},
-			{"/prombench", "help"},
-			{"/somebench", "help"},
+			{"/funcbench", "help", false},
+			{"/prombench", "help", false},
+			{"/somebench", "help", false},
 		},
 	}
 	testCases := []struct {

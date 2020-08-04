@@ -29,17 +29,17 @@ import (
 )
 
 type commentMonitorConfig struct {
-	verifyUserDisabled bool
-	configFilePath     string
-	whSecretFilePath   string
-	whSecret           []byte
-	configFile         configFile
-	port               string
+	configFilePath   string
+	whSecretFilePath string
+	whSecret         []byte
+	configFile       configFile
+	port             string
 }
 
 type commandPrefix struct {
 	Prefix       string `yaml:"prefix"`
 	HelpTemplate string `yaml:"help_template"`
+	VerifyUser   bool   `yaml:"verify_user"`
 }
 
 type webhookEvent struct {
@@ -63,8 +63,6 @@ func main() {
 	app.Flag("webhooksecretfile", "path to webhook secret file").
 		Default("./whsecret").
 		StringVar(&cmConfig.whSecretFilePath)
-	app.Flag("no-verify-user", "disable verifying user").
-		BoolVar(&cmConfig.verifyUserDisabled)
 	app.Flag("config", "Filepath to config file.").
 		Default("./config.yml").
 		StringVar(&cmConfig.configFilePath)
@@ -183,7 +181,7 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		}
 
 		// Verify user.
-		err = cmClient.verifyUser(c.verifyUserDisabled)
+		err = cmClient.verifyUser()
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "user not allowed to run command", http.StatusForbidden)
