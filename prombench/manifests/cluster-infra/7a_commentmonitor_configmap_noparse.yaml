@@ -8,9 +8,11 @@ data:
       - prefix: /prombench
         help_template: |
           Incorrect prombench syntax, please find [correct syntax here](https://github.com/prometheus/test-infra/tree/master/prombench#trigger-tests-via-a-github-comment).
+        verify_user: true
       - prefix: /funcbench
         help_template: |
           Incorrect funcbench syntax, please find [correct syntax here](https://github.com/prometheus/test-infra/tree/master/funcbench#triggering-with-github-comments).
+        verify_user: false
     events:
       - event_type: prombench_start
         regex_string: (?mi)^/prombench\s*(?P<RELEASE>master|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$

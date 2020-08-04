@@ -25,15 +25,16 @@ import (
 )
 
 type commentMonitorClient struct {
-	ghClient           *githubClient
-	allArgs            map[string]string
-	regex              *regexp.Regexp
-	events             []webhookEvent
-	prefixes           []commandPrefix
-	prefixHelpTemplate string
-	eventType          string
-	commentTemplate    string
-	label              string
+	ghClient         *githubClient
+	allArgs          map[string]string
+	regex            *regexp.Regexp
+	events           []webhookEvent
+	prefixes         []commandPrefix
+	helpTemplate     string
+	shouldVerifyUser bool
+	eventType        string
+	commentTemplate  string
+	label            string
 }
 
 // Set eventType and commentTemplate if
@@ -55,7 +56,8 @@ func (c *commentMonitorClient) validateRegex(command string) bool {
 func (c *commentMonitorClient) checkCommandPrefix(command string) bool {
 	for _, p := range c.prefixes {
 		if strings.HasPrefix(command, p.Prefix) {
-			c.prefixHelpTemplate = p.HelpTemplate
+			c.helpTemplate = p.HelpTemplate
+			c.shouldVerifyUser = p.VerifyUser
 			return true
 		}
 	}
@@ -63,8 +65,8 @@ func (c *commentMonitorClient) checkCommandPrefix(command string) bool {
 }
 
 // Verify if user is allowed to perform activity.
-func (c commentMonitorClient) verifyUser(verifyUserDisabled bool) error {
-	if !verifyUserDisabled {
+func (c commentMonitorClient) verifyUser() error {
+	if c.shouldVerifyUser {
 		var allowed bool
 		allowedAssociations := []string{"COLLABORATOR", "MEMBER", "OWNER"}
 		for _, a := range allowedAssociations {
@@ -128,7 +130,7 @@ func (c commentMonitorClient) generateAndPostSuccessComment() error {
 	return c.generateAndPostComment(c.commentTemplate)
 }
 func (c commentMonitorClient) generateAndPostErrorComment() error {
-	return c.generateAndPostComment(c.prefixHelpTemplate)
+	return c.generateAndPostComment(c.helpTemplate)
 }
 
 func (c commentMonitorClient) generateAndPostComment(commentTemplate string) error {
