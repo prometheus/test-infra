@@ -164,7 +164,7 @@ func main() {
 
 			// ( ◔_◔)ﾉ Start benchmarking!
 			benchmarker := newBenchmarker(logger, env,
-				&commander{env: env, verbose: cfg.verbose, ctx: ctx},
+				&commander{verbose: cfg.verbose, ctx: ctx},
 				cfg.benchTime, cfg.benchTimeout, cfg.resultsDir,
 				cfg.packagePath,
 			)
@@ -172,7 +172,7 @@ func main() {
 			if err != nil {
 				pErr := env.PostErr(
 					fmt.Sprintf(
-						"```\n%s\n```\n%s",
+						"```\n%s\n```\nError:\n```\n%s\n```",
 						strings.Join(benchmarker.benchmarkArgs, " "),
 						err.Error(),
 					),
@@ -325,7 +325,6 @@ func getTargetInfo(repo *git.Repository, target string) plumbing.Hash {
 
 type commander struct {
 	verbose bool
-	env     Environment
 	ctx     context.Context
 }
 
@@ -342,14 +341,6 @@ func (c *commander) exec(command ...string) (string, error) {
 	}
 	if err := cmd.Run(); err != nil {
 		out := b.String()
-		if c.verbose {
-			_, ok := c.env.(*GitHub)
-			if ok {
-				out = fmt.Sprintf("<details><summary>Error:</summary>\n```\n%v\n```\n</details>", out)
-			} else {
-				out = ""
-			}
-		}
 		return "", errors.Errorf("error: %v; Command out: %s", err, out)
 	}
 
