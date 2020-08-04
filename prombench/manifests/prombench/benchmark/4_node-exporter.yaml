@@ -43,7 +43,7 @@ spec:
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
       containers:
-      - image: quay.io/prometheus/node-exporter:v0.16.0
+      - image: quay.io/prometheus/node-exporter:v1.0.1
         args:
         - "--path.procfs=/host/proc"
         - "--path.sysfs=/host/sys"
@@ -110,7 +110,7 @@ spec:
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
       containers:
-      - image: quay.io/prometheus/node-exporter:v0.16.0
+      - image: quay.io/prometheus/node-exporter:v1.0.1
         args:
         - "--path.procfs=/host/proc"
         - "--path.sysfs=/host/sys"
@@ -167,7 +167,7 @@ spec:
       nodeSelector:
         node-name: nodes-{{ .PR_NUMBER }}
       containers:
-      - image: quay.io/prometheus/node-exporter:v0.16.0
+      - image: quay.io/prometheus/node-exporter:v1.0.1
         args:
         - "--path.procfs=/host/proc"
         - "--path.sysfs=/host/sys"
