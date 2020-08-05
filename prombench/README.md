@@ -94,6 +94,7 @@ cat $AUTH_FILE | base64 -w 0
 ## Usage
 
 ### Trigger tests via a Github comment.
+<!-- If you change the heading, also change the anchor in the comment monitor config map. -->
 
 ---
 
