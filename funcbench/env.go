@@ -19,6 +19,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -32,6 +33,7 @@ import (
 type Environment interface {
 	BenchFunc() string
 	CompareTarget() string
+	SetHashStrings(compareTargetHash, repoHeadHashString string)
 
 	PostErr(err string) error
 	PostResults(tables []*benchstat.Table, extraInfo ...string) error
@@ -42,12 +44,18 @@ type Environment interface {
 type environment struct {
 	logger Logger
 
-	benchFunc     string
-	compareTarget string
+	benchFunc               string
+	compareTarget           string
+	compareTargetHashString string
+	repoHeadHashString      string
 }
 
 func (e environment) BenchFunc() string     { return e.benchFunc }
 func (e environment) CompareTarget() string { return e.compareTarget }
+func (e *environment) SetHashStrings(compareTargetHash, repoHeadHashString string) {
+	e.compareTargetHashString = compareTargetHash
+	e.repoHeadHashString = repoHeadHashString
+}
 
 type Local struct {
 	environment
@@ -67,7 +75,12 @@ func newLocalEnv(e environment) (Environment, error) {
 func (l *Local) PostErr(string) error { return nil } // Noop. We will see error anyway.
 
 func (l *Local) PostResults(tables []*benchstat.Table, extraInfo ...string) error {
-	fmt.Println("Results:")
+	legend := fmt.Sprintf("Old: %s\nNew: %s",
+		l.compareTargetHashString,
+		l.repoHeadHashString,
+	)
+	fmt.Printf("Results:\n%s\n", legend)
+
 	var buf bytes.Buffer
 	benchstat.FormatText(&buf, tables)
 
@@ -89,10 +102,25 @@ type GitHub struct {
 }
 
 func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspace string) (Environment, error) {
-	r, err := git.PlainCloneContext(ctx, fmt.Sprintf("%s/%s", workspace, gc.repo), false, &git.CloneOptions{
-		URL:      fmt.Sprintf("https://github.com/%s/%s.git", gc.owner, gc.repo),
-		Progress: os.Stdout,
-	})
+
+	var r *git.Repository
+	var err error
+	retryTime := 10 * time.Second
+	// Retry 10 times.
+	for i := 1; i <= 10; i++ {
+		if err := os.RemoveAll(filepath.Join(workspace, gc.repo)); err != nil {
+			return nil, err
+		}
+		e.logger.Println("Cloning ", gc.owner, ":", gc.repo, " is in progress. Checking in ", retryTime)
+		time.Sleep(retryTime)
+		r, err = git.PlainCloneContext(ctx, filepath.Join(workspace, gc.repo), false, &git.CloneOptions{
+			URL:      fmt.Sprintf("https://github.com/%s/%s.git", gc.owner, gc.repo),
+			Progress: os.Stdout,
+		})
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		return nil, errors.Wrap(err, "clone git repository")
 	}
@@ -138,7 +166,7 @@ func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspac
 
 func (g *GitHub) PostErr(txt string) error {
 	c := fmt.Sprintf(
-		"Old: `%s`\nNew: `PR-%d`\n%s",
+		"Old: `%v`\nNew: `PR-%v`\n%v",
 		g.compareTarget,
 		g.client.prNumber,
 		txt,
@@ -157,7 +185,12 @@ func (g *GitHub) PostResults(tables []*benchstat.Table, extraInfo ...string) err
 		return err
 	}
 
-	legend := fmt.Sprintf("Old: `%s`\nNew: `PR-%d`", g.compareTarget, g.client.prNumber)
+	legend := fmt.Sprintf("Old: `%v`/`%v`\nNew: `PR-%v`/`%v`",
+		g.compareTarget,
+		g.compareTargetHashString,
+		g.client.prNumber,
+		g.repoHeadHashString,
+	)
 	result := fmt.Sprintf(
 		"<details><summary>Click to check benchmark result</summary>\n\n%s\n%s\n%s</details>",
 		legend,

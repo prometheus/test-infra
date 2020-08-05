@@ -23,6 +23,7 @@ spec:
           - "{{ .PR_NUMBER }}"
           - "{{ .BRANCH }}"
           - "{{ .BENCH_FUNC_REGEX }}"
+          - "{{ .PACKAGE_PATH }}"
         env:
           - name: GITHUB_TOKEN
             valueFrom:

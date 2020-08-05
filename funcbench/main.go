@@ -64,6 +64,7 @@ func main() {
 		benchTimeout   time.Duration
 		compareTarget  string
 		benchFuncRegex string
+		packagePath    string
 	}{}
 
 	app := kingpin.New(
@@ -76,7 +77,6 @@ func main() {
 		* For BenchmarkFunc.*, compare between sub-benchmarks of same benchmark on current commit: ./funcbench -v . BenchmarkFunc.*
 		* For BenchmarkFuncName, compare pr#35 with master: ./funcbench --nocomment --github-pr="35" master BenchmarkFuncName`,
 	)
-
 	// Options.
 	app.HelpFlag.Short('h')
 	app.Flag("verbose", "Verbose mode. Errors includes trace and commands output are logged.").
@@ -113,6 +113,9 @@ func main() {
 		"Supports RE2 regexp and is fully anchored, by default will run all benchmarks.").
 		Default(".*").
 		StringVar(&cfg.benchFuncRegex) // TODO (geekodour) : validate regex?
+	app.Arg("packagepath", "Package to run benchmark against. Eg. ./tsdb, defaults to ./...").
+		Default("./...").
+		StringVar(&cfg.packagePath)
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 	logger := &logger{
@@ -160,12 +163,16 @@ func main() {
 			}
 
 			// ( ◔_◔)ﾉ Start benchmarking!
-			benchmarker := newBenchmarker(logger, env, &commander{verbose: cfg.verbose, ctx: ctx}, cfg.benchTime, cfg.benchTimeout, cfg.resultsDir)
+			benchmarker := newBenchmarker(logger, env,
+				&commander{verbose: cfg.verbose, ctx: ctx},
+				cfg.benchTime, cfg.benchTimeout, cfg.resultsDir,
+				cfg.packagePath,
+			)
 			tables, err := startBenchmark(env, benchmarker)
 			if err != nil {
 				pErr := env.PostErr(
 					fmt.Sprintf(
-						"`%s`\n%s.",
+						"```\n%s\n```\nError:\n```\n%s\n```",
 						strings.Join(benchmarker.benchmarkArgs, " "),
 						err.Error(),
 					),
@@ -287,6 +294,9 @@ func startBenchmark(env Environment, bench *Benchmarker) ([]*benchstat.Table, er
 		return nil, errors.Wrap(err, "comparing benchmarks")
 	}
 
+	// Save hashes for info about benchmark.
+	env.SetHashStrings(targetCommit.String(), ref.Hash().String())
+
 	return tables, nil
 }
 
@@ -331,9 +341,6 @@ func (c *commander) exec(command ...string) (string, error) {
 	}
 	if err := cmd.Run(); err != nil {
 		out := b.String()
-		if c.verbose {
-			out = ""
-		}
 		return "", errors.Errorf("error: %v; Command out: %s", err, out)
 	}
 
