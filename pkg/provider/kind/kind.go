@@ -165,7 +165,6 @@ func (c *KIND) NewK8sProvider(*kingpin.ParseContext) error {
 	if err != nil {
 		log.Fatal("k8s provider error", err)
 	}
-	fmt.Println("Creating k8s provider successfull")
 	return nil
 }
 
@@ -181,6 +180,15 @@ func (c *KIND) ResourceApply(*kingpin.ParseContext) error {
 func (c *KIND) ResourceDelete(*kingpin.ParseContext) error {
 	if err := c.k8sProvider.ResourceDelete(c.k8sResources); err != nil {
 		log.Fatal("error while deleting objects from a manifest file err:", err)
+	}
+	return nil
+}
+
+// GetDeploymentVars shows deployment variables.
+func (c *KIND) GetDeploymentVars(parseContext *kingpin.ParseContext) error {
+	fmt.Print("-------------------\n   DeploymentVars   \n------------------- \n")
+	for key, value := range c.DeploymentVars {
+		fmt.Println(key, ": ", value)
 	}
 	return nil
 }

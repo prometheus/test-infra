@@ -87,6 +87,9 @@ func main() {
 	k8sKIND := app.Command("kind", `Kubernetes In Docker (KIND) provider - https://kind.sigs.k8s.io/docs/user/quick-start/`).
 		Action(k.SetupDeploymentResources)
 
+	k8sKIND.Command("info", "kind info -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+		Action(k.GetDeploymentVars)
+
 	//Cluster operations.
 	k8sKINDCluster := k8sKIND.Command("cluster", "manage KIND clusters").
 		Action(k.KINDDeploymentsParse)
