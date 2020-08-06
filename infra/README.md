@@ -38,26 +38,26 @@ Commands:
   gke cluster delete
     gke cluster delete -a service-account.json -f FileOrFolder
 
-  gke nodepool create
-    gke nodepool create -a service-account.json -f FileOrFolder
+  gke nodes create
+    gke nodes create -a service-account.json -f FileOrFolder
 
-  gke nodepool delete
-    gke nodepool delete -a service-account.json -f FileOrFolder
+  gke nodes delete
+    gke nodes delete -a service-account.json -f FileOrFolder
 
-  gke nodepool check-running
-    gke nodepool check-running -a service-account.json -f FileOrFolder
+  gke nodes check-running
+    gke nodes check-running -a service-account.json -f FileOrFolder
 
-  gke nodepool check-deleted
-    gke nodepool check-deleted -a service-account.json -f FileOrFolder
+  gke nodes check-deleted
+    gke nodes check-deleted -a service-account.json -f FileOrFolder
 
   gke resource apply
     gke resource apply -a service-account.json -f manifestsFileOrFolder -v
-    PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
+    GKE_PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
     hashStable:COMMIT1 -v hashTesting:COMMIT2
 
   gke resource delete
     gke resource delete -a service-account.json -f manifestsFileOrFolder -v
-    PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
+    GKE_PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
     hashStable:COMMIT1 -v hashTesting:COMMIT2
 
 

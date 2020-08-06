@@ -12,17 +12,17 @@ clean: resource_delete cluster_delete
 
 cluster_create:
 	$(INFRA_CMD) gke cluster create -a ${AUTH_FILE} \
-		-v PROJECT_ID:${PROJECT_ID} -v ZONE:${ZONE} -v CLUSTER_NAME:funcbench-${PR_NUMBER} -v PR_NUMBER:${PR_NUMBER} \
+		-v GKE_PROJECT_ID:${GKE_PROJECT_ID} -v ZONE:${ZONE} -v CLUSTER_NAME:funcbench-${PR_NUMBER} -v PR_NUMBER:${PR_NUMBER} \
 		-f manifests/cluster.yaml
 
 cluster_delete:
 	$(INFRA_CMD) gke cluster delete -a ${AUTH_FILE} \
-		-v PROJECT_ID:${PROJECT_ID} -v ZONE:${ZONE} -v CLUSTER_NAME:funcbench-${PR_NUMBER} -v PR_NUMBER:${PR_NUMBER} \
+		-v GKE_PROJECT_ID:${GKE_PROJECT_ID} -v ZONE:${ZONE} -v CLUSTER_NAME:funcbench-${PR_NUMBER} -v PR_NUMBER:${PR_NUMBER} \
 		-f manifests/cluster.yaml
 
 resource_apply:
 	$(INFRA_CMD) gke resource apply -a ${AUTH_FILE} \
-		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:funcbench-${PR_NUMBER} \
+		-v ZONE:${ZONE} -v GKE_PROJECT_ID:${GKE_PROJECT_ID} -v CLUSTER_NAME:funcbench-${PR_NUMBER} \
 		-v PR_NUMBER:${PR_NUMBER} -v GITHUB_TOKEN:${GITHUB_TOKEN} \
 		-v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
 		-v BRANCH:${BRANCH} -v 'BENCH_FUNC_REGEX:${BENCH_FUNC_REGEX}' \
@@ -32,7 +32,7 @@ resource_apply:
 # Removal of namespace should be at the end, after all other resources get removed.
 resource_delete:
 	$(INFRA_CMD) gke resource delete -a ${AUTH_FILE} \
-		-v ZONE:${ZONE} -v PROJECT_ID:${PROJECT_ID} -v CLUSTER_NAME:funcbench-${PR_NUMBER} \
+		-v ZONE:${ZONE} -v GKE_PROJECT_ID:${GKE_PROJECT_ID} -v CLUSTER_NAME:funcbench-${PR_NUMBER} \
 		-v PR_NUMBER:${PR_NUMBER} -v GITHUB_TOKEN:${GITHUB_TOKEN} \
 		-v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
 		-v BRANCH:${BRANCH} -v 'BENCH_FUNC_REGEX:${BENCH_FUNC_REGEX}' \

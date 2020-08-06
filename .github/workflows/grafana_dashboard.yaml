@@ -15,14 +15,14 @@ jobs:
       uses: docker://prominfra/prombench:master
       env:
         AUTH_FILE: ${{ secrets.TEST_INFRA_GKE_AUTH }}
-        PROJECT_ID: macro-mile-203600
+        GKE_PROJECT_ID: macro-mile-203600
         CLUSTER_NAME: test-infra
         ZONE: europe-west3-a
         TEST_INFRA_REPO: https://github.com/prometheus/test-infra.git
       with:
         args: >-
           ./prombench gke resource apply -a $AUTH_FILE
-          -v PROJECT_ID:$PROJECT_ID -v ZONE:$ZONE
+          -v GKE_PROJECT_ID:$GKE_PROJECT_ID -v ZONE:$ZONE
           -v CLUSTER_NAME:$CLUSTER_NAME
           -f manifests/cluster-infra/grafana_dashboard_dashboards_noparse.yaml
     - name: Comment Failure Message
