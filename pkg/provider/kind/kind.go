@@ -58,7 +58,6 @@ type KIND struct {
 }
 
 func New(dr *provider.DeploymentResource) *KIND {
-	dr.DefaultDeploymentVars["NGINX_SERVICE_TYPE"] = "NodePort"
 	return &KIND{
 		DeploymentResource: dr,
 		kindProvider: cluster.NewProvider(
@@ -70,6 +69,8 @@ func New(dr *provider.DeploymentResource) *KIND {
 
 // SetupDeploymentResources Sets up DeploymentVars and DeploymentFiles
 func (c *KIND) SetupDeploymentResources(*kingpin.ParseContext) error {
+	c.DeploymentResource.DefaultDeploymentVars["NGINX_SERVICE_TYPE"] = "NodePort"
+	c.DeploymentResource.DefaultDeploymentVars["LOADGEN_SCALE_UP_REPLICAS"] = "2"
 	c.DeploymentFiles = c.DeploymentResource.DeploymentFiles
 	c.DeploymentVars = provider.MergeDeploymentVars(
 		c.DeploymentResource.DefaultDeploymentVars,

@@ -48,6 +48,7 @@ func NewDeploymentResource() *DeploymentResource {
 		FlagDeploymentVars: map[string]string{},
 		DefaultDeploymentVars: map[string]string{
 			"NGINX_SERVICE_TYPE": "LoadBalancer",
+			"LOADGEN_SCALE_UP_REPLICAS": "10",
 		},
 	}
 }
