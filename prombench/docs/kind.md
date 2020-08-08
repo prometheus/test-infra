@@ -72,7 +72,7 @@ echo "Logs: http://$INTERNAL_IP:$NODE_PORT/grafana/explore"
 ## Usage
 
 
-## Start a benchmarking test manually
+### Start a benchmarking test manually
 
 - Set the following environment variables.
 

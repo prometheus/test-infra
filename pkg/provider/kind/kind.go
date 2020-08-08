@@ -1,4 +1,4 @@
-// Copyright 2019 The Prometheus Authors
+// Copyright 2020 The Prometheus Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -40,12 +40,11 @@ type KIND struct {
 
 	// The k8s provider used when we work with the manifest files.
 	k8sProvider *k8sProvider.K8s
-	// The kindprovider used to instantiate a new provider.
+	// The kind provider used to instantiate a new provider.
 	kindProvider *cluster.Provider
-	// DeploymentFiles files provided from the cli.
+	// Final DeploymentFiles files.
 	DeploymentFiles []string
-	// Variables to substitute in the DeploymentFiles.
-	// These are also used when the command requires some variables that are not provided by the deployment file.
+	// Final DeploymentVars.
 	DeploymentVars map[string]string
 	// DeployResource to construct DeploymentVars and DeploymentFiles
 	DeploymentResource *provider.DeploymentResource
@@ -69,12 +68,16 @@ func New(dr *provider.DeploymentResource) *KIND {
 
 // SetupDeploymentResources Sets up DeploymentVars and DeploymentFiles
 func (c *KIND) SetupDeploymentResources(*kingpin.ParseContext) error {
-	c.DeploymentResource.DefaultDeploymentVars["NGINX_SERVICE_TYPE"] = "NodePort"
-	c.DeploymentResource.DefaultDeploymentVars["LOADGEN_SCALE_UP_REPLICAS"] = "2"
+	customDeploymentVars := map[string]string{
+		"NGINX_SERVICE_TYPE":        "NodePort",
+		"LOADGEN_SCALE_UP_REPLICAS": "2",
+	}
+
 	c.DeploymentFiles = c.DeploymentResource.DeploymentFiles
 	c.DeploymentVars = provider.MergeDeploymentVars(
 		c.DeploymentResource.DefaultDeploymentVars,
 		c.DeploymentResource.FlagDeploymentVars,
+		customDeploymentVars,
 	)
 	return nil
 }
@@ -91,6 +94,10 @@ func (c *KIND) KINDDeploymentsParse(*kingpin.ParseContext) error {
 }
 
 func (c *KIND) K8SDeploymentsParse(*kingpin.ParseContext) error {
+	if err := c.checkDeploymentVarsAndFiles(); err != nil {
+		return err
+	}
+
 	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
 	if err != nil {
 		log.Fatalf("Couldn't parse deployment files: %v", err)
@@ -118,6 +125,20 @@ func (c *KIND) K8SDeploymentsParse(*kingpin.ParseContext) error {
 		if len(k8sObjects) > 0 {
 			c.k8sResources = append(c.k8sResources, k8sProvider.Resource{FileName: deployment.FileName, Objects: k8sObjects})
 		}
+	}
+	return nil
+}
+
+// checkDeploymentVarsAndFiles checks whether the requied deployment vars are passed.
+func (c *KIND) checkDeploymentVarsAndFiles() error {
+	reqDepVars := []string{"PR_NUMBER", "CLUSTER_NAME"}
+	for _, k := range reqDepVars {
+		if v, ok := c.DeploymentVars[k]; !ok || v == "" {
+			return fmt.Errorf("missing required %v variable", k)
+		}
+	}
+	if len(c.DeploymentFiles) == 0 {
+		return fmt.Errorf("missing deployment file(s)")
 	}
 	return nil
 }
