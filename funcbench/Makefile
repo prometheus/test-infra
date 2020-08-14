@@ -13,12 +13,12 @@ clean: resource_delete cluster_delete
 cluster_create:
 	$(INFRA_CMD) gke cluster create -a ${AUTH_FILE} \
 		-v GKE_PROJECT_ID:${GKE_PROJECT_ID} -v ZONE:${ZONE} -v CLUSTER_NAME:funcbench-${PR_NUMBER} -v PR_NUMBER:${PR_NUMBER} \
-		-f manifests/cluster.yaml
+		-f manifests/cluster_gke.yaml
 
 cluster_delete:
 	$(INFRA_CMD) gke cluster delete -a ${AUTH_FILE} \
 		-v GKE_PROJECT_ID:${GKE_PROJECT_ID} -v ZONE:${ZONE} -v CLUSTER_NAME:funcbench-${PR_NUMBER} -v PR_NUMBER:${PR_NUMBER} \
-		-f manifests/cluster.yaml
+		-f manifests/cluster_gke.yaml
 
 resource_apply:
 	$(INFRA_CMD) gke resource apply -a ${AUTH_FILE} \

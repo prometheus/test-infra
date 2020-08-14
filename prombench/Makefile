@@ -7,9 +7,9 @@ deploy: nodepool_create resource_apply
 clean: resource_delete nodepool_delete
 
 nodepool_create:
-	$(INFRA_CMD) gke nodepool create -a ${AUTH_FILE} \
+	$(INFRA_CMD) gke nodes create -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v GKE_PROJECT_ID:${GKE_PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
-		-f manifests/prombench/nodepools.yaml
+		-f manifests/prombench/nodes_gke.yaml
 
 resource_apply:
 	$(INFRA_CMD) gke resource apply -a ${AUTH_FILE} \
@@ -26,18 +26,18 @@ resource_delete:
 		-f manifests/prombench/benchmark/1a_namespace.yaml
 
 nodepool_delete:
-	$(INFRA_CMD) gke nodepool delete -a ${AUTH_FILE} \
+	$(INFRA_CMD) gke nodes delete -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v GKE_PROJECT_ID:${GKE_PROJECT_ID} -v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
-		-f manifests/prombench/nodepools.yaml
+		-f manifests/prombench/nodes_gke.yaml
 
 all_nodepools_running:
-	$(INFRA_CMD) gke nodepool check-running -a ${AUTH_FILE} \
+	$(INFRA_CMD) gke nodes check-running -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v GKE_PROJECT_ID:${GKE_PROJECT_ID} \
 		-v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
-		-f manifests/prombench/nodepools.yaml
+		-f manifests/prombench/nodes_gke.yaml
 
 all_nodepools_deleted:
-	$(INFRA_CMD) gke nodepool check-deleted -a ${AUTH_FILE} \
+	$(INFRA_CMD) gke nodes check-deleted -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v GKE_PROJECT_ID:${GKE_PROJECT_ID} \
 		-v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
-		-f manifests/prombench/nodepools.yaml
+		-f manifests/prombench/nodes_gke.yaml
