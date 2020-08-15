@@ -69,6 +69,8 @@ export GITHUB_REPO=prometheus
   - Prometheus :: `http://<DOMAIN_NAME>/prometheus-meta`
   - Logs :: `http://<DOMAIN_NAME>/grafana/explore`
 
+## Usage
+
 ### Start a benchmarking test manually
 
 ---

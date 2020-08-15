@@ -15,7 +15,7 @@ The `/manifest` directory contains all the kubernetes manifest files.
 
 ## Setup and run prombench
 
-Following sections consist of detail documentation to run prombench in their respective providers.
+Prombench can be run on various providers, following are the provider specific instructions:
     
 - Instructions for [Google Kubernetes Engine](docs/gke.md)
 
@@ -24,7 +24,7 @@ Following sections consist of detail documentation to run prombench in their res
 Place a workflow file in the `.github` directory of the repository.
 See the [prometheus/prometheus](https://github.com/prometheus/prometheus) repository for an example.
 
-Create a github action `TEST_INFRA_PROVIDER_AUTH` secret with the base64 encoded content of the `service-account.json` file.
+Create a github action `TEST_INFRA_PROVIDER_AUTH` secret with the base64 encoded content of the `AUTH_FILE`.
 
 ```
 cat $AUTH_FILE | base64 -w 0
