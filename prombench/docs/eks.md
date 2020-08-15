@@ -26,7 +26,7 @@ secretaccesskey: <Amazon access secret>
 - Set the following environment variables and deploy the cluster.
 
 ```shell
-export AUTH_FILE=<path to toml credentials file that was created in the last step>
+export AUTH_FILE=<path to yaml credentials file that was created in the last step>
 export CLUSTER_NAME=prombench
 export ZONE=us-east-1
 export EKS_WORKER_ROLE_ARN=<Amazon EKS worker node IAM role ARN>
@@ -73,7 +73,7 @@ export GITHUB_REPO=prometheus
     -f manifests/cluster-infra
 ```
 
-- The output will show the ingress IP which will be used to point the domain name to. Alternatively you can see it from the GKE/Services tab.
+- The output will show the ingress IP which will be used to point the domain name to.
 - Set the `A record` for `<DOMAIN_NAME>` to point to `nginx-ingress-controller` IP address.
 - The services will be accessible at:
   - Grafana :: `http://<DOMAIN_NAME>/grafana`

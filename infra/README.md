@@ -78,6 +78,9 @@ Commands:
   kind resource delete
     kind resource delete -f manifestsFileOrFolder -v hashStable:COMMIT1 -v
     hashTesting:COMMIT2
+  eks info
+    eks info -v hashStable:COMMIT1 -v hashTesting:COMMIT2
+
   eks cluster create
     eks cluster create -a credentials -f FileOrFolder
 

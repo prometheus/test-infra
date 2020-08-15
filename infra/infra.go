@@ -117,6 +117,9 @@ func main() {
 		Short('a').
 		StringVar(&e.Auth)
 
+	k8sEKS.Command("info", "eks info -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+		Action(e.GetDeploymentVars)
+
 	// EKS Cluster operations
 	k8sEKSCluster := k8sEKS.Command("cluster", "manage EKS clusters").
 		Action(e.EKSDeploymentParse)
