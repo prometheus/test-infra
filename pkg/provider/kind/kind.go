@@ -16,6 +16,8 @@ package kind
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/prometheus/test-infra/pkg/provider"
 	k8sProvider "github.com/prometheus/test-infra/pkg/provider/k8s"
@@ -26,12 +28,11 @@ import (
 	"k8s.io/client-go/util/homedir"
 	"sigs.k8s.io/kind/pkg/cluster"
 	"sigs.k8s.io/kind/pkg/cmd"
-	"strings"
 )
 
 type Resource = provider.Resource
 
-// GKE holds the fields used to generate an API request.
+// KIND holds the fields used to generate an API request.
 type KIND struct {
 
 	// The k8s provider used when we work with the manifest files.
@@ -83,7 +84,7 @@ func (c *KIND) SetupDeploymentResources(*kingpin.ParseContext) error {
 }
 
 // KINDDeploymentsParse parses the environment/kind deployment files and saves the result as bytes grouped by the filename.
-// Any variables passed to the cli will be replaced in the resources files following the golang text template format.
+// Any DeploymentVar will be replaced in the resources files following the golang text template format.
 func (c *KIND) KINDDeploymentsParse(*kingpin.ParseContext) error {
 	if err := c.checkDeploymentVarsAndFiles(); err != nil {
 		return err
