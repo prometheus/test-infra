@@ -13,18 +13,18 @@ The `/manifest` directory contains all the kubernetes manifest files.
 - `cluster-infra/` : These are the persistent components of the Main Node.
 - `prombench/` : These resources are created and destroyed for each prombench test.
 
-## Providers
+## Setup and run prombench
 
-Presently prombench supports following providers:
+Following sections consist of detail documentation to run prombench in their respective providers.
     
-- [Google Kubernetes Engine](docs/gke.md)
+- Instructions for [Google Kubernetes Engine](docs/gke.md)
 
 ## Setup GitHub Actions
 
 Place a workflow file in the `.github` directory of the repository.
 See the [prometheus/prometheus](https://github.com/prometheus/prometheus) repository for an example.
 
-Create a github action `TEST_INFRA_GKE_AUTH` secret with the base64 encoded content of the `service-account.json` file.
+Create a github action `TEST_INFRA_PROVIDER_AUTH` secret with the base64 encoded content of the `service-account.json` file.
 
 ```
 cat $AUTH_FILE | base64 -w 0

@@ -1,5 +1,6 @@
 INFRA_CMD        ?= ../infra/infra
 
+PROVIDER 		 ?= gke
 ifeq ($(PACKAGE_PATH),)
 PACKAGE_PATH = ./...
 endif
@@ -11,17 +12,17 @@ deploy: cluster_create resource_apply
 clean: resource_delete cluster_delete
 
 cluster_create:
-	$(INFRA_CMD) gke cluster create -a ${AUTH_FILE} \
+	$(INFRA_CMD) $(PROVIDER) cluster create -a ${AUTH_FILE} \
 		-v GKE_PROJECT_ID:${GKE_PROJECT_ID} -v ZONE:${ZONE} -v CLUSTER_NAME:funcbench-${PR_NUMBER} -v PR_NUMBER:${PR_NUMBER} \
-		-f manifests/cluster_gke.yaml
+		-f manifests/cluster_$(PROVIDER).yaml
 
 cluster_delete:
-	$(INFRA_CMD) gke cluster delete -a ${AUTH_FILE} \
+	$(INFRA_CMD) $(PROVIDER) cluster delete -a ${AUTH_FILE} \
 		-v GKE_PROJECT_ID:${GKE_PROJECT_ID} -v ZONE:${ZONE} -v CLUSTER_NAME:funcbench-${PR_NUMBER} -v PR_NUMBER:${PR_NUMBER} \
-		-f manifests/cluster_gke.yaml
+		-f manifests/cluster_$(PROVIDER).yaml
 
 resource_apply:
-	$(INFRA_CMD) gke resource apply -a ${AUTH_FILE} \
+	$(INFRA_CMD) $(PROVIDER) resource apply -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v GKE_PROJECT_ID:${GKE_PROJECT_ID} -v CLUSTER_NAME:funcbench-${PR_NUMBER} \
 		-v PR_NUMBER:${PR_NUMBER} -v GITHUB_TOKEN:${GITHUB_TOKEN} \
 		-v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
@@ -31,7 +32,7 @@ resource_apply:
 
 # Removal of namespace should be at the end, after all other resources get removed.
 resource_delete:
-	$(INFRA_CMD) gke resource delete -a ${AUTH_FILE} \
+	$(INFRA_CMD) $(PROVIDER) resource delete -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v GKE_PROJECT_ID:${GKE_PROJECT_ID} -v CLUSTER_NAME:funcbench-${PR_NUMBER} \
 		-v PR_NUMBER:${PR_NUMBER} -v GITHUB_TOKEN:${GITHUB_TOKEN} \
 		-v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
