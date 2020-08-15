@@ -60,6 +60,7 @@ Commands:
     GKE_PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
     hashStable:COMMIT1 -v hashTesting:COMMIT2
 
+<<<<<<< HEAD
   kind info
     kind info -v hashStable:COMMIT1 -v hashTesting:COMMIT2
 
@@ -79,6 +80,8 @@ Commands:
     kind resource delete -f manifestsFileOrFolder -v hashStable:COMMIT1 -v
     hashTesting:COMMIT2
 
+=======
+>>>>>>> Add info command for eks and documentational changes
   eks info
     eks info -v hashStable:COMMIT1 -v hashTesting:COMMIT2
 

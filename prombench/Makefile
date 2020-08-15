@@ -2,10 +2,6 @@ INFRA_CMD        ?= ../infra/infra
 
 PROVIDER 		 ?= gke
 
-ifeq ($(PROVIDER),)
-PROVIDER = gke
-endif
-
 .PHONY: deploy clean
 deploy: node_create resource_apply
 # GCP sometimes takes longer than 30 tries when trying to delete nodes
