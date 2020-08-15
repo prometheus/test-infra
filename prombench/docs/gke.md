@@ -18,20 +18,12 @@ Run prombench tests in [Google Kubernetes Engine](https://cloud.google.com/kuber
 - Set the following environment variables and deploy the cluster.
 
 ```
-<<<<<<< HEAD
 export GKE_PROJECT_ID=<google-cloud project-id>
-=======
-export PROJECT_ID=<google-cloud project-id>
->>>>>>> Add documentation for gke and update file names in both prombench and funcbench
 export CLUSTER_NAME=prombench
 export ZONE=us-east1-b
 export AUTH_FILE=<path to service-account.json>
 
-<<<<<<< HEAD
 ../infra/infra gke cluster create -a $AUTH_FILE -v GKE_PROJECT_ID:$GKE_PROJECT_ID \
-=======
-../infra/infra gke cluster create -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID \
->>>>>>> Add documentation for gke and update file names in both prombench and funcbench
     -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -f manifests/cluster_gke.yaml
 ```
 
@@ -58,11 +50,7 @@ export GITHUB_REPO=prometheus
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Loki, Grafana, Alertmanager & Github Notifier.
 
 ```
-<<<<<<< HEAD
 ../infra/infra gke resource apply -a $AUTH_FILE -v GKE_PROJECT_ID:$GKE_PROJECT_ID -v ZONE:$ZONE \
-=======
-../infra/infra gke resource apply -a $AUTH_FILE -v PROJECT_ID:$PROJECT_ID -v ZONE:$ZONE \
->>>>>>> Add documentation for gke and update file names in both prombench and funcbench
     -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
     -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
     -v SERVICEACCOUNT_CLIENT_EMAIL:$SERVICEACCOUNT_CLIENT_EMAIL \
