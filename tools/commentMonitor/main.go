@@ -29,24 +29,30 @@ import (
 )
 
 type commentMonitorConfig struct {
-	verifyUserDisabled bool
-	eventMapFilePath   string
-	whSecretFilePath   string
-	commandPrefixes    []string
-	whSecret           []byte
-	eventMap           webhookEventMaps
-	port               string
+	configFilePath   string
+	whSecretFilePath string
+	whSecret         []byte
+	configFile       configFile
+	port             string
 }
 
-// Structure of eventmap.yml file.
-type webhookEventMap struct {
+type commandPrefix struct {
+	Prefix       string `yaml:"prefix"`
+	HelpTemplate string `yaml:"help_template"`
+	VerifyUser   bool   `yaml:"verify_user"`
+}
+
+type webhookEvent struct {
 	EventType       string `yaml:"event_type"`
 	CommentTemplate string `yaml:"comment_template"`
 	RegexString     string `yaml:"regex_string"`
 	Label           string `yaml:"label"`
 }
 
-type webhookEventMaps []webhookEventMap
+type configFile struct {
+	Prefixes      []commandPrefix `yaml:"prefixes"`
+	WebhookEvents []webhookEvent  `yaml:"events"`
+}
 
 func main() {
 	log.SetFlags(log.Ltime | log.Lshortfile)
@@ -57,16 +63,12 @@ func main() {
 	app.Flag("webhooksecretfile", "path to webhook secret file").
 		Default("./whsecret").
 		StringVar(&cmConfig.whSecretFilePath)
-	app.Flag("no-verify-user", "disable verifying user").
-		BoolVar(&cmConfig.verifyUserDisabled)
-	app.Flag("eventmap", "Filepath to eventmap file.").
-		Default("./eventmap.yml").
-		StringVar(&cmConfig.eventMapFilePath)
+	app.Flag("config", "Filepath to config file.").
+		Default("./config.yml").
+		StringVar(&cmConfig.configFilePath)
 	app.Flag("port", "port number to run webhook in.").
 		Default("8080").
 		StringVar(&cmConfig.port)
-	app.Flag("command-prefix", `Specify allowed command prefix. Eg."/prombench" `).
-		StringsVar(&cmConfig.commandPrefixes)
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	mux := http.NewServeMux()
@@ -76,17 +78,17 @@ func main() {
 }
 
 func (c *commentMonitorConfig) loadConfig() error {
-	// Get eventmap file.
-	data, err := ioutil.ReadFile(c.eventMapFilePath)
+	// Get config file.
+	data, err := ioutil.ReadFile(c.configFilePath)
 	if err != nil {
 		return err
 	}
-	err = yaml.UnmarshalStrict(data, &c.eventMap)
+	err = yaml.UnmarshalStrict(data, &c.configFile)
 	if err != nil {
 		return fmt.Errorf("cannot unmarshal data: %v", err)
 	}
-	if len(c.eventMap) == 0 {
-		return fmt.Errorf("eventmap empty")
+	if len(c.configFile.WebhookEvents) == 0 || len(c.configFile.Prefixes) == 0 {
+		return fmt.Errorf("empty eventmap or prefix list")
 	}
 	// Get webhook secret.
 	c.whSecret, err = ioutil.ReadFile(c.whSecretFilePath)
@@ -103,15 +105,6 @@ func extractCommand(s string) string {
 	}
 	s = strings.TrimRight(s, "\r\n\t ")
 	return s
-}
-
-func checkCommandPrefix(command string, prefixes []string) bool {
-	for _, p := range prefixes {
-		if strings.HasPrefix(command, p) {
-			return true
-		}
-	}
-	return false
 }
 
 func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Request) {
@@ -136,7 +129,8 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 	// Setup commentMonitor client.
 	cmClient := commentMonitorClient{
 		allArgs:  make(map[string]string),
-		eventMap: c.eventMap,
+		events:   c.configFile.WebhookEvents,
+		prefixes: c.configFile.Prefixes,
 	}
 
 	// Parse webhook event.
@@ -150,6 +144,11 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 	switch e := event.(type) {
 	case *github.IssueCommentEvent:
 
+		if *e.Action != "created" {
+			http.Error(w, "issue_comment type must be 'created'", http.StatusOK)
+			return
+		}
+
 		// Setup github client.
 		ctx := context.Background()
 		cmClient.ghClient, err = newGithubClient(ctx, e)
@@ -162,8 +161,8 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		// Strip whitespace.
 		command := extractCommand(cmClient.ghClient.commentBody)
 
-		// test-infra command check.
-		if !checkCommandPrefix(command, c.commandPrefixes) {
+		// Command check.
+		if !cmClient.checkCommandPrefix(command) {
 			http.Error(w, "comment validation failed", http.StatusOK)
 			return
 		}
@@ -171,15 +170,18 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		// Validate regex.
 		if !cmClient.validateRegex(command) {
 			log.Println("invalid command syntax: ", command)
-			if err := cmClient.ghClient.postComment("command syntax invalid"); err != nil {
-				log.Printf("%v : couldn't post comment", err)
+			err = cmClient.generateAndPostErrorComment()
+			if err != nil {
+				log.Println(err)
+				http.Error(w, "could not post comment to GitHub", http.StatusBadRequest)
+				return
 			}
 			http.Error(w, "command syntax invalid", http.StatusBadRequest)
 			return
 		}
 
 		// Verify user.
-		err = cmClient.verifyUser(c.verifyUserDisabled)
+		err = cmClient.verifyUser()
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "user not allowed to run command", http.StatusForbidden)
@@ -195,7 +197,7 @@ func (c *commentMonitorConfig) webhookExtract(w http.ResponseWriter, r *http.Req
 		}
 
 		// Post generated comment to GitHub pr.
-		err = cmClient.generateAndPostComment()
+		err = cmClient.generateAndPostSuccessComment()
 		if err != nil {
 			log.Println(err)
 			http.Error(w, "could not post comment to GitHub", http.StatusBadRequest)
