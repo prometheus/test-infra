@@ -26,10 +26,13 @@ spec:
       nodeSelector:
         node-name: main-node
       containers:
-      - image: quay.io/prometheus/node-exporter:v0.16.0
+      - image: quay.io/prometheus/node-exporter:v1.0.1
         args:
         - "--path.procfs=/host/proc"
         - "--path.sysfs=/host/sys"
+        - "--path.rootfs=/host/root"
+        - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|run|home)($|/)"
+        - "--collector.diskstats.ignored-devices=^(ram|loop|fd|(h|s|v|xv)d[a-z]|nvme\\d+n\\d+p)\\d+$"
         name: node-exporter
         ports:
         - containerPort: 9100
@@ -42,6 +45,9 @@ spec:
         - name: sys
           readOnly: true
           mountPath: /host/sys
+        - name: root
+          mountPath: /host/root
+          readOnly: true
       tolerations:
       - effect: NoSchedule
         operator: Exists
@@ -52,6 +58,9 @@ spec:
       - name: sys
         hostPath:
           path: /sys
+      - name: root
+        hostPath:
+          path: /
 ---
 apiVersion: v1
 kind: Service
