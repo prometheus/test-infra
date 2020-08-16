@@ -109,8 +109,6 @@ func (c *EKS) NewEKSClient(*kingpin.ParseContext) error {
 		return errors.Wrap(err, "could not get credential values")
 	}
 
-	fmt.Print("drumil", credValue)
-
 	cl := eks.New(awsSession.Must(awsSession.NewSession()), &aws.Config{
 		Credentials: credentials.NewStaticCredentialsFromCreds(*credValue),
 		Region:      aws.String(c.DeploymentVars["ZONE"]),
