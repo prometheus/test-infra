@@ -31,7 +31,7 @@ spec:
         - "--path.procfs=/host/proc"
         - "--path.sysfs=/host/sys"
         - "--path.rootfs=/host/root"
-        - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|run|home)($|/)"
+        - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|run|home|tmp)($|/)"
         - "--collector.diskstats.ignored-devices=^(ram|loop|fd|(h|s|v|xv)d[a-z]|nvme\\d+n\\d+p)\\d+$"
         name: node-exporter
         ports:
