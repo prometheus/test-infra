@@ -19,6 +19,7 @@ Prombench can be run on various providers, following are the provider specific i
     
 - Instructions for [Google Kubernetes Engine](docs/gke.md)
 - Instructions for [Kubernetes In Docker](docs/kind.md)
+- Instructions for [Elastic Kubernetes Service](docs/eks.md)
 
 ## Setup GitHub Actions
 
