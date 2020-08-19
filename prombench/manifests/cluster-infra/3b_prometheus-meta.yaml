@@ -201,7 +201,7 @@ spec:
       securityContext:
         runAsUser: 0
       containers:
-      - image: quay.io/prometheus/prometheus:v2.10.0
+      - image: quay.io/prometheus/prometheus:v2.20.0
         args:
         - "--config.file=/etc/prometheus/config/prometheus.yaml"
         - "--storage.tsdb.path=/data"

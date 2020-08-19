@@ -57,7 +57,6 @@ Flags:
                                and --help-man).
       --webhooksecretfile="./whsecret"
                                path to webhook secret file
-      --no-verify-user         disable verifying user
       --config="./config.yml"  Filepath to config file.
       --port="8080"            port number to run webhook in.
 

@@ -1,5 +1,5 @@
 zone: {{ .ZONE }}
-projectid: {{ .PROJECT_ID }}
+projectid: {{ .GKE_PROJECT_ID }}
 cluster:
   name: {{ .CLUSTER_NAME }}
   nodepools:

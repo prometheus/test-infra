@@ -40,7 +40,7 @@ type Benchmarker struct {
 	repo *git.Repository
 }
 
-func newBenchmarker(logger Logger, env Environment, c *commander, benchTime time.Duration, benchTimeout time.Duration, resultCacheDir string) *Benchmarker {
+func newBenchmarker(logger Logger, env Environment, c *commander, benchTime time.Duration, benchTimeout time.Duration, resultCacheDir, packagePath string) *Benchmarker {
 	return &Benchmarker{
 		logger:    logger,
 		benchFunc: env.BenchFunc(),
@@ -49,12 +49,12 @@ func newBenchmarker(logger Logger, env Environment, c *commander, benchTime time
 			// 'go test' flags: https://golang.org/cmd/go/#hdr-Testing_flags
 			"go test",
 			"-mod", "vendor",
-			"-run", "^$",
-			"-bench", fmt.Sprintf("^%s$", env.BenchFunc()),
+			"-run", `"^$"`,
+			"-bench", fmt.Sprintf(`"^%s$"`, env.BenchFunc()),
 			"-benchmem",
 			"-benchtime", benchTime.String(),
 			"-timeout", benchTimeout.String(),
-			"./...",
+			packagePath,
 		},
 		c:              c,
 		repo:           env.Repo(),
