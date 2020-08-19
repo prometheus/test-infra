@@ -196,7 +196,7 @@ func (c *GKE) K8SDeploymentsParse(*kingpin.ParseContext) error {
 
 // checkDeploymentVarsAndFiles checks whether the requied deployment vars are passed.
 func (c *GKE) checkDeploymentVarsAndFiles() error {
-	reqDepVars := []string{"PROJECT_ID", "ZONE", "CLUSTER_NAME"}
+	reqDepVars := []string{"GKE_PROJECT_ID", "ZONE", "CLUSTER_NAME"}
 	for _, k := range reqDepVars {
 		if v, ok := c.DeploymentVars[k]; !ok || v == "" {
 			return fmt.Errorf("missing required %v variable", k)
@@ -518,7 +518,7 @@ func (c *GKE) AllNodepoolsDeleted(*kingpin.ParseContext) error {
 func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 	// Get the authentication certificate for the cluster using the GKE client.
 	req := &containerpb.GetClusterRequest{
-		ProjectId: c.DeploymentVars["PROJECT_ID"],
+		ProjectId: c.DeploymentVars["GKE_PROJECT_ID"],
 		Zone:      c.DeploymentVars["ZONE"],
 		ClusterId: c.DeploymentVars["CLUSTER_NAME"],
 	}

@@ -60,26 +60,26 @@ func main() {
 		Action(g.ClusterDelete)
 
 	// Cluster node-pool operations
-	k8sGKENodePool := k8sGKE.Command("nodepool", "manage GKE clusters nodepools").
+	k8sGKENodePool := k8sGKE.Command("nodes", "manage GKE clusters nodepools").
 		Action(g.NewGKEClient).
 		Action(g.GKEDeploymentsParse)
-	k8sGKENodePool.Command("create", "gke nodepool create -a service-account.json -f FileOrFolder").
+	k8sGKENodePool.Command("create", "gke nodes create -a service-account.json -f FileOrFolder").
 		Action(g.NodePoolCreate)
-	k8sGKENodePool.Command("delete", "gke nodepool delete -a service-account.json -f FileOrFolder").
+	k8sGKENodePool.Command("delete", "gke nodes delete -a service-account.json -f FileOrFolder").
 		Action(g.NodePoolDelete)
-	k8sGKENodePool.Command("check-running", "gke nodepool check-running -a service-account.json -f FileOrFolder").
+	k8sGKENodePool.Command("check-running", "gke nodes check-running -a service-account.json -f FileOrFolder").
 		Action(g.AllNodepoolsRunning)
-	k8sGKENodePool.Command("check-deleted", "gke nodepool check-deleted -a service-account.json -f FileOrFolder").
+	k8sGKENodePool.Command("check-deleted", "gke nodes check-deleted -a service-account.json -f FileOrFolder").
 		Action(g.AllNodepoolsDeleted)
 
 	// K8s resource operations.
-	k8sGKEResource := k8sGKE.Command("resource", `Apply and delete different k8s resources - deployments, services, config maps etc.Required variables -v PROJECT_ID, -v ZONE: -west1-b -v CLUSTER_NAME`).
+	k8sGKEResource := k8sGKE.Command("resource", `Apply and delete different k8s resources - deployments, services, config maps etc.Required variables -v GKE_PROJECT_ID, -v ZONE: -west1-b -v CLUSTER_NAME`).
 		Action(g.NewGKEClient).
 		Action(g.K8SDeploymentsParse).
 		Action(g.NewK8sProvider)
-	k8sGKEResource.Command("apply", "gke resource apply -a service-account.json -f manifestsFileOrFolder -v PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+	k8sGKEResource.Command("apply", "gke resource apply -a service-account.json -f manifestsFileOrFolder -v GKE_PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(g.ResourceApply)
-	k8sGKEResource.Command("delete", "gke resource delete -a service-account.json -f manifestsFileOrFolder -v PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+	k8sGKEResource.Command("delete", "gke resource delete -a service-account.json -f manifestsFileOrFolder -v GKE_PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(g.ResourceDelete)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {

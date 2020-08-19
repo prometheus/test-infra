@@ -1,4 +1,4 @@
-projectid: {{ .PROJECT_ID }}
+projectid: {{ .GKE_PROJECT_ID }}
 zone: {{ .ZONE }}
 cluster:
   name: {{ .CLUSTER_NAME }}
