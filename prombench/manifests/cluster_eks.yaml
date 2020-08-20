@@ -1,19 +1,19 @@
 cluster:
   name: {{ .CLUSTER_NAME }}
   version: 1.14
-  rolearn: {{ .ROLE_ARN }}
+  rolearn: {{ .EKS_CLUSTER_ROLE_ARN }}
   resourcesvpcconfig:
     endpointpublicaccess: true
     subnetids:
-      {{ range $subnetId := split .SUBNET_IDS .SEPARATOR }}
+      {{ range $subnetId := split .EKS_SUBNET_IDS .SEPARATOR }}
       - {{ $subnetId }}
       {{ end }}
 nodegroups:
   - nodegroupname: main-node
-    noderole: {{ .NODE_ROLE }}
+    noderole: {{ .EKS_WORKER_ROLE_ARN }}
     disksize: 300
     subnets:
-      {{ range $subnetId := split .SUBNET_IDS .SEPARATOR }}
+      {{ range $subnetId := split .EKS_SUBNET_IDS .SEPARATOR }}
       - {{ $subnetId }}
       {{ end }}
     instancetypes:

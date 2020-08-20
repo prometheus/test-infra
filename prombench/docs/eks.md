@@ -64,7 +64,7 @@ export GITHUB_REPO=prometheus
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Loki, Grafana, Alertmanager & Github Notifier.
 
 ```
-../infra/infra eks resource apply -a $AUTH_FILE -v REGION:$REGION \
+../infra/infra eks resource apply -a $AUTH_FILE -v ZONE:$ZONE \
     -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
     -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
     -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
@@ -98,7 +98,7 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 
 ```
 ../infra/infra eks nodegroups create -a $AUTH_FILE \
-    -v REGION:$REGION -v NODE_ROLE:$NODE_ROLE -v ROLE_ARN:$ROLE_ARN -v SUBNET_IDS:$SUBNET_IDS -v SEPARATOR:$SEPARATOR -v CLUSTER_NAME:$CLUSTER_NAME \
+    -v ZONE:$ZONE -v NODE_ROLE:$NODE_ROLE -v ROLE_ARN:$ROLE_ARN -v SUBNET_IDS:$SUBNET_IDS -v SEPARATOR:$SEPARATOR -v CLUSTER_NAME:$CLUSTER_NAME \
     -v PR_NUMBER:$PR_NUMBER -f manifests/prombench/nodepools_eks.yaml
 ```
 
@@ -106,7 +106,7 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 
 ```
 ../infra/infra eks resource apply -a $AUTH_FILE \
-    -v REGION:$REGION -v CLUSTER_NAME:$CLUSTER_NAME \
+    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME \
     -v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v DOMAIN_NAME:$DOMAIN_NAME \
     -v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
     -f manifests/prombench/benchmark

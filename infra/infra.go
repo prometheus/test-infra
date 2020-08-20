@@ -111,7 +111,7 @@ func main() {
 	// EKS based commands
 	e := eks.New(dr)
 	k8sEKS := app.Command("eks", "Amazon Elastic Kubernetes Service - https://aws.amazon.com/eks").
-		Action(e.NewEKSClient)
+		Action(e.SetupDeploymentResources)
 	k8sEKS.Flag("auth", "filename which consist eks credentials.").
 		PlaceHolder("credentials").
 		Short('a').
@@ -122,6 +122,7 @@ func main() {
 
 	// EKS Cluster operations
 	k8sEKSCluster := k8sEKS.Command("cluster", "manage EKS clusters").
+		Action(e.NewEKSClient).
 		Action(e.EKSDeploymentParse)
 	k8sEKSCluster.Command("create", "eks cluster create -a credentials -f FileOrFolder").
 		Action(e.ClusterCreate)
@@ -142,7 +143,8 @@ func main() {
 		Action(e.AllNodeGroupsDeleted)
 
 	// K8s resource operations.
-	k8sEKSResource := k8sEKS.Command("resource", `Apply and delete different k8s resources - deployments, services, config maps etc.Required variables -v REGION:europe-west1-b -v CLUSTER_NAME:test `).
+	k8sEKSResource := k8sEKS.Command("resource", `Apply and delete different k8s resources - deployments, services, config maps etc.Required variables -v ZONE:us-east-2 -v CLUSTER_NAME:test `).
+		Action(e.NewEKSClient).
 		Action(e.NewK8sProvider).
 		Action(e.K8SDeploymentsParse)
 	k8sEKSResource.Command("apply", "eks resource apply -a credentials -f manifestsFileOrFolder -v hashStable:COMMIT1 -v hashTesting:COMMIT2").

@@ -171,7 +171,7 @@ func (c *EKS) K8SDeploymentsParse(*kingpin.ParseContext) error {
 		log.Fatalf("Couldn't parse deployment files: %v", err)
 	}
 
-	for _, deployment := range deploymentResource {
+	for name, deployment := range deploymentResource {
 
 		decode := scheme.Codecs.UniversalDeserializer().Decode
 		k8sObjects := make([]runtime.Object, 0)
@@ -183,6 +183,9 @@ func (c *EKS) K8SDeploymentsParse(*kingpin.ParseContext) error {
 			}
 
 			resource, _, err := decode([]byte(text), nil, nil)
+			// DEBUG
+			fmt.Print(name)
+
 			if err != nil {
 				return errors.Wrapf(err, "decoding the resource file:%v, section:%v...", deployment.FileName, text[:100])
 			}
