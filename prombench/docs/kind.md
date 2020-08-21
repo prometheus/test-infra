@@ -3,7 +3,7 @@
 Run prombench tests in [Kubernetes In Docker](https://kind.sigs.k8s.io/).
 
 ## Setup prombench
-
+1. [Install KIND](https://kind.sigs.k8s.io/docs/user/quick-start/)
 1. [Create the KIND cluster](#create-the-kind-cluster)
 2. [Deploy monitoring components](#deploy-monitoring-components)
 

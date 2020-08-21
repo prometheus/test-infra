@@ -18,6 +18,7 @@ The `/manifest` directory contains all the kubernetes manifest files.
 Prombench can be run on various providers, following are the provider specific instructions:
     
 - Instructions for [Google Kubernetes Engine](docs/gke.md)
+- Instructions for [Kubernetes In Docker](docs/kind.md)
 
 ## Setup GitHub Actions
 
