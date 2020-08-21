@@ -89,3 +89,10 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
     -v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
     -f manifests/prombench/benchmark
 ```
+
+### Deleting benchmark infra
+
+```
+../infra/infra kind cluster delete -v PR_NUMBER:$PR_NUMBER -v CLUSTER_NAME:$CLUSTER_NAME \    
+    -f manifests/cluster_kind.yaml
+```
