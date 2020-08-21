@@ -82,8 +82,6 @@ export GITHUB_REPO=prometheus
 
 ## Usage
 
----
-
 ### Start a benchmarking test manually
 ---
 
@@ -97,9 +95,9 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 - Create the nodegroups for the k8s objects
 
 ```
-../infra/infra eks nodegroups create -a $AUTH_FILE \
-    -v ZONE:$ZONE -v NODE_ROLE:$NODE_ROLE -v ROLE_ARN:$ROLE_ARN -v SUBNET_IDS:$SUBNET_IDS -v SEPARATOR:$SEPARATOR -v CLUSTER_NAME:$CLUSTER_NAME \
-    -v PR_NUMBER:$PR_NUMBER -f manifests/prombench/nodepools_eks.yaml
+../infra/infra eks nodes create -a $AUTH_FILE \
+    -v ZONE:$ZONE -v EKS_WORKER_ROLE_ARN:$EKS_WORKER_ROLE_ARN -v EKS_CLUSTER_ROLE_ARN:$EKS_CLUSTER_ROLE_ARN -v EKS_SUBNET_IDS:$EKS_SUBNET_IDS -v CLUSTER_NAME:$CLUSTER_NAME \
+    -v PR_NUMBER:$PR_NUMBER -f manifests/prombench/nodes_eks.yaml
 ```
 
 - Deploy the k8s objects

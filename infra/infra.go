@@ -145,8 +145,8 @@ func main() {
 	// K8s resource operations.
 	k8sEKSResource := k8sEKS.Command("resource", `Apply and delete different k8s resources - deployments, services, config maps etc.Required variables -v ZONE:us-east-2 -v CLUSTER_NAME:test `).
 		Action(e.NewEKSClient).
-		Action(e.NewK8sProvider).
-		Action(e.K8SDeploymentsParse)
+		Action(e.K8SDeploymentsParse).
+		Action(e.NewK8sProvider)
 	k8sEKSResource.Command("apply", "eks resource apply -a credentials -f manifestsFileOrFolder -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(e.ResourceApply)
 	k8sEKSResource.Command("delete", "eks resource delete -a credentials -f manifestsFileOrFolder -v hashStable:COMMIT1 -v hashTesting:COMMIT2").

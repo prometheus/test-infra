@@ -25,7 +25,7 @@ nodegroups:
       - {{ $subnetId }}
       {{ end }}
     instancetypes:
-      - c6g.4xlarge
+      - c5.4xlarge
     scalingconfig:
       desiredsize: 1
       maxsize: 1
