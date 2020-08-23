@@ -20,9 +20,7 @@ secretaccesskey: <Amazon access secret>
 - Create a [Amazon EKS cluster role](https://docs.aws.amazon.com/eks/latest/userguide/service_IAM_role.html) with following policies:
     - AmazonEKSclusterPolicy 
 - Create a [Amazon EKS worker node role](https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html) with following policies:
-    - AmazonEKSWorkerNodePolicy
-    - AmazonEKS_CNI_Policy
-    - AmazonEC2ContainerRegistryReadOnly
+    - AmazonEKSWorkerNodePolicy, AmazonEKS_CNI_Policy, AmazonEC2ContainerRegistryReadOnly
 - Set the following environment variables and deploy the cluster.
 
 ```shell
@@ -37,7 +35,9 @@ export SEPARATOR=,
 export EKS_SUBNET_IDS=SUBNETID1,SUBNETID2,SUBNETID3
 
 ../infra/infra eks cluster create -a $AUTH_FILE -v ZONE:$ZONE \
-    -v EKS_WORKER_ROLE_ARN:$EKS_WORKER_ROLE_ARN -v EKS_CLUSTER_ROLE_ARN:$EKS_CLUSTER_ROLE_ARN -v EKS_SUBNET_IDS:$EKS_SUBNET_IDS -v CLUSTER_NAME:$CLUSTER_NAME \
+    -v EKS_WORKER_ROLE_ARN:$EKS_WORKER_ROLE_ARN -v EKS_CLUSTER_ROLE_ARN:$EKS_CLUSTER_ROLE_ARN \
+    -v EKS_SUBNET_IDS:$EKS_SUBNET_IDS \
+    -v CLUSTER_NAME:$CLUSTER_NAME \
     -f manifests/cluster_eks.yaml
 ```
 
@@ -52,7 +52,7 @@ export EKS_SUBNET_IDS=SUBNETID1,SUBNETID2,SUBNETID3
   - Login with the [Prombot account](https://github.com/prombot) and generate a [new auth token](https://github.com/settings/tokens).
   - With permissions: `public_repo`, `read:org`, `write:discussion`.
 
-```
+```shell
 export GRAFANA_ADMIN_PASSWORD=password
 export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom domain or an empty string when not used with the Github integration.
 export OAUTH_TOKEN=<generated token from github or set to an empty string " ">
@@ -63,7 +63,7 @@ export GITHUB_REPO=prometheus
 
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Loki, Grafana, Alertmanager & Github Notifier.
 
-```
+```shell
 ../infra/infra eks resource apply -a $AUTH_FILE -v ZONE:$ZONE \
     -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
     -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
@@ -87,22 +87,24 @@ export GITHUB_REPO=prometheus
 
 - Set the following environment variables.
 
-```
+```shell
 export RELEASE=<master or any prometheus release(ex: v2.3.0) >
 export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 ```
 
 - Create the nodegroups for the k8s objects
 
-```
+```shell
 ../infra/infra eks nodes create -a $AUTH_FILE \
-    -v ZONE:$ZONE -v EKS_WORKER_ROLE_ARN:$EKS_WORKER_ROLE_ARN -v EKS_CLUSTER_ROLE_ARN:$EKS_CLUSTER_ROLE_ARN -v EKS_SUBNET_IDS:$EKS_SUBNET_IDS -v CLUSTER_NAME:$CLUSTER_NAME \
+    -v ZONE:$ZONE -v EKS_WORKER_ROLE_ARN:$EKS_WORKER_ROLE_ARN -v EKS_CLUSTER_ROLE_ARN:$EKS_CLUSTER_ROLE_ARN \
+    -v EKS_SUBNET_IDS:$EKS_SUBNET_IDS \
+    -v CLUSTER_NAME:$CLUSTER_NAME \
     -v PR_NUMBER:$PR_NUMBER -f manifests/prombench/nodes_eks.yaml
 ```
 
 - Deploy the k8s objects
 
-```
+```shell
 ../infra/infra eks resource apply -a $AUTH_FILE \
     -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME \
     -v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v DOMAIN_NAME:$DOMAIN_NAME \
