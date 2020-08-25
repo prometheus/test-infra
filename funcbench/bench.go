@@ -114,7 +114,9 @@ func (b *Benchmarker) compareSubBenchmarks(string) ([]*benchstat.Table, error) {
 }
 
 func compareBenchmarks(files ...string) ([]*benchstat.Table, error) {
-	c := &benchstat.Collection{}
+	c := &benchstat.Collection{
+		DeltaTest: benchstat.NoDeltaTest,
+	}
 
 	for _, file := range files {
 		f, err := os.Open(file)
