@@ -45,8 +45,6 @@ type DeploymentResource struct {
 	FlagDeploymentVars map[string]string
 	// Default DeploymentVars.
 	DefaultDeploymentVars map[string]string
-	// Dashboards
-	Dashboards map[string]string
 }
 
 // NewDeploymentResource returns DeploymentResource with default values.
@@ -171,11 +169,11 @@ func CreateGrafanaDashboardsConfigMap() error {
 
 	NodeMetrics, err := ioutil.ReadFile("manifests/dashboards/node-metrics.json")
 	if err != nil {
-		return nil
+		return err
 	}
 	PromBench, err := ioutil.ReadFile("manifests/dashboards/prombench.json")
 	if err != nil {
-		return nil
+		return err
 	}
 
 	ConfigMapData := map[string]string{
@@ -196,7 +194,7 @@ func CreateGrafanaDashboardsConfigMap() error {
 
 	_, err = clientset.CoreV1().ConfigMaps("default").Create(context.TODO(), &newConfigMap, metav1.CreateOptions{})
 	if err != nil {
-		return nil
+		return err
 	}
 
 	log.Printf("resource created - kind: ConfigMap, name: grafana-dashboards")
