@@ -222,6 +222,7 @@ func (c *EKS) K8SDeploymentsParse(*kingpin.ParseContext) error {
 	return nil
 }
 
+// listdownSubnetIds lists all subnet ids for given cluster name, if vpc for given cluster does not exists it creates vpc with given configuration.
 func (c *EKS) listdownSubnetIds(clusterName string) ([]string, error) {
 	subnetIds, err := c.showSubnetIds(clusterName)
 
@@ -342,6 +343,7 @@ func (c *EKS) stackDeleted(name string) (bool, error) {
 	return false, nil
 }
 
+// showSubnetIds returns all subnet ids for given cluster configuration.
 func (c *EKS) showSubnetIds(clusterName string) ([]string, error) {
 	stackName := fmt.Sprintf("%s-vpc", clusterName)
 	req := &cloudFormation.DescribeStacksInput{

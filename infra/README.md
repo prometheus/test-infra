@@ -52,12 +52,12 @@ Commands:
 
   gke resource apply
     gke resource apply -a service-account.json -f manifestsFileOrFolder -v
-    PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
+    GKE_PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
     hashStable:COMMIT1 -v hashTesting:COMMIT2
 
   gke resource delete
     gke resource delete -a service-account.json -f manifestsFileOrFolder -v
-    PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
+    GKE_PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
     hashStable:COMMIT1 -v hashTesting:COMMIT2
 
   kind info
@@ -105,7 +105,7 @@ Commands:
     CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3
 
   eks resource apply
-    eks resource apply -a authFile -f manifestsFileOrFolder -v
+    eks resource apply -a credentials -f manifestsFileOrFolder -v
     hashStable:COMMIT1 -v hashTesting:COMMIT2
 
   eks resource delete
