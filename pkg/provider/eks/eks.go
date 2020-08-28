@@ -160,6 +160,19 @@ func (c *EKS) EKSDeploymentParse(*kingpin.ParseContext) error {
 		return err
 	}
 
+	subnetIds, err := c.listdownSubnetIds(c.DeploymentVars["CLUSTER_NAME"])
+
+	if err != nil {
+		log.Fatalf("Error in listing down subnets: %v", err)
+	}
+
+	c.DeploymentVars = provider.MergeDeploymentVars(
+		c.DeploymentVars,
+		map[string]string{
+			"EKS_SUBNET_IDS": strings.Join(subnetIds, c.DeploymentVars["SEPARATOR"]),
+		},
+	)
+
 	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
 	if err != nil {
 		return fmt.Errorf("Couldn't parse deployment files: %v", err)
@@ -209,14 +222,32 @@ func (c *EKS) K8SDeploymentsParse(*kingpin.ParseContext) error {
 	return nil
 }
 
-// StackCreate creates a new vpc and prints desired subnetIds.
-func (c *EKS) StackCreate(*kingpin.ParseContext) error {
-	stackName := fmt.Sprintf("%s-vpc", c.DeploymentVars["CLUSTER_NAME"])
+func (c *EKS) listdownSubnetIds(clusterName string) ([]string, error) {
+	subnetIds, err := c.showSubnetIds(clusterName)
+
+	if err != nil {
+		return []string{}, err
+	}
+
+	if len(subnetIds) == 0 {
+		subnetIds, err = c.createStack(clusterName)
+		if err != nil {
+			return []string{}, err
+		}
+	}
+
+	return subnetIds, err
+}
+
+// createStack creates a new vpc and prints desired subnetIds.
+func (c *EKS) createStack(clusterName string) ([]string, error) {
+	stackName := fmt.Sprintf("%s-vpc", clusterName)
 	req := &cloudFormation.CreateStackInput{
-		StackName: aws.String(stackName),
+		TemplateURL: aws.String("https://amazon-eks.s3.us-west-2.amazonaws.com/cloudformation/2020-07-23/amazon-eks-vpc-sample.yaml"),
+		StackName:   aws.String(stackName),
 		Tags: []*cloudFormation.Tag{
 			{
-				Key:   aws.String(fmt.Sprintf("kubernetes.io/cluster/%s", c.DeploymentVars["CLUSTER_NAME"])),
+				Key:   aws.String(fmt.Sprintf("kubernetes.io/cluster/%s", clusterName)),
 				Value: aws.String("shared"),
 			},
 		},
@@ -226,33 +257,25 @@ func (c *EKS) StackCreate(*kingpin.ParseContext) error {
 
 	_, err := c.clientCF.CreateStack(req)
 	if err != nil {
-		log.Fatalf("Couldn't create stack '%s' ,err: %s", *req.StackName, err)
+		return nil, fmt.Errorf("Couldn't create stack '%s' ,err: %s", *req.StackName, err)
 	}
 
 	err = provider.RetryUntilTrue(
 		fmt.Sprintf("creating stack:%v", *req.StackName),
 		provider.GlobalRetryCount,
-		func() (bool, error) { return c.clusterRunning(*req.StackName) },
+		func() (bool, error) { return c.stackCreated(*req.StackName) },
 	)
 
 	if err != nil {
-		log.Fatalf("creating cluster err:%v", err)
+		return nil, fmt.Errorf("creating stack err:%v", err)
 	}
 
-	subnetIds, err := c.showSubnetIds(*req.StackName)
-
-	if err != nil {
-		log.Fatalf("error in displaying subnetIds, err:%v", err)
-	}
-
-	fmt.Printf("SubnetIds with defined separator is as follows: %s", strings.Join(subnetIds, c.DeploymentVars["SEPARATOR"]))
-
-	return nil
+	return c.showSubnetIds(clusterName)
 }
 
-// StackDelete deletes vpc stack.
-func (c *EKS) StackDelete(*kingpin.ParseContext) error {
-	stackName := fmt.Sprintf("%s-vpc", c.DeploymentVars["CLUSTER_NAME"])
+// deleteStack deletes vpc stack.
+func (c *EKS) deleteStack(clusterName string) error {
+	stackName := fmt.Sprintf("%s-vpc", clusterName)
 	req := &cloudFormation.DeleteStackInput{
 		StackName: aws.String(stackName),
 	}
@@ -261,7 +284,7 @@ func (c *EKS) StackDelete(*kingpin.ParseContext) error {
 
 	_, err := c.clientCF.DeleteStack(req)
 	if err != nil {
-		log.Fatalf("Couldn't delete stack '%s' ,err: %s", *req.StackName, err)
+		return fmt.Errorf("Couldn't delete stack '%s' ,err: %s", *req.StackName, err)
 	}
 
 	err = provider.RetryUntilTrue(
@@ -271,7 +294,7 @@ func (c *EKS) StackDelete(*kingpin.ParseContext) error {
 	)
 
 	if err != nil {
-		log.Fatalf("deleting stack err:%v", err)
+		return fmt.Errorf("deleting stack err:%v", err)
 	}
 
 	return nil
@@ -302,27 +325,34 @@ func (c *EKS) stackDeleted(name string) (bool, error) {
 		StackName: aws.String(name),
 	}
 	stackRes, err := c.clientCF.DescribeStacks(req)
+
+	if err.(awserr.Error).Code() == "ValidationError" {
+		return true, nil
+	}
+
 	if err != nil {
 		return false, fmt.Errorf("Couldn't get stack status: %v", err)
 	}
+
 	if *stackRes.Stacks[0].StackStatus == cloudFormation.StackStatusDeleteFailed {
 		return false, fmt.Errorf("Stack delete failed - %s", *stackRes.Stacks[0].StackStatus)
 	}
-	if len(stackRes.Stacks) == 0 {
-		return true, nil
-	}
+
 	log.Printf("Stack '%s' status: %s", name, *stackRes.Stacks[0].StackStatus)
 	return false, nil
 }
 
-func (c *EKS) showSubnetIds(name string) ([]string, error) {
+func (c *EKS) showSubnetIds(clusterName string) ([]string, error) {
+	stackName := fmt.Sprintf("%s-vpc", clusterName)
 	req := &cloudFormation.DescribeStacksInput{
-		StackName: aws.String(name),
+		StackName: aws.String(stackName),
 	}
 	stackRes, err := c.clientCF.DescribeStacks(req)
 
-	if err != nil {
-		return []string{}, err
+	if awsErr, ok := err.(awserr.Error); ok {
+		if awsErr.Code() != "ValidationError" {
+			return []string{}, awsErr
+		}
 	}
 
 	for _, stack := range stackRes.Stacks {
@@ -456,6 +486,13 @@ func (c *EKS) ClusterDelete(*kingpin.ParseContext) error {
 
 		if err != nil {
 			return fmt.Errorf("removing cluster err:%v", err)
+		}
+
+		log.Printf("Removing subnets related to cluster '%s'", *req.Cluster.Name)
+		err = c.deleteStack(*req.Cluster.Name)
+
+		if err != nil {
+			log.Fatalf("removing cluster's subnets err:%v", err)
 		}
 	}
 	return nil
