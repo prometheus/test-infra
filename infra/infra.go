@@ -133,13 +133,13 @@ func main() {
 	k8sEKSNodeGroup := k8sEKS.Command("nodes", "manage EKS clusters nodegroups").
 		Action(e.NewEKSClient).
 		Action(e.EKSDeploymentParse)
-	k8sEKSNodeGroup.Command("create", "eks nodes create -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3").
+	k8sEKSNodeGroup.Command("create", "eks nodes create -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v CLUSTER_NAME:test").
 		Action(e.NodeGroupCreate)
-	k8sEKSNodeGroup.Command("delete", "eks nodes delete -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3").
+	k8sEKSNodeGroup.Command("delete", "eks nodes delete -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v CLUSTER_NAME:test").
 		Action(e.NodeGroupDelete)
-	k8sEKSNodeGroup.Command("check-running", "eks nodes check-running -a credentails -f FileOrFolder -v ZONE:eu-west-1 -v CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3").
+	k8sEKSNodeGroup.Command("check-running", "eks nodes check-running -a credentails -f FileOrFolder -v ZONE:eu-west-1 -v CLUSTER_NAME:test").
 		Action(e.AllNodeGroupsRunning)
-	k8sEKSNodeGroup.Command("check-deleted", "eks nodes check-deleted -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3").
+	k8sEKSNodeGroup.Command("check-deleted", "eks nodes check-deleted -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v CLUSTER_NAME:test").
 		Action(e.AllNodeGroupsDeleted)
 
 	// K8s resource operations.

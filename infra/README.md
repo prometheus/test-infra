@@ -90,19 +90,19 @@ Commands:
 
   eks nodes create
     eks nodes create -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v
-    CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3
+    CLUSTER_NAME:test
 
   eks nodes delete
     eks nodes delete -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v
-    CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3
+    CLUSTER_NAME:test
 
   eks nodes check-running
     eks nodes check-running -a credentails -f FileOrFolder -v ZONE:eu-west-1 -v
-    CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3
+    CLUSTER_NAME:test
 
   eks nodes check-deleted
     eks nodes check-deleted -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v
-    CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3
+    CLUSTER_NAME:test
 
   eks resource apply
     eks resource apply -a credentials -f manifestsFileOrFolder -v
