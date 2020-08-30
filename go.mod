@@ -8,11 +8,11 @@ require (
 	github.com/go-git/go-git/v5 v5.1.0
 	github.com/google/go-github/v29 v29.0.3
 	github.com/googleapis/gnostic v0.2.0 // indirect
-	github.com/oklog/run v1.0.0
-	github.com/pkg/errors v0.8.1
-	github.com/prometheus/alertmanager v0.18.0
-	github.com/prometheus/client_golang v1.0.0
-	github.com/prometheus/common v0.4.1
+	github.com/oklog/run v1.1.0
+	github.com/pkg/errors v0.9.1
+	github.com/prometheus/alertmanager v0.21.0
+	github.com/prometheus/client_golang v1.6.0
+	github.com/prometheus/common v0.10.0
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/perf v0.0.0-20200318175901-9c9101da8316
 	google.golang.org/api v0.27.0
