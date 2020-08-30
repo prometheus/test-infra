@@ -38,6 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+	awsToken "sigs.k8s.io/aws-iam-authenticator/pkg/token"
 )
 
 type Resource = provider.Resource
@@ -54,6 +55,8 @@ type EKS struct {
 	ClusterName string
 	// The eks client used when performing EKS requests.
 	clientEKS *eks.EKS
+	// The aws session used in abstraction of aws credentials.
+	sessionAWS *awsSession.Session
 	// The k8s provider used when we work with the manifest files.
 	k8sProvider *k8sProvider.K8s
 	// Final DeploymentFiles files.
@@ -109,12 +112,13 @@ func (c *EKS) NewEKSClient(*kingpin.ParseContext) error {
 		return errors.Wrap(err, "could not get credential values")
 	}
 
-	cl := eks.New(awsSession.Must(awsSession.NewSession()), &aws.Config{
+	awsSess := awsSession.Must(awsSession.NewSession(&aws.Config{
 		Credentials: credentials.NewStaticCredentialsFromCreds(*credValue),
 		Region:      aws.String(c.DeploymentVars["ZONE"]),
-	})
+	}))
 
-	c.clientEKS = cl
+	c.sessionAWS = awsSess
+	c.clientEKS = eks.New(awsSess)
 	c.ctx = context.Background()
 	return nil
 }
@@ -502,6 +506,29 @@ func (c *EKS) AllNodeGroupsDeleted(*kingpin.ParseContext) error {
 	return nil
 }
 
+// EKSK8sToken returns aws iam authenticator token which is used to access eks k8s cluster from outside.
+func (c *EKS) EKSK8sToken(clusterName, region string) awsToken.Token {
+
+	gen, err := awsToken.NewGenerator(true, false)
+
+	if err != nil {
+		log.Fatalf("Token abstraction error: %v", err)
+	}
+
+	opts := &awsToken.GetTokenOptions{
+		ClusterID: clusterName,
+		Session:   c.sessionAWS,
+	}
+
+	tok, err := gen.GetWithOptions(opts)
+
+	if err != nil {
+		log.Fatalf("Token abstraction error: %v", err)
+	}
+
+	return tok
+}
+
 // NewK8sProvider sets the k8s provider used for deploying k8s manifests
 func (c *EKS) NewK8sProvider(*kingpin.ParseContext) error {
 
@@ -533,11 +560,7 @@ func (c *EKS) NewK8sProvider(*kingpin.ParseContext) error {
 	clusterContext.AuthInfo = arnRole
 
 	authInfo := clientcmdapi.NewAuthInfo()
-	authInfo.Exec = &clientcmdapi.ExecConfig{
-		APIVersion: "client.authentication.k8s.io/v1alpha1",
-		Command:    "aws",
-		Args:       []string{"--region", region, "eks", "get-token", "--cluster-name", clusterName},
-	}
+	authInfo.Token = c.EKSK8sToken(clusterName, region).Token
 
 	config := clientcmdapi.NewConfig()
 	config.AuthInfos[arnRole] = authInfo
