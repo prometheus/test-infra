@@ -40,7 +40,7 @@ export AUTH_FILE=<path to service-account.json>
 ```
 export SERVICEACCOUNT_CLIENT_EMAIL=<client-email present in service-account.json>
 export GRAFANA_ADMIN_PASSWORD=password
-export DOMAIN_NAME=prombench.prometheus.io // Can be set to any other custom domain or an empty string when not used with the Github integration.
+export DOMAIN_NAME=prombench.prometheus.io # Can be set to any other custom domain or an empty string when not used with the Github integration.
 export OAUTH_TOKEN=<generated token from github or set to an empty string " ">
 export WH_SECRET=<github webhook secret>
 export GITHUB_ORG=prometheus
@@ -59,8 +59,6 @@ export GITHUB_REPO=prometheus
     -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
     -f manifests/cluster-infra
 ```
-
-> Note: Use `-v GKE_AUTH="$(echo $AUTH_FILE | base64 -w 0)"` if you're passing the data directly into `$AUTH_FILE`
 
 - The output will show the ingress IP which will be used to point the domain name to. Alternatively you can see it from the GKE/Services tab.
 - Set the `A record` for `<DOMAIN_NAME>` to point to `nginx-ingress-controller` IP address.
