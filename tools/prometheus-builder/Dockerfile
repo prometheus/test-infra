@@ -1,4 +1,4 @@
-FROM golang:1.14
+FROM golang:1.15
 LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com>"
 
 RUN \
