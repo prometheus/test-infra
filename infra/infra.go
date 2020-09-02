@@ -22,6 +22,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/test-infra/pkg/provider"
 	"github.com/prometheus/test-infra/pkg/provider/gke"
+	kind "github.com/prometheus/test-infra/pkg/provider/kind"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -81,6 +82,30 @@ func main() {
 		Action(g.ResourceApply)
 	k8sGKEResource.Command("delete", "gke resource delete -a service-account.json -f manifestsFileOrFolder -v GKE_PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(g.ResourceDelete)
+
+	k := kind.New(dr)
+	k8sKIND := app.Command("kind", `Kubernetes In Docker (KIND) provider - https://kind.sigs.k8s.io/docs/user/quick-start/`).
+		Action(k.SetupDeploymentResources)
+
+	k8sKIND.Command("info", "kind info -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+		Action(k.GetDeploymentVars)
+
+	//Cluster operations.
+	k8sKINDCluster := k8sKIND.Command("cluster", "manage KIND clusters").
+		Action(k.KINDDeploymentsParse)
+	k8sKINDCluster.Command("create", "kind cluster create -f File -v PR_NUMBER:$PR_NUMBER -v CLUSTER_NAME:$CLUSTER_NAME").
+		Action(k.ClusterCreate)
+	k8sKINDCluster.Command("delete", "kind cluster delete -f File -v PR_NUMBER:$PR_NUMBER -v CLUSTER_NAME:$CLUSTER_NAME").
+		Action(k.ClusterDelete)
+
+	// K8s resource operations.
+	k8sKINDResource := k8sKIND.Command("resource", `Apply and delete different k8s resources - deployments, services, config maps etc.`).
+		Action(k.NewK8sProvider).
+		Action(k.K8SDeploymentsParse)
+	k8sKINDResource.Command("apply", "kind resource apply -f manifestsFileOrFolder -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+		Action(k.ResourceApply)
+	k8sKINDResource.Command("delete", "kind resource delete -f manifestsFileOrFolder -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+		Action(k.ResourceDelete)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error parsing commandline arguments"))

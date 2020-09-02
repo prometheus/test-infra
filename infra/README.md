@@ -60,6 +60,25 @@ Commands:
     GKE_PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
     hashStable:COMMIT1 -v hashTesting:COMMIT2
 
+  kind info
+    kind info -v hashStable:COMMIT1 -v hashTesting:COMMIT2
+
+  kind cluster create
+    kind cluster create -f File -v PR_NUMBER:$PR_NUMBER -v
+    CLUSTER_NAME:$CLUSTER_NAME
+
+  kind cluster delete
+    kind cluster delete -f File -v PR_NUMBER:$PR_NUMBER -v
+    CLUSTER_NAME:$CLUSTER_NAME
+
+  kind resource apply
+    kind resource apply -f manifestsFileOrFolder -v hashStable:COMMIT1 -v
+    hashTesting:COMMIT2
+
+  kind resource delete
+    kind resource delete -f manifestsFileOrFolder -v hashStable:COMMIT1 -v
+    hashTesting:COMMIT2
+
 
 ```
 
