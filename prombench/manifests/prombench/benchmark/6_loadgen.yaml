@@ -76,7 +76,7 @@ spec:
         - "/etc/scaler/webserver.yaml"
         - "-v"
         - "PR_NUMBER:{{ .PR_NUMBER }}"        #Used to specify fake-webserver's namespace
-        - "10"                                #Scale Up replicas
+        - "{{ .LOADGEN_SCALE_UP_REPLICAS }}"  #Scale Up replicas
         - "1"                                 #Scale Down replicas
         - "15m"                               #Sleep Interval between scaling
         volumeMounts:
