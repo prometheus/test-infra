@@ -1280,7 +1280,15 @@ func (c *K8s) serviceExists(resource runtime.Object) (bool, error) {
 			if len(res.Status.LoadBalancer.Ingress) > 0 {
 				log.Printf("\tService %s Details", req.Name)
 				for _, x := range res.Status.LoadBalancer.Ingress {
-					log.Printf("\t\thttp://%s:%d", x.IP, res.Spec.Ports[0].Port)
+
+					ingressHostAddr := ""
+					if len(x.IP) != 0 {
+						ingressHostAddr = x.IP
+					} else {
+						ingressHostAddr = x.Hostname
+					}
+
+					log.Printf("\t\thttp://%s:%d", ingressHostAddr, res.Spec.Ports[0].Port)
 				}
 				return true, nil
 			}
