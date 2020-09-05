@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	cloud.google.com/go v0.56.0
+	github.com/aws/aws-sdk-go v1.34.5
 	github.com/go-git/go-git-fixtures/v4 v4.0.1
 	github.com/go-git/go-git/v5 v5.1.0
 	github.com/google/go-github/v29 v29.0.3
@@ -24,5 +25,6 @@ require (
 	k8s.io/apiextensions-apiserver v0.18.4
 	k8s.io/apimachinery v0.18.4
 	k8s.io/client-go v0.18.4
+	sigs.k8s.io/aws-iam-authenticator v0.5.1
 	sigs.k8s.io/kind v0.8.1
 )
