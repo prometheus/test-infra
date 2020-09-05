@@ -26,6 +26,7 @@ import (
 )
 
 const (
+	EKSRetryCount    = 100
 	GlobalRetryCount = 50
 	Separator        = "---"
 	globalRetryTime  = 10 * time.Second
@@ -47,8 +48,10 @@ func NewDeploymentResource() *DeploymentResource {
 		DeploymentFiles:    []string{},
 		FlagDeploymentVars: map[string]string{},
 		DefaultDeploymentVars: map[string]string{
-			"NGINX_SERVICE_TYPE":        "LoadBalancer",
-			"LOADGEN_SCALE_UP_REPLICAS": "10",
+			"NGINX_SERVICE_TYPE":          "LoadBalancer",
+			"LOADGEN_SCALE_UP_REPLICAS":   "10",
+			"SEPARATOR":                   ",",
+			"SERVICEACCOUNT_CLIENT_EMAIL": "example@example.com",
 		},
 	}
 }
@@ -79,10 +82,13 @@ func RetryUntilTrue(name string, retryCount int, fn func() (bool, error)) error 
 func applyTemplateVars(content []byte, deploymentVars map[string]string) ([]byte, error) {
 	fileContentParsed := bytes.NewBufferString("")
 	t := template.New("resource").Option("missingkey=error")
-	// k8s objects can't have dots(.) se we add a custom function to allow normalising the variable values.
 	t = t.Funcs(template.FuncMap{
+		// k8s objects can't have dots(.) se we add a custom function to allow normalising the variable values.
 		"normalise": func(t string) string {
 			return strings.Replace(t, ".", "-", -1)
+		},
+		"split": func(rangeVars, separator string) []string {
+			return strings.Split(rangeVars, separator)
 		},
 	})
 	if err := template.Must(t.Parse(string(content))).Execute(fileContentParsed, deploymentVars); err != nil {

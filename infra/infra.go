@@ -21,6 +21,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/test-infra/pkg/provider"
+	"github.com/prometheus/test-infra/pkg/provider/eks"
 	"github.com/prometheus/test-infra/pkg/provider/gke"
 	kind "github.com/prometheus/test-infra/pkg/provider/kind"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -106,6 +107,50 @@ func main() {
 		Action(k.ResourceApply)
 	k8sKINDResource.Command("delete", "kind resource delete -f manifestsFileOrFolder -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(k.ResourceDelete)
+
+	// EKS based commands
+	e := eks.New(dr)
+	k8sEKS := app.Command("eks", "Amazon Elastic Kubernetes Service - https://aws.amazon.com/eks").
+		Action(e.SetupDeploymentResources)
+	k8sEKS.Flag("auth", "filename which consist eks credentials.").
+		PlaceHolder("credentials").
+		Short('a').
+		StringVar(&e.Auth)
+
+	k8sEKS.Command("info", "eks info -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+		Action(e.GetDeploymentVars)
+
+	// EKS Cluster operations
+	k8sEKSCluster := k8sEKS.Command("cluster", "manage EKS clusters").
+		Action(e.NewEKSClient).
+		Action(e.EKSDeploymentParse)
+	k8sEKSCluster.Command("create", "eks cluster create -a credentials -f FileOrFolder").
+		Action(e.ClusterCreate)
+	k8sEKSCluster.Command("delete", "eks cluster delete -a credentials -f FileOrFolder").
+		Action(e.ClusterDelete)
+
+	// Cluster node-pool operations
+	k8sEKSNodeGroup := k8sEKS.Command("nodes", "manage EKS clusters nodegroups").
+		Action(e.NewEKSClient).
+		Action(e.EKSDeploymentParse)
+	k8sEKSNodeGroup.Command("create", "eks nodes create -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3").
+		Action(e.NodeGroupCreate)
+	k8sEKSNodeGroup.Command("delete", "eks nodes delete -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3").
+		Action(e.NodeGroupDelete)
+	k8sEKSNodeGroup.Command("check-running", "eks nodes check-running -a credentails -f FileOrFolder -v ZONE:eu-west-1 -v CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3").
+		Action(e.AllNodeGroupsRunning)
+	k8sEKSNodeGroup.Command("check-deleted", "eks nodes check-deleted -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3").
+		Action(e.AllNodeGroupsDeleted)
+
+	// K8s resource operations.
+	k8sEKSResource := k8sEKS.Command("resource", `Apply and delete different k8s resources - deployments, services, config maps etc.Required variables -v ZONE:us-east-2 -v CLUSTER_NAME:test `).
+		Action(e.NewEKSClient).
+		Action(e.K8SDeploymentsParse).
+		Action(e.NewK8sProvider)
+	k8sEKSResource.Command("apply", "eks resource apply -a credentials -f manifestsFileOrFolder -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+		Action(e.ResourceApply)
+	k8sEKSResource.Command("delete", "eks resource delete -a credentials -f manifestsFileOrFolder -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
+		Action(e.ResourceDelete)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error parsing commandline arguments"))
