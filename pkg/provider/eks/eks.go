@@ -252,6 +252,7 @@ func (c *EKS) createStack(clusterName string) ([]string, error) {
 				Value: aws.String("shared"),
 			},
 		},
+		DisableRollback: aws.Bool(true),
 	}
 
 	log.Printf("Stack create request: name:'%s'", *req.StackName)
@@ -327,11 +328,12 @@ func (c *EKS) stackDeleted(name string) (bool, error) {
 	}
 	stackRes, err := c.clientCF.DescribeStacks(req)
 
-	if err.(awserr.Error).Code() == "ValidationError" {
-		return true, nil
-	}
-
 	if err != nil {
+
+		if err.(awserr.Error).Code() == "ValidationError" {
+			return true, nil
+		}
+
 		return false, fmt.Errorf("Couldn't get stack status: %v", err)
 	}
 
