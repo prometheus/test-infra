@@ -145,8 +145,11 @@ func (c *K8s) DeploymentsParse(*kingpin.ParseContext) error {
 // ResourceApply applies k8s objects.
 // The input is a slice of structs containing the filename and the slice of k8s objects present in the file.
 func (c *K8s) ResourceApply(deployments []Resource) error {
+	err := provider.CreateGrafanaDashboardsConfigMap()
+	if err != nil {
+		return fmt.Errorf("error applying grafana dashboards config err:%v", err)
+	}
 
-	var err error
 	for _, deployment := range deployments {
 		for _, resource := range deployment.Objects {
 			switch kind := strings.ToLower(resource.GetObjectKind().GroupVersionKind().Kind); kind {
@@ -190,14 +193,18 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 			}
 		}
 	}
+
 	return nil
 }
 
 // ResourceDelete deletes k8s objects.
 // The input is a slice of structs containing the filename and the slice of k8s objects present in the file.
 func (c *K8s) ResourceDelete(deployments []Resource) error {
+	err := provider.DeleteGrafanaDashboardsConfigMap()
+	if err != nil {
+		return fmt.Errorf("error deleting grafana dashboards config err:%v", err)
+	}
 
-	var err error
 	for _, deployment := range deployments {
 		for _, resource := range deployment.Objects {
 			switch kind := strings.ToLower(resource.GetObjectKind().GroupVersionKind().Kind); kind {

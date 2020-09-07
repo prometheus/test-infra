@@ -15,8 +15,14 @@ package provider
 
 import (
 	"bytes"
+	"context"
+	"flag"
 	"fmt"
 	"io/ioutil"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 	"log"
 	"os"
 	"path/filepath"
@@ -144,4 +150,76 @@ func MergeDeploymentVars(ms ...map[string]string) map[string]string {
 		}
 	}
 	return res
+}
+
+func getK8sClientSet() (*kubernetes.Clientset, error) {
+	kubeconfig := flag.String("kubeconfig", "/home/raj/.kube/config", "absolute path to the kubeconfig file")
+
+	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	if err != nil {
+		return nil, err
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	return clientset, nil
+}
+
+func CreateGrafanaDashboardsConfigMap() error {
+
+	clientset, err := getK8sClientSet()
+	if err != nil {
+		return err
+	}
+
+	NodeMetrics, err := ioutil.ReadFile("manifests/dashboards/node-metrics.json")
+	if err != nil {
+		return err
+	}
+	PromBench, err := ioutil.ReadFile("manifests/dashboards/prombench.json")
+	if err != nil {
+		return err
+	}
+
+	ConfigMapData := map[string]string{
+		"node-metrics.json": string(NodeMetrics),
+		"prombench.json":    string(PromBench),
+	}
+
+	newConfigMap := corev1.ConfigMap{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ConfigMap",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "grafana-dashboards",
+		},
+		Data: ConfigMapData,
+	}
+
+	_, err = clientset.CoreV1().ConfigMaps("default").Create(context.TODO(), &newConfigMap, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+
+	log.Printf("resource created - kind: ConfigMap, name: grafana-dashboards")
+	return nil
+}
+
+func DeleteGrafanaDashboardsConfigMap() error {
+
+	clientset, err := getK8sClientSet()
+	if err != nil {
+		return err
+	}
+
+	err = clientset.CoreV1().ConfigMaps("default").Delete(context.TODO(), "grafana-dashboards", metav1.DeleteOptions{})
+	if err != nil {
+		return err
+	}
+
+	log.Printf("resource created - kind: ConfigMap, name: grafana-dashboards")
+	return nil
 }
