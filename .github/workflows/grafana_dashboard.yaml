@@ -21,7 +21,7 @@ jobs:
         TEST_INFRA_REPO: https://github.com/prometheus/test-infra.git
       with:
         args: >-
-          ../infra/infra gke resource apply -a $AUTH_FILE
+          infra gke resource apply -a $AUTH_FILE
           -v GKE_PROJECT_ID:$GKE_PROJECT_ID -v ZONE:$ZONE
           -v CLUSTER_NAME:$CLUSTER_NAME
           -f manifests/cluster-infra/grafana_dashboard_dashboards_noparse.yaml
