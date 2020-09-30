@@ -3821,7 +3821,7 @@ data:
           "steppedLine": false,
           "targets": [
           {
-              "expr": "rate(prometheus_tsdb_compaction_chunk_size_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_samples_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
+              "expr": "rate(prometheus_tsdb_compaction_chunk_size_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_samples_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m]) or rate(prometheus_tsdb_compaction_chunk_size_bytes_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_samples_sum{job=\"prometheus\",namespace=\"prombench-[[pr-number]]\",prometheus=~\"(test+).*\"}[10m])",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{prometheus}} - Bytes/Sample",
