@@ -41,7 +41,7 @@ cat $AUTH_FILE | base64 -w 0
 
 **Starting:**
 
-- `/prombench master` - compare PR with the master branch.
+- `/prombench main` - compare PR with the main branch.
 - `/prombench v2.4.0` - compare PR with a release version, from [quay.io/prometheus/prometheus:releaseVersion](https://quay.io/prometheus/prometheus:releaseVersion)
 
 **Restarting:**
