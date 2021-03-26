@@ -76,7 +76,7 @@ export GITHUB_REPO=prometheus
 - Set the following environment variables.
 
 ```
-export RELEASE=<master or any prometheus release(ex: v2.3.0) >
+export RELEASE=<master/main or any prometheus release(ex: v2.3.0) >
 export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 ```
 
