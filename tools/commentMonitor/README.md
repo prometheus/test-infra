@@ -42,7 +42,7 @@ If `regex_string` contains a capturing groups, using [named groups](https://godo
 
 For example, the following regex will create an argument named `RELEASE` with the content of the capture group:
 ```
-(?mi)^/prombench\s*(?P<RELEASE>master|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
+(?mi)^/prombench\s*(?P<RELEASE>master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
 ```
 
 #### Usage and examples:
