@@ -15,7 +15,7 @@ data:
         verify_user: false
     events:
       - event_type: prombench_start
-        regex_string: (?mi)^/prombench\s*(?P<RELEASE>master|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
+        regex_string: (?mi)^/prombench\s*(?P<RELEASE>master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
         label: prombench
         comment_template: |
           ⏱️ Welcome to Prometheus Benchmarking Tool. ⏱️
@@ -41,10 +41,10 @@ data:
         regex_string: (?mi)^/prombench\s*$
         comment_template: |
           Please add the version number to compare against.
-          Eg. `/prombench master`, `/prombench v2.12.0`
+          Eg. `/prombench main`, `/prombench v2.12.0`
 
       - event_type: prombench_restart
-        regex_string: (?mi)^/prombench\s+restart\s+(?P<RELEASE>master|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
+        regex_string: (?mi)^/prombench\s+restart\s+(?P<RELEASE>master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
         comment_template: |
           ⏱️ Welcome to Prometheus Benchmarking Tool. ⏱️
 
