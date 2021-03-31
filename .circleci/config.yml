@@ -1,153 +1,147 @@
----
 version: 2.1
-
 # To use this config, you have to add following variables in CircleCI config:
 #   - DOCKER_LOGIN
 #   - DOCKER_PASSWORD
 #   - DOCKER_REPO (optional, default to prominfra)
-
 orbs:
-  prometheus: prometheus/prometheus@0.5.0
-
+  prometheus: prometheus/prometheus@0.11.0
 executors:
   # Whenever the Go version is updated here, .travis.yml and .promu.yml
   # should also be updated.
   golang:
     docker:
-    - image: circleci/golang:1.13
-
+      - image: circleci/golang:1.13
 jobs:
   build_and_test:
     executor: golang
     steps:
-    - prometheus/setup_environment
-    - run:
-        command: make all
-        environment:
-          # By default Go uses GOMAXPROCS but a Circle CI executor has many
-          # cores (> 30) while the CPU and RAM resources are throttled. If we
-          # don't limit this to the number of allocated cores, the job is
-          # likely to get OOMed and killed.
-          GOOPTS: "-p 2"
+      - prometheus/setup_environment
+      - run:
+          command: make all
+          environment:
+            # By default Go uses GOMAXPROCS but a Circle CI executor has many
+            # cores (> 30) while the CPU and RAM resources are throttled. If we
+            # don't limit this to the number of allocated cores, the job is
+            # likely to get OOMed and killed.
+            GOOPTS: "-p 2"
   publish_infra:
     executor: golang
     steps:
-    - checkout
-    - setup_remote_docker:
-        version: 19.03.8
-    - run:
-        name: Setup environment variables
-        command: |
-          echo "export DOCKER_IMAGE_TAG=master" >> $BASH_ENV
-          echo "export DOCKER_ORG=${DOCKER_ORG:-prominfra}" >> $BASH_ENV
-          PROMU_BINARIES=infra make build
-    - prometheus/publish_images:
-        container_image_name: infra
-        dockerfile_path: "infra/Dockerfile"
-        dockerbuild_context: "infra/"
-        registry: docker.io
-        organization: "$DOCKER_ORG"
-        login_variable: DOCKER_LOGIN
-        password_variable: DOCKER_PASSWORD
+      - checkout
+      - setup_remote_docker:
+          version: 19.03.8
+      - run:
+          name: Setup environment variables
+          command: |
+            echo "export DOCKER_IMAGE_TAG=master" >> $BASH_ENV
+            echo "export DOCKER_ORG=${DOCKER_ORG:-prominfra}" >> $BASH_ENV
+            PROMU_BINARIES=infra make build
+      - prometheus/publish_images:
+          container_image_name: infra
+          dockerfile_path: "infra/Dockerfile"
+          dockerbuild_context: "infra/"
+          registry: docker.io
+          organization: "$DOCKER_ORG"
+          login_variable: DOCKER_LOGIN
+          password_variable: DOCKER_PASSWORD
   publish_others:
     executor: golang
     steps:
-    - checkout
-    - setup_remote_docker:
-        version: 19.03.8
-    - run:
-        name: Setup environment variables
-        command: |
-          echo "export DOCKER_IMAGE_TAG=master" >> $BASH_ENV
-          echo "export DOCKER_ORG=${DOCKER_ORG:-prominfra}" >> $BASH_ENV
-          make build
-    - prometheus/publish_images:
-        container_image_name: prombench
-        dockerfile_path: "prombench/Dockerfile"
-        dockerbuild_context: "prombench/"
-        registry: docker.io
-        organization: "$DOCKER_ORG"
-        login_variable: DOCKER_LOGIN
-        password_variable: DOCKER_PASSWORD
-    - prometheus/publish_images:
-        container_image_name: funcbench
-        dockerfile_path: "funcbench/Dockerfile"
-        dockerbuild_context: "funcbench/"
-        registry: docker.io
-        organization: "$DOCKER_ORG"
-        login_variable: DOCKER_LOGIN
-        password_variable: DOCKER_PASSWORD
-    - prometheus/publish_images:
-        container_image_name: amgithubnotifier
-        dockerfile_path: "tools/amGithubNotifier/Dockerfile"
-        dockerbuild_context: "tools/amGithubNotifier/"
-        registry: docker.io
-        organization: "$DOCKER_ORG"
-        login_variable: DOCKER_LOGIN
-        password_variable: DOCKER_PASSWORD
-    - prometheus/publish_images:
-        container_image_name: comment-monitor
-        dockerfile_path: "tools/commentMonitor/Dockerfile"
-        dockerbuild_context: "tools/commentMonitor/"
-        registry: docker.io
-        organization: "$DOCKER_ORG"
-        login_variable: DOCKER_LOGIN
-        password_variable: DOCKER_PASSWORD
-    - prometheus/publish_images:
-        container_image_name: fake-webserver
-        dockerfile_path: "tools/fake-webserver/Dockerfile"
-        dockerbuild_context: "tools/fake-webserver/"
-        registry: docker.io
-        organization: "$DOCKER_ORG"
-        login_variable: DOCKER_LOGIN
-        password_variable: DOCKER_PASSWORD
-    - prometheus/publish_images:
-        container_image_name: scaler
-        dockerfile_path: "tools/scaler/Dockerfile"
-        dockerbuild_context: "tools/scaler/"
-        registry: docker.io
-        organization: "$DOCKER_ORG"
-        login_variable: DOCKER_LOGIN
-        password_variable: DOCKER_PASSWORD
-    - prometheus/publish_images:
-        container_image_name: load-generator
-        dockerfile_path: "tools/load-generator/Dockerfile"
-        dockerbuild_context: "tools/load-generator/"
-        registry: docker.io
-        organization: "$DOCKER_ORG"
-        login_variable: DOCKER_LOGIN
-        password_variable: DOCKER_PASSWORD
-    - prometheus/publish_images:
-        container_image_name: prometheus-builder
-        dockerfile_path: "tools/prometheus-builder/Dockerfile"
-        dockerbuild_context: "tools/prometheus-builder/"
-        registry: docker.io
-        organization: "$DOCKER_ORG"
-        login_variable: DOCKER_LOGIN
-        password_variable: DOCKER_PASSWORD
-
+      - checkout
+      - setup_remote_docker:
+          version: 19.03.8
+      - run:
+          name: Setup environment variables
+          command: |
+            echo "export DOCKER_IMAGE_TAG=master" >> $BASH_ENV
+            echo "export DOCKER_ORG=${DOCKER_ORG:-prominfra}" >> $BASH_ENV
+            make build
+      - prometheus/publish_images:
+          container_image_name: prombench
+          dockerfile_path: "prombench/Dockerfile"
+          dockerbuild_context: "prombench/"
+          registry: docker.io
+          organization: "$DOCKER_ORG"
+          login_variable: DOCKER_LOGIN
+          password_variable: DOCKER_PASSWORD
+      - prometheus/publish_images:
+          container_image_name: funcbench
+          dockerfile_path: "funcbench/Dockerfile"
+          dockerbuild_context: "funcbench/"
+          registry: docker.io
+          organization: "$DOCKER_ORG"
+          login_variable: DOCKER_LOGIN
+          password_variable: DOCKER_PASSWORD
+      - prometheus/publish_images:
+          container_image_name: amgithubnotifier
+          dockerfile_path: "tools/amGithubNotifier/Dockerfile"
+          dockerbuild_context: "tools/amGithubNotifier/"
+          registry: docker.io
+          organization: "$DOCKER_ORG"
+          login_variable: DOCKER_LOGIN
+          password_variable: DOCKER_PASSWORD
+      - prometheus/publish_images:
+          container_image_name: comment-monitor
+          dockerfile_path: "tools/commentMonitor/Dockerfile"
+          dockerbuild_context: "tools/commentMonitor/"
+          registry: docker.io
+          organization: "$DOCKER_ORG"
+          login_variable: DOCKER_LOGIN
+          password_variable: DOCKER_PASSWORD
+      - prometheus/publish_images:
+          container_image_name: fake-webserver
+          dockerfile_path: "tools/fake-webserver/Dockerfile"
+          dockerbuild_context: "tools/fake-webserver/"
+          registry: docker.io
+          organization: "$DOCKER_ORG"
+          login_variable: DOCKER_LOGIN
+          password_variable: DOCKER_PASSWORD
+      - prometheus/publish_images:
+          container_image_name: scaler
+          dockerfile_path: "tools/scaler/Dockerfile"
+          dockerbuild_context: "tools/scaler/"
+          registry: docker.io
+          organization: "$DOCKER_ORG"
+          login_variable: DOCKER_LOGIN
+          password_variable: DOCKER_PASSWORD
+      - prometheus/publish_images:
+          container_image_name: load-generator
+          dockerfile_path: "tools/load-generator/Dockerfile"
+          dockerbuild_context: "tools/load-generator/"
+          registry: docker.io
+          organization: "$DOCKER_ORG"
+          login_variable: DOCKER_LOGIN
+          password_variable: DOCKER_PASSWORD
+      - prometheus/publish_images:
+          container_image_name: prometheus-builder
+          dockerfile_path: "tools/prometheus-builder/Dockerfile"
+          dockerbuild_context: "tools/prometheus-builder/"
+          registry: docker.io
+          organization: "$DOCKER_ORG"
+          login_variable: DOCKER_LOGIN
+          password_variable: DOCKER_PASSWORD
 workflows:
   version: 2
   test-infra:
     jobs:
-    - build_and_test:
-        filters:
-          branches:
-            only: /.*/
-    - publish_infra:
-        requires:
-          - build_and_test
-        context: org-context
-        filters:
-          branches:
-            only:
-              - master
-    - publish_others:
-        requires:
-          - build_and_test
-          - publish_infra
-        context: org-context
-        filters:
-          branches:
-            only:
-              - master
+      - build_and_test:
+          filters:
+            branches:
+              only: /.*/
+      - publish_infra:
+          requires:
+            - build_and_test
+          context: org-context
+          filters:
+            branches:
+              only:
+                - master
+      - publish_others:
+          requires:
+            - build_and_test
+            - publish_infra
+          context: org-context
+          filters:
+            branches:
+              only:
+                - master
