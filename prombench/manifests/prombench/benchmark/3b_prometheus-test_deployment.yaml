@@ -35,6 +35,7 @@ spec:
       initContainers:
       - name: prometheus-builder
         image: docker.io/prominfra/prometheus-builder:master
+        imagePullPolicy: Always
         env:
         - name: PR_NUMBER
           value: "{{ .PR_NUMBER }}"
