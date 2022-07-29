@@ -16,7 +16,6 @@ package provider
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -119,7 +118,7 @@ func DeploymentsParse(deploymentFiles []string, deploymentVars map[string]string
 	deploymentObjects := make([]Resource, 0)
 	for _, name := range fileList {
 		absFileName := strings.TrimSuffix(filepath.Base(name), filepath.Ext(name))
-		content, err := ioutil.ReadFile(name)
+		content, err := os.ReadFile(name)
 		if err != nil {
 			log.Fatalf("Error reading file %v:%v", name, err)
 		}

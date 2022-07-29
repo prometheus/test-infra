@@ -17,7 +17,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
@@ -85,7 +84,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 
 	// When the auth variable points to a file
 	// put the file content in the variable.
-	if content, err := ioutil.ReadFile(c.Auth); err == nil {
+	if content, err := os.ReadFile(c.Auth); err == nil {
 		c.Auth = string(content)
 	}
 
@@ -103,7 +102,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	}
 
 	// Create temporary file to store the credentials.
-	saFile, err := ioutil.TempFile("", "service-account")
+	saFile, err := os.CreateTemp("", "service-account")
 	if err != nil {
 		return errors.Wrap(err, "could not create temp file")
 	}
