@@ -13,7 +13,9 @@ primary_tools=("infra" "funcbench")
 helper_tools=("amGithubNotifier" "commentMonitor")
 
 function fetch_embedmd {
-  pushd ..; go get github.com/campoy/embedmd; popd
+  pushd ..
+  go install github.com/campoy/embedmd/v2@latest
+  popd
 }
 
 function docs {
