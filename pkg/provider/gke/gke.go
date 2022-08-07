@@ -217,6 +217,7 @@ func (c *GKE) ClusterCreate(*kingpin.ParseContext) error {
 			log.Fatalf("Error parsing the cluster deployment file %s:%v", deployment.FileName, err)
 		}
 
+		//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 		log.Printf("Cluster create request: name:'%v', project `%s`,zone `%s`", req.Cluster.Name, req.ProjectId, req.Zone)
 		_, err := c.clientGKE.CreateCluster(c.ctx, req)
 		if err != nil {
@@ -226,6 +227,7 @@ func (c *GKE) ClusterCreate(*kingpin.ParseContext) error {
 		err = provider.RetryUntilTrue(
 			fmt.Sprintf("creating cluster:%v", req.Cluster.Name),
 			provider.GlobalRetryCount,
+			//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 			func() (bool, error) { return c.clusterRunning(req.Zone, req.ProjectId, req.Cluster.Name) })
 
 		if err != nil {
@@ -245,12 +247,17 @@ func (c *GKE) ClusterDelete(*kingpin.ParseContext) error {
 			log.Fatalf("Error parsing the cluster deployment file %s:%v", deployment.FileName, err)
 		}
 		reqD := &containerpb.DeleteClusterRequest{
+			//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 			ProjectId: reqC.ProjectId,
-			Zone:      reqC.Zone,
+			//nolint:staticcheck // SA1019 - Ignore "Do not use.".
+			Zone: reqC.Zone,
+			//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 			ClusterId: reqC.Cluster.Name,
 		}
+		//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 		log.Printf("Removing cluster '%v', project '%v', zone '%v'", reqD.ClusterId, reqD.ProjectId, reqD.Zone)
 
+		//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 		err := provider.RetryUntilTrue(
 			fmt.Sprintf("deleting cluster:%v", reqD.ClusterId),
 			provider.GlobalRetryCount,
@@ -278,6 +285,7 @@ func (c *GKE) clusterDeleted(req *containerpb.DeleteClusterRequest) (bool, error
 			log.Printf("Cluster in 'FailedPrecondition' state '%s'", err)
 			return false, nil
 		}
+		//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 		return false, errors.Wrapf(err, "deleting cluster:%v", req.ClusterId)
 	}
 	log.Printf("cluster status: `%v`", rep.Status)
@@ -322,11 +330,15 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 
 		for _, node := range reqC.Cluster.NodePools {
 			reqN := &containerpb.CreateNodePoolRequest{
+				//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 				ProjectId: reqC.ProjectId,
-				Zone:      reqC.Zone,
+				//nolint:staticcheck // SA1019 - Ignore "Do not use.".
+				Zone: reqC.Zone,
+				//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 				ClusterId: reqC.Cluster.Name,
 				NodePool:  node,
 			}
+			//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 			log.Printf("Cluster nodepool create request: cluster '%v', nodepool '%v' , project `%s`,zone `%s`", reqN.ClusterId, reqN.NodePool.Name, reqN.ProjectId, reqN.Zone)
 
 			err := provider.RetryUntilTrue(
@@ -344,6 +356,7 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 				fmt.Sprintf("checking nodepool running status for:%v", reqN.NodePool.Name),
 				provider.GlobalRetryCount,
 				func() (bool, error) {
+					//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 					return c.nodePoolRunning(reqN.Zone, reqN.ProjectId, reqN.ClusterId, reqN.NodePool.Name)
 				})
 
@@ -391,14 +404,18 @@ func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 
 		for _, node := range reqC.Cluster.NodePools {
 			reqD := &containerpb.DeleteNodePoolRequest{
-				ProjectId:  reqC.ProjectId,
+				//nolint:staticcheck // SA1019 - Ignore "Do not use.".
+				ProjectId: reqC.ProjectId,
+				//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 				Zone:       reqC.Zone,
 				ClusterId:  reqC.Cluster.Name,
 				NodePoolId: node.Name,
 			}
+			//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 			log.Printf("Removing cluster node pool: `%v`,  cluster '%v', project '%v', zone '%v'", reqD.NodePoolId, reqD.ClusterId, reqD.ProjectId, reqD.Zone)
 
 			err := provider.RetryUntilTrue(
+				//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 				fmt.Sprintf("deleting nodepool:%v", reqD.NodePoolId),
 				provider.GlobalRetryCount,
 				func() (bool, error) { return c.nodePoolDeleted(reqD) })
@@ -478,6 +495,7 @@ func (c *GKE) AllNodepoolsRunning(*kingpin.ParseContext) error {
 		}
 
 		for _, node := range reqC.Cluster.NodePools {
+			//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 			isRunning, err := c.nodePoolRunning(reqC.Zone, reqC.ProjectId, reqC.Cluster.Name, node.Name)
 			if err != nil {
 				log.Fatalf("error fetching nodePool info")
@@ -501,6 +519,7 @@ func (c *GKE) AllNodepoolsDeleted(*kingpin.ParseContext) error {
 		}
 
 		for _, node := range reqC.Cluster.NodePools {
+			//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 			isRunning, err := c.nodePoolRunning(reqC.Zone, reqC.ProjectId, reqC.Cluster.Name, node.Name)
 			if err != nil {
 				log.Fatalf("error fetching nodePool info")
@@ -539,6 +558,7 @@ func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 
 	context := clientcmdapi.NewContext()
 	context.Cluster = rep.Name
+	//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 	context.AuthInfo = rep.Zone
 
 	authInfo := clientcmdapi.NewAuthInfo()
@@ -553,8 +573,11 @@ func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 
 	config := clientcmdapi.NewConfig()
 	config.Clusters[rep.Name] = cluster
+	//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 	config.Contexts[rep.Zone] = context
+	//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 	config.AuthInfos[rep.Zone] = authInfo
+	//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 	config.CurrentContext = rep.Zone
 
 	c.k8sProvider, err = k8sProvider.New(c.ctx, config)

@@ -4,13 +4,13 @@ version: 2.1
 #   - DOCKER_PASSWORD
 #   - DOCKER_REPO (optional, default to prominfra)
 orbs:
-  prometheus: prometheus/prometheus@0.11.0
+  prometheus: prometheus/prometheus@0.16.0
 executors:
   # Whenever the Go version is updated here, .travis.yml and .promu.yml
   # should also be updated.
   golang:
     docker:
-      - image: circleci/golang:1.13
+      - image: cimg/go:1.18
 jobs:
   build_and_test:
     executor: golang
