@@ -21,7 +21,7 @@ import (
 	"net/http/pprof"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -50,10 +50,10 @@ func main() {
 	flag.Parse()
 
 	if *registerProcessMetrics {
-		registry.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
+		registry.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
 	}
 	if *registerGoMetrics {
-		registry.MustRegister(prometheus.NewGoCollector())
+		registry.MustRegister(collectors.NewGoCollector())
 	}
 
 	for i := 0; i < *n; i++ {
