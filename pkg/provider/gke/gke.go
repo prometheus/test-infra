@@ -315,6 +315,7 @@ func (c *GKE) clusterRunning(zone, projectID, clusterID string) (bool, error) {
 	if cluster.Status == containerpb.Cluster_RUNNING {
 		return true, nil
 	}
+	//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 	log.Printf("Cluster '%v' status:%v , %v", projectID, cluster.Status, cluster.StatusMessage)
 	return false, nil
 }
@@ -478,9 +479,11 @@ func (c *GKE) nodePoolRunning(zone, projectID, clusterID, poolName string) (bool
 		rep.Status == containerpb.NodePool_RUNNING_WITH_ERROR ||
 		rep.Status == containerpb.NodePool_STOPPING ||
 		rep.Status == containerpb.NodePool_STATUS_UNSPECIFIED {
+		//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 		log.Fatalf("NodePool %s not in a status to become ready: %v", rep.Name, rep.StatusMessage)
 	}
 
+	//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 	log.Printf("Current cluster node pool '%v' status:%v , %v", rep.Name, rep.Status, rep.StatusMessage)
 	return false, nil
 }
