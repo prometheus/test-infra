@@ -28,8 +28,7 @@ jobs:
     executor: golang
     steps:
       - checkout
-      - setup_remote_docker:
-          version: 19.03.8
+      - setup_remote_docker
       - run:
           name: Setup environment variables
           command: |
@@ -48,8 +47,7 @@ jobs:
     executor: golang
     steps:
       - checkout
-      - setup_remote_docker:
-          version: 19.03.8
+      - setup_remote_docker
       - run:
           name: Setup environment variables
           command: |
