@@ -13,9 +13,9 @@ require (
 	github.com/prometheus/alertmanager v0.24.0
 	github.com/prometheus/client_golang v1.13.0
 	github.com/prometheus/common v0.37.0
-	golang.org/x/oauth2 v0.0.0-20220622183110-fd043fe589d2
+	golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094
 	golang.org/x/perf v0.0.0-20200318175901-9c9101da8316
-	google.golang.org/api v0.91.0
+	google.golang.org/api v0.98.0
 	google.golang.org/genproto v0.0.0-20220802133213-ce4fa296bf78
 	google.golang.org/grpc v1.48.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
@@ -98,8 +98,8 @@ require (
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e // indirect
-	golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e // indirect
-	golang.org/x/sys v0.0.0-20220624220833-87e55d714810 // indirect
+	golang.org/x/net v0.0.0-20220909164309-bea034e7d591 // indirect
+	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
