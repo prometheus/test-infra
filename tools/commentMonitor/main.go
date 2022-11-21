@@ -16,7 +16,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -79,7 +78,7 @@ func main() {
 
 func (c *commentMonitorConfig) loadConfig() error {
 	// Get config file.
-	data, err := ioutil.ReadFile(c.configFilePath)
+	data, err := os.ReadFile(c.configFilePath)
 	if err != nil {
 		return err
 	}
@@ -91,7 +90,7 @@ func (c *commentMonitorConfig) loadConfig() error {
 		return fmt.Errorf("empty eventmap or prefix list")
 	}
 	// Get webhook secret.
-	c.whSecret, err = ioutil.ReadFile(c.whSecretFilePath)
+	c.whSecret, err = os.ReadFile(c.whSecretFilePath)
 	if err != nil {
 		return err
 	}

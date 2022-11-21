@@ -19,8 +19,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/prometheus/test-infra/pkg/provider"
-	k8sProvider "github.com/prometheus/test-infra/pkg/provider/k8s"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -28,6 +26,9 @@ import (
 	"k8s.io/client-go/util/homedir"
 	"sigs.k8s.io/kind/pkg/cluster"
 	"sigs.k8s.io/kind/pkg/cmd"
+
+	"github.com/prometheus/test-infra/pkg/provider"
+	k8sProvider "github.com/prometheus/test-infra/pkg/provider/k8s"
 )
 
 type Resource = provider.Resource

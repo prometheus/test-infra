@@ -20,11 +20,12 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"gopkg.in/alecthomas/kingpin.v2"
+
 	"github.com/prometheus/test-infra/pkg/provider"
 	"github.com/prometheus/test-infra/pkg/provider/eks"
 	"github.com/prometheus/test-infra/pkg/provider/gke"
-	kind "github.com/prometheus/test-infra/pkg/provider/kind"
-	"gopkg.in/alecthomas/kingpin.v2"
+	"github.com/prometheus/test-infra/pkg/provider/kind"
 )
 
 func main() {
