@@ -14,7 +14,7 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -73,7 +73,7 @@ BenchmarkIsolation/10-8	445276	2478 ns/op	0 B/op	0 allocs/op
 	file2 := `
 BenchmarkIsolation/100-8	39044	28747 ns/op	6 B/op	0 allocs/op
 `
-	dir, err := ioutil.TempDir("", "test_empty_result")
+	dir, err := os.MkdirTemp("", "test_empty_result")
 	if err != nil {
 		t.Error(err)
 	}
@@ -86,7 +86,7 @@ BenchmarkIsolation/100-8	39044	28747 ns/op	6 B/op	0 allocs/op
 	names := make([]string, 0)
 	for name, content := range files {
 		f := filepath.Join(dir, name)
-		if err := ioutil.WriteFile(f, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(f, []byte(content), 0644); err != nil {
 			t.Error(err)
 			return
 		}

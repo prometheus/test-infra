@@ -17,7 +17,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
@@ -27,18 +26,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	awsSession "github.com/aws/aws-sdk-go/aws/session"
-	eks "github.com/aws/aws-sdk-go/service/eks"
+	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/pkg/errors"
-	k8sProvider "github.com/prometheus/test-infra/pkg/provider/k8s"
-
-	"github.com/prometheus/test-infra/pkg/provider"
 	"gopkg.in/alecthomas/kingpin.v2"
 	yamlGo "gopkg.in/yaml.v2"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	awsToken "sigs.k8s.io/aws-iam-authenticator/pkg/token"
+
+	"github.com/prometheus/test-infra/pkg/provider"
+	k8sProvider "github.com/prometheus/test-infra/pkg/provider/k8s"
 )
 
 type Resource = provider.Resource
@@ -90,7 +88,7 @@ func (c *EKS) NewEKSClient(*kingpin.ParseContext) error {
 
 	// When the auth variable points to a file
 	// put the file content in the variable.
-	if content, err := ioutil.ReadFile(c.Auth); err == nil {
+	if content, err := os.ReadFile(c.Auth); err == nil {
 		c.Auth = string(content)
 	}
 
