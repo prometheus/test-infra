@@ -22,12 +22,12 @@ import (
 	"strings"
 	"time"
 
-	appsV1 "k8s.io/api/apps/v1"
-
 	"github.com/pkg/errors"
-	"github.com/prometheus/test-infra/pkg/provider/k8s"
 	"gopkg.in/alecthomas/kingpin.v2"
+	appsV1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	"github.com/prometheus/test-infra/pkg/provider/k8s"
 )
 
 type scale struct {

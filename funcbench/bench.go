@@ -16,7 +16,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -82,7 +81,7 @@ func (b *Benchmarker) exec(pkgRoot string, commit plumbing.Hash) (string, error)
 		return "", err
 	}
 
-	if _, err := ioutil.ReadFile(filepath.Join(b.resultCacheDir, fileName)); err == nil {
+	if _, err := os.ReadFile(filepath.Join(b.resultCacheDir, fileName)); err == nil {
 		fmt.Println("Found previous results for ", fileName, b.benchFunc, "Reusing.")
 		return filepath.Join(b.resultCacheDir, fileName), nil
 	}
@@ -102,7 +101,7 @@ func (b *Benchmarker) exec(pkgRoot string, commit plumbing.Hash) (string, error)
 			return "", err
 		}
 	}
-	if err := ioutil.WriteFile(fn, []byte(out), os.ModePerm); err != nil {
+	if err := os.WriteFile(fn, []byte(out), os.ModePerm); err != nil {
 		return "", err
 	}
 	return fn, nil
