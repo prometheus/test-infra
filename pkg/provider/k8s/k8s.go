@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -25,6 +26,8 @@ import (
 	apiCoreV1 "k8s.io/api/core/v1"
 	apiExtensionsV1beta1 "k8s.io/api/extensions/v1beta1"
 	rbac "k8s.io/api/rbac/v1"
+	apiServerExtensionsV1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiServerExtensionsClient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	apiMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -32,16 +35,11 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/util/retry"
-
-	"strings"
-
-	"github.com/prometheus/test-infra/pkg/provider"
-
-	apiServerExtensionsV1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	apiServerExtensionsClient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+	"k8s.io/client-go/util/retry"
+
+	"github.com/prometheus/test-infra/pkg/provider"
 )
 
 func init() {

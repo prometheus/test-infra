@@ -17,7 +17,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -137,7 +136,7 @@ func newGhWebhookReceiver(cfg ghWebhookReceiverConfig) (*ghWebhookReceiver, erro
 	}
 
 	// Add github token.
-	oauth2token, err := ioutil.ReadFile(cfg.authFile)
+	oauth2token, err := os.ReadFile(cfg.authFile)
 	if err != nil {
 		return nil, err
 	}

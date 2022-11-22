@@ -17,7 +17,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
@@ -25,20 +24,19 @@ import (
 
 	gke "cloud.google.com/go/container/apiv1"
 	"github.com/pkg/errors"
-	k8sProvider "github.com/prometheus/test-infra/pkg/provider/k8s"
-
-	"github.com/prometheus/test-infra/pkg/provider"
+	"google.golang.org/api/option"
 	containerpb "google.golang.org/genproto/googleapis/container/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gopkg.in/alecthomas/kingpin.v2"
 	yamlGo "gopkg.in/yaml.v2"
-
-	"google.golang.org/api/option"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+
+	"github.com/prometheus/test-infra/pkg/provider"
+	k8sProvider "github.com/prometheus/test-infra/pkg/provider/k8s"
 )
 
 // New is the GKE constructor.
@@ -85,7 +83,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 
 	// When the auth variable points to a file
 	// put the file content in the variable.
-	if content, err := ioutil.ReadFile(c.Auth); err == nil {
+	if content, err := os.ReadFile(c.Auth); err == nil {
 		c.Auth = string(content)
 	}
 
@@ -103,7 +101,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	}
 
 	// Create temporary file to store the credentials.
-	saFile, err := ioutil.TempFile("", "service-account")
+	saFile, err := os.CreateTemp("", "service-account")
 	if err != nil {
 		return errors.Wrap(err, "could not create temp file")
 	}
