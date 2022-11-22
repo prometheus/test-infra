@@ -17,13 +17,19 @@ funcbench currently supports two modes, Local and GitHub. Running it in the Gith
 usage: funcbench [<flags>] <target> [<bench-func-regex>] [<packagepath>]
 
 Benchmark and compare your Go code between sub benchmarks or commits.
+  - For BenchmarkFuncName, compare current with master: ./funcbench -v master
+    BenchmarkFuncName
+  - For BenchmarkFunc.*, compare current with master: ./funcbench -v master
+    BenchmarkFunc.*
+  - For all benchmarks, compare current with devel: ./funcbench -v devel .* or
+    ./funcbench -v devel
+  - For BenchmarkFunc.*, compare current with 6d280 commit: ./funcbench -v 6d280
+    BenchmarkFunc.*
+  - For BenchmarkFunc.*, compare between sub-benchmarks of same benchmark on
+    current commit: ./funcbench -v . BenchmarkFunc.*
+  - For BenchmarkFuncName, compare pr#35 with master: ./funcbench --nocomment
+    --github-pr="35" master BenchmarkFuncName
 
-  * For BenchmarkFuncName, compare current with master: ./funcbench -v master BenchmarkFuncName
-  * For BenchmarkFunc.*, compare current with master: ./funcbench -v master BenchmarkFunc.*
-  * For all benchmarks, compare current with devel: ./funcbench -v devel .* or ./funcbench -v devel
-  * For BenchmarkFunc.*, compare current with 6d280 commit: ./funcbench -v 6d280 BenchmarkFunc.*
-  * For BenchmarkFunc.*, compare between sub-benchmarks of same benchmark on current commit: ./funcbench -v . BenchmarkFunc.*
-  * For BenchmarkFuncName, compare pr#35 with master: ./funcbench --nocomment --github-pr="35" master BenchmarkFuncName
 Flags:
   -h, --help                 Show context-sensitive help (also try --help-long
                              and --help-man).
@@ -46,14 +52,14 @@ Flags:
                              longer than duration d, panic.
 
 Args:
-  <target>              Can be one of '.', tag name, branch name or commit SHA
-                        of the branch to compare against. If set to '.',
-                        branch/commit is the same as the current one; funcbench
-                        will run once and try to compare between 2
-                        sub-benchmarks. Errors out if there are no
+  <target>              Can be one of '.', tag name, branch name or commit
+                        SHA of the branch to compare against. If set to '.',
+                        branch/commit is the same as the current one;
+                        funcbench will run once and try to compare between
+                        2 sub-benchmarks. Errors out if there are no
                         sub-benchmarks.
-  [<bench-func-regex>]  Function regex to use for benchmark.Supports RE2 regexp
-                        and is fully anchored, by default will run all
+  [<bench-func-regex>]  Function regex to use for benchmark.Supports RE2
+                        regexp and is fully anchored, by default will run all
                         benchmarks.
   [<packagepath>]       Package to run benchmark against. Eg. ./tsdb, defaults
                         to ./...

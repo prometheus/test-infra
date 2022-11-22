@@ -51,13 +51,13 @@ Commands:
     gke nodes check-deleted -a service-account.json -f FileOrFolder
 
   gke resource apply
-    gke resource apply -a service-account.json -f manifestsFileOrFolder -v
-    GKE_PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
+    gke resource apply -a service-account.json -f manifestsFileOrFolder
+    -v GKE_PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
     hashStable:COMMIT1 -v hashTesting:COMMIT2
 
   gke resource delete
-    gke resource delete -a service-account.json -f manifestsFileOrFolder -v
-    GKE_PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
+    gke resource delete -a service-account.json -f manifestsFileOrFolder
+    -v GKE_PROJECT_ID:test -v ZONE:europe-west1-b -v CLUSTER_NAME:test -v
     hashStable:COMMIT1 -v hashTesting:COMMIT2
 
   kind info
