@@ -37,7 +37,6 @@ alertmanager github webhook receiver
   annotation, org and repo labels are optional but will take precedence over cli args
   if provided.
 
-
 Flags:
   --help         Show context-sensitive help (also try --help-long and
                  --help-man).
