@@ -1,6 +1,6 @@
 module github.com/prometheus/test-infra
 
-go 1.17
+go 1.19
 
 require (
 	cloud.google.com/go/container v1.3.1
@@ -11,9 +11,9 @@ require (
 	github.com/oklog/run v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/alertmanager v0.24.0
-	github.com/prometheus/client_golang v1.13.0
-	github.com/prometheus/common v0.37.0
-	golang.org/x/oauth2 v0.0.0-20220622183110-fd043fe589d2
+	github.com/prometheus/client_golang v1.14.0
+	github.com/prometheus/common v0.42.0
+	golang.org/x/oauth2 v0.5.0
 	golang.org/x/perf v0.0.0-20200318175901-9c9101da8316
 	google.golang.org/api v0.91.0
 	google.golang.org/genproto v0.0.0-20220802133213-ce4fa296bf78
@@ -46,7 +46,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.0.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect
-	github.com/go-kit/log v0.2.0 // indirect
+	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-logr/logr v0.4.0 // indirect
 	github.com/gofrs/flock v0.7.0 // indirect
@@ -77,7 +77,7 @@ require (
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/miekg/dns v1.1.26 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -85,7 +85,7 @@ require (
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/pelletier/go-toml v1.7.0 // indirect
-	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common/sigv4 v0.1.0 // indirect
 	github.com/prometheus/exporter-toolkit v0.7.3 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
@@ -98,10 +98,11 @@ require (
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
-	golang.org/x/net v0.1.0 // indirect
-	golang.org/x/sys v0.1.0 // indirect
-	golang.org/x/term v0.1.0 // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/sync v0.1.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/term v0.5.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
