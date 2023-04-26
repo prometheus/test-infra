@@ -118,7 +118,7 @@ def main():
     namespace = sys.argv[1]
     pr_number = sys.argv[2]
 
-    config = yaml.load(open("/etc/loadgen/config.yaml", 'r').read())
+    config = yaml.load(open("/etc/loadgen/config.yaml", 'r', Loader=yaml.FullLoader).read())
 
     print("loaded configuration")
 
