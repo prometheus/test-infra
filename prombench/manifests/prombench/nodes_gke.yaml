@@ -8,7 +8,7 @@ cluster:
     initialnodecount: 2
     config:
       machinetype: n1-highmem-8
-      imagetype: COS
+      imagetype: COS_CONTAINERD
       disksizegb: 100
       localssdcount: 1  #SSD is used to give fast-lookup to Prometheus servers being benchmarked
       labels:
@@ -18,7 +18,7 @@ cluster:
     initialnodecount: 1
     config:
       machinetype: n1-highcpu-16
-      imagetype: COS
+      imagetype: COS_CONTAINERD
       disksizegb: 100
       localssdcount: 0  #use standard HDD. SSD not needed for fake-webservers.
       labels:
