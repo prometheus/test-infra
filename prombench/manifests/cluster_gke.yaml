@@ -9,7 +9,7 @@ cluster:
     initialnodecount: 1
     config:
       machinetype: n1-standard-4
-      imagetype: COS
+      imagetype: COS_CONTAINERD
       disksizegb: 300
       labels:
         node-name: main-node
