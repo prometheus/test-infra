@@ -252,7 +252,7 @@ spec:
     prometheus: meta
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress-prometheus-meta
@@ -264,6 +264,9 @@ spec:
   - http:
       paths:
       - backend:
-          serviceName: prometheus-meta
-          servicePort: prom-web
+          service:
+            name: prometheus-meta
+            port:
+              name: prom-web
         path: /prometheus-meta
+        pathType: Prefix
