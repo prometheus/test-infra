@@ -83,8 +83,10 @@ rules:
       - watch
   - apiGroups:
       - "extensions"
+      - networking.k8s.io
     resources:
       - ingresses
+      - ingressclasses
     verbs:
       - get
       - list
@@ -165,6 +167,16 @@ subjects:
   - kind: ServiceAccount
     name: nginx-ingress-serviceaccount
     namespace: ingress-nginx
+apiGroups:
+  - extensions
+  - networking.k8s.io
+resources:
+  - ingresses
+  - ingressclasses
+verbs:
+  - get
+  - list
+  - watch
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -182,6 +194,30 @@ subjects:
   - kind: ServiceAccount
     name: nginx-ingress-serviceaccount
     namespace: ingress-nginx
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: ingress-nginx
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+spec:
+  externalTrafficPolicy: Local
+  type: "{{ .NGINX_SERVICE_TYPE }}"
+  selector:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+    - name: https
+      port: 443
+      targetPort: https
 
 ---
 
@@ -211,7 +247,7 @@ spec:
       serviceAccountName: nginx-ingress-serviceaccount
       containers:
         - name: nginx-ingress-controller
-          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.24.1
+          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.33.0
           args:
             - /nginx-ingress-controller
             - --configmap=$(POD_NAMESPACE)/nginx-configuration
@@ -227,7 +263,11 @@ spec:
               add:
                 - NET_BIND_SERVICE
             # www-data -> 33
-            runAsUser: 33
+
+            # Due to the migration to alpinelinux (v0.27.0 onwards) the uid of the user is different.
+            # Source: https://github.com/kubernetes/ingress-nginx/releases/tag/nginx-0.27.0
+            # If runAsUser != 101, the ingress controller will not start (CrashLoopBackOff).
+            runAsUser: 101
           env:
             - name: POD_NAME
               valueFrom:
@@ -263,28 +303,4 @@ spec:
             timeoutSeconds: 10
       nodeSelector:
         node-name: main-node
-
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: ingress-nginx
-  namespace: ingress-nginx
-  labels:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
-spec:
-  externalTrafficPolicy: Local
-  type: "{{ .NGINX_SERVICE_TYPE }}"
-  selector:
-    app.kubernetes.io/name: ingress-nginx
-    app.kubernetes.io/part-of: ingress-nginx
-  ports:
-    - name: http
-      port: 80
-      targetPort: http
-    - name: https
-      port: 443
-      targetPort: https
-
 ---
