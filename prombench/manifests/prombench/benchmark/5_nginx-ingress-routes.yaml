@@ -14,7 +14,9 @@ spec:
           serviceName: prometheus-test-{{ normalise .RELEASE }}
           servicePort: 80
         path: /{{ .PR_NUMBER }}/prometheus-release
+        pathType: Prefix
       - backend:
           serviceName: prometheus-test-pr-{{ .PR_NUMBER }}
           servicePort: 80
         path: /{{ .PR_NUMBER }}/prometheus-pr
+        pathType: Prefix
