@@ -90,7 +90,7 @@ spec:
     component: core
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress-grafana
@@ -102,6 +102,9 @@ spec:
   - http:
       paths:
       - backend:
-          serviceName: grafana
-          servicePort: grafana-web
+          service:
+            name: grafana
+            port:
+              name: grafana-web
         path: /grafana
+        pathType: Prefix
