@@ -23,9 +23,9 @@ import (
 	"strings"
 
 	gke "cloud.google.com/go/container/apiv1"
+	"cloud.google.com/go/container/apiv1/containerpb"
 	"github.com/pkg/errors"
 	"google.golang.org/api/option"
-	containerpb "google.golang.org/genproto/googleapis/container/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gopkg.in/alecthomas/kingpin.v2"
