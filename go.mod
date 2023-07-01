@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	cloud.google.com/go/container v1.22.0
-	github.com/aws/aws-sdk-go v1.43.28
+	github.com/aws/aws-sdk-go v1.44.294
 	github.com/go-git/go-git-fixtures/v4 v4.2.1
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/google/go-github/v29 v29.0.3
