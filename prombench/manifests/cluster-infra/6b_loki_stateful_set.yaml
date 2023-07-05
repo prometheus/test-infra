@@ -39,7 +39,7 @@ data:
       max_look_back_period: 0s
     table_manager:
       retention_deletes_enabled: true
-      retention_period: 2160h
+      retention_period: 2184h
 ---
 apiVersion: v1
 kind: Service
