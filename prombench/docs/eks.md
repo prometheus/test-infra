@@ -33,12 +33,9 @@ export EKS_CLUSTER_ROLE_ARN=<Amazon EKS cluster role ARN>
 # then passing it with the -v flag. It is used to split DeploymentVar into a slice.
 export SEPARATOR=, 
 export EKS_SUBNET_IDS=SUBNETID1,SUBNETID2,SUBNETID3
+export PROVIDER=eks
 
-../infra/infra eks cluster create -a $AUTH_FILE -v ZONE:$ZONE \
-    -v EKS_WORKER_ROLE_ARN:$EKS_WORKER_ROLE_ARN -v EKS_CLUSTER_ROLE_ARN:$EKS_CLUSTER_ROLE_ARN \
-    -v EKS_SUBNET_IDS:$EKS_SUBNET_IDS \
-    -v CLUSTER_NAME:$CLUSTER_NAME \
-    -f manifests/cluster_eks.yaml
+make cluster_create
 ```
 
 
@@ -64,13 +61,7 @@ export GITHUB_REPO=prometheus
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Loki, Grafana, Alertmanager & Github Notifier.
 
 ```shell
-../infra/infra eks resource apply -a $AUTH_FILE -v ZONE:$ZONE \
-    -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
-    -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
-    -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
-    -v WH_SECRET="$(printf $WH_SECRET | base64 -w 0)" \
-    -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
-    -f manifests/cluster-infra
+make cluster_resource_apply
 ```
 
 - The output will show the ingress IP which will be used to point the domain name to.
@@ -95,19 +86,11 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 - Create the nodegroups for the k8s objects
 
 ```shell
-../infra/infra eks nodes create -a $AUTH_FILE \
-    -v ZONE:$ZONE -v EKS_WORKER_ROLE_ARN:$EKS_WORKER_ROLE_ARN -v EKS_CLUSTER_ROLE_ARN:$EKS_CLUSTER_ROLE_ARN \
-    -v EKS_SUBNET_IDS:$EKS_SUBNET_IDS \
-    -v CLUSTER_NAME:$CLUSTER_NAME \
-    -v PR_NUMBER:$PR_NUMBER -f manifests/prombench/nodes_eks.yaml
+make node_create
 ```
 
 - Deploy the k8s objects
 
 ```shell
-../infra/infra eks resource apply -a $AUTH_FILE \
-    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME \
-    -v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v DOMAIN_NAME:$DOMAIN_NAME \
-    -v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
-    -f manifests/prombench/benchmark
+make resource_apply
 ```
