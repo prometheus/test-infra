@@ -22,9 +22,9 @@ export GKE_PROJECT_ID=<google-cloud project-id>
 export CLUSTER_NAME=prombench
 export ZONE=us-east1-b
 export AUTH_FILE=<path to service-account.json>
+export PROVIDER=gke
 
-../infra/infra gke cluster create -a $AUTH_FILE -v GKE_PROJECT_ID:$GKE_PROJECT_ID \
-    -v ZONE:$ZONE -v CLUSTER_NAME:$CLUSTER_NAME -f manifests/cluster_gke.yaml
+make cluster_create
 ```
 
 ### Deploy monitoring components
@@ -50,14 +50,7 @@ export GITHUB_REPO=prometheus
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Loki, Grafana, Alertmanager & Github Notifier.
 
 ```
-../infra/infra gke resource apply -a $AUTH_FILE -v GKE_PROJECT_ID:$GKE_PROJECT_ID -v ZONE:$ZONE \
-    -v CLUSTER_NAME:$CLUSTER_NAME -v DOMAIN_NAME:$DOMAIN_NAME \
-    -v GRAFANA_ADMIN_PASSWORD:$GRAFANA_ADMIN_PASSWORD \
-    -v SERVICEACCOUNT_CLIENT_EMAIL:$SERVICEACCOUNT_CLIENT_EMAIL \
-    -v OAUTH_TOKEN="$(printf $OAUTH_TOKEN | base64 -w 0)" \
-    -v WH_SECRET="$(printf $WH_SECRET | base64 -w 0)" \
-    -v GITHUB_ORG:$GITHUB_ORG -v GITHUB_REPO:$GITHUB_REPO \
-    -f manifests/cluster-infra
+make cluster_resource_apply
 ```
 
 - The output will show the ingress IP which will be used to point the domain name to. Alternatively you can see it from the GKE/Services tab.
@@ -83,17 +76,11 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
 - Create the nodepools for the k8s objects
 
 ```
-../infra/infra gke nodes create -a $AUTH_FILE \
-    -v ZONE:$ZONE -v GKE_PROJECT_ID:$GKE_PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
-    -v PR_NUMBER:$PR_NUMBER -f manifests/prombench/nodes_gke.yaml
+make node_create
 ```
 
 - Deploy the k8s objects
 
 ```
-../infra/infra gke resource apply -a $AUTH_FILE \
-    -v ZONE:$ZONE -v GKE_PROJECT_ID:$GKE_PROJECT_ID -v CLUSTER_NAME:$CLUSTER_NAME \
-    -v PR_NUMBER:$PR_NUMBER -v RELEASE:$RELEASE -v DOMAIN_NAME:$DOMAIN_NAME \
-    -v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
-    -f manifests/prombench/benchmark
+make resource_apply
 ```
