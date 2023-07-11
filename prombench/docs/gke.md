@@ -84,3 +84,28 @@ make node_create
 ```
 make resource_apply
 ```
+
+### Stopping a benchmarking test manually
+
+---
+
+- Set the following environment variables:
+```
+export GKE_PROJECT_ID=<google-cloud project-id>
+export CLUSTER_NAME=prombench
+export ZONE=us-east1-b
+export AUTH_FILE=<path to service-account.json>
+export PROVIDER=gke
+
+export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
+```
+
+- To delete just the nodepool (while keeping the cluster's main node intact), run:
+```
+make clean
+```
+
+- To delete everything (complete teardown of the entire cluster and all the resources), run:
+```
+make cluster_delete
+```

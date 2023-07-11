@@ -94,3 +94,31 @@ make node_create
 ```shell
 make resource_apply
 ```
+
+### Stopping a benchmarking test manually
+
+---
+
+- Set the following environment variables:
+```
+export AUTH_FILE=<path to yaml credentials file that was created>
+export CLUSTER_NAME=prombench
+export SEPARATOR=,
+export EKS_WORKER_ROLE_ARN=<Amazon EKS worker node IAM role ARN>
+export EKS_CLUSTER_ROLE_ARN=<Amazon EKS cluster role ARN>
+export EKS_SUBNET_IDS=SUBNETID1,SUBNETID2,SUBNETID3
+export ZONE=us-east-1
+export PROVIDER=eks
+
+export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
+```
+
+- To delete just the nodepool (while keeping the cluster's main node intact), run:
+```
+make clean
+```
+
+- To delete everything (complete teardown of the entire cluster and all the resources), run:
+```
+make cluster_delete
+```
