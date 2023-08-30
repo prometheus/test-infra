@@ -84,13 +84,6 @@ spec:
           - "--cors-allowed-origins=*"
           - "--debuginfod-upstream-servers=https://debuginfod.systemtap.org"
           - "--debuginfod-http-request-timeout=5m"
-        livenessProbe:
-          exec:
-            command:
-              - /grpc_health_probe
-              - -v
-              - -addr=:7070
-          initialDelaySeconds: 5
         name: parca
         terminationMessagePolicy: FallbackToLogsOnError
         volumeMounts:
