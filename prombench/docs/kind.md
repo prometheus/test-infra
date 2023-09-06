@@ -68,6 +68,7 @@ export NODE_PORT=$(kubectl get -o jsonpath="{.spec.ports[0].nodePort}" services 
 echo "Grafana: http://$INTERNAL_IP:$NODE_PORT/grafana"
 echo "Prometheus: http://$INTERNAL_IP:$NODE_PORT/prometheus-meta"
 echo "Logs: http://$INTERNAL_IP:$NODE_PORT/grafana/explore"
+echo "Profiles: http://$INTERNAL_IP:$NODE_PORT/profiles"
 ```
 ## Usage
 

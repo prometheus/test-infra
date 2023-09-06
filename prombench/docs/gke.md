@@ -59,6 +59,7 @@ make cluster_resource_apply
   - Grafana :: `http://<DOMAIN_NAME>/grafana`
   - Prometheus :: `http://<DOMAIN_NAME>/prometheus-meta`
   - Logs :: `http://<DOMAIN_NAME>/grafana/explore`
+  - Profiles :: `http://<DOMAIN_NAME>/profiles`
 
 ## Usage
 
