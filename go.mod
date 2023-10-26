@@ -13,9 +13,9 @@ require (
 	github.com/prometheus/alertmanager v0.25.1
 	github.com/prometheus/client_golang v1.17.0
 	github.com/prometheus/common v0.44.0
-	golang.org/x/oauth2 v0.8.0
+	golang.org/x/oauth2 v0.13.0
 	golang.org/x/perf v0.0.0-20200318175901-9c9101da8316
-	google.golang.org/api v0.125.0
+	google.golang.org/api v0.126.0
 	google.golang.org/grpc v1.56.3
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.4.0
@@ -28,7 +28,7 @@ require (
 )
 
 require (
-	cloud.google.com/go/compute v1.19.3 // indirect
+	cloud.google.com/go/compute v1.20.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/BurntSushi/toml v0.3.1 // indirect
@@ -70,7 +70,7 @@ require (
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
-	github.com/googleapis/gax-go/v2 v2.10.0 // indirect
+	github.com/googleapis/gax-go/v2 v2.11.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-msgpack v0.5.3 // indirect
