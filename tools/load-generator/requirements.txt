@@ -1,4 +1,4 @@
-PyYAML==6.0
+PyYAML==6.0.1
 certifi==2023.7.22
 idna==3.4
 prometheus-client==0.17.0
