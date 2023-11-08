@@ -32,8 +32,8 @@ import (
 	yamlGo "gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+	_ "k8s.io/cloud-provider-gcp/pkg/clientauthplugin/gcp"
 
 	"github.com/prometheus/test-infra/pkg/provider"
 	k8sProvider "github.com/prometheus/test-infra/pkg/provider/k8s"
