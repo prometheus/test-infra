@@ -8,7 +8,7 @@ data:
     querier:
       groups:
       - name: simple_range
-        interval: 2s
+        interval: 10s
         type: range
         start: 2h
         end: 1h
@@ -16,32 +16,32 @@ data:
         queries:
         - expr: go_goroutines
         - expr: container_memory_rss
-        - expr: kube_pod_container_info
+        - expr: kubelet_running_pods
         - expr: codelab_api_http_requests_in_progress
-        - expr: codelab_api_requests_total
+        - expr: 'codelab_api_requests_total{method="GET",path="/api/bar",status="200"}'
       - name: aggr_instant
         interval: 5s
         type: instant
         queries:
         - expr: sum by(image) (container_memory_rss)
-        - expr: sum by(instance) (rate(node_cpu{mode!="idle"}[5m]))
-        - expr: sum by(instance) (rate(node_cpu[5m]))
+        - expr: sum by(instance) (rate(node_cpu_seconds_total{mode!="idle"}[5m]))
+        - expr: sum by(instance) (rate(node_cpu_seconds_total[5m]))
         - expr: sum by(instance) (rate(codelab_api_requests_total[5m]))
         - expr: sum by(instance) (rate(codelab_api_requests_total{method=~"GET|POST"}[5m]))
       - name: aggr_range
-        interval: 10s
+        interval: 30s
         type: range
         start: 1h
         end: 0h
         step: 15s
         queries:
         - expr: sum by(image) (container_memory_rss)
-        - expr: sum by(instance) (rate(node_cpu{mode!="idle"}[5m]))
-        - expr: sum by(instance) (rate(node_cpu[5m]))
+        - expr: sum by(instance) (rate(node_cpu_seconds_total{mode!="idle"}[5m]))
+        - expr: sum by(instance) (rate(node_cpu_seconds_total[5m]))
         - expr: sum by(instance) (rate(codelab_api_requests_total[5m]))
         - expr: sum by(instance) (rate(codelab_api_requests_total{method=~"GET|POST"}[5m]))
       - name: heavy_instant
-        interval: 10s
+        interval: 60s
         queries:
         - expr: rate(codelab_api_requests_total{method=~"GET|POST"}[5m])
         - expr: sum without(instance) (rate(codelab_api_requests_total{method=~"GET|POST"}[5m]))
