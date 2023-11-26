@@ -19,7 +19,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/prometheus/test-infra/pkg/provider"
@@ -92,7 +91,7 @@ func main() {
 	k8sKIND.Command("info", "kind info -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(k.GetDeploymentVars)
 
-	//Cluster operations.
+	// Cluster operations.
 	k8sKINDCluster := k8sKIND.Command("cluster", "manage KIND clusters").
 		Action(k.KINDDeploymentsParse)
 	k8sKINDCluster.Command("create", "kind cluster create -f File -v PR_NUMBER:$PR_NUMBER -v CLUSTER_NAME:$CLUSTER_NAME").
@@ -154,9 +153,8 @@ func main() {
 		Action(e.ResourceDelete)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
-		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error parsing commandline arguments"))
+		fmt.Fprintln(os.Stderr, fmt.Errorf("Error parsing commandline arguments: %w", err))
 		app.Usage(os.Args[1:])
 		os.Exit(2)
 	}
-
 }
