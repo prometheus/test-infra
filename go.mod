@@ -3,7 +3,7 @@ module github.com/prometheus/test-infra
 go 1.19
 
 require (
-	cloud.google.com/go/container v1.26.2
+	cloud.google.com/go/container v1.29.0
 	github.com/aws/aws-sdk-go v1.46.6
 	github.com/go-git/go-git-fixtures/v4 v4.3.2-0.20231010084843-55a94097c399
 	github.com/go-git/go-git/v5 v5.10.0
@@ -15,7 +15,7 @@ require (
 	github.com/prometheus/common v0.45.0
 	golang.org/x/oauth2 v0.13.0
 	golang.org/x/perf v0.0.0-20200318175901-9c9101da8316
-	google.golang.org/api v0.148.0
+	google.golang.org/api v0.149.0
 	google.golang.org/grpc v1.59.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.4.0
