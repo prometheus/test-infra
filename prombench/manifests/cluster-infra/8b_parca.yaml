@@ -74,7 +74,7 @@ spec:
         fsGroup: 65534
         runAsUser: 65534
       containers:
-      - image: ghcr.io/parca-dev/parca:v0.18.0
+      - image: ghcr.io/parca-dev/parca:v0.20.0
         args:
           - /parca
           - "--http-address=:7070"
