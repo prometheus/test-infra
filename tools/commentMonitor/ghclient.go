@@ -79,7 +79,7 @@ func (c githubClient) getLastCommitSHA() (string, error) {
 func (c githubClient) createRepositoryDispatch(eventType string, clientPayload map[string]string) error {
 	allArgs, err := json.Marshal(clientPayload)
 	if err != nil {
-		return fmt.Errorf("%v: could not encode client payload", err)
+		return fmt.Errorf("%w: could not encode client payload", err)
 	}
 	cp := json.RawMessage(string(allArgs))
 
