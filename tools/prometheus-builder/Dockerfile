@@ -1,4 +1,4 @@
-FROM quay.io/prometheus/golang-builder:1.20-main
+FROM quay.io/prometheus/golang-builder:1.21-main
 
 RUN mkdir -p /go/src/github.com
 COPY ./build.sh /go/src/github.com/build.sh
