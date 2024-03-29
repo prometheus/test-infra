@@ -1,6 +1,6 @@
 # infra: A cli tool to create/scale/delete k8s clusters and deploy manifest files.
 
-Currently it supports GKE, but it is designed in a way that adding more providers should be easy.
+Currently it supports GKE, kind and EKS, but it is designed in a way that adding more providers should be easy.
 
 ### Parsing of files
 
