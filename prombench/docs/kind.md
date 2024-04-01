@@ -3,11 +3,12 @@
 Run prombench tests in [Kubernetes In Docker](https://kind.sigs.k8s.io/).
 
 ## Setup prombench
+
 1. [Install KIND](https://kind.sigs.k8s.io/docs/user/quick-start/)
 1. [Create the KIND cluster](#create-the-kind-cluster)
 2. [Deploy monitoring components](#deploy-monitoring-components)
 
-### Create the Cluster Cluster
+### Create the KIND Cluster
 
 - Create multi node KIND cluster
 - Set the following environment variables and deploy the cluster.
@@ -20,9 +21,9 @@ export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
     -f manifests/cluster_kind.yaml
 ```
 
-- Remove taint(node-role.kubernetes.io/master) from prombench-control-plane node for deploying nginx-ingress-controller
+- Remove taint(node-role.kubernetes.io/control-plane) from prombench-control-plane node for deploying nginx-ingress-controller
 ```
-kubectl taint nodes $CLUSTER_NAME-control-plane node-role.kubernetes.io/master-
+kubectl --context kind-$CLUSTER_NAME taint nodes $CLUSTER_NAME-control-plane node-role.kubernetes.io/control-plane-
 ```
 
 ### Deploy monitoring components
@@ -57,9 +58,9 @@ export SERVICEACCOUNT_CLIENT_EMAIL=<Your Email address>
 
 - Set NODE_NAME, INTERNAL_IP and NODE_PORT environment variable
 ```bash
-export NODE_NAME=$(kubectl get pod -l "app=grafana" -o=jsonpath='{.items[*].spec.nodeName}')
-export INTERNAL_IP=$(kubectl get nodes $NODE_NAME -o jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')
-export NODE_PORT=$(kubectl get -o jsonpath="{.spec.ports[0].nodePort}" services grafana)
+export NODE_NAME=$(kubectl --context kind-$CLUSTER_NAME get pod -l "app=grafana" -o=jsonpath='{.items[*].spec.nodeName}')
+export INTERNAL_IP=$(kubectl --context kind-$CLUSTER_NAME get nodes $NODE_NAME -o jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')
+export NODE_PORT=$(kubectl --context kind-$CLUSTER_NAME get -o jsonpath="{.spec.ports[0].nodePort}" services grafana)
 ```
 
 - The services will be accessible at:
@@ -71,7 +72,6 @@ echo "Logs: http://$INTERNAL_IP:$NODE_PORT/grafana/explore"
 echo "Profiles: http://$INTERNAL_IP:$NODE_PORT/profiles"
 ```
 ## Usage
-
 
 ### Start a benchmarking test manually
 
