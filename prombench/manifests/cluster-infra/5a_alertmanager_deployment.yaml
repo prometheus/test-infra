@@ -38,7 +38,7 @@ spec:
     spec:
       serviceAccountName: prometheus
       containers:
-      - image: quay.io/prometheus/alertmanager:v0.25.0
+      - image: quay.io/prometheus/alertmanager:v0.27.0
         args:
         - "--web.external-url=http://{{ .DOMAIN_NAME }}/alertmanager"
         - "--config.file=/etc/alertmanager/alertmanager.yml"

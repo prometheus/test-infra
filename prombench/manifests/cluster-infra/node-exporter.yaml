@@ -26,7 +26,7 @@ spec:
       nodeSelector:
         node-name: main-node
       containers:
-      - image: quay.io/prometheus/node-exporter:v1.5.0
+      - image: quay.io/prometheus/node-exporter:v1.8.1
         args:
         - "--path.procfs=/host/proc"
         - "--path.sysfs=/host/sys"
