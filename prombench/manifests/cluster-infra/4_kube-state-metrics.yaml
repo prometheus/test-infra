@@ -99,7 +99,7 @@ spec:
       serviceAccountName: kube-state-metrics
       containers:
       - name: kube-state-metrics
-        image: quay.io/coreos/kube-state-metrics:v1.7.1
+        image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.1
         args:
         - "--collectors=namespaces"
         ports:
