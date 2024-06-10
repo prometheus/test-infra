@@ -12,7 +12,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/alertmanager v0.26.0
 	github.com/prometheus/client_golang v1.19.1
-	github.com/prometheus/common v0.48.0
+	github.com/prometheus/common v0.54.0
 	golang.org/x/oauth2 v0.21.0
 	golang.org/x/perf v0.0.0-20200318175901-9c9101da8316
 	google.golang.org/api v0.183.0
@@ -103,7 +103,7 @@ require (
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
-	github.com/prometheus/client_model v0.5.0 // indirect
+	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common/sigv4 v0.1.0 // indirect
 	github.com/prometheus/exporter-toolkit v0.10.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
