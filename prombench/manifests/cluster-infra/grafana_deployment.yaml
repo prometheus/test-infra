@@ -21,7 +21,7 @@ spec:
       securityContext:
         runAsUser: 472
       containers:
-      - image: grafana/grafana:9.4.3
+      - image: grafana/grafana:11.0.0
         name: grafana-core
         imagePullPolicy: IfNotPresent
         env:
