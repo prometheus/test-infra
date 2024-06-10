@@ -15,6 +15,7 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -23,7 +24,6 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/pkg/errors"
 	"golang.org/x/perf/benchstat"
 )
 
@@ -43,7 +43,8 @@ type Benchmarker struct {
 
 func newBenchmarker(logger Logger, env Environment, c *commander,
 	benchTime, benchTimeout time.Duration,
-	resultCacheDir, packagePath string, enablePerflock bool) *Benchmarker {
+	resultCacheDir, packagePath string, enablePerflock bool,
+) *Benchmarker {
 	return &Benchmarker{
 		logger:    logger,
 		benchFunc: env.BenchFunc(),
@@ -101,7 +102,7 @@ func (b *Benchmarker) exec(pkgRoot string, commit plumbing.Hash) (string, error)
 	}
 	out, err := b.c.exec(benchCmd...)
 	if err != nil {
-		return "", errors.Wrap(err, "benchmark ended with an error.")
+		return "", fmt.Errorf("benchmark ended with an error.: %w", err)
 	}
 
 	fn := filepath.Join(b.resultCacheDir, fileName)

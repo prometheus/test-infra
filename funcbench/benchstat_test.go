@@ -86,7 +86,7 @@ BenchmarkIsolation/100-8	39044	28747 ns/op	6 B/op	0 allocs/op
 	names := make([]string, 0)
 	for name, content := range files {
 		f := filepath.Join(dir, name)
-		if err := os.WriteFile(f, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(f, []byte(content), 0o644); err != nil {
 			t.Error(err)
 			return
 		}
