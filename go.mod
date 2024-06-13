@@ -1,7 +1,6 @@
 module github.com/prometheus/test-infra
 
 go 1.22.0
-
 toolchain go1.22.3
 
 require (
@@ -26,7 +25,7 @@ require (
 	k8s.io/apimachinery v0.30.1
 	k8s.io/client-go v0.30.1
 	k8s.io/cloud-provider-gcp v0.0.0-20231031161848-992c1c33f1be
-	sigs.k8s.io/aws-iam-authenticator v0.6.12
+	sigs.k8s.io/aws-iam-authenticator v0.6.20
 	sigs.k8s.io/kind v0.23.0
 )
 
@@ -142,7 +141,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
-	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect
+	k8s.io/utils v0.0.0-20240102154912-e7106e64919e // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
