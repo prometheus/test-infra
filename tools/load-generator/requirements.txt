@@ -1,6 +1,6 @@
 PyYAML==6.0.1
 certifi==2024.6.2
-idna==3.6
+idna==3.7
 prometheus-client==0.20.0
 requests==2.32.3
 urllib3==2.2.1
