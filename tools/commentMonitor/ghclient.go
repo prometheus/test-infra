@@ -71,7 +71,7 @@ func (c githubClient) getLastCommitSHA() (string, error) {
 	listops := &github.ListOptions{Page: 1, PerPage: 250}
 	l, _, err := c.clt.PullRequests.ListCommits(c.ctx, c.owner, c.repo, c.pr, listops)
 	if err != nil {
-		return "", fmt.Errorf("ListCommits(%q,%q,%q): %w", c.owner, c.repo, c.pr, err)
+		return "", fmt.Errorf("ListCommits(%q,%q,%d): %w", c.owner, c.repo, c.pr, err)
 	}
 	if len(l) == 0 {
 		return "", fmt.Errorf("pr does not have a commit")
