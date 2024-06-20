@@ -4547,7 +4547,7 @@ data:
           },
           "yaxes": [
           {
-              "format": "s",
+              "format": "reqps",
               "label": null,
               "logBase": 1,
               "max": null,
