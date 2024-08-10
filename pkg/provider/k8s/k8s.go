@@ -562,6 +562,10 @@ func (c *K8s) validatingWebhookConfigurationApply(resource runtime.Object) error
 		}
 		var exists bool
 		for _, l := range list.Items {
+			if req.ResourceVersion == "" {
+				req.ResourceVersion = l.ResourceVersion
+			}
+
 			if l.Name == req.Name {
 				exists = true
 				break
