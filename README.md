@@ -14,5 +14,5 @@ See [funcbench/README.md](funcbench/README.md) for full description.
 
 ## Building tools from source
 With a working go modules enabled Go environment:
-- Install [promu](https://github.com/prometheus/promu): `go install https://github.com/prometheus/promu`
+- Install [promu](https://github.com/prometheus/promu): `go install github.com/prometheus/promu@latest`
 - `promu build`
