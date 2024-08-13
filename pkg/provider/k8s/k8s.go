@@ -183,6 +183,8 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 				err = c.jobApply(resource)
 			case "validatingwebhookconfiguration":
 				err = c.validatingWebhookConfigurationApply(resource)
+			case "ingressclass":
+				err = c.ingressClassApply(resource)
 			default:
 				err = fmt.Errorf("creating request for unimplimented resource type:%v", kind)
 			}
@@ -235,6 +237,8 @@ func (c *K8s) ResourceDelete(deployments []Resource) error {
 				err = c.jobDelete(resource)
 			case "validatingwebhookconfiguration":
 				err = c.validatingWebhookConfigurationDelete(resource)
+			case "ingressclass":
+				err = c.ingressClassDelete(resource)
 			default:
 				err = fmt.Errorf("deleting request for unimplimented resource type:%v", kind)
 			}
@@ -671,6 +675,44 @@ func (c *K8s) ingressApply(resource runtime.Object) error {
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
+	return nil
+}
+
+func (c *K8s) ingressClassApply(resource runtime.Object) error {
+	req, ok := resource.(*apiNetworkingV1.IngressClass)
+	if !ok {
+		return fmt.Errorf("expected IngressClass, but got %T", resource)
+	}
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
+	if resource.GetObjectKind().GroupVersionKind().Version != "v1" {
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'",
+			resource.GetObjectKind().GroupVersionKind().Version, kind, req.Name)
+	}
+
+	client := c.clt.NetworkingV1().IngressClasses()
+	list, err := client.List(c.ctx, apiMetaV1.ListOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "error listing resource: %v, name: %v", kind, req.Name)
+	}
+
+	for _, l := range list.Items {
+		if l.Name == req.Name {
+			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+				_, err := client.Update(c.ctx, req, apiMetaV1.UpdateOptions{})
+				return err
+			}); err != nil {
+				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
+			}
+			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+			return nil
+		}
+	}
+
+	if _, err := client.Create(c.ctx, req, apiMetaV1.CreateOptions{}); err != nil {
+		return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
+	}
+	log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
 	return nil
 }
 
@@ -1158,6 +1200,28 @@ func (c *K8s) ingressDelete(resource runtime.Object) error {
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
+	return nil
+}
+
+func (c *K8s) ingressClassDelete(resource runtime.Object) error {
+	req, ok := resource.(*apiNetworkingV1.IngressClass)
+	if !ok {
+		return fmt.Errorf("expected IngressClass, but got %T", resource)
+	}
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
+	if resource.GetObjectKind().GroupVersionKind().Version != "v1" {
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'",
+			resource.GetObjectKind().GroupVersionKind().Version, kind, req.Name)
+	}
+
+	client := c.clt.NetworkingV1().IngressClasses()
+	err := client.Delete(c.ctx, req.Name, apiMetaV1.DeleteOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "resource deletion failed - kind: %v, name: %v", kind, req.Name)
+	}
+
+	log.Printf("resource deleted - kind: %v, name: %v", kind, req.Name)
 	return nil
 }
 
