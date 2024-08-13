@@ -101,7 +101,7 @@ spec:
       - name: kube-state-metrics
         image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.1
         args:
-        - "--collectors=namespaces"
+        - "--resources=namespaces"
         ports:
         - name: http-metrics
           containerPort: 8080
