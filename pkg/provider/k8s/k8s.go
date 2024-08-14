@@ -21,6 +21,7 @@ import (
 
 	"github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
+	admissionregistration "k8s.io/api/admissionregistration/v1"
 	appsV1 "k8s.io/api/apps/v1"
 	batchV1 "k8s.io/api/batch/v1"
 	apiCoreV1 "k8s.io/api/core/v1"
@@ -180,6 +181,8 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 				err = c.statefulSetApply(resource)
 			case "job":
 				err = c.jobApply(resource)
+			case "validatingwebhookconfiguration":
+				err = c.validatingWebhookConfigurationApply(resource)
 			case "ingressclass":
 				err = c.ingressClassApply(resource)
 			default:
@@ -232,6 +235,8 @@ func (c *K8s) ResourceDelete(deployments []Resource) error {
 				err = c.statefulSetDelete(resource)
 			case "job":
 				err = c.jobDelete(resource)
+			case "validatingwebhookconfiguration":
+				err = c.validatingWebhookConfigurationDelete(resource)
 			case "ingressclass":
 				err = c.ingressClassDelete(resource)
 			default:
@@ -546,6 +551,48 @@ func (c *K8s) jobApply(resource runtime.Object) error {
 		fmt.Sprintf("running job:%v", req.Name),
 		Infinite,
 		func() (bool, error) { return c.jobReady(resource) })
+}
+
+func (c *K8s) validatingWebhookConfigurationApply(resource runtime.Object) error {
+	req := resource.(*admissionregistration.ValidatingWebhookConfiguration)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
+	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
+	case "v1":
+		client := c.clt.AdmissionregistrationV1().ValidatingWebhookConfigurations()
+		list, err := client.List(c.ctx, apiMetaV1.ListOptions{})
+		if err != nil {
+			return errors.Wrapf(err, "error listing resource : %v, name: %v", kind, req.Name)
+		}
+		var exists bool
+		for _, l := range list.Items {
+			if req.ResourceVersion == "" {
+				req.ResourceVersion = l.ResourceVersion
+			}
+
+			if l.Name == req.Name {
+				exists = true
+				break
+			}
+		}
+
+		if exists {
+			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+				_, err := client.Update(c.ctx, req, apiMetaV1.UpdateOptions{})
+				return err
+			}); err != nil {
+				return errors.Wrapf(err, "resource update failed - kind: %v, name: %v", kind, req.Name)
+			}
+			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
+			return nil
+		} else if _, err := client.Create(c.ctx, req, apiMetaV1.CreateOptions{}); err != nil {
+			return errors.Wrapf(err, "resource creation failed - kind: %v, name: %v", kind, req.Name)
+		}
+		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
+	default:
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
+	}
+	return nil
 }
 
 func (c *K8s) customResourceApply(resource runtime.Object) error {
@@ -1312,6 +1359,24 @@ func (c *K8s) persistentVolumeClaimDelete(resource runtime.Object) error {
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
 		client := c.clt.CoreV1().PersistentVolumeClaims(req.Namespace)
+		delPolicy := apiMetaV1.DeletePropagationForeground
+		if err := client.Delete(c.ctx, req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
+			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
+		}
+		log.Printf("resource deleted - kind: %v , name: %v", kind, req.Name)
+	default:
+		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
+	}
+	return nil
+}
+
+func (c *K8s) validatingWebhookConfigurationDelete(resource runtime.Object) error {
+	req := resource.(*admissionregistration.ValidatingWebhookConfiguration)
+	kind := resource.GetObjectKind().GroupVersionKind().Kind
+
+	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
+	case "v1":
+		client := c.clt.AdmissionregistrationV1().ValidatingWebhookConfigurations()
 		delPolicy := apiMetaV1.DeletePropagationForeground
 		if err := client.Delete(c.ctx, req.Name, apiMetaV1.DeleteOptions{PropagationPolicy: &delPolicy}); err != nil {
 			return errors.Wrapf(err, "resource delete failed - kind: %v, name: %v", kind, req.Name)
