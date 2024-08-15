@@ -10,13 +10,28 @@ Run prombench tests in [Kubernetes In Docker](https://kind.sigs.k8s.io/).
 
 ### Create the KIND Cluster
 
+- Build the `infra` CLI tool
+
+```
+cd infra/
+
+# build the CLI tool - Infra
+go build .
+
+cd ../prombench/
+```
+
 - Create multi node KIND cluster
-- Set the following environment variables and deploy the cluster.
+- Set the following environment variables 
 
 ```
 export CLUSTER_NAME=prombench
 export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
+```
 
+- Deploy the cluster.
+
+```
 ../infra/infra kind cluster create -v PR_NUMBER:$PR_NUMBER -v CLUSTER_NAME:$CLUSTER_NAME \
     -f manifests/cluster_kind.yaml
 ```
@@ -44,6 +59,7 @@ export GITHUB_ORG=prometheus
 export GITHUB_REPO=prometheus
 export SERVICEACCOUNT_CLIENT_EMAIL=<Your Email address>
 ```
+
 - Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Loki, Grafana, Alertmanager & Github Notifier.
 
 ```
