@@ -1,10 +1,14 @@
-FROM python:3
-
-COPY ./requirements.txt /usr/src/app/
-RUN pip install -r /usr/src/app/requirements.txt
-
-COPY ./*.py /usr/src/app/
+FROM golang:1.20-alpine
 
 WORKDIR /usr/src/app
 
-ENTRYPOINT ["python", "-u", "./main.py"]
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN go build -o load-generator .
+
+EXPOSE 8080
+
+ENTRYPOINT ["./load-generator"]
