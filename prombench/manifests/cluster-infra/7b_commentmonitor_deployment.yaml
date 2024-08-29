@@ -70,7 +70,7 @@ kind: Ingress
 metadata:
   name: ingress-comment-monitor
   annotations:
-    kubernetes.io/ingress.class: "nginx"
+    spec.ingressClassName: "nginx"
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   rules:
