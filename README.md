@@ -1,18 +1,31 @@
-## This repository contains tools and configuration files for the testing and benchmarking used in the Prometheus project.
+# Repository Overview
 
-### [`/prombench`](/prombench)
+This repository contains tools and configuration files for testing and benchmarking used in the Prometheus project.
 
-Prombench is a project for automated E2E testing and benchmarking for Prometheus.
+## Tools and Projects
 
-See [prombench/README.md](prombench/README.md) for full description.
+### [`/prombench`](prombench/)
 
-### [`/funcbench`](/funcbench)
+**Prombench** is a project for automated end-to-end (E2E) testing and benchmarking for Prometheus.
 
-Funcbench is a project for running `go test -bench` on 2 different branches and showing the difference, and more!
+- **Description**: For full details, see [prombench/README.md](prombench/README.md).
 
-See [funcbench/README.md](funcbench/README.md) for full description.
+### [`/funcbench`](funcbench/)
 
-## Building tools from source
-With a working go modules enabled Go environment:
-- Install [promu](https://github.com/prometheus/promu): `go install github.com/prometheus/promu@latest`
-- `promu build`
+**Funcbench** is a project for running `go test -bench` on two different branches and comparing the results, among other functionalities.
+
+- **Description**: For full details, see [funcbench/README.md](funcbench/README.md).
+
+## Building Tools from Source
+
+To build the tools from source, ensure you have a working Go environment with modules enabled. Follow these steps:
+
+1. **Install `promu`**:
+   ```bash
+   go install github.com/prometheus/promu@latest
+   ```
+
+2. **Build the project**:
+   ```bash
+   promu build
+   ```

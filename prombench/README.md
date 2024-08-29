@@ -1,59 +1,56 @@
-# Automated Prometheus E2E testing and benchmarking.
+# Automated Prometheus E2E Testing and Benchmarking
 
 ![Prombench Design](design.svg)
 
-It runs with [Github Actions](https://github.com/features/actions) on a [Google Kubernetes Engine Cluster](https://cloud.google.com/kubernetes-engine/).
-It is designed to support adding more k8s providers.
+This setup leverages **GitHub Actions** and **Google Kubernetes Engine (GKE)**, but is designed to be extendable to other Kubernetes providers.
 
-## Overview of the manifest files
+## Overview of Manifest Files
 
-The `/manifest` directory contains all the kubernetes manifest files.
-- `cluster_gke.yaml` : This is used to create the Main Node in gke.
-- `cluster_eks.yaml` : This is used to create the Main Node in eks.
-- `cluster-infra/` : These are the persistent components of the Main Node.
-- `prombench/` : These resources are created and destroyed for each prombench test.
+The `/manifest` directory contains Kubernetes manifest files:
 
-## Setup and run prombench
+- **`cluster_gke.yaml`**: Creates the Main Node in GKE.
+- **`cluster_eks.yaml`**: Creates the Main Node in EKS.
+- **`cluster-infra/`**: Contains persistent components of the Main Node.
+- **`prombench/`**: Resources created and destroyed for each Prombench test.
 
-Prombench can be run on various providers, following are the provider specific instructions:
-    
-- Instructions for [Google Kubernetes Engine](docs/gke.md)
-- Instructions for [Kubernetes In Docker](docs/kind.md)
-- Instructions for [Elastic Kubernetes Service](docs/eks.md)
+## Setup and Running Prombench
 
-## Setup GitHub Actions
+Prombench can be run on different providers. Follow these instructions based on your provider:
 
-Place a workflow file in the `.github` directory of the repository.
-See the [prometheus/prometheus](https://github.com/prometheus/prometheus) repository for an example.
+- [Google Kubernetes Engine (GKE)](docs/gke.md)
+- [Kubernetes In Docker (KIND)](docs/kind.md)
+- [Elastic Kubernetes Service (EKS)](docs/eks.md)
 
-Create a github action `TEST_INFRA_PROVIDER_AUTH` secret with the base64 encoded content of the `AUTH_FILE`.
+## Setting Up GitHub Actions
 
-```
-cat $AUTH_FILE | base64 -w 0
-```
+1. Place a workflow file in the `.github` directory of your repository. Refer to the [Prometheus GitHub repository](https://github.com/prometheus/prometheus) for an example.
 
-### Trigger tests via a Github comment.
-<!-- If you change the heading, also change the anchor in the comment monitor config map. -->
+2. Create a GitHub Action secret `TEST_INFRA_PROVIDER_AUTH` with the base64 encoded content of the `AUTH_FILE`:
 
----
+   ```bash
+   cat $AUTH_FILE | base64 -w 0
+   ```
 
-> Due to the high cost of each test, only maintainers can manage tests.
+### Triggering Tests via GitHub Comment
 
-**Starting:**
+**Starting Tests:**
 
-- `/prombench main` or `/prombench master` - compare PR with the main/master branch.
-- `/prombench v2.4.0` - compare PR with a release version, from [quay.io/prometheus/prometheus:releaseVersion](https://quay.io/prometheus/prometheus:releaseVersion)
+- `/prombench main` or `/prombench master` - Compare PR with the main/master branch.
+- `/prombench v2.4.0` - Compare PR with a specific release version (e.g., from [quay.io/prometheus/prometheus:releaseVersion](https://quay.io/prometheus/prometheus:releaseVersion)).
 
-**Restarting:**
+**Restarting Tests:**
 
 - `/prombench restart <release_version>`
 
-**Stopping:**
+**Stopping Tests:**
 
 - `/prombench cancel`
 
-### Building Docker Image
+### Building the Docker Image
 
-```
+Build the Docker image with:
+
+```bash
 docker build -t prominfra/prombench:master .
 ```
+
