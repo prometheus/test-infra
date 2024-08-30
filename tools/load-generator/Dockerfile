@@ -1,14 +1,8 @@
-FROM golang:1.20-alpine
+FROM quay.io/prometheus/busybox:latest
+LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com>"
 
-WORKDIR /usr/src/app
-
-COPY go.mod go.sum ./
-RUN go mod download
-
-COPY . .
-
-RUN go build -o load-generator .
+COPY load-generator /bin/load-generator
 
 EXPOSE 8080
 
-ENTRYPOINT ["./load-generator"]
+ENTRYPOINT ["/bin/load-generator"]

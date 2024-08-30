@@ -12,7 +12,3 @@ updates:
         patterns:
           - "go.opentelemetry.io/*"
     open-pull-requests-limit: 20
-  #- package-ecosystem: "pip"
-   # directory: "/tools/load-generator"
-   # schedule:
-    #  interval: "monthly"
