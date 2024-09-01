@@ -18,7 +18,7 @@ require (
 	golang.org/x/oauth2 v0.22.0
 	golang.org/x/perf v0.0.0-20200318175901-9c9101da8316
 	google.golang.org/api v0.193.0
-	google.golang.org/grpc v1.65.0
+	google.golang.org/grpc v1.66.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.30.2
