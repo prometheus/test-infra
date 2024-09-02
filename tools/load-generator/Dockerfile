@@ -1,10 +1,8 @@
-FROM python:3
+FROM quay.io/prometheus/busybox:latest
+LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com>"
 
-COPY ./requirements.txt /usr/src/app/
-RUN pip install -r /usr/src/app/requirements.txt
+COPY load-generator /bin/load-generator
 
-COPY ./*.py /usr/src/app/
+EXPOSE 8080
 
-WORKDIR /usr/src/app
-
-ENTRYPOINT ["python", "-u", "./main.py"]
+ENTRYPOINT ["/bin/load-generator"]

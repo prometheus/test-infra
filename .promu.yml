@@ -18,6 +18,8 @@ build:
           path: ./tools/fake-webserver
         - name: tools/scaler
           path: ./tools/scaler
+        - name: tools/load-generator
+          path: ./tools/load-generator
     flags: -a -tags netgo
 crossbuild:
     platforms:
