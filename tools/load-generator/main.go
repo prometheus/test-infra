@@ -221,9 +221,6 @@ func main() {
 	for i, group := range config.Querier.Groups {
 		wg.Add(1)
 		go NewQuerier(i, "pr", prNumber, group).run(&wg)
-	}
-
-	for i, group := range config.Querier.Groups {
 		wg.Add(1)
 		go NewQuerier(i, "release", prNumber, group).run(&wg)
 	}
