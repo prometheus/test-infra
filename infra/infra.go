@@ -88,6 +88,7 @@ func main() {
 	k := kind.New(dr)
 	k8sKIND := app.Command("kind", `Kubernetes In Docker (KIND) provider - https://kind.sigs.k8s.io/docs/user/quick-start/`).
 		Action(k.SetupDeploymentResources)
+	fmt.Printf("%+v\n", k8sKIND)
 
 	k8sKIND.Command("info", "kind info -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(k.GetDeploymentVars)

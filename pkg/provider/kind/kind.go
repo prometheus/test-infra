@@ -76,6 +76,7 @@ func (c *KIND) SetupDeploymentResources(*kingpin.ParseContext) error {
 	}
 
 	c.DeploymentFiles = c.DeploymentResource.DeploymentFiles
+	//Q Here I dont understand why c.DeploymentFiles is equals to c.DeploymentResource.DeploymentFiles
 	c.DeploymentVars = provider.MergeDeploymentVars(
 		c.DeploymentResource.DefaultDeploymentVars,
 		customDeploymentVars,

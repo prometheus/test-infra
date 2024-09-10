@@ -7,7 +7,7 @@ import (
 
 func main() {
 	startTime := time.Date(2024, 9, 1, 0, 0, 0, 0, time.UTC)
-	endTime := startTime.Add(24 * time.Hour)
+	endTime := startTime.Add(2 * time.Hour)
 
 	timeStep := 15 * time.Second
 

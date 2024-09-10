@@ -49,6 +49,7 @@ class Querier(object):
             self.url = "http://%s/%s/prometheus-%s/api/v1/query_range" % (domain_name, pr_number, target)
 
     def run(self):
+        print(self ,"Hello from self")
         print("run querier %s %s for %s" % (self.target, self.name, self.url))
         print("Waiting for 20 seconds to allow prometheus server (%s) to be properly set-up" % (self.url))
         time.sleep(20)

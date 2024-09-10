@@ -28,4 +28,12 @@ nodes:
         kind: JoinConfiguration
         nodeRegistration:
           kubeletExtraArgs:
+            node-labels: "isolation=prometheus,node-name=prometheus-{{ .PR_NUMBER }}"            
+
+  - role: worker
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
             node-labels: "isolation=none,node-name=nodes-{{ .PR_NUMBER }}"
