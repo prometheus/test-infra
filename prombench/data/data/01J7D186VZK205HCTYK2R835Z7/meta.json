@@ -1,0 +1,17 @@
+{
+	"ulid": "01J7D186VZK205HCTYK2R835Z7",
+	"minTime": 1725154515000000,
+	"maxTime": 1725154515000001,
+	"stats": {
+		"numSamples": 11,
+		"numSeries": 11,
+		"numChunks": 11
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01J7D186VZK205HCTYK2R835Z7"
+		]
+	},
+	"version": 1
+}

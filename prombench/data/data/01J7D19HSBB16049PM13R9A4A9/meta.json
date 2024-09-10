@@ -1,0 +1,17 @@
+{
+	"ulid": "01J7D19HSBB16049PM13R9A4A9",
+	"minTime": 1725154845000000,
+	"maxTime": 1725154845000001,
+	"stats": {
+		"numSamples": 11,
+		"numSeries": 11,
+		"numChunks": 11
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01J7D19HSBB16049PM13R9A4A9"
+		]
+	},
+	"version": 1
+}

@@ -1,0 +1,17 @@
+{
+	"ulid": "01J7D1151ENY7M48X9MHR8W9S3",
+	"minTime": 1725151545000000,
+	"maxTime": 1725151545000001,
+	"stats": {
+		"numSamples": 11,
+		"numSeries": 11,
+		"numChunks": 11
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01J7D1151ENY7M48X9MHR8W9S3"
+		]
+	},
+	"version": 1
+}

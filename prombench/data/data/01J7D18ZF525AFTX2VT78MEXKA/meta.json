@@ -1,0 +1,17 @@
+{
+	"ulid": "01J7D18ZF525AFTX2VT78MEXKA",
+	"minTime": 1725154680000000,
+	"maxTime": 1725154680000001,
+	"stats": {
+		"numSamples": 11,
+		"numSeries": 11,
+		"numChunks": 11
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01J7D18ZF525AFTX2VT78MEXKA"
+		]
+	},
+	"version": 1
+}

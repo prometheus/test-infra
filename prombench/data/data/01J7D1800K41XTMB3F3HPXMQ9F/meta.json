@@ -1,0 +1,17 @@
+{
+	"ulid": "01J7D1800K41XTMB3F3HPXMQ9F",
+	"minTime": 1725154410000000,
+	"maxTime": 1725154410000001,
+	"stats": {
+		"numSamples": 11,
+		"numSeries": 11,
+		"numChunks": 11
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01J7D1800K41XTMB3F3HPXMQ9F"
+		]
+	},
+	"version": 1
+}

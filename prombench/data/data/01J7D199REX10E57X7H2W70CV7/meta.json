@@ -1,0 +1,17 @@
+{
+	"ulid": "01J7D199REX10E57X7H2W70CV7",
+	"minTime": 1725154755000000,
+	"maxTime": 1725154755000001,
+	"stats": {
+		"numSamples": 11,
+		"numSeries": 11,
+		"numChunks": 11
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01J7D199REX10E57X7H2W70CV7"
+		]
+	},
+	"version": 1
+}
