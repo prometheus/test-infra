@@ -36,11 +36,12 @@ spec:
       - name: prometheus-builder
         image: docker.io/prominfra/prometheus-builder:master
         imagePullPolicy: Always
+        
         env:
         - name: PR_NUMBER
           value: "{{ .PR_NUMBER }}"
         - name: VOLUME_DIR
-          value: "/prometheus-builder" # same as mountPath
+          value: "/prometheus-builder" 
         - name: GITHUB_ORG
           value: "{{ .GITHUB_ORG }}"
         - name: GITHUB_REPO
@@ -63,14 +64,6 @@ spec:
           periodSeconds: 2
           failureThreshold: 30
         command: ["/usr/bin/prometheus"]
-        args: [
-          "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-pr",
-          "--storage.tsdb.path=/prometheus",
-          "--web.console.libraries=/usr/bin/console_libraries",
-          "--web.console.templates=/usr/bin/consoles",
-          "--config.file=/etc/prometheus/prometheus.yml",
-          "--log.level=debug"
-        ]
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus
@@ -78,6 +71,16 @@ spec:
           mountPath: /prometheus
         - name: prometheus-executable
           mountPath: /usr/bin
+        - name: my-data
+          mountPath: /mnt/downloads  
+        args: [
+          "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-pr",
+          "--storage.tsdb.path=/mnt/downloads",
+          "--web.console.libraries=/usr/bin/console_libraries",
+          "--web.console.templates=/usr/bin/consoles",
+          "--config.file=/etc/prometheus/prometheus.yml",
+          "--log.level=debug"
+        ]          
         ports:
         - name: prom-web
           containerPort: 9090
@@ -90,6 +93,9 @@ spec:
           path: /mnt/disks/ssd0 #gke ssds
       - name: prometheus-executable
         emptyDir: {}
+      - name: my-data
+        hostPath: 
+          path: /mnt/data          
       terminationGracePeriodSeconds: 300
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
@@ -152,19 +158,21 @@ spec:
         image: quay.io/prometheus/prometheus:{{ .RELEASE }}
         imagePullPolicy: Always
         command: [ "/bin/prometheus" ]
-        args: [
-          "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-release",
-          "--storage.tsdb.path=/prometheus",
-          "--web.console.libraries=/etc/prometheus/console_libraries",
-          "--web.console.templates=/etc/prometheus/consoles",
-          "--config.file=/etc/prometheus/prometheus.yml",
-          "--log.level=debug"
-        ]
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus
         - name: instance-ssd
           mountPath: /prometheus
+        - name: my-data
+          mountPath: /mnt/downloads        
+        args: [
+          "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-release",
+          "--storage.tsdb.path=/mnt/downloads",
+          "--web.console.libraries=/etc/prometheus/console_libraries",
+          "--web.console.templates=/etc/prometheus/consoles",
+          "--config.file=/etc/prometheus/prometheus.yml",
+          "--log.level=debug"
+        ]            
         ports:
         - name: prom-web
           containerPort: 9090
@@ -177,6 +185,9 @@ spec:
           # /mnt is where GKE keeps it's SSD
           # don't change this if you want Prometheus to take advantage of these local SSDs
           path: /mnt/disks/ssd0
+      - name: my-data
+        hostPath: 
+          path: /mnt/data          
       terminationGracePeriodSeconds: 300
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
