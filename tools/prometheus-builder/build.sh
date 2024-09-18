@@ -7,8 +7,9 @@ if [[ -z $PR_NUMBER || -z $VOLUME_DIR || -z $GITHUB_ORG || -z $GITHUB_REPO ]]; t
     exit 1;
 fi
 
-echo ">> Cloning repository $GITHUB_ORG/$GITHUB_REPO"
-if ! git clone https://github.com/$GITHUB_ORG/$GITHUB_REPO.git $DIR; then
+# Clone the repository with a shallow clone
+echo ">> Cloning repository $GITHUB_ORG/$GITHUB_REPO (shallow clone)"
+if ! git clone --depth 1 https://github.com/$GITHUB_ORG/$GITHUB_REPO.git $DIR; then
     echo "ERROR:: Cloning of repo $GITHUB_ORG/$GITHUB_REPO failed"
     exit 1;
 fi
