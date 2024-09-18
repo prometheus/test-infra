@@ -48,6 +48,30 @@ data:
         - expr: histogram_quantile(0.99, sum by(path, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[5m])))
         - expr: histogram_quantile(0.99, sum by(path, method, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[5m])))
         - expr: histogram_quantile(0.99, sum by(instance, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[5m])))
+      - name: arithmetic operation
+        interval: 10s
+        type: instant
+        queries:
+        - expr: sum by (container, pod) (rate(container_cpu_usage_seconds_total[5m])) / sum by (container, pod) (container_spec_cpu_quota)
+        - expr: rate(node_network_receive_bytes_total[5m]) * 60
+        - expr: sum(rate(storage_operation_duration_seconds_sum[5m])) + sum(rate(storage_operation_duration_seconds_count[5m]))
+        - expr: sum(rate(kubelet_runtime_operations_duration_seconds_sum[5m])) by (operation_type) / sum(rate(kubelet_runtime_operations_duration_seconds_count[5m])) by (operation_type)  
+      - name: logic_operator
+        interval: 10s
+        type: instant
+        queries:
+        - expr: node_filesystem_avail_bytes{mountpoint="/"} and on(instance) node_filesystem_size_bytes{mountpoint="/"}
+        - expr: container_ulimits_soft{namespace="kube-system"} or container_ulimits_soft{cloud_google_com_gke_nodepool="main-node"}
+        - expr: container_memory_working_set_bytes{namespace=~"^prombench-[0-9]+"} or container_memory_rss{namespace=~"^prombench-[0-9]+"}
+        - expr: rate(node_network_receive_bytes_total{device="eth0"}[5m]) unless rate(node_network_receive_packets_dropped_total{device="eth0"}[5m])
+      - name: topk
+        interval: 10s
+        type: instant
+        queries:
+        - expr: topk(3, sum(rate(node_cpu_seconds_total{mode="user"}[5m])) by (instance))
+        - expr: topk(5, sum(container_cpu_usage_seconds_total) by (instance))     
+        - expr: topk(3, sum(container_memory_usage_bytes) by (pod))
+        - expr: topk(5, sum(container_sockets) by (namespace))
 ---
 apiVersion: apps/v1
 kind: Deployment
