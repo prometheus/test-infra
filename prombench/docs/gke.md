@@ -1,112 +1,132 @@
 # Prombench in GKE
 
-Run prombench tests in [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine).
+Run Prombench tests in [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine).
 
-## Setup prombench
+## Table of Contents
 
-1. [Create the main node](#create-the-main-node)
-2. [Deploy monitoring components](#deploy-monitoring-components)
-3. [Start a benchmarking test manually](#start-a-benchmarking-test-manually)
+1. [Setup Prombench](#setup-prombench)
+    - [Create the Main Node](#create-the-main-node)
+    - [Deploy Monitoring Components](#deploy-monitoring-components)
+2. [Usage](#usage)
+    - [Start a Benchmarking Test Manually](#start-a-benchmarking-test-manually)
+    - [Stopping a Benchmarking Test Manually](#stopping-a-benchmarking-test-manually)
 
-### Create the Main Node
+## Setup Prombench
 
----
-
-- Create a new project on Google Cloud.
-- Create a [Service Account](https://cloud.google.com/iam/docs/creating-managing-service-accounts) on GKE with role `Kubernetes Engine Service Agent` & `Kubernetes Engine Admin`. If using gcloud cli add the [`roles/container.admin`](https://cloud.google.com/kubernetes-engine/docs/how-to/iam#kubernetes-engine-roles) and [`roles/iam.serviceAccountUser`](https://cloud.google.com/kubernetes-engine/docs/how-to/iam#service_account_user) roles to the GCP serviceAccount and download the json file.
-
-- Set the following environment variables and deploy the cluster.
-
-```
-export GKE_PROJECT_ID=<google-cloud project-id>
-export CLUSTER_NAME=prombench
-export ZONE=us-east1-b
-export AUTH_FILE=<path to service-account.json>
-export PROVIDER=gke
-
-make cluster_create
-```
-
-### Deploy monitoring components
-
-> Collecting, monitoring and displaying the test results and logs
+### 1. Create the Main Node
 
 ---
 
-- [Optional] If used with the Github integration generate a GitHub auth token.
-  - Login with the [Prombot account](https://github.com/prombot) and generate a [new auth token](https://github.com/settings/tokens).
-  - With permissions: `public_repo`, `read:org`, `write:discussion`.
+1. **Create a New Project**: Start by creating a new project on Google Cloud.
 
-```
-export SERVICEACCOUNT_CLIENT_EMAIL=<client-email present in service-account.json>
-export GRAFANA_ADMIN_PASSWORD=password
-export DOMAIN_NAME=prombench.prometheus.io # Can be set to any other custom domain or an empty string when not used with the Github integration.
-export OAUTH_TOKEN=<generated token from github or set to an empty string " ">
-export WH_SECRET=<github webhook secret>
-export GITHUB_ORG=prometheus
-export GITHUB_REPO=prometheus
-```
+2. **Create a Service Account**: 
+    - Create a [Service Account](https://cloud.google.com/iam/docs/creating-managing-service-accounts) on GKE with the roles:
+        - `Kubernetes Engine Service Agent`
+        - `Kubernetes Engine Admin`
+    - If using the `gcloud` CLI, add the following roles to the GCP Service Account:
+        - [`roles/container.admin`](https://cloud.google.com/kubernetes-engine/docs/how-to/iam#kubernetes-engine-roles)
+        - [`roles/iam.serviceAccountUser`](https://cloud.google.com/kubernetes-engine/docs/how-to/iam#service_account_user)
+    - Download the JSON file for the service account.
 
-- Deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Loki, Grafana, Alertmanager & Github Notifier.
+3. **Set Environment Variables and Deploy the Cluster**:
 
-```
-make cluster_resource_apply
-```
+    ```bash
+    export GKE_PROJECT_ID=<google-cloud project-id>
+    export CLUSTER_NAME=prombench
+    export ZONE=us-east1-b
+    export AUTH_FILE=<path to service-account.json>
+    export PROVIDER=gke
 
-- The output will show the ingress IP which will be used to point the domain name to. Alternatively you can see it from the GKE/Services tab.
-- Set the `A record` for `<DOMAIN_NAME>` to point to `nginx-ingress-controller` IP address.
-- The services will be accessible at:
-  - Grafana :: `http://<DOMAIN_NAME>/grafana`
-  - Prometheus :: `http://<DOMAIN_NAME>/prometheus-meta`
-  - Logs :: `http://<DOMAIN_NAME>/grafana/explore`
-  - Profiles :: `http://<DOMAIN_NAME>/profiles`
+    make cluster_create
+    ```
+
+### 2. Deploy Monitoring Components
+
+---
+
+> **Note**: These components are responsible for collecting, monitoring, and displaying test results and logs.
+
+1. **Optional GitHub Integration**:
+    - If used with GitHub integration, generate a GitHub auth token:
+        - Login with the [Prombot account](https://github.com/prombot) and generate a [new auth token](https://github.com/settings/tokens).
+        - Required permissions: `public_repo`, `read:org`, `write:discussion`.
+
+    ```bash
+    export SERVICEACCOUNT_CLIENT_EMAIL=<client-email present in service-account.json>
+    export GRAFANA_ADMIN_PASSWORD=password
+    export DOMAIN_NAME=prombench.prometheus.io # Can be set to any other custom domain or an empty string if not used with the GitHub integration.
+    export OAUTH_TOKEN=<generated token from GitHub or set to an empty string " ">
+    export WH_SECRET=<GitHub webhook secret>
+    export GITHUB_ORG=prometheus
+    export GITHUB_REPO=prometheus
+    ```
+
+2. **Deploy the Monitoring Components**:
+    - This step will deploy the [nginx-ingress-controller](https://github.com/kubernetes/ingress-nginx), Prometheus-Meta, Loki, Grafana, Alertmanager, and GitHub Notifier.
+
+    ```bash
+    make cluster_resource_apply
+    ```
+
+3. **Configure DNS**:
+    - The output will display the ingress IP. Use this IP to point the domain name.
+    - Set the `A record` for `<DOMAIN_NAME>` to point to the `nginx-ingress-controller` IP address.
+
+4. **Access the Services**:
+    - Grafana: `http://<DOMAIN_NAME>/grafana`
+    - Prometheus: `http://<DOMAIN_NAME>/prometheus-meta`
+    - Logs: `http://<DOMAIN_NAME>/grafana/explore`
+    - Profiles: `http://<DOMAIN_NAME>/profiles`
 
 ## Usage
 
-### Start a benchmarking test manually
+### 1. Start a Benchmarking Test Manually
 
 ---
 
-- Set the following environment variables.
+1. **Set the Environment Variables**:
 
-```
-export RELEASE=<master/main or any prometheus release(ex: v2.3.0) >
-export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
-```
+    ```bash
+    export RELEASE=<master/main or any Prometheus release (e.g., v2.3.0)>
+    export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
+    ```
 
-- Create the nodepools for the k8s objects
+2. **Create Node Pools for Kubernetes Objects**:
 
-```
-make node_create
-```
+    ```bash
+    make node_create
+    ```
 
-- Deploy the k8s objects
+3. **Deploy the Kubernetes Objects**:
 
-```
-make resource_apply
-```
+    ```bash
+    make resource_apply
+    ```
 
-### Stopping a benchmarking test manually
+### 2. Stopping a Benchmarking Test Manually
 
 ---
 
-- Set the following environment variables:
-```
-export GKE_PROJECT_ID=<google-cloud project-id>
-export CLUSTER_NAME=prombench
-export ZONE=us-east1-b
-export AUTH_FILE=<path to service-account.json>
-export PROVIDER=gke
+1. **Set the Environment Variables**:
 
-export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
-```
+    ```bash
+    export GKE_PROJECT_ID=<google-cloud project-id>
+    export CLUSTER_NAME=prombench
+    export ZONE=us-east1-b
+    export AUTH_FILE=<path to service-account.json>
+    export PROVIDER=gke
 
-- To delete just the nodepool (while keeping the cluster's main node intact), run:
-```
-make clean
-```
+    export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
+    ```
 
-- To delete everything (complete teardown of the entire cluster and all the resources), run:
-```
-make cluster_delete
-```
+2. **Delete Node Pools (Keeping the Main Node Intact)**:
+
+    ```bash
+    make clean
+    ```
+
+3. **Delete Everything (Complete Teardown)**:
+
+    ```bash
+    make cluster_delete
+    ```
