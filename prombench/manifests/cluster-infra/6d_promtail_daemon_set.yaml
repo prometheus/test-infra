@@ -120,8 +120,6 @@ spec:
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 1
-      nodeSelector:
-        node-name: main-node
       tolerations:
         - key: node-role.kubernetes.io/master
           effect: NoSchedule

@@ -38,18 +38,3 @@ subjects:
 - kind: ServiceAccount
   name: prometheus
   namespace: prombench-{{ .PR_NUMBER }}
----
-# Need to give Promtail access to fetch logs
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  #PR number is used in name to avoid conflict with multiple prombench instances
-  name: promtail-{{ .PR_NUMBER }}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: promtail-clusterrole
-subjects:
-- kind: ServiceAccount
-  name: promtail
-  namespace: prombench-{{ .PR_NUMBER }}
