@@ -48,25 +48,6 @@ data:
         - expr: histogram_quantile(0.99, sum by(path, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[5m])))
         - expr: histogram_quantile(0.99, sum by(path, method, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[5m])))
         - expr: histogram_quantile(0.99, sum by(instance, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[5m])))
-      - name: binary_arithmetic_operators
-        interval: 15s
-        type: instant
-        queries:
-        - expr: sum(node_memory_MemAvailable_bytes) / sum(node_memory_MemTotal_bytes)
-        - expr: rate(node_network_transmit_bytes_total[5m]) * 8
-        - expr: node_filesystem_avail_bytes / node_filesystem_size_bytes
-      - name: logical_operators
-        interval: 15s
-        type: instant
-        queries:
-        - expr: rate(node_cpu_seconds_total{mode="system"}[5m]) and rate(node_cpu_seconds_total{mode="user"}[5m])
-        - expr: node_filesystem_avail_bytes unless node_filesystem_size_bytes
-        - expr: rate(node_network_receive_bytes_total[5m]) or rate(node_network_transmit_bytes_total[5m])
-      - name: topk_example
-        interval: 15s
-        type: instant
-        queries:
-        - expr: topk(5, rate(http_requests_total[5m]))
 ---
 apiVersion: apps/v1
 kind: Deployment
