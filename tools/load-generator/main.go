@@ -24,6 +24,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 )
 
@@ -184,12 +185,14 @@ func (q *Querier) query(expr string) {
 }
 
 func durationSeconds(s string) time.Duration {
-	num := s[:len(s)-1]
-	value, err := time.ParseDuration(num + string(s[len(s)-1]))
-	if err != nil {
-		log.Fatalf("Invalid duration: %s", s)
+	if s == "" {
+		return 0
 	}
-	return value
+	value, err := model.ParseDuration(s)
+	if err != nil {
+		log.Fatalf("%s", err.Error())
+	}
+	return time.Duration(value)
 }
 
 func main() {
