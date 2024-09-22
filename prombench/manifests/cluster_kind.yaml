@@ -9,6 +9,9 @@ nodes:
           kubeletExtraArgs:
             node-labels: "node-name=main-node"
   - role: worker
+    extraMounts:
+      - hostPath: /home/lenovo/data1
+        containerPath: /mnt/data  
     kubeadmConfigPatches:
       - |
         kind: JoinConfiguration
@@ -16,6 +19,9 @@ nodes:
           kubeletExtraArgs:
             node-labels: "isolation=prometheus,node-name=prometheus-{{ .PR_NUMBER }}"
   - role: worker
+    extraMounts:
+      - hostPath: /home/lenovo/data2S
+        containerPath: /mnt/data  
     kubeadmConfigPatches:
       - |
         kind: JoinConfiguration
