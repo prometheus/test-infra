@@ -66,8 +66,6 @@ spec:
         args: [
           "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-pr",
           "--storage.tsdb.path=/prometheus",
-          "--web.console.libraries=/usr/bin/console_libraries",
-          "--web.console.templates=/usr/bin/consoles",
           "--config.file=/etc/prometheus/prometheus.yml",
           "--log.level=debug"
         ]
@@ -155,8 +153,6 @@ spec:
         args: [
           "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-release",
           "--storage.tsdb.path=/prometheus",
-          "--web.console.libraries=/etc/prometheus/console_libraries",
-          "--web.console.templates=/etc/prometheus/consoles",
           "--config.file=/etc/prometheus/prometheus.yml",
           "--log.level=debug"
         ]

@@ -32,5 +32,3 @@ fi
 
 echo ">> Copy files to volume"
 cp prometheus               $VOLUME_DIR/prometheus
-cp -r console_libraries/    $VOLUME_DIR
-cp -r consoles/             $VOLUME_DIR
