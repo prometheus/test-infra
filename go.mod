@@ -24,7 +24,51 @@ require (
 )
 
 require (
-	cloud.google.com/go/auth v0.9.5 // indirect
+	cloud.google.com/go v0.115.1 // indirect
+	cloud.google.com/go/iam v1.2.0 // indirect
+	cloud.google.com/go/storage v1.43.0 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.9.2 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.5.1 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/internal v1.5.2 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.3.0 // indirect
+	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.1 // indirect
+	github.com/aliyun/aliyun-oss-go-sdk v2.2.2+incompatible // indirect
+	github.com/aws/aws-sdk-go-v2 v1.16.0 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.15.1 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.11.0 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.7 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.11.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.16.1 // indirect
+	github.com/aws/smithy-go v1.11.1 // indirect
+	github.com/baidubce/bce-sdk-go v0.9.111 // indirect
+	github.com/clbanning/mxj v1.8.4 // indirect
+	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/efficientgo/core v1.0.0-rc.0.0.20221201130417-ba593f67d2a4 // indirect
+	github.com/goccy/go-json v0.10.3 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.0 // indirect
+	github.com/huaweicloud/huaweicloud-sdk-go-obs v3.23.3+incompatible // indirect
+	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
+	github.com/kylelemons/godebug v1.1.0 // indirect
+	github.com/minio/md5-simd v1.1.2 // indirect
+	github.com/minio/minio-go/v7 v7.0.72 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/mozillazg/go-httpheader v0.2.1 // indirect
+	github.com/ncw/swift v1.0.53 // indirect
+	github.com/oracle/oci-go-sdk/v65 v65.41.1 // indirect
+	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
+	github.com/rs/xid v1.5.0 // indirect
+	github.com/sony/gobreaker v0.5.0 // indirect
+	github.com/tencentyun/cos-go-sdk-v5 v0.7.40 // indirect
+	google.golang.org/genproto v0.0.0-20240903143218-8af14fe29dc1 // indirect
+	gopkg.in/ini.v1 v1.67.0 // indirect
+)
+
+require (
+	cloud.google.com/go/auth v0.9.4 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.4 // indirect
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
@@ -102,6 +146,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/cobra v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/thanos-io/objstore v0.0.0-20240913165201-fd105025a2e5
 	github.com/x448/float16 v0.8.4 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.54.0 // indirect
