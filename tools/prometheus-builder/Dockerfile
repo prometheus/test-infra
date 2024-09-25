@@ -1,4 +1,4 @@
-FROM quay.io/prometheus/golang-builder:1.22-main
+FROM quay.io/prometheus/golang-builder:1.23-main
 
 RUN mkdir -p /go/src/github.com
 
