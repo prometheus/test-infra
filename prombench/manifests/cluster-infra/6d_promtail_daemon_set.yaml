@@ -9,21 +9,17 @@ data:
     client:
       batchwait: 1s # Maximum wait period before sending batch
       batchsize: 102400 # Maximum batch size to accrue before sending, unit is byte
-
       timeout: 10s # Maximum time to wait for server to respond to a request
-
       backoff_config:
-        minbackoff: 100ms # Initial backoff time between retries
-        maxbackoff: 5s # Maximum backoff time between retries
-        maxretries: 5 # Maximum number of retries when sending batches, 0 means infinite retries
-
+        min_period: 100ms # Initial backoff time between retries
+        max_period: 5s # Maximum backoff time between retries
+        max_retries: 5 # Maximum number of retries when sending batches, 0 means infinite retries
     server:
       http_listen_port: 3101
     positions:
       filename: /run/promtail/positions.yaml
     target_config:
       sync_period: 10s # Period to resync directories being watched and files being tailed
-
     scrape_configs:
     - job_name: kubernetes-pods
       kubernetes_sd_configs:
@@ -80,7 +76,7 @@ spec:
       serviceAccountName: promtail
       containers:
         - name: promtail
-          image: grafana/promtail:1.4.1
+          image: grafana/promtail:3.2.0
           imagePullPolicy: IfNotPresent
           args:
             - "-config.file=/etc/promtail/promtail.yaml"
