@@ -1,5 +1,5 @@
 
-# blockSynch - TSDB Data Synchronization Tool
+# block-sync - TSDB Data Synchronization Tool
 
 
 The `block-sync` command is a CLI tool designed to synchronize TSDB data with an object storage system. 
@@ -23,7 +23,7 @@ The `upload` command allows you to upload TSDB data from a specified path to an 
 ### Usage
 
 ```bash
-./blockSynch upload --tsdb-path=<path-to-tsdb> --objstore.config-file=<path-to-config> --key=<object-key>
+./block-sync upload --tsdb-path=<path-to-tsdb> --objstore.config-file=<path-to-config> --key=<object-key>
 
 
 ```
@@ -34,7 +34,7 @@ The `download` command allows you to retrieve TSDB data from an object storage b
 ### Usage
 
 ```bash
-./blockSynch download --tsdb-path=<path-to-tsdb> --objstore.config-file=<path-to-config> --key=<object-key>
+./block-sync download --tsdb-path=<path-to-tsdb> --objstore.config-file=<path-to-config> --key=<object-key>
 ```
 ## Config File
 
@@ -49,5 +49,5 @@ config:
   secret_key: your-secret-key
   insecure: false  # Set to true if using HTTP instead of HTTPS
 ```
-For more follow this link [Storage.md](https://thanos.io/tip/thanos/storage.md/)
+You can customize the config file ,  follow this link [Storage.md](https://thanos.io/tip/thanos/storage.md/)
 

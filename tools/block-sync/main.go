@@ -14,6 +14,9 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -24,27 +27,38 @@ func main() {
 	app := kingpin.New(filepath.Base(os.Args[0]), "Tool for storing TSDB data to object storage")
 	app.HelpFlag.Short('h')
 
-	var tsdbPath, objectConfig, objectKey string
-	var s *Store
-
-	objstore := app.Command("block-sync", `Using an object storage to store the data`)
+	var (
+		s            *Store
+		tsdbPath     string
+		objectConfig string
+		objectKey    string
+		logger       *slog.Logger
+	)
+	objstore := app.Command("blocksync", `Using an object storage to store the data`)
 	objstore.Flag("tsdb-path", "Path for The TSDB data in prometheus").Required().StringVar(&tsdbPath)
 	objstore.Flag("objstore.config-file", "Path for The Config file").Required().StringVar(&objectConfig)
 	objstore.Flag("key", "Path for the Key where to store block data").Required().StringVar(&objectKey)
-
 	objstore.Action(func(c *kingpin.ParseContext) error {
-		s = newstore(tsdbPath, objectConfig, objectKey)
+		var err error
+		logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+		s, err = newStore(tsdbPath, objectConfig, objectKey, logger)
+		if err != nil {
+			logger.Error("Failed to create store", "error", err)
+			return fmt.Errorf("fail to create store :%w", err)
+		}
 		return nil
 	})
-
-	uploadCmd := objstore.Command("upload", "Uploading data")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	uploadCmd := objstore.Command("upload", "Uploading data to objstore")
 	uploadCmd.Action(func(c *kingpin.ParseContext) error {
-		return s.upload(c)
+		return s.upload(ctx)
 	})
 
-	downloadCmd := objstore.Command("download", "Downloading data")
+	downloadCmd := objstore.Command("download", "Downloading data from objstore")
 	downloadCmd.Action(func(c *kingpin.ParseContext) error {
-		return s.download(c)
+		return s.download(ctx)
 	})
 	kingpin.MustParse(app.Parse(os.Args[1:]))
+
 }
