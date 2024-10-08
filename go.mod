@@ -15,7 +15,7 @@ require (
 	github.com/prometheus/common v0.59.1
 	golang.org/x/oauth2 v0.23.0
 	golang.org/x/perf v0.0.0-20200318175901-9c9101da8316
-	google.golang.org/api v0.198.0
+	google.golang.org/api v0.199.0
 	google.golang.org/grpc v1.67.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.4.0
@@ -29,9 +29,9 @@ require (
 )
 
 require (
-	cloud.google.com/go/auth v0.9.4 // indirect
+	cloud.google.com/go/auth v0.9.5 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.4 // indirect
-	cloud.google.com/go/compute/metadata v0.5.1 // indirect
+	cloud.google.com/go/compute/metadata v0.5.2 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
