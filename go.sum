@@ -852,8 +852,8 @@ k8s.io/utils v0.0.0-20240711033017-18e509b52bc8/go.mod h1:OLgZIPagt7ERELqWJFomSt
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
-sigs.k8s.io/aws-iam-authenticator v0.6.20 h1:heAGFNUkYJafT165FOlTWQT1S6UULTHa61w5mHJuSXk=
-sigs.k8s.io/aws-iam-authenticator v0.6.20/go.mod h1:wOXhEO/yKuFQUNIL9uq43vA+/E+k5kb/w1KoZbvEvSk=
+sigs.k8s.io/aws-iam-authenticator v0.6.27 h1:uzSwFYh+hrrbpv7goZ+2FN/2oCQddiKpb8l5vBbY1i4=
+sigs.k8s.io/aws-iam-authenticator v0.6.27/go.mod h1:8CAmUtqsLmv5QvnhXQ2+byy1EL+TCDyyYTGFXDyt0sk=
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd h1:EDPBXCAspyGV4jQlpZSudPeMmr1bNJefnuqLsRAsHZo=
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd/go.mod h1:B8JuhiUyNFVKdsE8h686QcCxMaH6HrOAZj4vswFpcB0=
 sigs.k8s.io/kind v0.24.0 h1:g4y4eu0qa+SCeKESLpESgMmVFBebL0BDa6f777OIWrg=
