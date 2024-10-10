@@ -1,7 +1,7 @@
 go:
     # Whenever the Go version is updated here, .travis.yml and
     # .circle/config.yml should also be updated if in use.
-    version: 1.22
+    version: 1.23
 repository:
     path: github.com/prometheus/test-infra
 build:
@@ -18,6 +18,8 @@ build:
           path: ./tools/fake-webserver
         - name: tools/scaler
           path: ./tools/scaler
+        - name: tools/load-generator
+          path: ./tools/load-generator
     flags: -a -tags netgo
 crossbuild:
     platforms:
