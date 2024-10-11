@@ -15,50 +15,89 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log/slog"
 	"os"
-	"path/filepath"
-
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 func main() {
-	app := kingpin.New(filepath.Base(os.Args[0]), "Tool for storing TSDB data to object storage")
-	app.HelpFlag.Short('h')
-
 	var (
-		s            *Store
 		tsdbPath     string
 		objectConfig string
 		objectKey    string
-		logger       *slog.Logger
 	)
-	objstore := app.Command("blocksync", `Using an object storage to store the data`)
-	objstore.Flag("tsdb-path", "Path for The TSDB data in prometheus").Required().StringVar(&tsdbPath)
-	objstore.Flag("objstore.config-file", "Path for The Config file").Required().StringVar(&objectConfig)
-	objstore.Flag("key", "Path for the Key where to store block data").Required().StringVar(&objectKey)
-	objstore.Action(func(c *kingpin.ParseContext) error {
-		var err error
-		logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
-		s, err = newStore(tsdbPath, objectConfig, objectKey, logger)
-		if err != nil {
-			logger.Error("Failed to create store", "error", err)
-			return fmt.Errorf("fail to create store :%w", err)
+	uploadCmd := flag.NewFlagSet("upload", flag.ExitOnError)
+	downloadCmd := flag.NewFlagSet("download", flag.ExitOnError)
+
+	uploadCmd.StringVar(&tsdbPath, "tsdb-path", "", "Uploading data to objstore")
+	uploadCmd.StringVar(&objectConfig, "objstore.config-file", "", "Path for The Config file")
+	uploadCmd.StringVar(&objectKey, "key", "", "Path for the Key where to store block data")
+
+	downloadCmd.StringVar(&tsdbPath, "tsdb-path", "", "Downloading data to objstore")
+	downloadCmd.StringVar(&objectConfig, "objstore.config-file", "", "Path for The Config file")
+	downloadCmd.StringVar(&objectKey, "key", "", "Path from the Key where to download the block data")
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
+		fmt.Println("  upload     Uploads data to the object store")
+		fmt.Println("  download   Downloads data from the object store")
+		fmt.Println("Flags:")
+		fmt.Println("  --tsdb-path               Path to TSDB data")
+		fmt.Println("  --objstore.config-file    Path to the object store config file")
+		fmt.Println("  --key                     Key path for storing or downloading data")
+		fmt.Println()
+		fmt.Println("Use 'block-sync [command] --help' for more information about a command.")
+	}
+
+	if len(os.Args) < 2 {
+		logger.Error("Expected 'upload' or 'download' subcommands")
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	switch os.Args[1] {
+	case "upload":
+		if err := uploadCmd.Parse(os.Args[2:]); err != nil {
+			fmt.Println("Error parsing upload command:", err)
+			os.Exit(1)
 		}
-		return nil
-	})
+	case "download":
+		if err := downloadCmd.Parse(os.Args[2:]); err != nil {
+			fmt.Println("Error parsing download command:", err)
+			os.Exit(1)
+		}
+	default:
+		logger.Error("Expected 'upload' or 'download' subcommands")
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	if tsdbPath == "" || objectConfig == "" || objectKey == "" {
+		fmt.Println("error: all flags --tsdb-path, --objstore.config-file, and --key are required.")
+		os.Exit(1)
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	uploadCmd := objstore.Command("upload", "Uploading data to objstore")
-	uploadCmd.Action(func(c *kingpin.ParseContext) error {
-		return s.upload(ctx)
-	})
+	store, err := newStore(tsdbPath, objectConfig, objectKey, logger)
+	if err != nil {
+		logger.Error("Failed to create store", "error", err)
+		os.Exit(1)
+	}
 
-	downloadCmd := objstore.Command("download", "Downloading data from objstore")
-	downloadCmd.Action(func(c *kingpin.ParseContext) error {
-		return s.download(ctx)
-	})
-	kingpin.MustParse(app.Parse(os.Args[1:]))
-
+	switch os.Args[1] {
+	case "upload":
+		err = store.upload(ctx)
+		if err != nil {
+			logger.Error("Failed to upload data", "Error", err)
+			os.Exit(1)
+		}
+	case "download":
+		err = store.download(ctx)
+		if err != nil {
+			logger.Error("Failed to download data", "error", err)
+			os.Exit(1)
+		}
+	}
 }
