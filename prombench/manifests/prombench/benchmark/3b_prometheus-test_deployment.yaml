@@ -1,3 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: data
+  namespace: prombench-{{ .PR_NUMBER }}
+data:
+  minio-config.yaml: |
+    type: S3
+    config:
+      bucket: thanos-bucket
+      endpoint: minio:9000
+      access_key: ROOTNAME
+      secret_key: CHANGEME123
+      insecure: true
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -48,6 +63,20 @@ spec:
         volumeMounts:
         - name: prometheus-executable
           mountPath: /prometheus-builder
+      - name: data-downloader
+        image: kushalshukla/writer:latest
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: instance-ssd
+          mountPath: /data
+        - name: minio-config
+          mountPath: /mnc  
+        args: [
+          "download",
+        "--tsdb-path=/data", 
+        "--objstore.config-file=/mnc/minio-config.yaml",
+        "--key=gendata"
+        ]  
       containers:
       - name: prometheus
         image: quay.io/prometheus/busybox:latest
@@ -83,6 +112,9 @@ spec:
       - name: config-volume
         configMap:
           name: prometheus-test
+      - name: minio-config
+        configMap:
+          name: data    
       - name: instance-ssd
         hostPath:
           path: /mnt/disks/ssd0 #gke ssds
