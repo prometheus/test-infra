@@ -95,5 +95,4 @@ func TestFormatIssueCommentBody(t *testing.T) {
 			t.Errorf("Output did not match.\ngot:\n%#v\nwant:\n%#v", c, output[i])
 		}
 	}
-
 }

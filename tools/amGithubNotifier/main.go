@@ -127,7 +127,6 @@ func (hl ghWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func newGhWebhookReceiver(cfg ghWebhookReceiverConfig) (*ghWebhookReceiver, error) {
-
 	if cfg.dryRun {
 		return &ghWebhookReceiver{
 			ghClient: github.NewClient(nil),
@@ -175,7 +174,6 @@ func (g ghWebhookReceiver) processAlert(ctx context.Context, alert template.Aler
 }
 
 func (g ghWebhookReceiver) processAlerts(ctx context.Context, msg *webhook.Message) ([]string, error) {
-
 	var alertcomments []string
 
 	// Each alert will have its own comment.

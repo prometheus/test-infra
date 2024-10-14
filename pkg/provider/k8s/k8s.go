@@ -114,7 +114,6 @@ func (c *K8s) DeploymentsParse(*kingpin.ParseContext) error {
 	}
 
 	for _, deployment := range deploymentResource {
-
 		decode := scheme.Codecs.UniversalDeserializer().Decode
 		k8sObjects := make([]runtime.Object, 0)
 
@@ -1405,7 +1404,6 @@ func (c *K8s) serviceExists(resource runtime.Object) (bool, error) {
 			if len(res.Status.LoadBalancer.Ingress) > 0 {
 				log.Printf("\tService %s Details", req.Name)
 				for _, x := range res.Status.LoadBalancer.Ingress {
-
 					ingressHostAddr := ""
 					if len(x.IP) != 0 {
 						ingressHostAddr = x.IP

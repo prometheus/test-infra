@@ -44,7 +44,7 @@ func main() {
 	g := gke.New(dr)
 	k8sGKE := app.Command("gke", `Google container engine provider - https://cloud.google.com/kubernetes-engine/`).
 		Action(g.SetupDeploymentResources)
-	k8sGKE.Flag("auth", "json authentication for the project. Accepts a filepath or an env variable that inlcudes tha json data. If not set the tool will use the GOOGLE_APPLICATION_CREDENTIALS env variable (export GOOGLE_APPLICATION_CREDENTIALS=service-account.json). https://cloud.google.com/iam/docs/creating-managing-service-account-keys.").
+	k8sGKE.Flag("auth", "json authentication for the project. Accepts a filepath or an env variable that includes tha json data. If not set the tool will use the GOOGLE_APPLICATION_CREDENTIALS env variable (export GOOGLE_APPLICATION_CREDENTIALS=service-account.json). https://cloud.google.com/iam/docs/creating-managing-service-account-keys.").
 		PlaceHolder("service-account.json").
 		Short('a').
 		StringVar(&g.Auth)
@@ -91,7 +91,7 @@ func main() {
 	k8sKIND.Command("info", "kind info -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(k.GetDeploymentVars)
 
-	//Cluster operations.
+	// Cluster operations.
 	k8sKINDCluster := k8sKIND.Command("cluster", "manage KIND clusters").
 		Action(k.KINDDeploymentsParse)
 	k8sKINDCluster.Command("create", "kind cluster create -f File -v PR_NUMBER:$PR_NUMBER -v CLUSTER_NAME:$CLUSTER_NAME").
@@ -137,7 +137,7 @@ func main() {
 		Action(e.NodeGroupCreate)
 	k8sEKSNodeGroup.Command("delete", "eks nodes delete -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3").
 		Action(e.NodeGroupDelete)
-	k8sEKSNodeGroup.Command("check-running", "eks nodes check-running -a credentails -f FileOrFolder -v ZONE:eu-west-1 -v CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3").
+	k8sEKSNodeGroup.Command("check-running", "eks nodes check-running -a credentials -f FileOrFolder -v ZONE:eu-west-1 -v CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3").
 		Action(e.AllNodeGroupsRunning)
 	k8sEKSNodeGroup.Command("check-deleted", "eks nodes check-deleted -a authFile -f FileOrFolder -v ZONE:eu-west-1 -v CLUSTER_NAME:test -v EKS_SUBNET_IDS: subnetId1,subnetId2,subnetId3").
 		Action(e.AllNodeGroupsDeleted)
@@ -157,5 +157,4 @@ func main() {
 		app.Usage(os.Args[1:])
 		os.Exit(2)
 	}
-
 }
