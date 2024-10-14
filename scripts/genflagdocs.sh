@@ -7,9 +7,9 @@ set -u
 EMBEDMD_BIN=${EMBEDMD_BIN:-embedmd}
 SED_BIN=${SED_BIN:-sed}
 
-README_FILES="./tools/*/README.md ./funcbench/README.md ./infra/README.md"
+README_FILES="./tools/*/README.md ./infra/README.md"
 
-primary_tools=("infra" "funcbench")
+primary_tools=("infra")
 helper_tools=("amGithubNotifier" "commentMonitor")
 
 function fetch_embedmd {

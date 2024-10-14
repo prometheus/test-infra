@@ -10,12 +10,6 @@ This repository contains tools and configuration files for testing and benchmark
 
 - **Description**: For full details, see [prombench/README.md](prombench/README.md).
 
-### [`/funcbench`](funcbench/)
-
-**Funcbench** is a project for running `go test -bench` on two different branches and comparing the results, among other functionalities.
-
-- **Description**: For full details, see [funcbench/README.md](funcbench/README.md).
-
 ## Building Tools from Source
 
 To build the tools from source, ensure you have a working Go environment with modules enabled. Follow these steps:
