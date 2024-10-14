@@ -16,6 +16,7 @@ package eks
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -27,7 +28,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	awsSession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
 	yamlGo "gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -83,7 +83,7 @@ func New(dr *provider.DeploymentResource) *EKS {
 func (c *EKS) NewEKSClient(*kingpin.ParseContext) error {
 	if c.Auth != "" {
 	} else if c.Auth = os.Getenv("AWS_APPLICATION_CREDENTIALS"); c.Auth == "" {
-		return errors.Errorf("no auth provided set the auth flag or the AWS_APPLICATION_CREDENTIALS env variable")
+		return fmt.Errorf("no auth provided set the auth flag or the AWS_APPLICATION_CREDENTIALS env variable")
 	}
 
 	// When the auth variable points to a file
@@ -100,14 +100,14 @@ func (c *EKS) NewEKSClient(*kingpin.ParseContext) error {
 	if encoded {
 		auth, err := base64.StdEncoding.DecodeString(c.Auth)
 		if err != nil {
-			return errors.Wrap(err, "could not decode auth data")
+			return fmt.Errorf("could not decode auth data: %w", err)
 		}
 		c.Auth = string(auth)
 	}
 
 	credValue := &credentials.Value{}
 	if err = yamlGo.UnmarshalStrict([]byte(c.Auth), credValue); err != nil {
-		return errors.Wrap(err, "could not get credential values")
+		return fmt.Errorf("could not get credential values: %w", err)
 	}
 
 	awsSess := awsSession.Must(awsSession.NewSession(&aws.Config{
@@ -154,7 +154,7 @@ func (c *EKS) EKSDeploymentParse(*kingpin.ParseContext) error {
 
 	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
 	if err != nil {
-		return fmt.Errorf("Couldn't parse deployment files: %v", err)
+		return fmt.Errorf("Couldn't parse deployment files: %w", err)
 	}
 
 	c.eksResources = deploymentResource
@@ -170,7 +170,7 @@ func (c *EKS) K8SDeploymentsParse(*kingpin.ParseContext) error {
 
 	deploymentResource, err := provider.DeploymentsParse(c.DeploymentFiles, c.DeploymentVars)
 	if err != nil {
-		return fmt.Errorf("Couldn't parse deployment files: %v", err)
+		return fmt.Errorf("Couldn't parse deployment files: %w", err)
 	}
 
 	for _, deployment := range deploymentResource {
@@ -187,7 +187,7 @@ func (c *EKS) K8SDeploymentsParse(*kingpin.ParseContext) error {
 			resource, _, err := decode([]byte(text), nil, nil)
 
 			if err != nil {
-				return errors.Wrapf(err, "decoding the resource file:%v, section:%v...", deployment.FileName, text[:100])
+				return fmt.Errorf("decoding the resource file:%v, section:%v...: %w", deployment.FileName, text[:100], err)
 			}
 			if resource == nil {
 				continue
@@ -207,13 +207,13 @@ func (c *EKS) ClusterCreate(*kingpin.ParseContext) error {
 	for _, deployment := range c.eksResources {
 
 		if err := yamlGo.UnmarshalStrict(deployment.Content, req); err != nil {
-			return fmt.Errorf("Error parsing the cluster deployment file %s:%v", deployment.FileName, err)
+			return fmt.Errorf("Error parsing the cluster deployment file %s: %w", deployment.FileName, err)
 		}
 
 		log.Printf("Cluster create request: name:'%s'", *req.Cluster.Name)
 		_, err := c.clientEKS.CreateCluster(&req.Cluster)
 		if err != nil {
-			return fmt.Errorf("Couldn't create cluster '%v', file:%v ,err: %v", *req.Cluster.Name, deployment.FileName, err)
+			return fmt.Errorf("Couldn't create cluster '%v', file:%v ,err: %w", *req.Cluster.Name, deployment.FileName, err)
 		}
 
 		err = provider.RetryUntilTrue(
@@ -223,7 +223,7 @@ func (c *EKS) ClusterCreate(*kingpin.ParseContext) error {
 		)
 
 		if err != nil {
-			return fmt.Errorf("creating cluster err:%v", err)
+			return fmt.Errorf("creating cluster err: %w", err)
 		}
 
 		for _, nodegroupReq := range req.NodeGroups {
@@ -231,7 +231,7 @@ func (c *EKS) ClusterCreate(*kingpin.ParseContext) error {
 			log.Printf("Nodegroup create request: NodeGroupName: '%s', ClusterName: '%s'", *nodegroupReq.NodegroupName, *req.Cluster.Name)
 			_, err := c.clientEKS.CreateNodegroup(&nodegroupReq)
 			if err != nil {
-				return fmt.Errorf("Couldn't create nodegroup '%v' for cluster '%v, file:%v ,err: %v", nodegroupReq.NodegroupName, req.Cluster.Name, deployment.FileName, err)
+				return fmt.Errorf("Couldn't create nodegroup '%v' for cluster '%v, file:%v ,err: %w", nodegroupReq.NodegroupName, req.Cluster.Name, deployment.FileName, err)
 			}
 
 			err = provider.RetryUntilTrue(
@@ -241,7 +241,7 @@ func (c *EKS) ClusterCreate(*kingpin.ParseContext) error {
 			)
 
 			if err != nil {
-				return fmt.Errorf("creating nodegroup err:%v", err)
+				return fmt.Errorf("creating nodegroup err: %w", err)
 			}
 		}
 	}
@@ -254,7 +254,7 @@ func (c *EKS) ClusterDelete(*kingpin.ParseContext) error {
 	for _, deployment := range c.eksResources {
 
 		if err := yamlGo.UnmarshalStrict(deployment.Content, req); err != nil {
-			return fmt.Errorf("Error parsing the cluster deployment file %s:%v", deployment.FileName, err)
+			return fmt.Errorf("Error parsing the cluster deployment file %s: %w", deployment.FileName, err)
 		}
 
 		// To delete a cluster we have to manually delete all cluster
@@ -268,7 +268,7 @@ func (c *EKS) ClusterDelete(*kingpin.ParseContext) error {
 		for {
 			resL, err := c.clientEKS.ListNodegroups(reqL)
 			if err != nil {
-				return fmt.Errorf("listing nodepools err:%v", err)
+				return fmt.Errorf("listing nodepools err: %w", err)
 			}
 
 			for _, nodegroup := range resL.Nodegroups {
@@ -280,7 +280,7 @@ func (c *EKS) ClusterDelete(*kingpin.ParseContext) error {
 				}
 				_, err := c.clientEKS.DeleteNodegroup(&reqD)
 				if err != nil {
-					return fmt.Errorf("Couldn't create nodegroup '%v' for cluster '%v ,err: %v", *nodegroup, req.Cluster.Name, err)
+					return fmt.Errorf("Couldn't create nodegroup '%v' for cluster '%v ,err: %w", *nodegroup, req.Cluster.Name, err)
 				}
 
 				err = provider.RetryUntilTrue(
@@ -290,7 +290,7 @@ func (c *EKS) ClusterDelete(*kingpin.ParseContext) error {
 				)
 
 				if err != nil {
-					return fmt.Errorf("deleting nodegroup err:%v", err)
+					return fmt.Errorf("deleting nodegroup err: %w", err)
 				}
 			}
 
@@ -308,7 +308,7 @@ func (c *EKS) ClusterDelete(*kingpin.ParseContext) error {
 		log.Printf("Removing cluster '%v'", *reqD.Name)
 		_, err := c.clientEKS.DeleteCluster(reqD)
 		if err != nil {
-			return fmt.Errorf("Couldn't delete cluster '%v', file:%v ,err: %v", *req.Cluster.Name, deployment.FileName, err)
+			return fmt.Errorf("Couldn't delete cluster '%v', file:%v ,err: %w", *req.Cluster.Name, deployment.FileName, err)
 		}
 
 		err = provider.RetryUntilTrue(
@@ -317,7 +317,7 @@ func (c *EKS) ClusterDelete(*kingpin.ParseContext) error {
 			func() (bool, error) { return c.clusterDeleted(*reqD.Name) })
 
 		if err != nil {
-			return fmt.Errorf("removing cluster err:%v", err)
+			return fmt.Errorf("removing cluster err: %w", err)
 		}
 	}
 	return nil
@@ -330,10 +330,11 @@ func (c *EKS) clusterRunning(name string) (bool, error) {
 	}
 	clusterRes, err := c.clientEKS.DescribeCluster(req)
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == eks.ErrCodeNotFoundException {
+		var aerr awserr.Error
+		if errors.As(err, &aerr) && aerr.Code() == eks.ErrCodeNotFoundException {
 			return false, nil
 		}
-		return false, fmt.Errorf("Couldn't get cluster status: %v", err)
+		return false, fmt.Errorf("Couldn't get cluster status: %w", err)
 	}
 	if *clusterRes.Cluster.Status == eks.ClusterStatusFailed {
 		return false, fmt.Errorf("Cluster not in a status to become ready - %s", *clusterRes.Cluster.Status)
@@ -351,10 +352,11 @@ func (c *EKS) clusterDeleted(name string) (bool, error) {
 	}
 	clusterRes, err := c.clientEKS.DescribeCluster(req)
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == eks.ErrCodeResourceNotFoundException {
+		var aerr awserr.Error
+		if errors.As(err, &aerr) && aerr.Code() == eks.ErrCodeResourceNotFoundException {
 			return true, nil
 		}
-		return false, fmt.Errorf("Couldn't get cluster status: %v", err)
+		return false, fmt.Errorf("Couldn't get cluster status: %w", err)
 	}
 
 	log.Printf("Cluster '%v' status: %v", name, *clusterRes.Cluster.Status)
@@ -367,7 +369,7 @@ func (c *EKS) NodeGroupCreate(*kingpin.ParseContext) error {
 	for _, deployment := range c.eksResources {
 
 		if err := yamlGo.UnmarshalStrict(deployment.Content, req); err != nil {
-			return fmt.Errorf("Error parsing the cluster deployment file %s:%v", deployment.FileName, err)
+			return fmt.Errorf("Error parsing the cluster deployment file %s: %w", deployment.FileName, err)
 		}
 
 		for _, nodegroupReq := range req.NodeGroups {
@@ -375,7 +377,7 @@ func (c *EKS) NodeGroupCreate(*kingpin.ParseContext) error {
 			log.Printf("Nodegroup create request: NodeGroupName: '%s', ClusterName: '%s'", *nodegroupReq.NodegroupName, *req.Cluster.Name)
 			_, err := c.clientEKS.CreateNodegroup(&nodegroupReq)
 			if err != nil {
-				return fmt.Errorf("Couldn't create nodegroup '%s' for cluster '%s', file:%v ,err: %v", *nodegroupReq.NodegroupName, *req.Cluster.Name, deployment.FileName, err)
+				return fmt.Errorf("Couldn't create nodegroup '%s' for cluster '%s', file:%v ,err: %w", *nodegroupReq.NodegroupName, *req.Cluster.Name, deployment.FileName, err)
 			}
 
 			err = provider.RetryUntilTrue(
@@ -385,7 +387,7 @@ func (c *EKS) NodeGroupCreate(*kingpin.ParseContext) error {
 			)
 
 			if err != nil {
-				return fmt.Errorf("creating nodegroup err:%v", err)
+				return fmt.Errorf("creating nodegroup err: %w", err)
 			}
 		}
 	}
@@ -397,7 +399,7 @@ func (c *EKS) NodeGroupDelete(*kingpin.ParseContext) error {
 	req := &eksCluster{}
 	for _, deployment := range c.eksResources {
 		if err := yamlGo.UnmarshalStrict(deployment.Content, req); err != nil {
-			return fmt.Errorf("Error parsing the cluster deployment file %s:%v", deployment.FileName, err)
+			return fmt.Errorf("Error parsing the cluster deployment file %s: %w", deployment.FileName, err)
 		}
 
 		for _, nodegroupReq := range req.NodeGroups {
@@ -409,7 +411,7 @@ func (c *EKS) NodeGroupDelete(*kingpin.ParseContext) error {
 			}
 			_, err := c.clientEKS.DeleteNodegroup(&reqD)
 			if err != nil {
-				return fmt.Errorf("Couldn't delete nodegroup '%s' for cluster '%s, file:%v ,err: %v", *nodegroupReq.NodegroupName, *req.Cluster.Name, deployment.FileName, err)
+				return fmt.Errorf("Couldn't delete nodegroup '%s' for cluster '%s, file:%v ,err: %w", *nodegroupReq.NodegroupName, *req.Cluster.Name, deployment.FileName, err)
 			}
 			err = provider.RetryUntilTrue(
 				fmt.Sprintf("deleting nodegroup:%s for cluster:%s", *nodegroupReq.NodegroupName, *req.Cluster.Name),
@@ -418,7 +420,7 @@ func (c *EKS) NodeGroupDelete(*kingpin.ParseContext) error {
 			)
 
 			if err != nil {
-				return fmt.Errorf("deleting nodegroup err:%v", err)
+				return fmt.Errorf("deleting nodegroup err: %w", err)
 			}
 
 		}
@@ -433,10 +435,11 @@ func (c *EKS) nodeGroupCreated(nodegroupName, clusterName string) (bool, error) 
 	}
 	nodegroupRes, err := c.clientEKS.DescribeNodegroup(req)
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == eks.ErrCodeNotFoundException {
+		var aerr awserr.Error
+		if errors.As(err, &aerr) && aerr.Code() == eks.ErrCodeNotFoundException {
 			return false, nil
 		}
-		return false, fmt.Errorf("Couldn't get nodegroupname status: %v", err)
+		return false, fmt.Errorf("Couldn't get nodegroupname status: %w", err)
 	}
 	if *nodegroupRes.Nodegroup.Status == eks.NodegroupStatusActive {
 		return true, nil
@@ -454,10 +457,11 @@ func (c *EKS) nodeGroupDeleted(nodegroupName, clusterName string) (bool, error) 
 	}
 	nodegroupRes, err := c.clientEKS.DescribeNodegroup(req)
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == eks.ErrCodeResourceNotFoundException {
+		var aerr awserr.Error
+		if errors.As(err, &aerr) && aerr.Code() == eks.ErrCodeResourceNotFoundException {
 			return true, nil
 		}
-		return false, fmt.Errorf("Couldn't get nodegroupname status: %v", err)
+		return false, fmt.Errorf("Couldn't get nodegroupname status: %w", err)
 	}
 
 	log.Printf("Nodegroup '%v' for Cluster '%v' status: %v", nodegroupName, clusterName, *nodegroupRes.Nodegroup.Status)
@@ -469,7 +473,7 @@ func (c *EKS) AllNodeGroupsRunning(*kingpin.ParseContext) error {
 	req := &eksCluster{}
 	for _, deployment := range c.eksResources {
 		if err := yamlGo.UnmarshalStrict(deployment.Content, req); err != nil {
-			return fmt.Errorf("Error parsing the cluster deployment file %s:%v", deployment.FileName, err)
+			return fmt.Errorf("Error parsing the cluster deployment file %s: %w", deployment.FileName, err)
 		}
 		for _, nodegroup := range req.NodeGroups {
 			isRunning, err := c.nodeGroupCreated(*nodegroup.NodegroupName, *req.Cluster.Name)
@@ -489,7 +493,7 @@ func (c *EKS) AllNodeGroupsDeleted(*kingpin.ParseContext) error {
 	req := &eksCluster{}
 	for _, deployment := range c.eksResources {
 		if err := yamlGo.UnmarshalStrict(deployment.Content, req); err != nil {
-			return fmt.Errorf("Error parsing the cluster deployment file %s:%v", deployment.FileName, err)
+			return fmt.Errorf("Error parsing the cluster deployment file %s: %w", deployment.FileName, err)
 		}
 		for _, nodegroup := range req.NodeGroups {
 			isRunning, err := c.nodeGroupDeleted(*nodegroup.NodegroupName, *req.Cluster.Name)
@@ -539,14 +543,14 @@ func (c *EKS) NewK8sProvider(*kingpin.ParseContext) error {
 
 	rep, err := c.clientEKS.DescribeCluster(req)
 	if err != nil {
-		return fmt.Errorf("failed to get cluster details: %v", err)
+		return fmt.Errorf("failed to get cluster details: %w", err)
 	}
 
 	arnRole := *rep.Cluster.Arn
 
 	caCert, err := base64.StdEncoding.DecodeString(*rep.Cluster.CertificateAuthority.Data)
 	if err != nil {
-		return fmt.Errorf("failed to decode certificate: %v", err.Error())
+		return fmt.Errorf("failed to decode certificate: %w", err)
 	}
 
 	cluster := clientcmdapi.NewCluster()
@@ -570,7 +574,7 @@ func (c *EKS) NewK8sProvider(*kingpin.ParseContext) error {
 
 	c.k8sProvider, err = k8sProvider.New(c.ctx, config)
 	if err != nil {
-		return fmt.Errorf("k8s provider error %v", err)
+		return fmt.Errorf("k8s provider error %w", err)
 	}
 
 	return nil
@@ -579,7 +583,7 @@ func (c *EKS) NewK8sProvider(*kingpin.ParseContext) error {
 // ResourceApply calls k8s.ResourceApply to apply the k8s objects in the manifest files.
 func (c *EKS) ResourceApply(*kingpin.ParseContext) error {
 	if err := c.k8sProvider.ResourceApply(c.k8sResources); err != nil {
-		return fmt.Errorf("error while applying a resource err: %v", err)
+		return fmt.Errorf("error while applying a resource err: %w", err)
 	}
 	return nil
 }
@@ -587,7 +591,7 @@ func (c *EKS) ResourceApply(*kingpin.ParseContext) error {
 // ResourceDelete calls k8s.ResourceDelete to apply the k8s objects in the manifest files.
 func (c *EKS) ResourceDelete(*kingpin.ParseContext) error {
 	if err := c.k8sProvider.ResourceDelete(c.k8sResources); err != nil {
-		return fmt.Errorf("error while deleting objects from a manifest file err: %v", err)
+		return fmt.Errorf("error while deleting objects from a manifest file err: %w", err)
 	}
 	return nil
 }

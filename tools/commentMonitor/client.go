@@ -77,7 +77,7 @@ func (c commentMonitorClient) verifyUser() error {
 		if !allowed {
 			b := fmt.Sprintf("@%s is not a org member nor a collaborator and cannot execute benchmarks.", c.ghClient.author)
 			if err := c.ghClient.postComment(b); err != nil {
-				return fmt.Errorf("%v : couldn't post comment", err)
+				return fmt.Errorf("%w : couldn't post comment", err)
 			}
 			return fmt.Errorf("author is not a member or collaborator")
 		}
@@ -104,13 +104,13 @@ func (c *commentMonitorClient) extractArgs(command string) error {
 		c.allArgs["PR_NUMBER"] = strconv.Itoa(c.ghClient.pr)
 		c.allArgs["LAST_COMMIT_SHA"], err = c.ghClient.getLastCommitSHA()
 		if err != nil {
-			return fmt.Errorf("%v: could not fetch SHA", err)
+			return fmt.Errorf("%w: could not fetch SHA", err)
 		}
 
 		// TODO (geekodour) : We could run this in a seperate method.
 		err = c.ghClient.createRepositoryDispatch(c.eventType, c.allArgs)
 		if err != nil {
-			return fmt.Errorf("%v: could not create repository_dispatch event", err)
+			return fmt.Errorf("%w: could not create repository_dispatch event", err)
 		}
 	}
 	return nil
@@ -119,7 +119,7 @@ func (c *commentMonitorClient) extractArgs(command string) error {
 func (c commentMonitorClient) postLabel() error {
 	if c.label != "" {
 		if err := c.ghClient.createLabel(c.label); err != nil {
-			return fmt.Errorf("%v : couldn't set label", err)
+			return fmt.Errorf("%w : couldn't set label", err)
 		}
 		log.Println("label successfully set")
 	}
@@ -148,7 +148,7 @@ func (c commentMonitorClient) generateAndPostComment(commentTemplate string) err
 		}
 		// Post the comment.
 		if err := c.ghClient.postComment(buf.String()); err != nil {
-			return fmt.Errorf("%v : couldn't post generated comment", err)
+			return fmt.Errorf("%w : couldn't post generated comment", err)
 		}
 		log.Println("comment successfully posted")
 	}

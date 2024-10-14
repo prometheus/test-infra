@@ -9,7 +9,6 @@ require (
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/google/go-github/v29 v29.0.3
 	github.com/oklog/run v1.1.0
-	github.com/pkg/errors v0.9.1
 	github.com/prometheus/alertmanager v0.27.0
 	github.com/prometheus/client_golang v1.20.4
 	github.com/prometheus/common v0.60.0
@@ -108,6 +107,7 @@ require (
 	github.com/onsi/gomega v1.33.1 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common/sigv4 v0.1.0 // indirect
 	github.com/prometheus/exporter-toolkit v0.11.0 // indirect

@@ -91,7 +91,7 @@ func applyTemplateVars(content []byte, deploymentVars map[string]string) ([]byte
 		},
 	})
 	if err := template.Must(t.Parse(string(content))).Execute(fileContentParsed, deploymentVars); err != nil {
-		return nil, fmt.Errorf("Failed to execute parse file err: %s", err)
+		return nil, fmt.Errorf("Failed to execute parse file err: %w", err)
 	}
 	return fileContentParsed.Bytes(), nil
 }
@@ -108,7 +108,7 @@ func DeploymentsParse(deploymentFiles []string, deploymentVars map[string]string
 				}
 				return nil
 			}); err != nil {
-				return nil, fmt.Errorf("error reading directory: %v", err)
+				return nil, fmt.Errorf("error reading directory: %w", err)
 			}
 		} else {
 			fileList = append(fileList, name)
@@ -126,7 +126,7 @@ func DeploymentsParse(deploymentFiles []string, deploymentVars map[string]string
 		if !strings.HasSuffix(absFileName, "noparse") {
 			content, err = applyTemplateVars(content, deploymentVars)
 			if err != nil {
-				return nil, fmt.Errorf("couldn't apply template to file %s: %v", name, err)
+				return nil, fmt.Errorf("couldn't apply template to file %s: %w", name, err)
 			}
 		}
 		deploymentObjects = append(deploymentObjects, Resource{FileName: name, Content: content})

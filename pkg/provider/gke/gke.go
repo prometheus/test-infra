@@ -24,7 +24,6 @@ import (
 
 	gke "cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
-	"github.com/pkg/errors"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -78,7 +77,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	// Set the auth env variable needed to the gke client.
 	if c.Auth != "" {
 	} else if c.Auth = os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"); c.Auth == "" {
-		return errors.Errorf("no auth provided! Need to either set the auth flag or the GOOGLE_APPLICATION_CREDENTIALS env variable")
+		return fmt.Errorf("no auth provided! Need to either set the auth flag or the GOOGLE_APPLICATION_CREDENTIALS env variable")
 	}
 
 	// When the auth variable points to a file
@@ -95,7 +94,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	if encoded {
 		auth, err := base64.StdEncoding.DecodeString(c.Auth)
 		if err != nil {
-			return errors.Wrap(err, "could not decode auth data")
+			return fmt.Errorf("could not decode auth data: %w", err)
 		}
 		c.Auth = string(auth)
 	}
@@ -103,11 +102,11 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	// Create temporary file to store the credentials.
 	saFile, err := os.CreateTemp("", "service-account")
 	if err != nil {
-		return errors.Wrap(err, "could not create temp file")
+		return fmt.Errorf("could not create temp file: %w", err)
 	}
 	defer saFile.Close()
 	if _, err := saFile.Write([]byte(c.Auth)); err != nil {
-		return errors.Wrap(err, "could not write to temp file")
+		return fmt.Errorf("could not write to temp file: %w", err)
 	}
 	// Set the auth env variable needed to the k8s client.
 	// The client looks for this special variable name and it is the only way to set the auth for now.
@@ -119,7 +118,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 
 	cl, err := gke.NewClusterManagerClient(context.Background(), opts)
 	if err != nil {
-		return errors.Wrap(err, "could not create the gke client")
+		return fmt.Errorf("could not create the gke client: %w", err)
 	}
 	c.clientGKE = cl
 	c.ctx = context.Background()
@@ -178,7 +177,7 @@ func (c *GKE) K8SDeploymentsParse(*kingpin.ParseContext) error {
 
 			resource, _, err := decode([]byte(text), nil, nil)
 			if err != nil {
-				return errors.Wrapf(err, "decoding the resource file:%v, section:%v...", deployment.FileName, text[:100])
+				return fmt.Errorf("decoding the resource file:%v, section:%v...: %w", deployment.FileName, text[:100], err)
 			}
 			if resource == nil {
 				continue
@@ -274,7 +273,7 @@ func (c *GKE) clusterDeleted(req *containerpb.DeleteClusterRequest) (bool, error
 	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok {
-			return false, fmt.Errorf("unknown reply status error %v", err)
+			return false, fmt.Errorf("unknown reply status error, %w", err)
 		}
 		if st.Code() == codes.NotFound {
 			return true, nil
@@ -284,7 +283,7 @@ func (c *GKE) clusterDeleted(req *containerpb.DeleteClusterRequest) (bool, error
 			return false, nil
 		}
 		//nolint:staticcheck // SA1019 - Ignore "Do not use.".
-		return false, errors.Wrapf(err, "deleting cluster:%v", req.ClusterId)
+		return false, fmt.Errorf("deleting cluster:%v: %w", req.ClusterId, err)
 	}
 	log.Printf("cluster status: `%v`", rep.Status)
 	return false, nil
@@ -303,7 +302,7 @@ func (c *GKE) clusterRunning(zone, projectID, clusterID string) (bool, error) {
 		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
 			return false, nil
 		}
-		return false, fmt.Errorf("Couldn't get cluster status:%v", err)
+		return false, fmt.Errorf("Couldn't get cluster status: %w", err)
 	}
 	if cluster.Status == containerpb.Cluster_ERROR ||
 		cluster.Status == containerpb.Cluster_STATUS_UNSPECIFIED ||
@@ -375,7 +374,7 @@ func (c *GKE) nodePoolCreated(req *containerpb.CreateNodePoolRequest) (bool, err
 	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok {
-			return false, fmt.Errorf("unknown reply status error %v", err)
+			return false, fmt.Errorf("unknown reply status error: %w", err)
 		}
 		if st.Code() == codes.FailedPrecondition {
 			// GKE cannot have two simultaneous nodepool operations running on it
@@ -434,7 +433,7 @@ func (c *GKE) nodePoolDeleted(req *containerpb.DeleteNodePoolRequest) (bool, err
 	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok {
-			return false, fmt.Errorf("unknown reply status error %v", err)
+			return false, fmt.Errorf("unknown reply status error: %w", err)
 		}
 		if st.Code() == codes.NotFound {
 			return true, nil
@@ -467,7 +466,7 @@ func (c *GKE) nodePoolRunning(zone, projectID, clusterID, poolName string) (bool
 		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
 			return false, nil
 		}
-		return false, fmt.Errorf("Couldn't get node pool status:%v", err)
+		return false, fmt.Errorf("Couldn't get node pool status: %w", err)
 	}
 	if rep.Status == containerpb.NodePool_RUNNING {
 		return true, nil
@@ -492,7 +491,7 @@ func (c *GKE) AllNodepoolsRunning(*kingpin.ParseContext) error {
 
 	for _, deployment := range c.gkeResources {
 		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
-			return errors.Errorf("error parsing the cluster deployment file %s:%v", deployment.FileName, err)
+			return fmt.Errorf("error parsing the cluster deployment file %s: %w", deployment.FileName, err)
 		}
 
 		for _, node := range reqC.Cluster.NodePools {
@@ -516,7 +515,7 @@ func (c *GKE) AllNodepoolsDeleted(*kingpin.ParseContext) error {
 
 	for _, deployment := range c.gkeResources {
 		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
-			return errors.Errorf("error parsing the cluster deployment file %s:%v", deployment.FileName, err)
+			return fmt.Errorf("error parsing the cluster deployment file %s: %w", deployment.FileName, err)
 		}
 
 		for _, node := range reqC.Cluster.NodePools {
