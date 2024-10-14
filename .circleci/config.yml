@@ -63,14 +63,6 @@ jobs:
           login_variable: DOCKER_LOGIN
           password_variable: DOCKER_PASSWORD
       - prometheus/publish_images:
-          container_image_name: funcbench
-          dockerfile_path: "funcbench/Dockerfile"
-          dockerbuild_context: "funcbench/"
-          registry: docker.io
-          organization: "$DOCKER_ORG"
-          login_variable: DOCKER_LOGIN
-          password_variable: DOCKER_PASSWORD
-      - prometheus/publish_images:
           container_image_name: amgithubnotifier
           dockerfile_path: "tools/amGithubNotifier/Dockerfile"
           dockerbuild_context: "tools/amGithubNotifier/"

@@ -8,8 +8,6 @@ build:
     binaries:
         - name: infra
           path: ./infra
-        - name: funcbench
-          path: ./funcbench
         - name: tools/amGithubNotifier
           path: ./tools/amGithubNotifier
         - name: tools/commentMonitor
