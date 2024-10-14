@@ -19,7 +19,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/prometheus/test-infra/pkg/provider"
@@ -154,7 +153,7 @@ func main() {
 		Action(e.ResourceDelete)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
-		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error parsing commandline arguments"))
+		fmt.Fprintln(os.Stderr, fmt.Errorf("Error parsing commandline arguments: %w", err))
 		app.Usage(os.Args[1:])
 		os.Exit(2)
 	}

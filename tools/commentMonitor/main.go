@@ -84,7 +84,7 @@ func (c *commentMonitorConfig) loadConfig() error {
 	}
 	err = yaml.UnmarshalStrict(data, &c.configFile)
 	if err != nil {
-		return fmt.Errorf("cannot unmarshal data: %v", err)
+		return fmt.Errorf("cannot unmarshal data: %w", err)
 	}
 	if len(c.configFile.WebhookEvents) == 0 || len(c.configFile.Prefixes) == 0 {
 		return fmt.Errorf("empty eventmap or prefix list")

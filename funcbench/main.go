@@ -15,6 +15,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -30,7 +31,6 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/oklog/run"
-	"github.com/pkg/errors"
 	"golang.org/x/perf/benchstat"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -155,21 +155,21 @@ func main() {
 				// Local Mode.
 				env, err = newLocalEnv(e)
 				if err != nil {
-					return errors.Wrap(err, "environment create")
+					return fmt.Errorf("environment create: %w", err)
 				}
 			} else {
 				// Github Mode.
 				ghClient, err := newGitHubClient(ctx, cfg.owner, cfg.repo, cfg.ghPR, cfg.nocomment)
 				if err != nil {
-					return errors.Wrapf(err, "github client")
+					return fmt.Errorf("github client: %w", err)
 				}
 
 				env, err = newGitHubEnv(ctx, e, ghClient, cfg.workspaceDir)
 				if err != nil {
 					if err := ghClient.postComment(fmt.Sprintf("%v. Could not setup environment, please check logs.", err)); err != nil {
-						return errors.Wrap(err, "could not post error")
+						return fmt.Errorf("could not post error: %w", err)
 					}
-					return errors.Wrap(err, "environment create")
+					return fmt.Errorf("environment create: %w", err)
 				}
 			}
 
@@ -192,7 +192,7 @@ func main() {
 				)
 
 				if pErr != nil {
-					return errors.Wrap(pErr, "could not log error")
+					return fmt.Errorf("could not log error: %w", pErr)
 				}
 				return err
 			}
@@ -219,7 +219,7 @@ func main() {
 	}
 
 	if err := g.Run(); err != nil {
-		logger.FatalError(errors.Wrap(err, "running command failed"))
+		logger.FatalError(fmt.Errorf("running command failed: %w", err))
 	}
 	logger.Println("exiting")
 }
@@ -237,24 +237,24 @@ func startBenchmark(env Environment, bench *Benchmarker) ([]*benchstat.Table, er
 
 	ref, err := env.Repo().Head()
 	if err != nil {
-		return nil, errors.Wrap(err, "get head")
+		return nil, fmt.Errorf("get head: %w", err)
 	}
 
 	// TODO move it into env? since GitHub env doesn't need this check.
 	if _, err := bench.c.exec("sh", "-c", "git update-index -q --ignore-submodules --refresh && git diff-files --quiet --ignore-submodules --"); err != nil {
-		return nil, errors.Wrap(err, "not clean worktree")
+		return nil, fmt.Errorf("not clean worktree: %w", err)
 	}
 
 	if env.CompareTarget() == "." {
 		bench.logger.Println("Assuming sub-benchmarks comparison.")
 		subResult, err := bench.exec(wt.Filesystem.Root(), ref.Hash())
 		if err != nil {
-			return nil, errors.Wrap(err, "execute sub-benchmark")
+			return nil, fmt.Errorf("execute sub-benchmark: %w", err)
 		}
 
 		cmps, err := bench.compareSubBenchmarks(subResult)
 		if err != nil {
-			return nil, errors.Wrap(err, "comparing sub benchmarks")
+			return nil, fmt.Errorf("comparing sub benchmarks: %w", err)
 		}
 		return cmps, nil
 	}
@@ -276,35 +276,35 @@ func startBenchmark(env Environment, bench *Benchmarker) ([]*benchstat.Table, er
 	// Execute benchmark A.
 	newResult, err := bench.exec(wt.Filesystem.Root(), ref.Hash())
 	if err != nil {
-		return nil, errors.Wrapf(err, "execute benchmark for A: %v", ref.Name().String())
+		return nil, fmt.Errorf("execute benchmark for A: %v: %w", ref.Name().String(), err)
 	}
 
 	// TODO move the following part before 'Execute benchmark B.' into a function Benchmarker.switchToWorkTree.
 	// Best effort cleanup and checkout new worktree.
 	if err := os.RemoveAll(cmpWorkTreeDir); err != nil {
-		return nil, errors.Wrapf(err, "delete worktree at %s", cmpWorkTreeDir)
+		return nil, fmt.Errorf("delete worktree at %s: %w", cmpWorkTreeDir, err)
 	}
 
 	// TODO (geekodour): switch to worktree remove once we decide not to support git<2.17
 	if _, err := bench.c.exec("git", "worktree", "prune"); err != nil {
-		return nil, errors.Wrap(err, "worktree prune")
+		return nil, fmt.Errorf("worktree prune: %w", err)
 	}
 
 	bench.logger.Println("Checking out (in new workdir):", cmpWorkTreeDir, "commmit", targetCommit.String())
 	if _, err := bench.c.exec("git", "worktree", "add", "-f", cmpWorkTreeDir, targetCommit.String()); err != nil {
-		return nil, errors.Wrapf(err, "checkout %s in worktree %s", targetCommit.String(), cmpWorkTreeDir)
+		return nil, fmt.Errorf("checkout %s in worktree %s: %w", targetCommit.String(), cmpWorkTreeDir, err)
 	}
 
 	// Execute benchmark B.
 	oldResult, err := bench.exec(cmpWorkTreeDir, targetCommit)
 	if err != nil {
-		return nil, errors.Wrapf(err, "execute benchmark for B: %v", env.CompareTarget())
+		return nil, fmt.Errorf("execute benchmark for B: %v: %w", env.CompareTarget(), err)
 	}
 
 	// Compare B vs A.
 	tables, err := compareBenchmarks(oldResult, newResult)
 	if err != nil {
-		return nil, errors.Wrap(err, "comparing benchmarks")
+		return nil, fmt.Errorf("comparing benchmarks: %w", err)
 	}
 
 	// Save hashes for info about benchmark.
@@ -354,7 +354,7 @@ func (c *commander) exec(command ...string) (string, error) {
 	}
 	if err := cmd.Run(); err != nil {
 		out := b.String()
-		return "", errors.Errorf("error: %v; Command out: %s", err, out)
+		return "", fmt.Errorf("error: %w; Command out: %s", err, out)
 	}
 
 	return b.String(), nil

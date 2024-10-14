@@ -15,6 +15,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -25,7 +26,6 @@ import (
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/google/go-github/v29/github"
-	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 	"golang.org/x/perf/benchstat"
 )
@@ -122,11 +122,11 @@ func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspac
 		}
 	}
 	if err != nil {
-		return nil, errors.Wrap(err, "clone git repository")
+		return nil, fmt.Errorf("clone git repository: %w", err)
 	}
 
 	if err := os.Chdir(filepath.Join(workspace, gc.repo)); err != nil {
-		return nil, errors.Wrapf(err, "changing to %s/%s dir", workspace, gc.repo)
+		return nil, fmt.Errorf("changing to %s/%s dir: %w", workspace, gc.repo, err)
 	}
 
 	g := &GitHub{
@@ -150,14 +150,14 @@ func newGitHubEnv(ctx context.Context, e environment, gc *gitHubClient, workspac
 			config.RefSpec(fmt.Sprintf("+refs/pull/%d/head:refs/heads/pullrequest", gc.prNumber)),
 		},
 		Progress: os.Stdout,
-	}); err != nil && err != git.NoErrAlreadyUpToDate {
-		return nil, errors.Wrap(err, "fetch to pull request branch")
+	}); err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
+		return nil, fmt.Errorf("fetch to pull request branch: %w", err)
 	}
 
 	if err = wt.Checkout(&git.CheckoutOptions{
 		Branch: plumbing.NewBranchReferenceName("pullrequest"),
 	}); err != nil {
-		return nil, errors.Wrap(err, "switch to pull request branch")
+		return nil, fmt.Errorf("switch to pull request branch: %w", err)
 	}
 
 	e.logger.Println("[GitHub Mode]", gc.owner, ":", gc.repo, "\nBenchmarking PR -", gc.prNumber, "versus:", e.compareTarget, "\nBenchmark func regex:", e.benchFunc)
