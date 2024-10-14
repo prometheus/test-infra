@@ -1,7 +1,7 @@
 DOCKER_REPO             ?= prominfra
 
 .PHONY: all
-all: precheck style check_license lint build test unused docs-check
+all: precheck style check_license lint build test unused docs-check generate-dashboards-cm
 
 .PHONY: docker
 docker:
@@ -23,5 +23,9 @@ docs:
 .PHONY: docs-check
 docs-check:
 	./scripts/genflagdocs.sh check
+
+.PHONY: generate-dashboards-cm
+generate-dashboards-cm:
+	./scripts/sync-dashboards-to-configmap.sh
 
 include Makefile.common
