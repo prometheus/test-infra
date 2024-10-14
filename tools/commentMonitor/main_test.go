@@ -20,11 +20,7 @@ func TestExtractCommand(t *testing.T) {
 		commentBody string
 		command     string
 	}{
-		{"\r\n/funcbench master\t", "/funcbench master"},
-		{"\r\n/funcbench master\n", "/funcbench master"},
-		{"\r\n/funcbench master\r\n", "/funcbench master"},
 		{"/prombench master\r\n", "/prombench master"},
-		{"/funcbench master .*\t\r\nSomething", "/funcbench master .*"},
 		{"command without forwardslash", "command without forwardslash"},
 	}
 	for _, tc := range testCases {
@@ -37,7 +33,6 @@ func TestExtractCommand(t *testing.T) {
 func TestCheckCommandPrefix(t *testing.T) {
 	cmClient := commentMonitorClient{
 		prefixes: []commandPrefix{
-			{"/funcbench", "help", false},
 			{"/prombench", "help", false},
 			{"/somebench", "help", false},
 		},
@@ -46,7 +41,6 @@ func TestCheckCommandPrefix(t *testing.T) {
 		command string
 		valid   bool
 	}{
-		{"/funcbench master", true},
 		{"/somebench master", true},
 		{"/querybench master", false},
 		{"prombench master", false},
