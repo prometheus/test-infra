@@ -34,7 +34,6 @@ type Resource = provider.Resource
 
 // KIND holds the fields used to generate an API request.
 type KIND struct {
-
 	// The k8s provider used when we work with the manifest files.
 	k8sProvider *k8sProvider.K8s
 	// The kind provider used to instantiate a new provider.
@@ -108,7 +107,6 @@ func (c *KIND) K8SDeploymentsParse(*kingpin.ParseContext) error {
 		return err
 	}
 	for _, deployment := range deploymentResource {
-
 		decode := scheme.Codecs.UniversalDeserializer().Decode
 		k8sObjects := make([]runtime.Object, 0)
 

@@ -107,7 +107,7 @@ func (c *commentMonitorClient) extractArgs(command string) error {
 			return fmt.Errorf("%w: could not fetch SHA", err)
 		}
 
-		// TODO (geekodour) : We could run this in a seperate method.
+		// TODO (geekodour) : We could run this in a separate method.
 		err = c.ghClient.createRepositoryDispatch(c.eventType, c.allArgs)
 		if err != nil {
 			return fmt.Errorf("%w: could not create repository_dispatch event", err)
@@ -129,6 +129,7 @@ func (c commentMonitorClient) postLabel() error {
 func (c commentMonitorClient) generateAndPostSuccessComment() error {
 	return c.generateAndPostComment(c.commentTemplate)
 }
+
 func (c commentMonitorClient) generateAndPostErrorComment() error {
 	return c.generateAndPostComment(c.helpTemplate)
 }

@@ -90,7 +90,6 @@ func (s *scale) scale(*kingpin.ParseContext) error {
 }
 
 func main() {
-
 	app := kingpin.New(filepath.Base(os.Args[0]), "The Prombench-Scaler tool")
 	app.HelpFlag.Short('h')
 
