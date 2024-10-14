@@ -109,7 +109,6 @@ spec:
   selector:
     app: prometheus
     prometheus: test-pr-{{ .PR_NUMBER }}
-
 ---
 apiVersion: apps/v1
 kind: Deployment
