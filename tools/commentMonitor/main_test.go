@@ -30,6 +30,7 @@ func TestExtractCommand(t *testing.T) {
 		}
 	}
 }
+
 func TestCheckCommandPrefix(t *testing.T) {
 	cmClient := commentMonitorClient{
 		prefixes: []commandPrefix{
