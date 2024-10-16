@@ -165,7 +165,6 @@ func (c *GKE) K8SDeploymentsParse(*kingpin.ParseContext) error {
 	}
 
 	for _, deployment := range deploymentResource {
-
 		decode := scheme.Codecs.UniversalDeserializer().Decode
 		k8sObjects := make([]runtime.Object, 0)
 
@@ -209,7 +208,6 @@ func (c *GKE) checkDeploymentVarsAndFiles() error {
 func (c *GKE) ClusterCreate(*kingpin.ParseContext) error {
 	req := &containerpb.CreateClusterRequest{}
 	for _, deployment := range c.gkeResources {
-
 		if err := yamlGo.UnmarshalStrict(deployment.Content, req); err != nil {
 			log.Fatalf("Error parsing the cluster deployment file %s:%v", deployment.FileName, err)
 		}
@@ -226,7 +224,6 @@ func (c *GKE) ClusterCreate(*kingpin.ParseContext) error {
 			provider.GlobalRetryCount,
 			//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 			func() (bool, error) { return c.clusterRunning(req.Zone, req.ProjectId, req.Cluster.Name) })
-
 		if err != nil {
 			log.Fatalf("creating cluster err:%v", err)
 		}
@@ -259,7 +256,6 @@ func (c *GKE) ClusterDelete(*kingpin.ParseContext) error {
 			fmt.Sprintf("deleting cluster:%v", reqD.ClusterId),
 			provider.GlobalRetryCount,
 			func() (bool, error) { return c.clusterDeleted(reqD) })
-
 		if err != nil {
 			log.Fatalf("removing cluster err:%v", err)
 		}
@@ -345,7 +341,6 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 				func() (bool, error) {
 					return c.nodePoolCreated(reqN)
 				})
-
 			if err != nil {
 				log.Fatalf("Couldn't create cluster nodepool '%v', file:%v ,err: %v", node.Name, deployment.FileName, err)
 			}
@@ -357,7 +352,6 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 					//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 					return c.nodePoolRunning(reqN.Zone, reqN.ProjectId, reqN.ClusterId, reqN.NodePool.Name)
 				})
-
 			if err != nil {
 				log.Fatalf("Couldn't create cluster nodepool '%v', file:%v ,err: %v", node.Name, deployment.FileName, err)
 			}
@@ -369,7 +363,6 @@ func (c *GKE) NodePoolCreate(*kingpin.ParseContext) error {
 // nodePoolCreated checks if there is any ongoing NodePool operation on the cluster
 // when creating a NodePool.
 func (c *GKE) nodePoolCreated(req *containerpb.CreateNodePoolRequest) (bool, error) {
-
 	rep, err := c.clientGKE.CreateNodePool(c.ctx, req)
 	if err != nil {
 		st, ok := status.FromError(err)
@@ -395,7 +388,6 @@ func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 	// than use the result to create the DeleteNodePoolRequest
 	reqC := &containerpb.CreateClusterRequest{}
 	for _, deployment := range c.gkeResources {
-
 		if err := yamlGo.UnmarshalStrict(deployment.Content, reqC); err != nil {
 			log.Fatalf("Error parsing the cluster deployment file %s:%v", deployment.FileName, err)
 		}
@@ -417,7 +409,6 @@ func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 				fmt.Sprintf("deleting nodepool:%v", reqD.NodePoolId),
 				provider.GlobalRetryCount,
 				func() (bool, error) { return c.nodePoolDeleted(reqD) })
-
 			if err != nil {
 				log.Fatalf("Couldn't delete cluster nodepool '%v', file:%v ,err: %v", node.Name, deployment.FileName, err)
 			}
@@ -428,7 +419,6 @@ func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 
 // nodePoolDeleted checks whether a nodepool has been deleted.
 func (c *GKE) nodePoolDeleted(req *containerpb.DeleteNodePoolRequest) (bool, error) {
-
 	rep, err := c.clientGKE.DeleteNodePool(c.ctx, req)
 	if err != nil {
 		st, ok := status.FromError(err)
@@ -460,7 +450,6 @@ func (c *GKE) nodePoolRunning(zone, projectID, clusterID, poolName string) (bool
 		NodePoolId: poolName,
 	}
 	rep, err := c.clientGKE.GetNodePool(c.ctx, req)
-
 	if err != nil {
 		// We don't consider none existing cluster node pool a failure. So don't return an error here.
 		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
