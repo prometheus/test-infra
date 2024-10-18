@@ -125,9 +125,9 @@ kind: Ingress
 metadata:
   name: ingress-parca
   annotations:
-    spec.ingressClassName: "nginx"
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
+  ingressClassName: nginx
   rules:
   - http:
       paths:
