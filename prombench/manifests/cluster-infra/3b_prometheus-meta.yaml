@@ -257,9 +257,9 @@ kind: Ingress
 metadata:
   name: ingress-prometheus-meta
   annotations:
-    spec.ingressClassName: "nginx"
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
+  ingressClassName: nginx
   rules:
   - http:
       paths:
