@@ -4,12 +4,12 @@ metadata:
   name: ingress-prometheus
   namespace: prombench-{{ .PR_NUMBER }}
   annotations:
-    spec.ingressClassName: "nginx"
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/proxy-connect-timeout: '605'
     nginx.ingress.kubernetes.io/proxy-send-timeout: '605'
     nginx.ingress.kubernetes.io/proxy-read-timeout: '605'
 spec:
+  ingressClassName: nginx
   rules:
   - http:
       paths:
