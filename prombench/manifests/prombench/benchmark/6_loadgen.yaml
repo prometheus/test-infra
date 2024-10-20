@@ -20,7 +20,7 @@ data:
         - expr: codelab_api_http_requests_in_progress
         - expr: 'codelab_api_requests_total{method="GET",path="/api/bar",status="200"}'
       - name: aggr_instant
-        interval: 5s
+        interval: 15s
         type: instant
         queries:
         - expr: sum by(image) (container_memory_rss)
@@ -45,7 +45,6 @@ data:
         queries:
         - expr: rate(codelab_api_requests_total{method=~"GET|POST"}[5m])
         - expr: sum without(instance) (rate(codelab_api_requests_total{method=~"GET|POST"}[5m]))
-        - expr: histogram_quantile(0.99, sum by(path, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[5m])))
         - expr: histogram_quantile(0.99, sum by(path, method, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[5m])))
         - expr: histogram_quantile(0.99, sum by(instance, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[5m])))
       - name: arithmetic_operation
