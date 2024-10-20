@@ -7,39 +7,50 @@ metadata:
 data:
   loki.yaml: |
     auth_enabled: false
-    ingester:
-      chunk_idle_period: 15m
-      chunk_block_size: 262144
-      lifecycler:
-        ring:
-          kvstore:
-            store: inmemory
-          replication_factor: 1
-    limits_config:
-      enforce_metric_name: false
-      reject_old_samples: true
-      reject_old_samples_max_age: 168h
+
+    common:
+      instance_addr: 127.0.0.1
+      path_prefix: /data/loki
+      storage:
+        filesystem:
+          chunks_directory: /data/loki/chunks
+          rules_directory: /data/loki/rules
+      replication_factor: 1
+      ring:
+        kvstore:
+          store: inmemory
+
+    query_range:
+      results_cache:
+        cache:
+          embedded_cache:
+            enabled: true
+            max_size_mb: 100
+
     schema_config:
       configs:
-      - from: 2018-04-15
-        store: boltdb
+      - from: 2024-10-20
+        store: tsdb
         object_store: filesystem
-        schema: v9
+        schema: v13
         index:
           prefix: index_
-          period: 168h
+          period: 24h
+
+    pattern_ingester:
+      enabled: true
+      metric_aggregation:
+        enabled: true
+        loki_address: localhost:3100
+
+    frontend:
+      encoding: protobuf
+
     server:
       http_listen_port: 3100
-    storage_config:
-      boltdb:
-        directory: /data/loki/index
-      filesystem:
-        directory: /data/loki/chunks
-    chunk_store_config:
-      max_look_back_period: 0s
-    table_manager:
-      retention_deletes_enabled: true
-      retention_period: 2184h
+      grpc_listen_port: 9096
+      log_level: debug
+      grpc_server_max_concurrent_streams: 1000
 ---
 apiVersion: v1
 kind: Service
@@ -86,7 +97,7 @@ spec:
         runAsUser: 10001
       containers:
         - name: loki
-          image: grafana/loki:1.4.1
+          image: grafana/loki:3.2.1
           imagePullPolicy: IfNotPresent
           args:
             - "-config.file=/etc/loki/loki.yaml"
