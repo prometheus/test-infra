@@ -101,6 +101,9 @@ spec:
           imagePullPolicy: IfNotPresent
           args:
             - "-config.file=/etc/loki/loki.yaml"
+          requests:
+            cpu: 100m
+            memory: 100MB
           volumeMounts:
             - name: config
               mountPath: /etc/loki
