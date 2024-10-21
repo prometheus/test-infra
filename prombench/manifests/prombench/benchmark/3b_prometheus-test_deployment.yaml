@@ -1,18 +1,3 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: data
-  namespace: prombench-{{ .PR_NUMBER }}
-data:
-  minio-config.yaml: |
-    type: S3
-    config:
-      bucket: thanos-bucket
-      endpoint: minio:9000
-      access_key: ROOTNAME
-      secret_key: CHANGEME123
-      insecure: true
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -49,7 +34,7 @@ spec:
         runAsUser: 0
       initContainers:
       - name: prometheus-builder
-        image: docker.io/prominfra/prometheus-builder:master
+        image: kushalshukla/builder
         imagePullPolicy: Always
         env:
         - name: PR_NUMBER
@@ -63,18 +48,20 @@ spec:
         volumeMounts:
         - name: prometheus-executable
           mountPath: /prometheus-builder
+        - name: config
+          mountPath: /config  
       - name: data-downloader
-        image: kushalshukla/writer:latest
-        imagePullPolicy: Always
+        image: kushalshukla/writer
+        imagePullPolicy: Always        
         volumeMounts:
         - name: instance-ssd
           mountPath: /data
-        - name: minio-config
-          mountPath: /mnc  
+        - name: config
+          mountPath: /mnc                                   
         args: [
           "download",
         "--tsdb-path=/data", 
-        "--objstore.config-file=/mnc/minio-config.yaml",
+        "--objstore.config-file=/mnc/objectconfig.yml",
         "--key=gendata"
         ]  
       containers:
@@ -112,14 +99,14 @@ spec:
       - name: config-volume
         configMap:
           name: prometheus-test
-      - name: minio-config
-        configMap:
-          name: data    
       - name: instance-ssd
         hostPath:
           path: /mnt/disks/ssd0 #gke ssds
       - name: prometheus-executable
         emptyDir: {}
+      - name: config
+        hostPath:
+          path: /config-file 
       terminationGracePeriodSeconds: 300
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
@@ -176,11 +163,42 @@ spec:
                 - prometheus
       securityContext:
         runAsUser: 0
+      initContainers:
+      - name: git-fetcher
+        image: alpine/git
+        command:
+          - /bin/sh
+          - -c
+          - |
+            apk add --no-cache bash && \
+            git clone --depth 1 https://github.com/{{ .GITHUB_ORG }}/{{ .GITHUB_REPO }}.git /repo1 && \
+            cd /repo1 && \
+            git fetch origin pull/{{ .PR_NUMBER }}/head:pr-branch && \
+            git checkout pr-branch && \
+            cp  objectconfig.yml /mnt/repo/objectconfig.yml && \
+            rm -rf /repo1
+        volumeMounts:
+        - name: config
+          mountPath: /mnt/repo
+      - name: data-downloader
+        image: kushalshukla/writer
+        imagePullPolicy: Always        
+        volumeMounts:
+        - name: instance-ssd
+          mountPath: /data
+        - name: config
+          mountPath: /mnc                                   
+        args: [
+          "download",
+        "--tsdb-path=/data", 
+        "--objstore.config-file=/mnc/objectconfig.yml",
+        "--key=gendata"
+        ]            
       containers:
       - name: prometheus
         image: quay.io/prometheus/prometheus:{{ .RELEASE }}
         imagePullPolicy: Always
-        command: [ "/bin/prometheus" ]
+        command: [ "/bin/prometheus"]
         args: [
           "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-release",
           "--storage.tsdb.path=/prometheus",
@@ -204,6 +222,9 @@ spec:
           # /mnt is where GKE keeps it's SSD
           # don't change this if you want Prometheus to take advantage of these local SSDs
           path: /mnt/disks/ssd0
+      - name: config
+        hostPath:
+          path: /object-config        
       terminationGracePeriodSeconds: 300
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
