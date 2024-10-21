@@ -49,7 +49,6 @@ func newStore(tsdbPath, objectConfig, objectKey string, logger *slog.Logger) (*S
 		objectconfig: objectConfig,
 		bucketlogger: logger,
 	}, nil
-
 }
 
 func (c *Store) upload(ctx context.Context) error {
@@ -62,7 +61,7 @@ func (c *Store) upload(ctx context.Context) error {
 	err = objstore.UploadDir(ctx, log.NewNopLogger(), c.bucket, c.tsdbpath, c.objectkey)
 	if err != nil {
 		c.bucketlogger.Error("Failed to upload directory", "path", c.tsdbpath, "error", err)
-		return fmt.Errorf("failed to upload directory from path %s to bucket: %v", c.tsdbpath, err)
+		return fmt.Errorf("failed to upload directory from path %s to bucket: %w", c.tsdbpath, err)
 	}
 
 	c.bucketlogger.Info("Successfully uploaded directory", "path", c.tsdbpath, "bucket", c.bucket.Name())
@@ -79,7 +78,7 @@ func (c *Store) download(ctx context.Context) error {
 	err = objstore.DownloadDir(ctx, log.NewNopLogger(), c.bucket, "dir/", c.objectkey, c.tsdbpath)
 	if err != nil {
 		c.bucketlogger.Error("Failed to download directory", "path", c.tsdbpath, "error", err)
-		return fmt.Errorf("failed to download directory from path %s to bucket: %v", c.tsdbpath, err)
+		return fmt.Errorf("failed to download directory from path %s to bucket: %w", c.tsdbpath, err)
 	}
 
 	c.bucketlogger.Info("Successfully downloaded directory", "path", c.tsdbpath, "bucket", c.bucket.Name())
