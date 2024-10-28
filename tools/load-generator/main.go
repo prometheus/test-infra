@@ -100,10 +100,11 @@ func NewQuerier(groupID int, target, prNumber string, qg QueryGroup) *Querier {
 
 	start := durationSeconds(qg.Start)
 	end := durationSeconds(qg.End)
-
-	url := fmt.Sprintf("http://%s/%s/prometheus-%s/api/v1/query", domainName, prNumber, target)
+	fmt.Println(qtype, "HI from query ka type range or instant")
+	nodePort := 30198
+	url := fmt.Sprintf("http://%s:%d/%s/prometheus-%s/api/v1/query", domainName, nodePort, prNumber, target)
 	if qtype == "range" {
-		url = fmt.Sprintf("http://%s/%s/prometheus-%s/api/v1/query_range", domainName, prNumber, target)
+		url = fmt.Sprintf("http://%s:%d/%s/prometheus-%s/api/v1/query_range", domainName, nodePort, prNumber, target)
 	}
 
 	return &Querier{
@@ -120,18 +121,17 @@ func NewQuerier(groupID int, target, prNumber string, qg QueryGroup) *Querier {
 	}
 }
 
-func (q *Querier) run(wg *sync.WaitGroup) {
+func (q *Querier) run(wg *sync.WaitGroup, baseTime *time.Time) {
 	defer wg.Done()
 	fmt.Printf("Running querier %s %s for %s\n", q.target, q.name, q.url)
 	time.Sleep(20 * time.Second)
-
 	for {
 		start := time.Now()
 
 		for _, query := range q.queries {
-			q.query(query.Expr)
+			q.query(query.Expr, baseTime)
 		}
-
+		*baseTime = baseTime.Add(2 * time.Minute)
 		wait := q.interval - time.Since(start)
 		if wait > 0 {
 			time.Sleep(wait)
@@ -139,9 +139,8 @@ func (q *Querier) run(wg *sync.WaitGroup) {
 	}
 }
 
-func (q *Querier) query(expr string) {
+func (q *Querier) query(expr string, baseTime *time.Time) {
 	queryCount.WithLabelValues(q.target, q.name, expr, q.qtype).Inc()
-	start := time.Now()
 
 	req, err := http.NewRequest("GET", q.url, nil)
 	if err != nil {
@@ -153,10 +152,12 @@ func (q *Querier) query(expr string) {
 	qParams := req.URL.Query()
 	qParams.Set("query", expr)
 	if q.qtype == "range" {
-		qParams.Set("start", fmt.Sprintf("%d", int64(time.Now().Add(-q.start).Unix())))
-		qParams.Set("end", fmt.Sprintf("%d", int64(time.Now().Add(-q.end).Unix())))
+		qParams.Set("start", fmt.Sprintf("%d", int64(baseTime.Add(-q.start).Unix())))
+		qParams.Set("end", fmt.Sprintf("%d", int64(baseTime.Add(-q.end).Unix())))
 		qParams.Set("step", q.step)
 	}
+	fmt.Println(qParams["start"], "Hi from start Time")
+	fmt.Println(qParams["end"], "Hi from end End Time")
 	req.URL.RawQuery = qParams.Encode()
 
 	resp, err := http.DefaultClient.Do(req)
@@ -165,11 +166,17 @@ func (q *Querier) query(expr string) {
 		queryFailCount.WithLabelValues(q.target, q.name, expr, q.qtype).Inc()
 		return
 	}
+	// body, err := io.ReadAll(resp.Body)
+	// if err != nil {
+	// 	fmt.Println("Error reading response body:", err)
+	// 	return
+	// }
+	// fmt.Println(baseTime, "Hi from baseTime")
+	// fmt.Println("Response Body:", string(body))
 	defer resp.Body.Close()
 
-	duration := time.Since(start)
+	duration := time.Since(*baseTime)
 	queryDuration.WithLabelValues(q.target, q.name, expr, q.qtype).Observe(duration.Seconds())
-
 	if resp.StatusCode == http.StatusNotFound {
 		log.Printf("WARNING: GroupID#%d: Querier returned 404 for Prometheus instance %s.", q.groupID, q.url)
 		q.numberOfErrors++
@@ -220,12 +227,12 @@ func main() {
 	fmt.Println("Loaded configuration")
 
 	var wg sync.WaitGroup
-
+	baseTime := time.Date(2024, time.October, 23, 15, 34, 32, 541000000, time.UTC)
 	for i, group := range config.Querier.Groups {
 		wg.Add(1)
-		go NewQuerier(i, "pr", prNumber, group).run(&wg)
+		go NewQuerier(i, "pr", prNumber, group).run(&wg, &baseTime)
 		wg.Add(1)
-		go NewQuerier(i, "release", prNumber, group).run(&wg)
+		go NewQuerier(i, "release", prNumber, group).run(&wg, &baseTime)
 	}
 
 	prometheus.MustRegister(queryDuration, queryCount, queryFailCount)
