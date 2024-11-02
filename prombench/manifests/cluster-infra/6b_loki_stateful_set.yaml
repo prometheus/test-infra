@@ -49,8 +49,13 @@ data:
     server:
       http_listen_port: 3100
       grpc_listen_port: 9096
-      log_level: debug
+      log_level: info
       grpc_server_max_concurrent_streams: 1000
+
+    compactor:
+      retention_enabled: true
+    limits_config:
+      retention_period: 2184h
 ---
 apiVersion: v1
 kind: Service
