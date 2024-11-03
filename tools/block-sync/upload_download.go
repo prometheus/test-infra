@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 
 	"github.com/go-kit/log"
 	"github.com/thanos-io/objstore"
@@ -42,10 +43,23 @@ func newStore(tsdbPath, objectConfig, objectKey string, logger *slog.Logger) (*S
 	if err != nil {
 		return nil, fmt.Errorf("failed to create bucket existence:%w", err)
 	}
+	key, err := os.ReadFile(objectKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read objectKey file: %w", err)
+	}
+
+	content := strings.TrimSpace(string(key))
+	var value string
+	if strings.HasPrefix(content, "key:") {
+		value = strings.TrimSpace(strings.TrimPrefix(content, "key:"))
+	} else {
+		return nil, fmt.Errorf("expected 'key:' prefix not found")
+	}
+
 	return &Store{
 		bucket:       bucket,
 		tsdbpath:     tsdbPath,
-		objectkey:    objectKey,
+		objectkey:    value,
 		objectconfig: objectConfig,
 		bucketlogger: logger,
 	}, nil
