@@ -41,10 +41,10 @@ The `download` command allows you to retrieve TSDB data from an object storage b
 The configuration file is essential for connecting to your object storage solution. Below are basic templates for different object storage systems.
 
 ```yaml
-type: s3
+type: s3, GCS , AZURE , etc.
 config:
   bucket: your-bucket-name
-  endpoint: https://your-minio-endpoint.com
+  endpoint: https://your-endpoint
   access_key: your-access-key
   secret_key: your-secret-key
   insecure: false  # Set to true if using HTTP instead of HTTPS

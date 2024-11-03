@@ -44,25 +44,34 @@ spec:
         - name: GITHUB_ORG
           value: "{{ .GITHUB_ORG }}"
         - name: GITHUB_REPO
-          value: "{{ .GITHUB_REPO }}"
+          value: "{{ .GITHUB_REPO }}"     
         volumeMounts:
         - name: prometheus-executable
           mountPath: /prometheus-builder
-        - name: config
-          mountPath: /config  
+        - name: key
+          mountPath: /config     
       - name: data-downloader
         image: kushalshukla/writer
-        imagePullPolicy: Always        
+        imagePullPolicy: Always
+        env:
+        - name: ACCESS_KEY
+          value: "{{ .ACCESS_KEY }}"
+        - name: SECRET_KEY
+          value: "{{ .SECRET_KEY }}"  
+        - name: BUCKET_KEY
+          value: "{{ .BUCKET_KEY }}"                
         volumeMounts:
         - name: instance-ssd
           mountPath: /data
-        - name: config
-          mountPath: /mnc                                   
+        - name: s3-config
+          mountPath: /config
+        - name: key
+          mountPath: /key 
         args: [
           "download",
         "--tsdb-path=/data", 
-        "--objstore.config-file=/mnc/objectconfig.yml",
-        "--key=gendata"
+        "--objstore.config-file=/config/object-config.yml",
+        "--key=/key/key.yml"
         ]  
       containers:
       - name: prometheus
@@ -104,9 +113,11 @@ spec:
           path: /mnt/disks/ssd0 #gke ssds
       - name: prometheus-executable
         emptyDir: {}
-      - name: config
-        hostPath:
-          path: /config-file 
+      - name: s3-config   # Define the Secret volume
+        secret:
+          secretName: s3-secret
+      - name: key
+        emptyDir: {}               
       terminationGracePeriodSeconds: 300
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
@@ -175,30 +186,39 @@ spec:
             cd /repo1 && \
             git fetch origin pull/{{ .PR_NUMBER }}/head:pr-branch && \
             git checkout pr-branch && \
-            cp  objectconfig.yml /mnt/repo/objectconfig.yml && \
+            cp  key.yml /config/key.yml && \
             rm -rf /repo1
         volumeMounts:
-        - name: config
-          mountPath: /mnt/repo
+        - name: key
+          mountPath: /config
       - name: data-downloader
         image: kushalshukla/writer
-        imagePullPolicy: Always        
+        imagePullPolicy: Always
+        env:
+        - name: ACCESS_KEY
+          value: "{{ .ACCESS_KEY }}"
+        - name: SECRET_KEY
+          value: "{{ .SECRET_KEY }}"  
+        - name: BUCKET_KEY
+          value: "{{ .BUCKET_KEY }}"                  
         volumeMounts:
         - name: instance-ssd
           mountPath: /data
-        - name: config
-          mountPath: /mnc                                   
+        - name: s3-config
+          mountPath: /config
+        - name: key
+          mountPath: /key                                               
         args: [
           "download",
         "--tsdb-path=/data", 
-        "--objstore.config-file=/mnc/objectconfig.yml",
-        "--key=gendata"
+        "--objstore.config-file=/config/object-config.yml",
+        "--key=/key/key.yml"
         ]            
       containers:
       - name: prometheus
         image: quay.io/prometheus/prometheus:{{ .RELEASE }}
         imagePullPolicy: Always
-        command: [ "/bin/prometheus"]
+        command: [ "/bin/prometheus" ]
         args: [
           "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-release",
           "--storage.tsdb.path=/prometheus",
@@ -224,7 +244,12 @@ spec:
           path: /mnt/disks/ssd0
       - name: config
         hostPath:
-          path: /object-config        
+          path: /object-config
+      - name: s3-config   # Define the Secret volume
+        secret:
+          secretName: s3-secret
+      - name: key
+        emptyDir: {}                              
       terminationGracePeriodSeconds: 300
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
