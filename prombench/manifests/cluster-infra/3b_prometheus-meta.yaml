@@ -242,7 +242,7 @@ metadata:
     prometheus: meta
     app: prometheus-meta
 spec:
-  type: NodePort
+  type: ClusterIP
   ports:
   - name: prom-web
     port: 80
@@ -257,9 +257,13 @@ kind: Ingress
 metadata:
   name: ingress-prometheus-meta
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+      - prombench.prometheus.io
+    secretName: prombench-prometheus-tls
   rules:
   - http:
       paths:
