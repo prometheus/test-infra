@@ -44,7 +44,7 @@ spec:
         - name: GITHUB_ORG
           value: "{{ .GITHUB_ORG }}"
         - name: GITHUB_REPO
-          value: "{{ .GITHUB_REPO }}"     
+          value: "{{ .GITHUB_REPO }}"
         volumeMounts:
         - name: prometheus-executable
           mountPath: /prometheus-builder
@@ -66,13 +66,7 @@ spec:
         - name: s3-config
           mountPath: /config
         - name: key
-          mountPath: /key 
-        args: [
-          "download",
-        "--tsdb-path=/data", 
-        "--objstore.config-file=/config/object-config.yml",
-        "--key=/key/key.yml"
-        ]  
+          mountPath: /key
       containers:
       - name: prometheus
         image: quay.io/prometheus/busybox:latest
@@ -117,7 +111,7 @@ spec:
         secret:
           secretName: s3-secret
       - name: key
-        emptyDir: {}               
+        emptyDir: {}                  
       terminationGracePeriodSeconds: 300
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
@@ -175,19 +169,17 @@ spec:
       securityContext:
         runAsUser: 0
       initContainers:
-      - name: git-fetcher
-        image: alpine/git
-        command:
-          - /bin/sh
-          - -c
-          - |
-            apk add --no-cache bash && \
-            git clone --depth 1 https://github.com/{{ .GITHUB_ORG }}/{{ .GITHUB_REPO }}.git /repo1 && \
-            cd /repo1 && \
-            git fetch origin pull/{{ .PR_NUMBER }}/head:pr-branch && \
-            git checkout pr-branch && \
-            cp  key.yml /config/key.yml && \
-            rm -rf /repo1
+      - name: download-key
+        image: kushalshukla/builder
+        imagePullPolicy: Always
+        command: [ "/download-key/key.sh" ]
+        env:
+        - name: PR_NUMBER
+          value: "{{ .PR_NUMBER }}"
+        - name: GITHUB_ORG
+          value: "{{ .GITHUB_ORG }}"
+        - name: GITHUB_REPO
+          value: "{{ .GITHUB_REPO }}"          
         volumeMounts:
         - name: key
           mountPath: /config
@@ -207,13 +199,7 @@ spec:
         - name: s3-config
           mountPath: /config
         - name: key
-          mountPath: /key                                               
-        args: [
-          "download",
-        "--tsdb-path=/data", 
-        "--objstore.config-file=/config/object-config.yml",
-        "--key=/key/key.yml"
-        ]            
+          mountPath: /key            
       containers:
       - name: prometheus
         image: quay.io/prometheus/prometheus:{{ .RELEASE }}
