@@ -52,18 +52,11 @@ spec:
           mountPath: /config     
       - name: data-downloader
         image: kushalshukla/writer
-        imagePullPolicy: Always
-        env:
-        - name: ACCESS_KEY
-          value: "{{ .ACCESS_KEY }}"
-        - name: SECRET_KEY
-          value: "{{ .SECRET_KEY }}"  
-        - name: BUCKET_KEY
-          value: "{{ .BUCKET_KEY }}"                
+        imagePullPolicy: Always                
         volumeMounts:
         - name: instance-ssd
           mountPath: /data
-        - name: s3-config
+        - name: bucket-config
           mountPath: /config
         - name: key
           mountPath: /key
@@ -107,9 +100,9 @@ spec:
           path: /mnt/disks/ssd0 #gke ssds
       - name: prometheus-executable
         emptyDir: {}
-      - name: s3-config   # Define the Secret volume
+      - name: bucket-config   # Define the Secret volume
         secret:
-          secretName: s3-secret
+          secretName: bucket-secret
       - name: key
         emptyDir: {}                  
       terminationGracePeriodSeconds: 300
@@ -185,18 +178,11 @@ spec:
           mountPath: /config
       - name: data-downloader
         image: kushalshukla/writer
-        imagePullPolicy: Always
-        env:
-        - name: ACCESS_KEY
-          value: "{{ .ACCESS_KEY }}"
-        - name: SECRET_KEY
-          value: "{{ .SECRET_KEY }}"  
-        - name: BUCKET_KEY
-          value: "{{ .BUCKET_KEY }}"                  
+        imagePullPolicy: Always                  
         volumeMounts:
         - name: instance-ssd
           mountPath: /data
-        - name: s3-config
+        - name: bucket-config
           mountPath: /config
         - name: key
           mountPath: /key            
@@ -231,9 +217,9 @@ spec:
       - name: config
         hostPath:
           path: /object-config
-      - name: s3-config   # Define the Secret volume
+      - name: bucket-config   # Define the Secret volume
         secret:
-          secretName: s3-secret
+          secretName: bucket-secret
       - name: key
         emptyDir: {}                              
       terminationGracePeriodSeconds: 300
