@@ -6,7 +6,7 @@ if [[ -z $PR_NUMBER || -z $VOLUME_DIR || -z $GITHUB_ORG || -z $GITHUB_REPO ]]; t
     echo "ERROR:: environment variables not set correctly"
     exit 1;
 fi
-
+ 
 # Clone the repository with a shallow clone
 echo ">> Cloning repository $GITHUB_ORG/$GITHUB_REPO (shallow clone)"
 if ! git clone --depth 1 https://github.com/$GITHUB_ORG/$GITHUB_REPO.git $DIR; then
@@ -34,12 +34,3 @@ if [ -f "$DIR/key.yml" ]; then
 else
     echo "File does not exist."
 fi
-
-echo ">> Creating prometheus binaries"
-if ! make build PROMU_BINARIES="prometheus"; then
-    echo "ERROR:: Building of binaries failed"
-    exit 1;
-fi
-
-echo ">> Copy files to volume"
-cp prometheus               $VOLUME_DIR/prometheus

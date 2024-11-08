@@ -34,7 +34,7 @@ spec:
         runAsUser: 0
       initContainers:
       - name: prometheus-builder
-        image: docker.io/prominfra/prometheus-builder:master
+        image: kushalshukla/builder
         imagePullPolicy: Always
         env:
         - name: PR_NUMBER
@@ -48,6 +48,18 @@ spec:
         volumeMounts:
         - name: prometheus-executable
           mountPath: /prometheus-builder
+        - name: key
+          mountPath: /config     
+      - name: data-downloader
+        image: kushalshukla/writer
+        imagePullPolicy: Always                
+        volumeMounts:
+        - name: instance-ssd
+          mountPath: /data
+        - name: bucket-config
+          mountPath: /config
+        - name: key
+          mountPath: /key
       containers:
       - name: prometheus
         image: quay.io/prometheus/busybox:latest
@@ -88,6 +100,11 @@ spec:
           path: /mnt/disks/ssd0 #gke ssds
       - name: prometheus-executable
         emptyDir: {}
+      - name: bucket-config   # Define the Secret volume
+        secret:
+          secretName: bucket-secret
+      - name: key
+        emptyDir: {}                  
       terminationGracePeriodSeconds: 300
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
@@ -144,6 +161,31 @@ spec:
                 - prometheus
       securityContext:
         runAsUser: 0
+      initContainers:
+      - name: download-key
+        image: kushalshukla/builder
+        imagePullPolicy: Always
+        command: [ "/download-key/key.sh" ]
+        env:
+        - name: PR_NUMBER
+          value: "{{ .PR_NUMBER }}"
+        - name: GITHUB_ORG
+          value: "{{ .GITHUB_ORG }}"
+        - name: GITHUB_REPO
+          value: "{{ .GITHUB_REPO }}"          
+        volumeMounts:
+        - name: key
+          mountPath: /config
+      - name: data-downloader
+        image: kushalshukla/writer
+        imagePullPolicy: Always                  
+        volumeMounts:
+        - name: instance-ssd
+          mountPath: /data
+        - name: bucket-config
+          mountPath: /config
+        - name: key
+          mountPath: /key            
       containers:
       - name: prometheus
         image: quay.io/prometheus/prometheus:{{ .RELEASE }}
@@ -172,6 +214,14 @@ spec:
           # /mnt is where GKE keeps it's SSD
           # don't change this if you want Prometheus to take advantage of these local SSDs
           path: /mnt/disks/ssd0
+      - name: config
+        hostPath:
+          path: /object-config
+      - name: bucket-config   # Define the Secret volume
+        secret:
+          secretName: bucket-secret
+      - name: key
+        emptyDir: {}                              
       terminationGracePeriodSeconds: 300
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
