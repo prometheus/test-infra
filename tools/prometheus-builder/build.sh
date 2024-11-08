@@ -6,7 +6,7 @@ if [[ -z $PR_NUMBER || -z $VOLUME_DIR || -z $GITHUB_ORG || -z $GITHUB_REPO ]]; t
     echo "ERROR:: environment variables not set correctly"
     exit 1;
 fi
- 
+
 # Clone the repository with a shallow clone
 echo ">> Cloning repository $GITHUB_ORG/$GITHUB_REPO (shallow clone)"
 if ! git clone --depth 1 https://github.com/$GITHUB_ORG/$GITHUB_REPO.git $DIR; then
@@ -23,17 +23,6 @@ if ! git fetch origin pull/$PR_NUMBER/head:pr-branch; then
 fi
 
 git checkout pr-branch
-
-# Here, MKDIR is specified in the volumeMount section of the prometheus-builder init container, 
-# where it will copy the key.yml file from the Prometheus directory to the volume section of the
-# emptyDir. This file will later be used by the data-downloader init container.
-MKDIR="/config"
-if [ -f "$DIR/key.yml" ]; then
-    echo "File exists."
-    cp  "$DIR/key.yml" "$MKDIR/key.yml"
-else
-    echo "File does not exist."
-fi
 
 echo ">> Creating prometheus binaries"
 if ! make build PROMU_BINARIES="prometheus"; then

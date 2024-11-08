@@ -49,10 +49,20 @@ func newStore(tsdbPath, objectConfig, objectKey string, logger *slog.Logger) (*S
 	}
 
 	content := strings.TrimSpace(string(key))
+	lines := strings.Split(content, "\n")
 	var value string
-	if strings.HasPrefix(content, "key:") {
-		value = strings.TrimSpace(strings.TrimPrefix(content, "key:"))
-	} else {
+
+	// Loop through each line to find the key
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "key:") {
+			// Extract the value after "key:"
+			value = strings.TrimSpace(strings.TrimPrefix(line, "key:"))
+			break
+		}
+	}
+
+	if value == "" {
 		return nil, fmt.Errorf("expected 'key:' prefix not found")
 	}
 
