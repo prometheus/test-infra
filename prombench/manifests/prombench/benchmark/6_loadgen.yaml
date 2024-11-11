@@ -85,6 +85,21 @@ spec:
         app: loadgen-scaler
     spec:
       serviceAccountName: loadgen-scaler
+      initContainers:      
+      - name: download-key
+        image: kushalshukla/builder
+        imagePullPolicy: Always
+        command: [ "/download-key/key.sh" ]
+        env:
+        - name: PR_NUMBER
+          value: "{{ .PR_NUMBER }}"
+        - name: GITHUB_ORG
+          value: "{{ .GITHUB_ORG }}"
+        - name: GITHUB_REPO
+          value: "{{ .GITHUB_REPO }}"          
+        volumeMounts:
+        - name: key
+          mountPath: /config 
       containers:
       - name: prom-load-generator
         image: docker.io/prominfra/scaler:master
@@ -105,6 +120,8 @@ spec:
       - name: webserver-config-volume
         configMap:
           name: fake-webserver-config-for-scaler
+      - name: key
+        emptyDir: {}              
       nodeSelector:
         node-name: nodes-{{ .PR_NUMBER }}
         isolation: none

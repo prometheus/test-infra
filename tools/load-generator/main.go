@@ -92,6 +92,12 @@ type QueryGroup struct {
 	Step     string  `yaml:"step,omitempty"`
 }
 
+type KeyConfig struct {
+	Key     string `yaml:"key"`
+	MinTime int64  `yaml:"minTime"`
+	MaxTime int64  `yaml:"maxTime"`
+}
+
 func NewQuerier(groupID int, target, prNumber string, qg QueryGroup) *Querier {
 	qtype := qg.Type
 	if qtype == "" {
@@ -101,9 +107,10 @@ func NewQuerier(groupID int, target, prNumber string, qg QueryGroup) *Querier {
 	start := durationSeconds(qg.Start)
 	end := durationSeconds(qg.End)
 
-	url := fmt.Sprintf("http://%s/%s/prometheus-%s/api/v1/query", domainName, prNumber, target)
+	nodePort := 30198
+	url := fmt.Sprintf("http://%s:%d/%s/prometheus-%s/api/v1/query", domainName, nodePort, prNumber, target)
 	if qtype == "range" {
-		url = fmt.Sprintf("http://%s/%s/prometheus-%s/api/v1/query_range", domainName, prNumber, target)
+		url = fmt.Sprintf("http://%s:%d/%s/prometheus-%s/api/v1/query_range", domainName, nodePort, prNumber, target)
 	}
 
 	return &Querier{
@@ -120,6 +127,28 @@ func NewQuerier(groupID int, target, prNumber string, qg QueryGroup) *Querier {
 	}
 }
 
+// Function to load `minTime` and `maxTime` from key.yml
+func loadKeyConfig() (*KeyConfig, error) {
+	filePath := "/config/key.yml"
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		return nil, fmt.Errorf("file not found: %s", filePath)
+	}
+
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading file: %v", err)
+	}
+
+	var keyConfig KeyConfig
+	err = yaml.Unmarshal(data, &keyConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing YAML: %v", err)
+	}
+
+	return &keyConfig, nil
+}
+
 func (q *Querier) run(wg *sync.WaitGroup) {
 	defer wg.Done()
 	fmt.Printf("Running querier %s %s for %s\n", q.target, q.name, q.url)
@@ -129,7 +158,8 @@ func (q *Querier) run(wg *sync.WaitGroup) {
 		start := time.Now()
 
 		for _, query := range q.queries {
-			q.query(query.Expr)
+			q.query(query.Expr, "current")
+			q.query(query.Expr, "absolute")
 		}
 
 		wait := q.interval - time.Since(start)
@@ -139,23 +169,33 @@ func (q *Querier) run(wg *sync.WaitGroup) {
 	}
 }
 
-func (q *Querier) query(expr string) {
+func (q *Querier) query(expr string, timeMode string) {
 	queryCount.WithLabelValues(q.target, q.name, expr, q.qtype).Inc()
 	start := time.Now()
-
 	req, err := http.NewRequest("GET", q.url, nil)
 	if err != nil {
 		log.Printf("Error creating request: %v", err)
 		queryFailCount.WithLabelValues(q.target, q.name, expr, q.qtype).Inc()
 		return
 	}
-
+	keyConfig, err := loadKeyConfig()
+	if err != nil {
+		timeMode = "current"
+	}
 	qParams := req.URL.Query()
 	qParams.Set("query", expr)
 	if q.qtype == "range" {
-		qParams.Set("start", fmt.Sprintf("%d", int64(time.Now().Add(-q.start).Unix())))
-		qParams.Set("end", fmt.Sprintf("%d", int64(time.Now().Add(-q.end).Unix())))
-		qParams.Set("step", q.step)
+		if timeMode == "current" {
+			qParams.Set("start", fmt.Sprintf("%d", int64(time.Now().Add(-q.start).Unix())))
+			qParams.Set("end", fmt.Sprintf("%d", int64(time.Now().Add(-q.end).Unix())))
+			qParams.Set("step", q.step)
+		} else {
+			startTime := time.Unix(0, keyConfig.MinTime*int64(time.Millisecond))
+			endTime := time.Unix(0, keyConfig.MaxTime*int64(time.Millisecond))
+			qParams.Set("start", fmt.Sprintf("%d", int64(startTime.Add(-q.start).Unix())))
+			qParams.Set("end", fmt.Sprintf("%d", int64(endTime.Add(-q.end).Unix())))
+			qParams.Set("step", q.step)
+		}
 	}
 	req.URL.RawQuery = qParams.Encode()
 
