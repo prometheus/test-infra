@@ -54,6 +54,7 @@ data:
 
     compactor:
       retention_enabled: true
+      delete_request_store: filesystem
     limits_config:
       retention_period: 2184h
 ---
