@@ -107,10 +107,9 @@ func NewQuerier(groupID int, target, prNumber string, qg QueryGroup) *Querier {
 	start := durationSeconds(qg.Start)
 	end := durationSeconds(qg.End)
 
-	nodePort := 30198
-	url := fmt.Sprintf("http://%s:%d/%s/prometheus-%s/api/v1/query", domainName, nodePort, prNumber, target)
+	url := fmt.Sprintf("http://%s/%s/prometheus-%s/api/v1/query", domainName, prNumber, target)
 	if qtype == "range" {
-		url = fmt.Sprintf("http://%s:%d/%s/prometheus-%s/api/v1/query_range", domainName, nodePort, prNumber, target)
+		url = fmt.Sprintf("http://%s/%s/prometheus-%s/api/v1/query_range", domainName, prNumber, target)
 	}
 
 	return &Querier{
@@ -137,13 +136,13 @@ func loadKeyConfig() (*KeyConfig, error) {
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("error reading file: %v", err)
+		return nil, fmt.Errorf("error reading file: %w", err)
 	}
 
 	var keyConfig KeyConfig
 	err = yaml.Unmarshal(data, &keyConfig)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing YAML: %v", err)
+		return nil, fmt.Errorf("error parsing YAML: %w", err)
 	}
 
 	return &keyConfig, nil
@@ -154,12 +153,16 @@ func (q *Querier) run(wg *sync.WaitGroup) {
 	fmt.Printf("Running querier %s %s for %s\n", q.target, q.name, q.url)
 	time.Sleep(20 * time.Second)
 
+	keyConfig, err := loadKeyConfig()
+
 	for {
 		start := time.Now()
 
 		for _, query := range q.queries {
-			q.query(query.Expr, "current")
-			q.query(query.Expr, "absolute")
+			q.query(query.Expr, "current", nil)
+			if err == nil {
+				q.query(query.Expr, "absolute", keyConfig)
+			}
 		}
 
 		wait := q.interval - time.Since(start)
@@ -169,30 +172,29 @@ func (q *Querier) run(wg *sync.WaitGroup) {
 	}
 }
 
-func (q *Querier) query(expr string, timeMode string) {
+func (q *Querier) query(expr string, timeMode string, keyConfig *KeyConfig) {
 	queryCount.WithLabelValues(q.target, q.name, expr, q.qtype).Inc()
 	start := time.Now()
+
 	req, err := http.NewRequest("GET", q.url, nil)
 	if err != nil {
 		log.Printf("Error creating request: %v", err)
 		queryFailCount.WithLabelValues(q.target, q.name, expr, q.qtype).Inc()
 		return
 	}
-	keyConfig, err := loadKeyConfig()
-	if err != nil {
-		timeMode = "current"
-	}
+
 	qParams := req.URL.Query()
 	qParams.Set("query", expr)
 	if q.qtype == "range" {
 		if timeMode == "current" {
+			fmt.Println("range , current blocks")
 			qParams.Set("start", fmt.Sprintf("%d", int64(time.Now().Add(-q.start).Unix())))
 			qParams.Set("end", fmt.Sprintf("%d", int64(time.Now().Add(-q.end).Unix())))
 			qParams.Set("step", q.step)
 		} else {
-			startTime := time.Unix(0, keyConfig.MinTime*int64(time.Millisecond))
+			fmt.Println("range , absolute blocks")
 			endTime := time.Unix(0, keyConfig.MaxTime*int64(time.Millisecond))
-			qParams.Set("start", fmt.Sprintf("%d", int64(startTime.Add(-q.start).Unix())))
+			qParams.Set("start", fmt.Sprintf("%d", int64(endTime.Add(-q.start).Unix())))
 			qParams.Set("end", fmt.Sprintf("%d", int64(endTime.Add(-q.end).Unix())))
 			qParams.Set("step", q.step)
 		}
