@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/google/go-github/v29 v29.0.3
 	github.com/prometheus/alertmanager v0.27.0
-	github.com/prometheus/client_golang v1.20.4
+	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/common v0.60.1
 	golang.org/x/oauth2 v0.23.0
 	google.golang.org/api v0.205.0
