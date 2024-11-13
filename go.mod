@@ -3,7 +3,7 @@ module github.com/prometheus/test-infra
 go 1.23
 
 require (
-	cloud.google.com/go/container v1.40.0
+	cloud.google.com/go/container v1.41.0
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/google/go-github/v29 v29.0.3
 	github.com/prometheus/alertmanager v0.27.0
