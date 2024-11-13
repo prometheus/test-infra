@@ -114,7 +114,13 @@ If used with the GitHub integration:
    export PR_NUMBER=<PR to benchmark against the selected $RELEASE>
    ```
 
-2. Before applying benchmarking objects , You have two choices to make:  
+2. ### Setting Up Benchmarking Data
+
+When setting up a benchmarking environment, it’s often useful to have pre-generated data available. This data can help speed up testing and make benchmarks more realistic by simulating actual workloads.
+
+In this setup, you have two choices:
+
+Here’s how each option works:
 - **Option 1: Download data from object storage**
 
    To download data from object storage, create a Kubernetes secret with exact named `bucket-config` and file name ```object-config.yml```  with the necessary credentials as per your object storage. This secret enables access to the stored data.

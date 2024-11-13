@@ -34,7 +34,7 @@ spec:
         runAsUser: 0
       initContainers:
       - name: prometheus-builder
-        image: kushalshukla/builder
+        image: docker.io/prominfra/prometheus-builder:master
         imagePullPolicy: Always
         env:
         - name: PR_NUMBER
@@ -45,13 +45,15 @@ spec:
           value: "{{ .GITHUB_ORG }}"
         - name: GITHUB_REPO
           value: "{{ .GITHUB_REPO }}"
+        - name: STORAGE
+          value: "/storage-paths"  
         volumeMounts:
         - name: prometheus-executable
           mountPath: /prometheus-builder
         - name: key
-          mountPath: /config     
+          mountPath: /storage-paths     
       - name: data-downloader
-        image: kushalshukla/writer
+        image: docker.io/prominfra/block-sync:master
         imagePullPolicy: Always                
         volumeMounts:
         - name: instance-ssd
@@ -163,9 +165,9 @@ spec:
         runAsUser: 0
       initContainers:
       - name: download-key
-        image: kushalshukla/builder
+        image: docker.io/prominfra/prometheus-builder:master
         imagePullPolicy: Always
-        command: [ "/download-key/key.sh" ]
+        command: [ "/go/src/github.com/key.sh" ]
         env:
         - name: PR_NUMBER
           value: "{{ .PR_NUMBER }}"
@@ -173,11 +175,13 @@ spec:
           value: "{{ .GITHUB_ORG }}"
         - name: GITHUB_REPO
           value: "{{ .GITHUB_REPO }}"          
+        - name: STORAGE
+          value: "/storage-paths"
         volumeMounts:
         - name: key
-          mountPath: /config
+          mountPath: /storage-paths
       - name: data-downloader
-        image: kushalshukla/writer
+        image: docker.io/prominfra/block-sync:master
         imagePullPolicy: Always                  
         volumeMounts:
         - name: instance-ssd

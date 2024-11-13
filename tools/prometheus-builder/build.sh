@@ -2,7 +2,7 @@
 
 DIR="/go/src/github.com/prometheus/prometheus"
 
-if [[ -z $PR_NUMBER || -z $VOLUME_DIR || -z $GITHUB_ORG || -z $GITHUB_REPO ]]; then
+if [[ -z $PR_NUMBER || -z $VOLUME_DIR || -z $STORAGE || -z $GITHUB_ORG || -z $GITHUB_REPO ]]; then
     echo "ERROR:: environment variables not set correctly"
     exit 1;
 fi
@@ -24,15 +24,14 @@ fi
 
 git checkout pr-branch
 
-# Here, MKDIR is specified in the volumeMount section of the prometheus-builder init container, 
+# Here, STORAGE is specified as an  environment variable of the prometheus-builder init container, 
 # where it will copy the key.yml file from the Prometheus directory to the volume section of the
 # emptyDir. This file will later be used by the data-downloader init container.
-MKDIR="/config"
 if [ -f "$DIR/key.yml" ]; then
-    echo "File exists."
-    cp  "$DIR/key.yml" "$MKDIR/key.yml"
+    echo "INFO:: key.yml file is Present on $DIR/key.yml directory."
+    cp  "$DIR/key.yml" "$STORAGE/key.yml"
 else
-    echo "File does not exist."
+    echo "INFO:: key.yml File does not exist on $DIR/key.yml directory."
 fi
 
 echo ">> Creating prometheus binaries"
