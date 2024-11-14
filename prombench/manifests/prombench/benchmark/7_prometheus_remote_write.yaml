@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-sink
+  namespace: prombench-{{ .PR_NUMBER }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sink
+  template:
+    metadata:
+      namespace: prombench-{{ .PR_NUMBER }}
+      labels:
+        app: sink
+    spec:
+      containers:
+      - name: prom-sink
+        image: quay.io/bwplotka/sink:latest
+        imagePullPolicy: Always
+        ports:
+        - name: sink-port
+          containerPort: 9011
+      nodeSelector:
+        node-name: nodes-{{ .PR_NUMBER }}
+        isolation: none
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-remote-write
+  namespace: prombench-{{ .PR_NUMBER }}
+  labels:
+    app: remote-write
+spec:
+  ports:
+  - name: prometheus
+    port: 80
+    targetPort: sink-port
+  selector:
+    app: sink
