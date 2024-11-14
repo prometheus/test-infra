@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/go-kit/log"
@@ -80,17 +82,34 @@ func newStore(tsdbPath, objectConfig, objectPath string, logger *slog.Logger) (*
 func (c *Store) upload(ctx context.Context) error {
 	exists, err := c.bucket.Exists(ctx, c.objectpath)
 	if err != nil {
-		return fmt.Errorf("failed to check new bucket:%w", err)
+		return fmt.Errorf("failed to check new bucket: %w", err)
 	}
-	c.bucketlogger.Info("Bucket checked  Successfully", "Bucket name", exists)
+	c.bucketlogger.Info("Bucket checked successfully", "Bucket name", exists)
 
-	err = objstore.UploadDir(ctx, log.NewNopLogger(), c.bucket, c.tsdbpath, c.objectpath)
+	blockDirRegex := regexp.MustCompile(`^[A-Z0-9]{16,}$`)
+
+	entries, err := os.ReadDir(c.tsdbpath)
 	if err != nil {
-		c.bucketlogger.Error("Failed to upload directory", "path", c.tsdbpath, "error", err)
-		return fmt.Errorf("failed to upload directory from path %s to bucket: %w", c.tsdbpath, err)
+		return fmt.Errorf("failed to read directory %s: %w", c.tsdbpath, err)
 	}
 
-	c.bucketlogger.Info("Successfully uploaded directory", "path", c.tsdbpath, "bucket", c.bucket.Name())
+	for _, entry := range entries {
+		// Only process directories that match the TSDB block naming pattern
+		if entry.IsDir() && blockDirRegex.MatchString(entry.Name()) {
+			blockDirPath := filepath.Join(c.tsdbpath, entry.Name())
+
+			err = objstore.UploadDir(ctx, log.NewNopLogger(), c.bucket, blockDirPath, filepath.Join(c.objectpath, entry.Name()))
+			if err != nil {
+				c.bucketlogger.Error("Failed to upload block directory", "path", blockDirPath, "error", err)
+				return fmt.Errorf("failed to upload directory %s to bucket: %w", blockDirPath, err)
+			}
+			c.bucketlogger.Info("Successfully uploaded block directory", "path", blockDirPath, "bucket", c.bucket.Name())
+		} else {
+			c.bucketlogger.Info("Skipping non-block item", "name", entry.Name())
+		}
+	}
+
+	c.bucketlogger.Info("Successfully uploaded all block directories in path", "path", c.tsdbpath, "bucket", c.bucket.Name())
 	return nil
 }
 
