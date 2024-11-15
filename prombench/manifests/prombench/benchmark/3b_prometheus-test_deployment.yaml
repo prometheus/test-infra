@@ -218,9 +218,6 @@ spec:
           # /mnt is where GKE keeps it's SSD
           # don't change this if you want Prometheus to take advantage of these local SSDs
           path: /mnt/disks/ssd0
-      - name: config
-        hostPath:
-          path: /object-config
       - name: bucket-config   # Define the Secret volume
         secret:
           secretName: bucket-secret

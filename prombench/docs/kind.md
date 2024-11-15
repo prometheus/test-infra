@@ -116,22 +116,30 @@ If used with the GitHub integration:
 
 2. ### Setting Up Benchmarking Data
 
-When setting up a benchmarking environment, it’s often useful to have pre-generated data available. This data can help speed up testing and make benchmarks more realistic by simulating actual workloads.
+When setting up a benchmarking environment, it’s often useful to have pre-generated data available.This data can help speed up testing and make benchmarks more realistic by simulating actual workloads.
 
 In this setup, you have two choices:
 
 Here’s how each option works:
 - **Option 1: Download data from object storage**
 
-   To download data from object storage, create a Kubernetes secret with exact named `bucket-config` and file name ```object-config.yml```  with the necessary credentials as per your object storage. This secret enables access to the stored data.
+   To download data from object storage, create a Kubernetes secret with exact named `bucket-secret` and file name ```object-config.yml```  with the necessary credentials as per your object storage. This secret enables access to the stored data.
 > Note: Make sure this secret applied before ```3b_prometheus-test_deployment.yaml```
+
 - **Option 2: Skip downloading data**
 
-   If you don’t need to download data, edit the `3b_prometheus-test_deployment.yaml` file:
+If you don’t Want to Download data create an empty secret like this -
 
-   - Remove the `bucket-config` volume section from.
-   - Remove the `volumeMount` section name `bucket-config` from `data-downloader`.
-> Note: You have to remove these two sections from both prometheus-test-pr-{{ .PR_NUMBER }} and prometheus-test-{{ normalise .RELEASE }} deployments.
+```yaml
+# Empty Secret to Skip Downloading Data
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bucket-secret
+  namespace: prombench-{{ .PR_NUMBER }} 
+type: Opaque
+stringData:
+  object-config.yml: 
 
 3. Deploy the Kubernetes objects:
    > **_Note:_** If you encounter a `too many files open` error caused by promtail, increase the default value of `/proc/sys/fs/inotify/max_user_instances` from 128 to 512:
