@@ -79,7 +79,8 @@ spec:
           "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-pr",
           "--storage.tsdb.path=/prometheus",
           "--config.file=/etc/prometheus/prometheus.yml",
-          "--log.level=debug"
+          "--log.level=debug",
+          "--storage.tsdb.retention.size=5GB"
         ]
         resources:
           requests:
