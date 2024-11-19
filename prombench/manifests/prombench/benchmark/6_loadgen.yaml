@@ -10,7 +10,7 @@ data:
       - name: simple_range
         interval: 10s
         type: range
-        start: 4h
+        start: 2h
         end: 1h
         step: 15s
         queries:
@@ -31,7 +31,7 @@ data:
       - name: aggr_range
         interval: 30s
         type: range
-        start: 4h
+        start: 1h
         end: 0h
         step: 15s
         queries:
@@ -129,17 +129,19 @@ spec:
       - name: download-key
         image: kushalshukla/builder
         imagePullPolicy: Always
-        command: [ "/download-key/key.sh" ]
+        command: [ "/go/src/github.com/key.sh" ]
         env:
         - name: PR_NUMBER
           value: "{{ .PR_NUMBER }}"
         - name: GITHUB_ORG
           value: "{{ .GITHUB_ORG }}"
         - name: GITHUB_REPO
-          value: "{{ .GITHUB_REPO }}"          
+          value: "{{ .GITHUB_REPO }}"
+        - name: STORAGE
+          value: "/storage-paths"                    
         volumeMounts:
         - name: key
-          mountPath: /config     
+          mountPath: /storage-paths    
       containers:
       - name: prom-load-generator
         image: kushalshukla/load-generator
