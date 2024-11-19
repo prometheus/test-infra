@@ -140,6 +140,10 @@ metadata:
 type: Opaque
 stringData:
   object-config.yml: 
+ 
+Regardless of the option chosen, data stored in Prometheus will only be retained based on the configured retention settings (`--storage.tsdb.retention.size`). 
+
+> **⚠️ Warning:** The benchmark will change its basis when the retention size limit is reached and older downloaded blocks are deleted. Ensure that you have sufficient retention settings configured to avoid data loss that could affect benchmarking results. 
 
 3. Deploy the Kubernetes objects:
    > **_Note:_** If you encounter a `too many files open` error caused by promtail, increase the default value of `/proc/sys/fs/inotify/max_user_instances` from 128 to 512:
