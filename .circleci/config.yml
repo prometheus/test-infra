@@ -110,6 +110,14 @@ jobs:
           organization: "$DOCKER_ORG"
           login_variable: DOCKER_LOGIN
           password_variable: DOCKER_PASSWORD
+      - prometheus/publish_images:
+          container_image_name: block-sync
+          dockerfile_path: "tools/block-sync/Dockerfile"
+          dockerbuild_context: "tools/block-sync/"
+          registry: docker.io
+          organization: "$DOCKER_ORG"
+          login_variable: DOCKER_LOGIN
+          password_variable: DOCKER_PASSWORD    
 workflows:
   version: 2
   test-infra:
