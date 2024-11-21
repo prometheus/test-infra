@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
 	"sync"
@@ -102,7 +101,7 @@ type KeyConfig struct {
 type configState struct {
 	keyConfig    *KeyConfig
 	Err          error
-	StaticValues []int64 // For storing the static absolute time for the downloaded blocks.
+	absoluteTime int64
 }
 
 func NewQuerier(groupID int, target, prNumber string, qg QueryGroup) *Querier {
@@ -133,18 +132,6 @@ func NewQuerier(groupID int, target, prNumber string, qg QueryGroup) *Querier {
 	}
 }
 
-// This function returns an array of length 5 containing instant values between minTime and maxTime.
-// To calculate the values, the formula (maxTime - minTime) / int64(count+1) is used to determine the step size.
-// The step size is then added incrementally to minTime to generate the values.
-func generateStaticValues(minTime, maxTime int64, count int) []int64 {
-	step := (maxTime - minTime) / int64(count+1)
-	values := make([]int64, count)
-	for i := 0; i < count; i++ {
-		values[i] = minTime + step*int64(i+1)
-	}
-	return values
-}
-
 // Function to load `minTime` and `maxTime` from key.yml
 func loadKeyConfig() (*KeyConfig, error) {
 	filePath := "/config/key.yml"
@@ -168,16 +155,14 @@ func loadKeyConfig() (*KeyConfig, error) {
 }
 
 func configstate(v *KeyConfig, err error) *configState {
-	var staticValues []int64
-	// if there is an error in extracting key.yml file then it means there is no way to query
-	// data on downloaded blocks. so keep StateValues slices to be empty.
-	if err == nil {
-		staticValues = generateStaticValues(v.MinTime, v.MaxTime, 5)
+	var absolutetime int64
+	if v != nil {
+		absolutetime = v.MaxTime
 	}
 	return &configState{
 		keyConfig:    v,
 		Err:          err,
-		StaticValues: staticValues,
+		absoluteTime: absolutetime,
 	}
 }
 
@@ -188,12 +173,17 @@ func (q *Querier) run(wg *sync.WaitGroup, timeBound *configState) {
 
 	for {
 		start := time.Now()
-
+		runBlockMode := "current"
 		for _, query := range q.queries {
-			q.query(query.Expr, "current", nil)
-			// if there is an error we can avoid to go on absolute block.
-			if timeBound.Err == nil {
+			if runBlockMode == "current" {
+				q.query(query.Expr, "current", nil)
+			} else if timeBound.Err == nil {
 				q.query(query.Expr, "absolute", timeBound)
+			}
+			if runBlockMode == "current" && timeBound.Err == nil {
+				runBlockMode = "absolute"
+			} else if timeBound.Err == nil {
+				runBlockMode = "current"
 			}
 		}
 
@@ -229,10 +219,8 @@ func (q *Querier) query(expr string, timeMode string, timeBound *configState) {
 			qParams.Set("step", q.step)
 		}
 	} else if timeMode == "absolute" {
-		x := timeBound.StaticValues
-		randomIndex := rand.Intn(len(x)) // calculating random index between StaticValues slice.
-		instantTime := time.Unix(0, x[randomIndex]*int64(time.Millisecond))
-		qParams.Set("time", fmt.Sprintf("%d", int64(instantTime.Unix())))
+		blockinstime := time.Unix(0, timeBound.absoluteTime*int64(time.Millisecond))
+		qParams.Set("time", fmt.Sprintf("%d", int64(blockinstime.Unix())))
 	}
 	req.URL.RawQuery = qParams.Encode()
 
