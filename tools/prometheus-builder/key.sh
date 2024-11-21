@@ -29,7 +29,7 @@ git checkout pr-branch
 # emptyDir. This file will later be used by the data-downloader init container.
 if [ -f "$DIR/key.yml" ]; then
     echo "INFO:: key.yml file is Present on $DIR/key.yml directory."
-    cp  "$DIR/key.yml" "$STORAGE/key.yml"
+    echo "INFO:: key.yml file is Present on $DIR/key.yml directory so download the block from ObjecStorage."
 else
-    echo "INFO:: key.yml File does not exist on $DIR/key.yml directory."
+    echo "INFO:: key.yml File does not exist on $DIR/key.yml directory so data is not downloaded from ObjectStorage."
 fi
