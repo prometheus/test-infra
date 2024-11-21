@@ -38,6 +38,10 @@ func newStore(tsdbPath, objectConfig, objectKey string, logger *slog.Logger) (*S
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
+	if len(configBytes) == 0 {
+		fmt.Println("Config file is empty, exiting container.")
+		os.Exit(0)
+	}
 
 	bucket, err := client.NewBucket(log.NewNopLogger(), configBytes, "block-sync")
 	if err != nil {
