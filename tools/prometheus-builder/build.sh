@@ -28,10 +28,10 @@ git checkout pr-branch
 # where it will copy the key.yml file from the Prometheus directory to the volume section of the
 # emptyDir. This file will later be used by the data-downloader init container.
 if [ -f "$DIR/key.yml" ]; then
-    echo "INFO:: key.yml file is Present on $DIR/key.yml directory."
+    echo "INFO:: key.yml file is Present on $DIR/key.yml directory so download the block from ObjecStorage."
     cp  "$DIR/key.yml" "$STORAGE/key.yml"
 else
-    echo "INFO:: key.yml File does not exist on $DIR/key.yml directory."
+    echo "INFO:: key.yml File does not exist on $DIR/key.yml directory so data is not downloaded from ObjectStorage."
 fi
 
 echo ">> Creating prometheus binaries"

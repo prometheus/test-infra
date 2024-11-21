@@ -96,17 +96,16 @@ Run Prombench tests in [Google Kubernetes Engine (GKE)](https://cloud.google.com
     ```bash
     make node_create
     ```
-3. **Setting Up Benchmarking Data**  
-
-When setting up a benchmarking environment, it’s often useful to have pre-generated data available.This data can help speed up testing and make benchmarks more realistic by simulating actual workloads.
+3. **Setting Up Benchmarking Data**    
+ When setting up a benchmarking environment, it’s often useful to have pre-generated data available.This data can help speed up testing and make benchmarks more realistic by simulating actual workloads.
 
 In this setup, you have two choices:
 
 Here’s how each option works:
 - **Option 1: Download data from object storage**
 
-   To download data from object storage, create a Kubernetes secret with exact named `bucket-secret` and file name ```object-config.yml```  with the necessary credentials as per your object storage. This secret enables access to the stored data.
-> Note: Make sure this secret applied before ```3b_prometheus-test_deployment.yaml```
+   To download data from object storage, create a Kubernetes secret with exact named `bucket-secret` and file name `object-config.yml`  with the necessary credentials as per your object storage. This secret enables access to the stored data.
+> Note: Make sure this secret applied before `3b_prometheus-test_deployment.yaml`
 
 - **Option 2: Skip downloading data**
 
@@ -122,8 +121,9 @@ metadata:
 type: Opaque
 stringData:
   object-config.yml: 
+```  
  
-Regardless of the option chosen, data stored in Prometheus will only be retained based on the configured retention settings (`--storage.tsdb.retention.size`). 
+Regardless of the option chosen, data stored in Prometheus will only be retained based on the configured retention settings (```--storage.tsdb.retention.size```). 
 
 > **⚠️ Warning:** The benchmark will change its basis when the retention size limit is reached and older downloaded blocks are deleted. Ensure that you have sufficient retention settings configured to avoid data loss that could affect benchmarking results. 
 
