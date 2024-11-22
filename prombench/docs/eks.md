@@ -108,7 +108,7 @@ Run Prombench tests in [Elastic Kubernetes Service (EKS)](https://aws.amazon.com
     make node_create
     ```
 3. **Setting Up Benchmarking Data**    
- When setting up a benchmarking environment, it’s often useful to have pre-generated data available.This data can help speed up testing and make benchmarks more realistic by simulating actual workloads.
+ When setting up a benchmarking environment, it’s often useful to have pre-generated data available. This data can help speed up testing and make benchmarks more realistic by simulating actual workloads.
 
 In this setup, you have two choices:
 

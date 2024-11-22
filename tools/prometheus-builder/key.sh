@@ -27,9 +27,9 @@ git checkout pr-branch
 # Here, STORAGE is specified as an  environment variable of the download-key init container, 
 # where it will copy the key.yml file from the Prometheus directory to the volume section of the
 # emptyDir. This file will later be used by the data-downloader init container.
-if [ -f "$DIR/key.yml" ]; then
-    echo "INFO:: key.yml file is Present on $DIR/key.yml directory."
-    echo "INFO:: key.yml file is Present on $DIR/key.yml directory so download the block from ObjecStorage."
+if [ -f "$DIR/bucket-config.yml" ]; then
+    echo "INFO:: bucket-config.yml file is Present on $DIR/bucket-config.yml directory so download the block from ObjecStorage."
+    cp  "$DIR/bucket-config.yml" "$STORAGE/bucket-config.yml"
 else
-    echo "INFO:: key.yml File does not exist on $DIR/key.yml directory so data is not downloaded from ObjectStorage."
+    echo "INFO:: bucket-config.yml File does not exist on $DIR/bucket-config.yml directory so data is not downloaded from ObjectStorage."
 fi
