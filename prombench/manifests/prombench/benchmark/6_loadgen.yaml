@@ -127,7 +127,7 @@ spec:
     spec:
       initContainers:      
       - name: download-key
-        image: kushalshukla/builder
+        image: docker.io/prominfra/prometheus-builder:master
         imagePullPolicy: Always
         command: [ "/go/src/github.com/key.sh" ]
         env:
@@ -144,7 +144,7 @@ spec:
           mountPath: /storage-paths    
       containers:
       - name: prom-load-generator
-        image: kushalshukla/load-generator
+        image: docker.io/prominfra/load-generator:master
         imagePullPolicy: Always
         args:
         - "prombench-{{ .PR_NUMBER }}"
