@@ -25,18 +25,18 @@ func main() {
 	var (
 		tsdbPath     string
 		objectConfig string
-		objectKey    string
+		objectPath   string
 	)
 	uploadCmd := flag.NewFlagSet("upload", flag.ExitOnError)
 	downloadCmd := flag.NewFlagSet("download", flag.ExitOnError)
 
 	uploadCmd.StringVar(&tsdbPath, "tsdb-path", "", "Uploading data to objstore")
 	uploadCmd.StringVar(&objectConfig, "objstore.config-file", "", "Path for The Config file")
-	uploadCmd.StringVar(&objectKey, "key", "", "Path for the Key where to store block data")
+	uploadCmd.StringVar(&objectPath, "path", "", "Path within the objectstorage")
 
 	downloadCmd.StringVar(&tsdbPath, "tsdb-path", "", "Downloading data to objstore")
 	downloadCmd.StringVar(&objectConfig, "objstore.config-file", "", "Path for The Config file")
-	downloadCmd.StringVar(&objectKey, "key", "", "Path from the Key where to download the block data")
+	downloadCmd.StringVar(&objectPath, "path", "", "Path within the objectstorage")
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	flag.Usage = func() {
@@ -46,9 +46,8 @@ func main() {
 		fmt.Println("Flags:")
 		fmt.Println("  --tsdb-path               Path to TSDB data")
 		fmt.Println("  --objstore.config-file    Path to the object store config file")
-		fmt.Println("  --key                     Key path for storing or downloading data")
+		fmt.Println("  --path                    Directory in objectstorage for uploading or downloading data")
 		fmt.Println()
-		fmt.Println("Use 'block-sync [command] --help' for more information about a command.")
 	}
 
 	if len(os.Args) < 2 {
@@ -74,13 +73,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	if tsdbPath == "" || objectConfig == "" || objectKey == "" {
-		fmt.Println("error: all flags --tsdb-path, --objstore.config-file, and --key are required.")
+	if tsdbPath == "" || objectConfig == "" || objectPath == "" {
+		fmt.Println("error: all flags --tsdb-path, --objstore.config-file, and --path are required.")
 		os.Exit(1)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	store, err := newStore(tsdbPath, objectConfig, objectKey, logger)
+	store, err := newStore(tsdbPath, objectConfig, objectPath, logger)
 	if err != nil {
 		logger.Error("Failed to create store", "error", err)
 		os.Exit(1)
