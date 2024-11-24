@@ -28,61 +28,63 @@ import (
 type Store struct {
 	bucket       objstore.Bucket
 	tsdbpath     string
-	objectkey    string
+	objectpath   string
 	objectconfig string
 	bucketlogger *slog.Logger
 }
 
-func newStore(tsdbPath, objectConfig, objectKey string, logger *slog.Logger) (*Store, error) {
+func newStore(tsdbPath, objectConfig, objectPath string, logger *slog.Logger) (*Store, error) {
 	configBytes, err := os.ReadFile(objectConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
+	}
+	if len(configBytes) == 0 {
+		fmt.Println("Config file is empty, exiting container.")
+		os.Exit(0)
 	}
 
 	bucket, err := client.NewBucket(log.NewNopLogger(), configBytes, "block-sync")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create bucket existence:%w", err)
 	}
-	key, err := os.ReadFile(objectKey)
+	path, err := os.ReadFile(objectPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read objectKey file: %w", err)
 	}
 
-	content := strings.TrimSpace(string(key))
+	content := strings.TrimSpace(string(path))
 	lines := strings.Split(content, "\n")
-	var value string
+	var directory string
 
-	// Loop through each line to find the key
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, "key:") {
-			// Extract the value after "key:"
-			value = strings.TrimSpace(strings.TrimPrefix(line, "key:"))
+		if strings.HasPrefix(line, "path:") {
+			directory = strings.TrimSpace(strings.TrimPrefix(line, "path:"))
 			break
 		}
 	}
 
-	if value == "" {
-		return nil, fmt.Errorf("expected 'key:' prefix not found")
+	if directory == "" {
+		return nil, fmt.Errorf("expected 'path:' prefix not found")
 	}
 
 	return &Store{
 		bucket:       bucket,
 		tsdbpath:     tsdbPath,
-		objectkey:    value,
+		objectpath:   directory,
 		objectconfig: objectConfig,
 		bucketlogger: logger,
 	}, nil
 }
 
 func (c *Store) upload(ctx context.Context) error {
-	exists, err := c.bucket.Exists(ctx, c.objectkey)
+	exists, err := c.bucket.Exists(ctx, c.objectpath)
 	if err != nil {
 		return fmt.Errorf("failed to check new bucket:%w", err)
 	}
 	c.bucketlogger.Info("Bucket checked  Successfully", "Bucket name", exists)
 
-	err = objstore.UploadDir(ctx, log.NewNopLogger(), c.bucket, c.tsdbpath, c.objectkey)
+	err = objstore.UploadDir(ctx, log.NewNopLogger(), c.bucket, c.tsdbpath, c.objectpath)
 	if err != nil {
 		c.bucketlogger.Error("Failed to upload directory", "path", c.tsdbpath, "error", err)
 		return fmt.Errorf("failed to upload directory from path %s to bucket: %w", c.tsdbpath, err)
@@ -93,13 +95,13 @@ func (c *Store) upload(ctx context.Context) error {
 }
 
 func (c *Store) download(ctx context.Context) error {
-	exists, err := c.bucket.Exists(ctx, c.objectkey)
+	exists, err := c.bucket.Exists(ctx, c.objectpath)
 	if err != nil {
 		return fmt.Errorf("failed to check new bucket:%w", err)
 	}
 	c.bucketlogger.Info("Bucket checked  Successfully", "Bucket name", exists)
 
-	err = objstore.DownloadDir(ctx, log.NewNopLogger(), c.bucket, "dir/", c.objectkey, c.tsdbpath)
+	err = objstore.DownloadDir(ctx, log.NewNopLogger(), c.bucket, "dir/", c.objectpath, c.tsdbpath)
 	if err != nil {
 		c.bucketlogger.Error("Failed to download directory", "path", c.tsdbpath, "error", err)
 		return fmt.Errorf("failed to download directory from path %s to bucket: %w", c.tsdbpath, err)

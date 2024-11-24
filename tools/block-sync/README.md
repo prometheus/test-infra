@@ -1,6 +1,4 @@
-
 # block-sync - TSDB Data Synchronization Tool
-
 
 The `block-sync` command is a CLI tool designed to synchronize TSDB data with an object storage system. 
 
@@ -14,7 +12,9 @@ The `block-sync` command is a CLI tool designed to synchronize TSDB data with an
 - ``` -h , --help```:Displays context-sensitive help 
 - ``` - tsdb-path```: Path for The TSDB data in prometheus
 - ```- objstore.config-file```: Path for The Config file
-- ```- Key```: Path for the Key where to store block data , i.e a Directory. 
+- ```- path```: Path within the objectstorage where to store block data , i.e a Directory.
+## Note  
+> Use the `path` flag with a file specifying the path: *your directory name*.
 
 ## Upload
 
@@ -23,7 +23,7 @@ The `upload` command allows you to upload TSDB data from a specified path to an 
 ### Usage
 
 ```bash
-./block-sync upload --tsdb-path=<path-to-tsdb> --objstore.config-file=<path-to-config> --key=<object-key>
+./block-sync upload --tsdb-path=<path-to-tsdb> --objstore.config-file=<path-to-config> --path=<path-to-bucket-config-file>
 
 
 ```
@@ -34,7 +34,7 @@ The `download` command allows you to retrieve TSDB data from an object storage b
 ### Usage
 
 ```bash
-./block-sync download --tsdb-path=<path-to-tsdb> --objstore.config-file=<path-to-config> --key=<object-key>
+./block-sync download --tsdb-path=<path-to-tsdb> --objstore.config-file=<path-to-config> --path=<path-to-bucket-config-file>
 ```
 ## Config File
 
