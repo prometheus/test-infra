@@ -17,6 +17,13 @@ spec:
       containers:
       - name: prom-sink
         image: quay.io/bwplotka/sink:latest
+        resources:
+          limits:
+            cpu: "1"
+            memory: "350Mi"
+          requests:
+            cpu: "560m"
+            memory: "250Mi"
         imagePullPolicy: Always
         ports:
         - name: sink-port
@@ -28,14 +35,16 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: prometheus-remote-write
+  name: prometheus-sink
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
-    app: remote-write
+    app: sink
 spec:
+  type: ClusterIP
+  clusterIP: None
   ports:
-  - name: prometheus
-    port: 80
+  - name: sink-port
+    port: 9011
     targetPort: sink-port
   selector:
     app: sink

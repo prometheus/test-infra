@@ -719,4 +719,4 @@ data:
         source_labels: [__meta_kubernetes_pod_node_name]
         target_label: nodeName
     remote_write:
-      - url: "http://prometheus-remote-write:80/sink/prw"  
+      - url: "http://prometheus-sink:9011/sink/prw"
