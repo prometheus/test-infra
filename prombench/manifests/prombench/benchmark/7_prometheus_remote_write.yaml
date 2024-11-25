@@ -18,9 +18,6 @@ spec:
       - name: prom-sink
         image: quay.io/bwplotka/sink:latest
         resources:
-          limits:
-            cpu: "1"
-            memory: "350Mi"
           requests:
             cpu: "560m"
             memory: "250Mi"
