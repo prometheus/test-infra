@@ -135,6 +135,10 @@ spec:
         env:
         - name: DOMAIN_NAME
           value: "{{ .DOMAIN_NAME }}"
+        resources:
+          requests:
+            cpu: 200m
+            memory: 100Mi
         volumeMounts:
         - name: config-volume
           mountPath: /etc/loadgen
