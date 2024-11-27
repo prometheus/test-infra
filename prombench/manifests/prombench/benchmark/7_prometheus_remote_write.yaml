@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-sink
+  namespace: prombench-{{ .PR_NUMBER }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sink
+  template:
+    metadata:
+      namespace: prombench-{{ .PR_NUMBER }}
+      labels:
+        app: sink
+    spec:
+      containers:
+      - name: prom-sink
+        image: quay.io/bwplotka/sink:latest
+        resources:
+          requests:
+            cpu: "560m"
+            memory: "250Mi"
+        imagePullPolicy: Always
+        ports:
+        - name: sink-port
+          containerPort: 9011
+      nodeSelector:
+        node-name: nodes-{{ .PR_NUMBER }}
+        isolation: none
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-sink
+  namespace: prombench-{{ .PR_NUMBER }}
+  labels:
+    app: sink
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: sink-port
+    port: 9011
+    targetPort: sink-port
+  selector:
+    app: sink
