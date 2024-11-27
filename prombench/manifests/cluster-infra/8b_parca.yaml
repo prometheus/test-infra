@@ -81,6 +81,7 @@ spec:
           - "--config-path=/etc/parca/parca.yaml"
           - "--path-prefix=/profiles"
           - "--log-level=info"
+          - "--log.format=json"
           - "--cors-allowed-origins=*"
           - "--debuginfod-upstream-servers=https://debuginfod.systemtap.org"
           - "--debuginfod-http-request-timeout=5m"

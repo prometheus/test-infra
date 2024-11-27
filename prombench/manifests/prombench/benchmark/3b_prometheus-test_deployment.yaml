@@ -68,6 +68,7 @@ spec:
           "--storage.tsdb.path=/prometheus",
           "--config.file=/etc/prometheus/prometheus.yml",
           "--log.level=debug"
+          "--log.format=json"
         ]
         volumeMounts:
         - name: config-volume

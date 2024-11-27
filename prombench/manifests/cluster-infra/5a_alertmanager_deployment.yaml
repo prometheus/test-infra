@@ -44,6 +44,7 @@ spec:
         - "--config.file=/etc/alertmanager/alertmanager.yml"
         - "--cluster.listen-address="
         - "--storage.path=/alertmanager"
+        - "--log.format=json"
         name: alertmanager
         volumeMounts:
         - name: config

@@ -25,6 +25,8 @@ spec:
         name: grafana-core
         imagePullPolicy: IfNotPresent
         env:
+          - name: GF_LOG_FILE_FORMAT
+            value: "json"
           - name: GF_PATHS_PROVISIONING
             value: "/opt/grafana-provision"
           - name: GF_SERVER_ROOT_URL
