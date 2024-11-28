@@ -35,6 +35,10 @@ data:
               containerPort: 8083
             - name: metrics5
               containerPort: 8084
+            resources:
+              requests:
+                cpu: 200m
+                memory: 60Mi
           nodeSelector:
             node-name: nodes-{{ .PR_NUMBER }}
             isolation: none
@@ -69,6 +73,10 @@ spec:
           containerPort: 8083
         - name: metrics5
           containerPort: 8084
+        resources:
+          requests:
+            cpu: 200m
+            memory: 60Mi
       nodeSelector:
         node-name: nodes-{{ .PR_NUMBER }}
         isolation: none
