@@ -82,6 +82,10 @@ spec:
             - "-config.file=/etc/promtail/promtail.yaml"
             - "-client.url=http://loki:3100/api/prom/push"
             - "-log.format=json"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 100Mi
           volumeMounts:
             - name: config
               mountPath: /etc/promtail

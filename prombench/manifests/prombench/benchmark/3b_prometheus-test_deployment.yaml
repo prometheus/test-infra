@@ -70,6 +70,10 @@ spec:
           "--log.level=debug"
           "--log.format=json"
         ]
+        resources:
+          requests:
+            cpu: 2
+            memory: 20Gi
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus
@@ -156,6 +160,10 @@ spec:
           "--config.file=/etc/prometheus/prometheus.yml",
           "--log.level=debug"
         ]
+        resources:
+          requests:
+            cpu: 2
+            memory: 20Gi
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus

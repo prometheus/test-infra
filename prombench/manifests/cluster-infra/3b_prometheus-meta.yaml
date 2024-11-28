@@ -210,6 +210,10 @@ spec:
         - "--web.external-url=http://{{ .DOMAIN_NAME }}/prometheus-meta"
         - "--log.format=json"
         name: prometheus
+        resources:
+          requests:
+            cpu: 100m
+            memory: 1Gi
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus/config

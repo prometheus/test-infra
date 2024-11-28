@@ -19,8 +19,14 @@ spec:
         image: quay.io/bwplotka/sink:latest
         resources:
           requests:
-            cpu: "560m"
-            memory: "250Mi"
+            cpu: "2"
+            memory: "512Mi"
+        # Trade more memory for less CPU
+        env:
+        - name: GOGC
+          value: "off"
+        - name: GOMEMLIMIT
+          value: "512MiB"
         imagePullPolicy: Always
         ports:
         - name: sink-port
