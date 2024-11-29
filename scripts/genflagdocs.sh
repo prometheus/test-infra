@@ -10,7 +10,7 @@ SED_BIN=${SED_BIN:-sed}
 README_FILES="./tools/*/README.md ./infra/README.md"
 
 primary_tools=("infra")
-helper_tools=("amGithubNotifier" "commentMonitor")
+helper_tools=("amGithubNotifier" "comment-monitor")
 
 function fetch_embedmd {
   pushd ..
