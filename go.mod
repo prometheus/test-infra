@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/container v1.41.0
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/google/go-github/v29 v29.0.3
+	github.com/nelkinda/health-go v0.0.1
 	github.com/prometheus/alertmanager v0.27.0
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/common v0.60.1
@@ -18,7 +19,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.31.2
 	k8s.io/apimachinery v0.31.2
 	k8s.io/client-go v0.31.2
-	k8s.io/cloud-provider-gcp v0.0.0-20231031161848-992c1c33f1be
+	k8s.io/cloud-provider-gcp v0.0.0-20241115222652-d74b2e1d6653
 	sigs.k8s.io/aws-iam-authenticator v0.6.27
 	sigs.k8s.io/kind v0.24.0
 )
@@ -58,6 +59,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mozillazg/go-httpheader v0.2.1 // indirect
 	github.com/ncw/swift v1.0.53 // indirect
+	github.com/nelkinda/http-go v0.0.1 // indirect
 	github.com/oracle/oci-go-sdk/v65 v65.41.1 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/rs/xid v1.5.0 // indirect
@@ -131,7 +133,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
-	github.com/oklog/run v1.1.0 // indirect
+	github.com/oklog/run v1.1.0
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/onsi/gomega v1.33.1 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
@@ -149,15 +151,15 @@ require (
 	github.com/thanos-io/objstore v0.0.0-20240913165201-fd105025a2e5
 	github.com/x448/float16 v0.8.4 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.54.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0 // indirect
-	go.opentelemetry.io/otel v1.29.0 // indirect
-	go.opentelemetry.io/otel/metric v1.29.0 // indirect
-	go.opentelemetry.io/otel/trace v1.29.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.55.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.55.0 // indirect
+	go.opentelemetry.io/otel v1.30.0 // indirect
+	go.opentelemetry.io/otel/metric v1.30.0 // indirect
+	go.opentelemetry.io/otel/trace v1.30.0 // indirect
 	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
+	golang.org/x/sync v0.8.0
 	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/term v0.25.0 // indirect
 	golang.org/x/text v0.19.0 // indirect
@@ -175,3 +177,6 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
+
+// Remove broken version.
+exclude k8s.io/cloud-provider-gcp/providers v0.0.0-00010101000000-000000000000

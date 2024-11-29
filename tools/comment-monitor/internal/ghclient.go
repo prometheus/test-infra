@@ -11,62 +11,61 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package internal
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
-	"os"
 
 	"github.com/google/go-github/v29/github"
 	"golang.org/x/oauth2"
 )
 
-type githubClient struct {
+type EventDetails struct {
+	Owner             string
+	Repo              string
+	PR                int
+	Author            string
+	AuthorAssociation string
+}
+
+func NewEventDetails(e *github.IssueCommentEvent) EventDetails {
+	return EventDetails{
+		Owner:             *e.GetRepo().Owner.Login,
+		Repo:              *e.GetRepo().Name,
+		PR:                *e.GetIssue().Number,
+		Author:            *e.Sender.Login,
+		AuthorAssociation: *e.GetComment().AuthorAssociation,
+	}
+}
+
+type GithubClient struct {
 	clt               *github.Client
 	owner             string
 	repo              string
 	pr                int
 	author            string
-	commentBody       string
 	authorAssociation string
 	ctx               context.Context
 }
 
-func newGithubClient(ctx context.Context, e *github.IssueCommentEvent) (*githubClient, error) {
-	ghToken := os.Getenv("GITHUB_TOKEN")
-	if ghToken == "" {
-		return nil, fmt.Errorf("env var missing")
-	}
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: ghToken})
+func NewGithubClient(ctx context.Context, token string) (*GithubClient, error) {
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 	tc := oauth2.NewClient(ctx, ts)
-	return &githubClient{
-		clt:               github.NewClient(tc),
-		owner:             *e.GetRepo().Owner.Login,
-		repo:              *e.GetRepo().Name,
-		pr:                *e.GetIssue().Number,
-		author:            *e.Sender.Login,
-		authorAssociation: *e.GetComment().AuthorAssociation,
-		commentBody:       *e.GetComment().Body,
-		ctx:               ctx,
+	return &GithubClient{
+		clt: github.NewClient(tc),
+		ctx: ctx,
 	}, nil
 }
 
-func (c githubClient) postComment(commentBody string) error {
-	issueComment := &github.IssueComment{Body: github.String(commentBody)}
-	_, _, err := c.clt.Issues.CreateComment(c.ctx, c.owner, c.repo, c.pr, issueComment)
-	return err
-}
-
-func (c githubClient) createLabel(labelName string) error {
+func (c *GithubClient) createLabel(labelName string) error {
 	benchmarkLabel := []string{labelName}
 	_, _, err := c.clt.Issues.AddLabelsToIssue(c.ctx, c.owner, c.repo, c.pr, benchmarkLabel)
 	return err
 }
 
-func (c githubClient) getLastCommitSHA() (string, error) {
+func (c *GithubClient) GetLastCommitSHA() (string, error) {
 	// https://developer.github.com/v3/pulls/#list-commits-on-a-pull-request
 	listops := &github.ListOptions{Page: 1, PerPage: 250}
 	l, _, err := c.clt.PullRequests.ListCommits(c.ctx, c.owner, c.repo, c.pr, listops)
@@ -79,19 +78,31 @@ func (c githubClient) getLastCommitSHA() (string, error) {
 	return l[len(l)-1].GetSHA(), nil
 }
 
-func (c githubClient) createRepositoryDispatch(eventType string, clientPayload map[string]string) error {
-	allArgs, err := json.Marshal(clientPayload)
+func (c *GithubClient) Dispatch(eventType string, args map[string]string) error {
+	allArgs, err := json.Marshal(args)
 	if err != nil {
 		return fmt.Errorf("%w: could not encode client payload", err)
 	}
-	cp := json.RawMessage(string(allArgs))
+	cp := json.RawMessage(allArgs)
 
 	rd := github.DispatchRequestOptions{
 		EventType:     eventType,
 		ClientPayload: &cp,
 	}
 
-	log.Printf("creating repository_dispatch with payload: %v", string(allArgs))
 	_, _, err = c.clt.Repositories.Dispatch(c.ctx, c.owner, c.repo, rd)
 	return err
+}
+
+func (c *GithubClient) PostComment(commentBody string) error {
+	issueComment := &github.IssueComment{Body: github.String(commentBody)}
+	_, _, err := c.clt.Issues.CreateComment(c.ctx, c.owner, c.repo, c.pr, issueComment)
+	return err
+}
+
+func (c *GithubClient) PostLabel(label string) error {
+	if err := c.createLabel(label); err != nil {
+		return fmt.Errorf("%w : couldn't set label", err)
+	}
+	return nil
 }

@@ -1,6 +1,12 @@
-# commentMonitor
+# comment-monitor
 
-A simple webhook server designed to parse GitHub comments and execute actions based on the comment content. Currently, it only supports the [`issue_comment` event](https://developer.github.com/v3/activity/events/types/#issuecommentevent) triggered by pull requests (PRs).
+A GitHub webhook that watches GitHub Issue and Pull Request comments for `/prombench <event> [<version>] [<options>]` commands.
+
+On each command it dispatches appropriate [`repository_dispatch` event](https://developer.github.com/v3/repos/#create-a-repository-dispatch-event) to configured repository and notifies the same issue/PR.
+
+See [Prometheus GitHub action that responses to prombench comment-monitor dispatches](https://github.com/prometheus/prometheus/blob/main/.github/workflows/prombench.yml).
+
+Currently, it only supports the [`issue_comment` event](https://developer.github.com/v3/activity/events/types/#issuecommentevent), which can be triggered by either issue or PR.
 
 ## Table of Contents
 
@@ -19,7 +25,7 @@ A simple webhook server designed to parse GitHub comments and execute actions ba
 
 ## Setting Up the Webhook Server
 
-To specify the configuration file for `commentMonitor`, use the `--config` flag.
+To specify the configuration file for `comment-monitor`, use the `--config` flag.
 
 ### Example `config.yml` File
 
@@ -40,7 +46,7 @@ eventmaps:
 **How It Works:**
 - Comments are first checked to see if they start with any of the prefixes specified in `prefixes`. If not, the request is dropped.
 - If the prefix is matched, but the subsequent content does not match the `regex_string`, a comment with the `help_template` for that prefix is posted back to the issue/PR.
-- If a comment matches the `regex_string`, `commentMonitor` will trigger a [`repository_dispatch` event](https://developer.github.com/v3/repos/#create-a-repository-dispatch-event) with the specified `event_type`.
+- If a comment matches the `regex_string`, `comment-monitor` will trigger a [`repository_dispatch` event](https://developer.github.com/v3/repos/#create-a-repository-dispatch-event) with the specified `event_type`.
 - A comment will also be posted to the issue/PR with the `comment_template`.
 - Any arguments extracted by the `regex_string` will be passed to the [`client_payload`](https://developer.github.com/v3/repos/#example-5) of the `repository_dispatch` event.
 
@@ -84,7 +90,7 @@ Flags:
 
 ## Building Docker Image
 
-To build the Docker image for `commentMonitor`:
+To build the Docker image for `comment-monitor`:
 
 ```bash
 docker build -t prominfra/comment-monitor:master .
