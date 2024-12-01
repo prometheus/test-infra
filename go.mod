@@ -9,7 +9,7 @@ require (
 	github.com/prometheus/alertmanager v0.27.0
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/common v0.60.1
-	golang.org/x/oauth2 v0.23.0
+	golang.org/x/oauth2 v0.24.0
 	google.golang.org/api v0.205.0
 	google.golang.org/grpc v1.67.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
