@@ -11,7 +11,7 @@ require (
 	github.com/prometheus/common v0.60.1
 	golang.org/x/oauth2 v0.24.0
 	google.golang.org/api v0.205.0
-	google.golang.org/grpc v1.67.1
+	google.golang.org/grpc v1.68.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.31.2
