@@ -19,7 +19,7 @@ spec:
         imagePullPolicy: Always
         args:
         - "--config=/etc/cm/config.yml"
-        - "--webhooksecretfile=/etc/github/whsecret"
+        - "--whsecret=/etc/github/whsecret"
         name: comment-monitor
         env:
         - name: DOMAIN_NAME

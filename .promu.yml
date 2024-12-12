@@ -10,8 +10,8 @@ build:
           path: ./infra
         - name: tools/amGithubNotifier
           path: ./tools/amGithubNotifier
-        - name: tools/commentMonitor
-          path: ./tools/commentMonitor
+        - name: tools/comment-monitor
+          path: ./tools/comment-monitor
         - name: tools/fake-webserver
           path: ./tools/fake-webserver
         - name: tools/scaler

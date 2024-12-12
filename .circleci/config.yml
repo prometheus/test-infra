@@ -72,8 +72,8 @@ jobs:
           password_variable: DOCKER_PASSWORD
       - prometheus/publish_images:
           container_image_name: comment-monitor
-          dockerfile_path: "tools/commentMonitor/Dockerfile"
-          dockerbuild_context: "tools/commentMonitor/"
+          dockerfile_path: "tools/comment-monitor/Dockerfile"
+          dockerbuild_context: "tools/comment-monitor/"
           registry: docker.io
           organization: "$DOCKER_ORG"
           login_variable: DOCKER_LOGIN
