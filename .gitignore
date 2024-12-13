@@ -1,6 +1,6 @@
 .idea/
 /tools/amGithubNotifier/amGithubNotifier
-/tools/commentMonitor/commentMonitor
+/tools/comment-monitor/comment-monitor
 /tools/fake-webserver/fake-webserver
 /tools/scaler/scaler
 /infra/infra
