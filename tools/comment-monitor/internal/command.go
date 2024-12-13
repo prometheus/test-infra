@@ -54,6 +54,10 @@ func parseConfigContent(content []byte) (_ *Config, err error) {
 			if c.Name == "" && c.ArgsRegex == "" {
 				return nil, fmt.Errorf("/%v bad config; default commands cannot have empty args_regex (no required arguments)", p.Prefix)
 			}
+			if strings.ToLower(c.Name) == "help" {
+				return nil, fmt.Errorf("/%v bad config; 'help' command name is reserved", p.Prefix)
+
+			}
 			if strings.HasPrefix(c.ArgsRegex, "^") {
 				return nil, fmt.Errorf("/%v bad config; args_regex has to be front open, got %v", p.Prefix, c.ArgsRegex)
 			}
@@ -143,6 +147,16 @@ func ParseCommand(cfg *Config, comment string) (_ *Command, ok bool, err *Comman
 	}
 	cmdLine := comment[:i]
 	rest := cmdLine[len(prefix.Prefix):]
+
+	// Is it help?
+	if hasExactPrefix(rest, " help") {
+		return &Command{
+			Args:                   map[string]string{},
+			Prefix:                 prefix.Prefix,
+			SuccessCommentTemplate: prefix.Help,
+			DebugCMDLine:           cmdLine,
+		}, true, nil
+	}
 
 	// Find the command.
 	var cmdConfig *CommandConfig

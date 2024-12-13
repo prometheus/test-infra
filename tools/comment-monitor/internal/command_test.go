@@ -28,17 +28,24 @@ const (
 	eventTypeStop    = "prombench_stop"
 )
 
-func testCommand(evenType, release string) *Command {
+func testCommand(eventType, release string) *Command {
 	c := &Command{
 		Prefix:           "/prombench",
 		Args:             map[string]string{},
-		EventType:        evenType,
+		EventType:        eventType,
 		ShouldVerifyUser: true,
 	}
 	if release != "" {
 		c.Args["RELEASE"] = release
 	}
 	return c
+}
+
+func helpCommand() *Command {
+	return &Command{
+		Prefix: "/prombench",
+		Args:   map[string]string{},
+	}
 }
 
 type parseCommandCase struct {
@@ -99,9 +106,8 @@ func testParseCommand(t *testing.T, c *Config, cases []parseCommandCase) {
 }
 
 func TestParseCommand(t *testing.T) {
-	const testConfigFile = "./testconfig.yaml"
 
-	c, err := ParseConfig(testConfigFile)
+	c, err := ParseConfig("./testconfig.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,6 +127,10 @@ func TestParseCommand(t *testing.T) {
 		{
 			comment: "/prombench cancel",
 			expect:  testCommand(eventTypeStop, ""),
+		},
+		{
+			comment: "/prombench help",
+			expect:  helpCommand(),
 		},
 		// Different versions based on the provided  args_regex: ^\s+(?P<RELEASE>master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
 		{

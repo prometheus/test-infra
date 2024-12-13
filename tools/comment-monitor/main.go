@@ -236,12 +236,14 @@ func (d *dispatcher) HandleIssue(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
+	}
 
+	allArgs := cmd.Args
+	if cmd.EventType != "" {
 		logger = logger.With("cmdLine", cmd.DebugCMDLine)
 		logger.Info("dispatching a new command and updating issue")
 
 		// Combine all arguments for both dispatch and the comment update.
-		allArgs := cmd.Args
 		allArgs["PR_NUMBER"] = strconv.Itoa(eventDetails.PR)
 		allArgs["LAST_COMMIT_SHA"], err = ghClient.GetLastCommitSHA()
 		if err != nil {
@@ -257,26 +259,27 @@ func (d *dispatcher) HandleIssue(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		logger.Info("dispatched repository GitHub payload")
+	}
 
-		// Update the issue.
-		comment, err := executeCommentTemplate(cmd.SuccessCommentTemplate, allArgs)
-		if err != nil {
-			handleErr(w, logger, "failed to execute template", http.StatusInternalServerError, err)
+	// Update the issue.
+	comment, err := executeCommentTemplate(cmd.SuccessCommentTemplate, allArgs)
+	if err != nil {
+		handleErr(w, logger, "failed to execute template", http.StatusInternalServerError, err)
+		return
+	}
+
+	if err = ghClient.PostComment(comment); err != nil {
+		handleErr(w, logger, "dispatch successful; but could not post comment to GitHub", http.StatusInternalServerError, err)
+		return
+	}
+
+	if cmd.SuccessLabel != "" {
+		if err = ghClient.PostLabel(cmd.SuccessLabel); err != nil {
+			handleErr(w, logger, "dispatch successful; but could not post label to GitHub", http.StatusInternalServerError, err)
 			return
-		}
-
-		if err = ghClient.PostComment(comment); err != nil {
-			handleErr(w, logger, "dispatch successful; but could not post comment to GitHub", http.StatusInternalServerError, err)
-			return
-		}
-
-		if cmd.SuccessLabel != "" {
-			if err = ghClient.PostLabel(cmd.SuccessLabel); err != nil {
-				handleErr(w, logger, "dispatch successful; but could not post label to GitHub", http.StatusInternalServerError, err)
-				return
-			}
 		}
 	}
+
 }
 
 func executeCommentTemplate(commentTemplate string, args map[string]string) (string, error) {
