@@ -86,8 +86,9 @@ github.com/aslakhellesoy/gox v1.0.100/go.mod h1:AJl542QsKKG96COVsv0N74HHzVQgDIQP
 github.com/aws/aws-sdk-go v1.38.35/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/aws/aws-sdk-go v1.55.5 h1:KKUZBfBoyqy5d3swXyiC7Q76ic40rYcbqH7qjh59kzU=
 github.com/aws/aws-sdk-go v1.55.5/go.mod h1:eRwEWoyTWFMVYVQzKMNHWP5/RV4xIUGMQfXQHfHkpNU=
-github.com/aws/aws-sdk-go-v2 v1.16.0 h1:cBAYjiiexRAg9v2z9vb6IdxAa7ef4KCtjW7w7e3GxGo=
 github.com/aws/aws-sdk-go-v2 v1.16.0/go.mod h1:lJYcuZZEHWNIb6ugJjbQY1fykdoobWbOS7kJYb4APoI=
+github.com/aws/aws-sdk-go-v2 v1.30.4 h1:frhcagrVNrzmT95RJImMHgabt99vkXGslubDaDagTk8=
+github.com/aws/aws-sdk-go-v2 v1.30.4/go.mod h1:CT+ZPWXbYrci8chcARI3OmI/qgd+f6WtuLOoaIA8PR0=
 github.com/aws/aws-sdk-go-v2/config v1.15.1 h1:hTIZFepYESYyowQUBo47lu69WSxsYqGUILY9Nu8+7pY=
 github.com/aws/aws-sdk-go-v2/config v1.15.1/go.mod h1:MZHGbuW2WnqIOQQBKu2ZkhTjuutZSTnn56TDq4QyydE=
 github.com/aws/aws-sdk-go-v2/credentials v1.11.0 h1:gc4Uhs80s60nmLon5Z4JXWinX2BkAGT0YROoUT8h8U4=
@@ -106,8 +107,9 @@ github.com/aws/aws-sdk-go-v2/service/sso v1.11.1 h1:DyHctRsJIAWIvom1Itb4T84D2jwp
 github.com/aws/aws-sdk-go-v2/service/sso v1.11.1/go.mod h1:CvFTucADIx7U/M44vjLs/ZttpQHdpxwK+62+dUGhDeY=
 github.com/aws/aws-sdk-go-v2/service/sts v1.16.1 h1:xsOtPAvHqhvQvBza5ohaUcfq1LceH2lZKMUGZJKiZiM=
 github.com/aws/aws-sdk-go-v2/service/sts v1.16.1/go.mod h1:Aq2/Qggh2oemSfyHH+EO4UBbgWG6zFCXLHYI4ILTY7w=
-github.com/aws/smithy-go v1.11.1 h1:IQ+lPZVkSM3FRtyaDox41R8YS6iwPMYIreejOgPW49g=
 github.com/aws/smithy-go v1.11.1/go.mod h1:3xHYmszWVx2c0kIwQeEVf9uSm4fYZt67FBJnwub1bgM=
+github.com/aws/smithy-go v1.20.4 h1:2HK1zBdPgRbjFOHlfeQZfpC4r72MOb9bZkiFwggKO+4=
+github.com/aws/smithy-go v1.20.4/go.mod h1:irrKGvNn1InZwb2d7fkIRNucdfwR8R+Ts3wxYa/cJHg=
 github.com/baidubce/bce-sdk-go v0.9.111 h1:yGgtPpZYUZW4uoVorQ4xnuEgVeddACydlcJKW87MDV4=
 github.com/baidubce/bce-sdk-go v0.9.111/go.mod h1:zbYJMQwE4IZuyrJiFO8tO8NbtYiKTFTbwh4eIsqjVdg=
 github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f h1:ZNv7On9kyUzm7fvRZumSyy/IUiSC7AzL0I1jKKtwooA=
@@ -155,8 +157,8 @@ github.com/efficientgo/core v1.0.0-rc.0.0.20221201130417-ba593f67d2a4 h1:rydBwnB
 github.com/efficientgo/core v1.0.0-rc.0.0.20221201130417-ba593f67d2a4/go.mod h1:kQa0V74HNYMfuJH6jiPiwNdpWXl4xd/K4tzlrcvYDQI=
 github.com/efficientgo/e2e v0.13.1-0.20220922081603-45de9fc588a8 h1:UFLc39BcUXahSNCLUrKjNGZABMUZaS4M74EZvTRnq3k=
 github.com/efficientgo/e2e v0.13.1-0.20220922081603-45de9fc588a8/go.mod h1:Hi+sz0REtlhVZ8zcdeTC3j6LUEEpJpPtNjOaOKuNcgI=
-github.com/emicklei/go-restful/v3 v3.11.0 h1:rAQeMHw1c7zTmncogyy8VvRZwtkmkZ4FxERmMY4rD+g=
-github.com/emicklei/go-restful/v3 v3.11.0/go.mod h1:6n3XBCmQQb25CM2LCACGz8ukIrRry+4bhvbpWn3mrbc=
+github.com/emicklei/go-restful/v3 v3.11.3 h1:yagOQz/38xJmcNeZJtrUcKjkHRltIaIFXKWeG1SkWGE=
+github.com/emicklei/go-restful/v3 v3.11.3/go.mod h1:6n3XBCmQQb25CM2LCACGz8ukIrRry+4bhvbpWn3mrbc=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1mIlRU8Am5FuJP05cCM98=
@@ -530,6 +532,8 @@ github.com/sirupsen/logrus v1.9.3 h1:dueUQJ1C2q9oE3F7wvmSGAaVtTmUizReu6fjN8uqzbQ
 github.com/sirupsen/logrus v1.9.3/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVsIT4qYEQ=
 github.com/sony/gobreaker v0.5.0 h1:dRCvqm0P490vZPmy7ppEk2qCnCieBooFJ+YoXGYB+yg=
 github.com/sony/gobreaker v0.5.0/go.mod h1:ZKptC7FHNvhBz7dN2LGjPVBz2sZJmc0/PkyDJOjmxWY=
+github.com/spf13/afero v1.11.0 h1:WJQKhtpdm3v2IzqG8VMqrr6Rf3UYpEF239Jy9wNepM8=
+github.com/spf13/afero v1.11.0/go.mod h1:GH9Y3pIexgf1MTIWtNGyogA5MwRIDXGUr+hbWNoBjkY=
 github.com/spf13/cobra v0.0.3/go.mod h1:1l0Ry5zgKvJasoi3XT1TypsSe7PqH0Sj9dhYf7v3XqQ=
 github.com/spf13/cobra v1.8.1 h1:e5/vxKd/rZsfSJMUX1agtjeTDf+qv1/JdBF8gg5k9ZM=
 github.com/spf13/cobra v1.8.1/go.mod h1:wHxEcudfqmLYa8iTfL+OuZPbBZkmvliBWKIezN3kD9Y=
@@ -945,8 +949,8 @@ k8s.io/utils v0.0.0-20240711033017-18e509b52bc8/go.mod h1:OLgZIPagt7ERELqWJFomSt
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
-sigs.k8s.io/aws-iam-authenticator v0.6.27 h1:uzSwFYh+hrrbpv7goZ+2FN/2oCQddiKpb8l5vBbY1i4=
-sigs.k8s.io/aws-iam-authenticator v0.6.27/go.mod h1:8CAmUtqsLmv5QvnhXQ2+byy1EL+TCDyyYTGFXDyt0sk=
+sigs.k8s.io/aws-iam-authenticator v0.6.28 h1:W5exNoRMP4x/6vSzTLtYvxphWTrNxCS/2dowixsgsJ0=
+sigs.k8s.io/aws-iam-authenticator v0.6.28/go.mod h1:9jFkXkrkN97+UAMrDzTsqoxDj8OHo3FkVcsTKyHvHSM=
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd h1:EDPBXCAspyGV4jQlpZSudPeMmr1bNJefnuqLsRAsHZo=
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd/go.mod h1:B8JuhiUyNFVKdsE8h686QcCxMaH6HrOAZj4vswFpcB0=
 sigs.k8s.io/kind v0.25.0 h1:ugUvgesHKKA0yKmD6QtYTiEev+kPUpGxdTPbMGf8VTU=

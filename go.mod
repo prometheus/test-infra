@@ -20,7 +20,7 @@ require (
 	k8s.io/apimachinery v0.31.2
 	k8s.io/client-go v0.31.2
 	k8s.io/cloud-provider-gcp v0.0.0-20241115222652-d74b2e1d6653
-	sigs.k8s.io/aws-iam-authenticator v0.6.27
+	sigs.k8s.io/aws-iam-authenticator v0.6.28
 	sigs.k8s.io/kind v0.25.0
 )
 
@@ -34,7 +34,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.3.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2 // indirect
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.2+incompatible // indirect
-	github.com/aws/aws-sdk-go-v2 v1.16.0 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.30.4 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.15.1 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.11.0 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.1 // indirect
@@ -44,7 +44,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.1 // indirect
-	github.com/aws/smithy-go v1.11.1 // indirect
+	github.com/aws/smithy-go v1.20.4 // indirect
 	github.com/baidubce/bce-sdk-go v0.9.111 // indirect
 	github.com/clbanning/mxj v1.8.4 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -64,6 +64,7 @@ require (
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/sony/gobreaker v0.5.0 // indirect
+	github.com/spf13/afero v1.11.0 // indirect
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.40 // indirect
 	google.golang.org/genproto v0.0.0-20241021214115-324edc3d5d38 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
@@ -84,7 +85,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
+	github.com/emicklei/go-restful/v3 v3.11.3 // indirect
 	github.com/evanphx/json-patch/v5 v5.7.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
