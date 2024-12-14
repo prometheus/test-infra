@@ -1,3 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blocksync-config
+  namespace: prombench-{{ .PR_NUMBER }}
+data:
+  bucket-config.yml: |
+    path: gendata
+    minTime: 1729694072541
+    maxTime: 1729706400000
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -48,6 +59,18 @@ spec:
         volumeMounts:
         - name: prometheus-executable
           mountPath: /prometheus-builder
+        - name: key
+          mountPath: /storage-paths     
+      - name: data-downloader
+        image: docker.io/prominfra/block-sync:master
+        imagePullPolicy: Always                
+        volumeMounts:
+        - name: instance-ssd
+          mountPath: /data
+        - name: bucket-config
+          mountPath: /config
+        - name: key
+          mountPath: /key
       containers:
       - name: prometheus
         image: quay.io/prometheus/busybox:latest
@@ -67,7 +90,8 @@ spec:
           "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-pr",
           "--storage.tsdb.path=/prometheus",
           "--config.file=/etc/prometheus/prometheus.yml",
-          "--log.level=debug"
+          "--log.level=debug",
+          "--storage.tsdb.retention.size=5GB"
         ]
         resources:
           requests:
@@ -92,6 +116,12 @@ spec:
           path: /mnt/disks/ssd0 #gke ssds
       - name: prometheus-executable
         emptyDir: {}
+      - name: bucket-config   # Define the Secret volume
+        secret:
+          secretName: bucket-secret
+      - name: key
+        configMap:
+          name: blocksync-config                 
       terminationGracePeriodSeconds: 300
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
@@ -148,6 +178,17 @@ spec:
                 - prometheus
       securityContext:
         runAsUser: 0
+      initContainers:
+      - name: data-downloader
+        image: docker.io/prominfra/block-sync:master
+        imagePullPolicy: Always                  
+        volumeMounts:
+        - name: instance-ssd
+          mountPath: /data
+        - name: bucket-config
+          mountPath: /config
+        - name: key
+          mountPath: /key            
       containers:
       - name: prometheus
         image: quay.io/prometheus/prometheus:{{ .RELEASE }}
@@ -157,7 +198,8 @@ spec:
           "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-release",
           "--storage.tsdb.path=/prometheus",
           "--config.file=/etc/prometheus/prometheus.yml",
-          "--log.level=debug"
+          "--log.level=debug",
+          "--storage.tsdb.retention.size=5GB"
         ]
         resources:
           requests:
@@ -180,6 +222,12 @@ spec:
           # /mnt is where GKE keeps it's SSD
           # don't change this if you want Prometheus to take advantage of these local SSDs
           path: /mnt/disks/ssd0
+      - name: bucket-config   # Define the Secret volume
+        secret:
+          secretName: bucket-secret
+      - name: key
+        configMap:
+          name: blocksync-config                              
       terminationGracePeriodSeconds: 300
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
