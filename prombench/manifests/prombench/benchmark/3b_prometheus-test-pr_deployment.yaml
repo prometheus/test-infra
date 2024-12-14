@@ -1,3 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blocksync-config
+  namespace: prombench-{{ .PR_NUMBER }}
+data:
+  bucket-config.yml: |
+    path: gendata
+    minTime: 1729694072541
+    maxTime: 1729706400000
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -110,7 +121,8 @@ spec:
         secret:
           secretName: bucket-secret
       - name: key
-        emptyDir: {}                  
+        configMap:
+          name: blocksync-config                 
       terminationGracePeriodSeconds: 300
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
