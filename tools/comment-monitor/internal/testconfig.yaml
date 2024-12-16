@@ -7,9 +7,13 @@ prefixes:
     * To stop benchmark: `/prombench cancel`
     * To print help: `/prombench help`
     
-    **Example:** `/prombench v3.0.0`
+    **Advanced Flags for `start` and `restart` Commands:**:
+    * `--bench.directory` (default: `manifests/prombench`)
+    * `--bench.version` (default: `master`)
     
-    > NOTE: Validation of arguments are on prombench GitHub action time, not webhook time.
+    **Examples:** 
+    * `/prombench v3.0.0`
+    * `/prombench v3.0.0 --bench.version=@aca1803ccf5d795eee4b0848707eab26d05965cc --bench.directory=manifests/prombench`
 
   verify_user: true
   commands:
@@ -20,7 +24,11 @@ prefixes:
 
   - name: restart
     event_type: prombench_restart
-    args_regex: (?P<RELEASE>master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)$
+    arg_regex: (master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)
+    arg_name: RELEASE
+    flag_args:
+      bench.directory: BENCHMARK_DIRECTORY
+      bench.version: BENCHMARK_VERSION
     comment_template: |
       ⏱️ Welcome (again) to Prometheus Benchmarking Tool. ⏱️
       
@@ -40,7 +48,11 @@ prefixes:
 
   - name: "" # start is a default (empty command).
     event_type: prombench_start
-    args_regex:  (?P<RELEASE>master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)$
+    arg_regex: (master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)
+    arg_name: RELEASE
+    flag_args:
+      bench.directory: BENCHMARK_DIRECTORY
+      bench.version: BENCHMARK_VERSION
     label: prombench
     comment_template: |
       ⏱️ Welcome to Prometheus Benchmarking Tool. ⏱️

@@ -28,15 +28,12 @@ const (
 	eventTypeStop    = "prombench_stop"
 )
 
-func testCommand(eventType, release string) *Command {
+func testCommand(eventType string, args map[string]string) *Command {
 	c := &Command{
 		Prefix:           "/prombench",
-		Args:             map[string]string{},
+		Args:             args,
 		EventType:        eventType,
 		ShouldVerifyUser: true,
-	}
-	if release != "" {
-		c.Args["RELEASE"] = release
 	}
 	return c
 }
@@ -106,7 +103,6 @@ func testParseCommand(t *testing.T, c *Config, cases []parseCommandCase) {
 }
 
 func TestParseCommand(t *testing.T) {
-
 	c, err := ParseConfig("./testconfig.yaml")
 	if err != nil {
 		t.Fatal(err)
@@ -118,15 +114,15 @@ func TestParseCommand(t *testing.T) {
 		},
 		{
 			comment: "/prombench v3.0.0",
-			expect:  testCommand(eventTypeStart, "v3.0.0"),
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0"}),
 		},
 		{
 			comment: "/prombench restart v3.0.0",
-			expect:  testCommand(eventTypeRestart, "v3.0.0"),
+			expect:  testCommand(eventTypeRestart, map[string]string{"RELEASE": "v3.0.0"}),
 		},
 		{
 			comment: "/prombench cancel",
-			expect:  testCommand(eventTypeStop, ""),
+			expect:  testCommand(eventTypeStop, map[string]string{}),
 		},
 		{
 			comment: "/prombench help",
@@ -135,29 +131,42 @@ func TestParseCommand(t *testing.T) {
 		// Different versions based on the provided  args_regex: ^\s+(?P<RELEASE>master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)\s*$
 		{
 			comment: "/prombench main",
-			expect:  testCommand(eventTypeStart, "main"),
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "main"}),
+		},
+		// Flags.
+		{
+			comment: "/prombench v3.0.0 --bench.version=yolo",
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0", "BENCHMARK_VERSION": "yolo"}),
+		},
+		{
+			comment: "/prombench v3.0.0 --bench.directory=dir1",
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0", "BENCHMARK_DIRECTORY": "dir1"}),
+		},
+		{
+			comment: "/prombench v3.0.0 --bench.version=yolo --bench.directory=dir1",
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0", "BENCHMARK_VERSION": "yolo", "BENCHMARK_DIRECTORY": "dir1"}),
 		},
 		// Text at the end is generally accepted, after \n.
 		{
 			comment: "/prombench v3.0.0\n",
-			expect:  testCommand(eventTypeStart, "v3.0.0"),
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0"}),
 		},
 		{
 			comment: "/prombench v3.0.0\n\nYolo",
-			expect:  testCommand(eventTypeStart, "v3.0.0"),
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0"}),
 		},
 		// Incorrect syntax cases.
 		{
 			comment:                "/prombench v3.0.0 garbage",
-			expectErrCommentPrefix: "Incorrect `/prombench` syntax;  command requires at least one argument that matches `" + `(?P<RELEASE>master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)$` + "` regex.",
+			expectErrCommentPrefix: "Incorrect `/prombench` syntax;  command flag parsing failed: expected flag (starting with --), got garbage.",
 		},
 		{
 			comment:                "/prombench restart v3.0.0 garbage",
-			expectErrCommentPrefix: "Incorrect `/prombench` syntax; restart command requires at least one argument that matches `" + `(?P<RELEASE>master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)$` + "` regex.",
+			expectErrCommentPrefix: "Incorrect `/prombench` syntax; restart command flag parsing failed: expected flag (starting with --), got garbage.",
 		},
 		{
 			comment:                "/prombench restartv3.0.0 garbage",
-			expectErrCommentPrefix: "Incorrect `/prombench` syntax;  command requires at least one argument that matches `" + `(?P<RELEASE>master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)$` + "` regex.",
+			expectErrCommentPrefix: "Incorrect `/prombench` syntax;  command flag parsing failed: expected flag (starting with --), got garbage.",
 		},
 		{
 			comment:                "/prombench cancel garbage",
@@ -165,7 +174,7 @@ func TestParseCommand(t *testing.T) {
 		},
 		{
 			comment:                "/prombench not-a-version",
-			expectErrCommentPrefix: "Incorrect `/prombench` syntax;  command requires at least one argument that matches `" + `(?P<RELEASE>master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)$` + "` regex.",
+			expectErrCommentPrefix: "Incorrect `/prombench` syntax;  command requires one argument that matches `" + `(master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)` + "` regex.",
 		},
 		// Not matching cases.
 		{comment: ""},
@@ -217,23 +226,36 @@ func TestParseCommand_ProdCommentMonitorConfig(t *testing.T) {
 		},
 		{
 			comment: "/prombench v3.0.0\nSome text after",
-			expect:  testCommand(eventTypeStart, "v3.0.0"),
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0"}),
 		},
 		{
 			comment: "/prombench main\nSome text after",
-			expect:  testCommand(eventTypeStart, "main"),
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "main"}),
 		},
 		{
 			comment: "/prombench master\nSome text after",
-			expect:  testCommand(eventTypeStart, "master"),
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "master"}),
 		},
 		{
 			comment: "/prombench restart v3.0.0\nSome text after",
-			expect:  testCommand(eventTypeRestart, "v3.0.0"),
+			expect:  testCommand(eventTypeRestart, map[string]string{"RELEASE": "v3.0.0"}),
 		},
 		{
 			comment: "/prombench cancel\nSome text after",
-			expect:  testCommand(eventTypeStop, ""),
+			expect:  testCommand(eventTypeStop, map[string]string{}),
+		},
+		// Flags.
+		{
+			comment: "/prombench v3.0.0 --bench.version=@aca1803ccf5d795eee4b0848707eab26d05965cc",
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0", "BENCHMARK_VERSION": "@aca1803ccf5d795eee4b0848707eab26d05965cc"}),
+		},
+		{
+			comment: "/prombench v3.0.0 --bench.directory=manifests/prombench",
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0", "BENCHMARK_DIRECTORY": "manifests/prombench"}),
+		},
+		{
+			comment: "/prombench v3.0.0 --bench.version=mybranch --bench.directory=manifests/prombench",
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0", "BENCHMARK_VERSION": "mybranch", "BENCHMARK_DIRECTORY": "manifests/prombench"}),
 		},
 		// Not matching cases.
 		{comment: ""},

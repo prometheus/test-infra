@@ -51,27 +51,22 @@ func parseConfigContent(content []byte) (_ *Config, err error) {
 			return nil, fmt.Errorf("empty configuration; no command for /%v", p.Prefix)
 		}
 		for _, c := range p.Commands {
-			if c.Name == "" && c.ArgsRegex == "" {
-				return nil, fmt.Errorf("/%v bad config; default commands cannot have empty args_regex (no required arguments)", p.Prefix)
+			if c.Name == "" && c.ArgName == "" && c.ArgRegex == "" {
+				return nil, fmt.Errorf("/%v bad config; default commands cannot have empty arg_name and args_regex (no required arguments)", p.Prefix)
 			}
 			if strings.ToLower(c.Name) == "help" {
 				return nil, fmt.Errorf("/%v bad config; 'help' command name is reserved", p.Prefix)
-
 			}
-			if strings.HasPrefix(c.ArgsRegex, "^") {
-				return nil, fmt.Errorf("/%v bad config; args_regex has to be front open, got %v", p.Prefix, c.ArgsRegex)
-			}
-
-			c.argsRegex, err = regexp.Compile(c.ArgsRegex)
-			if err != nil {
-				return nil, fmt.Errorf("/%v bad config; command %v args_regex %v doesn't compile: %w", p.Prefix, c.Name, c.ArgsRegex, err)
-			}
-
-			commandArgsNames := c.argsRegex.SubexpNames()[1:]
-			for _, argName := range commandArgsNames {
-				if argName == "" {
-					return nil, fmt.Errorf("/%v bad config; command %v named groups in regex are mandatory; got %v", p.Prefix, c.Name, c.ArgsRegex)
+			if c.ArgRegex != "" {
+				if c.ArgName == "" {
+					return nil, fmt.Errorf("/%v bad config; command '%v' arg_name cannot be empty, when arg_regex is specified", p.Prefix, c.Name)
 				}
+				c.argsRegex, err = regexp.Compile(c.ArgRegex)
+				if err != nil {
+					return nil, fmt.Errorf("/%v bad config; command %v args_regex %v doesn't compile: %w", p.Prefix, c.Name, c.ArgRegex, err)
+				}
+			} else {
+				c.argsRegex = regexp.MustCompile(".*")
 			}
 		}
 	}
@@ -86,11 +81,13 @@ type PrefixConfig struct {
 }
 
 type CommandConfig struct {
-	Name            string `yaml:"name"`
-	EventType       string `yaml:"event_type"`
-	CommentTemplate string `yaml:"comment_template"`
-	ArgsRegex       string `yaml:"args_regex"`
-	Label           string `yaml:"label"`
+	Name            string            `yaml:"name"`
+	EventType       string            `yaml:"event_type"`
+	CommentTemplate string            `yaml:"comment_template"`
+	ArgRegex        string            `yaml:"arg_regex"`
+	ArgName         string            `yaml:"arg_name"`
+	FlagArgs        map[string]string `yaml:"flag_args"` // flagName => argName
+	Label           string            `yaml:"label"`
 
 	argsRegex *regexp.Regexp
 }
@@ -101,6 +98,7 @@ type Command struct {
 	Prefix    string
 	EventType string
 	Args      map[string]string
+	Flags     map[string]string
 
 	ShouldVerifyUser       bool
 	SuccessCommentTemplate string
@@ -126,7 +124,8 @@ func hasExactPrefix(s, token string) bool {
 func ParseCommand(cfg *Config, comment string) (_ *Command, ok bool, err *CommandParseError) {
 	comment = strings.TrimSpace(comment)
 
-	// TODO(bwplotka): Consider accepting things before /<prefix
+	// TODO(bwplotka): Consider accepting things before /<prefix, but be careful
+	// on recursive flows (parsing own help comments).
 
 	// Find the prefix.
 	var prefix *PrefixConfig
@@ -146,10 +145,15 @@ func ParseCommand(cfg *Config, comment string) (_ *Command, ok bool, err *Comman
 		i = len(comment)
 	}
 	cmdLine := comment[:i]
-	rest := cmdLine[len(prefix.Prefix):]
+	rest := strings.Split(strings.TrimSpace(cmdLine[len(prefix.Prefix):]), " ")
+	if len(rest) == 0 || rest[0] == "" {
+		return nil, false, &CommandParseError{
+			error: fmt.Errorf("no matching command found for comment line: %v", cmdLine),
+			help:  fmt.Sprintf("Incorrect `%v` syntax; no matching command found.\n\n%s", prefix.Prefix, prefix.Help),
+		}
+	}
 
-	// Is it help?
-	if hasExactPrefix(rest, " help") {
+	if rest[0] == "help" {
 		return &Command{
 			Args:                   map[string]string{},
 			Prefix:                 prefix.Prefix,
@@ -167,22 +171,20 @@ func ParseCommand(cfg *Config, comment string) (_ *Command, ok bool, err *Comman
 			continue
 		}
 
-		if hasExactPrefix(rest, " "+c.Name) {
+		if c.Name == rest[0] {
 			cmdConfig = c
 			break
 		}
 	}
 
 	if cmdConfig == nil {
-		// No explicit command found. Is it a default command? (they have to have arguments)
-		if defaultCmdConfig != nil && strings.HasPrefix(rest, " ") {
-			cmdConfig = defaultCmdConfig
-		} else {
+		if defaultCmdConfig == nil {
 			return nil, false, &CommandParseError{
 				error: fmt.Errorf("no matching command found for comment line: %v", cmdLine),
 				help:  fmt.Sprintf("Incorrect `%v` syntax; no matching command found.\n\n%s", prefix.Prefix, prefix.Help),
 			}
 		}
+		cmdConfig = defaultCmdConfig
 	}
 
 	cmd := &Command{
@@ -196,36 +198,62 @@ func ParseCommand(cfg *Config, comment string) (_ *Command, ok bool, err *Comman
 		DebugCMDLine:           cmdLine,
 	}
 	if len(cmdConfig.Name) > 0 {
-		rest = rest[len(cmdConfig.Name)+1:] // plus prefixed space.
+		rest = rest[1:]
 	}
 
-	if cmdConfig.ArgsRegex == "" {
-		// Ensure there are no more characters.
-		if len(rest) > 0 {
+	// We expect next token to be the required argument (if defined in config).
+	if cmdConfig.ArgName == "" {
+		if len(rest) > 0 && !strings.HasPrefix(rest[0], "--") {
 			return nil, false, &CommandParseError{
 				error: fmt.Errorf("command expected no argument, but got some '%v' for cmdLine: '%v'", rest, cmdLine),
 				help:  fmt.Sprintf("Incorrect `%v` syntax; %v command expects no arguments, but got some.\n\n%s", prefix.Prefix, cmdConfig.Name, prefix.Help),
 			}
 		}
-		return cmd, true, nil
-	}
-	// Parse required arguments.
-	if !cmdConfig.argsRegex.MatchString(rest) {
-		return nil, false, &CommandParseError{
-			error: fmt.Errorf("command requires at least one argument, matching '%v' regex on '%v' string for cmdLine '%v'", cmdConfig.ArgsRegex, rest, cmdLine),
-			help:  fmt.Sprintf("Incorrect `%v` syntax; %v command requires at least one argument that matches `%v` regex.\n\n%s", prefix.Prefix, cmdConfig.Name, cmdConfig.ArgsRegex, prefix.Help),
-		}
-	}
-
-	args := cmdConfig.argsRegex.FindStringSubmatch(rest)[1:]
-	commandArgsNames := cmdConfig.argsRegex.SubexpNames()[1:]
-	for i, argName := range commandArgsNames {
-		if argName == "" {
+	} else {
+		// Check the required argument.
+		if len(rest) == 0 || !cmdConfig.argsRegex.MatchString(rest[0]) {
 			return nil, false, &CommandParseError{
-				error: fmt.Errorf("named groups in regex are mandatory; should be validated on config read, got %v", cmdConfig.ArgsRegex),
+				error: fmt.Errorf("command requires one argument, matching '%v' regex; got cmdLine '%v' and args %v", cmdConfig.argsRegex.String(), cmdLine, rest),
+				help:  fmt.Sprintf("Incorrect `%v` syntax; %v command requires one argument that matches `%v` regex.\n\n%s", prefix.Prefix, cmdConfig.Name, cmdConfig.argsRegex.String(), prefix.Help),
 			}
 		}
-		cmd.Args[argName] = args[i]
+		cmd.Args[cmdConfig.ArgName] = rest[0]
+		rest = rest[1:]
+	}
+
+	// We expect only flags now.
+	if len(cmdConfig.FlagArgs) > 0 {
+		if err := parseFlags(rest, cmdConfig, cmd); err != nil {
+			return nil, false, &CommandParseError{
+				error: fmt.Errorf("command flag parsing failed for cmdLine '%v' and flags %v: %w", cmdLine, rest, err),
+				help:  fmt.Sprintf("Incorrect `%v` syntax; %v command flag parsing failed: %v.\n\n%s", prefix.Prefix, cmdConfig.Name, err.Error(), prefix.Help),
+			}
+		}
+	} else if len(rest) > 0 {
+		return nil, false, &CommandParseError{
+			error: fmt.Errorf("command does not expect any flags; got cmdLine '%v' and flags %v", cmdLine, rest),
+			help:  fmt.Sprintf("Incorrect `%v` syntax; %v command expects no flags but got some.\n\n%s", prefix.Prefix, cmdConfig.Name, prefix.Help),
+		}
 	}
 	return cmd, true, nil
+}
+
+func parseFlags(rest []string, cfg *CommandConfig, cmd *Command) error {
+	// TODO(bwplotka: Naive flag parsing, make it support quoting, spaces etc later.
+	for _, flag := range rest {
+		if !strings.HasPrefix(flag, "--") {
+			return fmt.Errorf("expected flag (starting with --), got %v", flag)
+		}
+		parts := strings.Split(flag, "=")
+		if len(parts) != 2 {
+			return fmt.Errorf("expected flag format '--<flag>=<value>', got %v", flag)
+		}
+
+		argName, ok := cfg.FlagArgs[strings.TrimPrefix(parts[0], "--")]
+		if !ok {
+			return fmt.Errorf("flag %v is not supported", flag)
+		}
+		cmd.Args[argName] = parts[1]
+	}
+	return nil
 }

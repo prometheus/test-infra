@@ -279,7 +279,6 @@ func (d *dispatcher) HandleIssue(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
 }
 
 func executeCommentTemplate(commentTemplate string, args map[string]string) (string, error) {
