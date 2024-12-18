@@ -7,6 +7,8 @@ It assumes running cluster was created via `infra` CLI using `make cluster_creat
 
 ### Customizations
 
+#### Benchmarking from the custom test-infra commit/branch 
+
 > NOTE: See https://github.com/prometheus/proposals/pull/41 for design.
 
 On the `master` branch, in this directory, we maintain the standard, single benchmarking scenario used
@@ -29,9 +31,15 @@ Here are an example steps:
 Other details:
 
 * Other custom branch modifications other than to this directory do not affect prombench (e.g. to infra CLI or makefiles).
-* `--bench.version` is designed for a short-term or even one-off benchmark scenario configurations. It's not designed for long-term, well maintained scenarios. For the latter reason we can later e.g. maintain multiple `manifests/prombench` directories and introduce a new `--bench.directory` flag.
+* `--bench.version` is designed for a short-term or even one-off benchmark scenario configurations. It's not designed for long-term, well maintained scenarios. For the latter reason we can later e.g. maintain multiple `manifests/prombench` directories and use it via [`--bench.directory` flag](#benchmarking-from-the-different-directory).
 * Non-maintainers can follow similar process, but they will need to ask maintainer for a new branch and PR review. We can consider extending `--bench.version` to support remote repositories if this becomes a problem.
 * Custom benchmarking logic is implemented in the [`maybe_pull_custom_version` make job](../../Makefile) and invoked by the prombench GH job on Prometheus repo on `deploy` and `clean`.
+
+#### Benchmarking from the different directory.
+
+On top of the commit/branch you can also specify custom directory with `--bench.directory` (default to this directory, so `manifests/prombench` value). This is designed if we even want to maintain standard benchmark modes for longer time e.g. agent mode.
+
+For one-off benchmarks prefer one-off branches.
 
 ### Variables
 

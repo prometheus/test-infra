@@ -65,7 +65,3 @@ Build the Docker image with:
 ```bash
 docker build -t prominfra/prombench:master .
 ```
-
-
-
-
