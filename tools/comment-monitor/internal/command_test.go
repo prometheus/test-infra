@@ -14,6 +14,7 @@
 package internal
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -103,7 +104,7 @@ func testParseCommand(t *testing.T, c *Config, cases []parseCommandCase) {
 }
 
 func TestParseCommand(t *testing.T) {
-	c, err := ParseConfig("./testconfig.yaml")
+	c, err := ParseConfig("testdata/testconfig.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -193,9 +194,7 @@ func TestParseCommand(t *testing.T) {
 	})
 }
 
-// NOTE(bwplotka): Simplified version of TestParseCommand that literally uses
-// our production comment monitoring configuration in the same repo.
-func TestParseCommand_ProdCommentMonitorConfig(t *testing.T) {
+func parseProdCommentMonitorConfig(t *testing.T) *Config {
 	const prodCommentMonitorConfigMap = "../../../prombench/manifests/cluster-infra/7a_commentmonitor_configmap_noparse.yaml"
 
 	b, err := os.ReadFile(prodCommentMonitorConfigMap)
@@ -219,6 +218,13 @@ func TestParseCommand_ProdCommentMonitorConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	return c
+}
+
+// NOTE(bwplotka): Simplified version of TestParseCommand that literally uses
+// our production comment monitoring configuration in the same repo.
+func TestParseCommand_ProdCommentMonitorConfig(t *testing.T) {
+	c := parseProdCommentMonitorConfig(t)
 	testParseCommand(t, c, []parseCommandCase{
 		{
 			comment:                "/prombench",
@@ -261,4 +267,61 @@ func TestParseCommand_ProdCommentMonitorConfig(t *testing.T) {
 		{comment: ""},
 		{comment: "How to start prombench? I think it was something like:\n\n /prombench main\n\nYolo"},
 	})
+}
+
+func TestGenerateSuccessComment_ProdCommentMonitorConfig(t *testing.T) {
+	c := parseProdCommentMonitorConfig(t)
+
+	for _, tcase := range []struct {
+		comment                  string
+		expectSuccessCommentFile string
+	}{
+		// Test interesting comment templates from prod as they can get complex.
+		{
+			comment:                  "/prombench v3.0.0",
+			expectSuccessCommentFile: "testdata/expectedcomment.start-no-flags.md",
+		},
+		{
+			comment:                  "/prombench v3.0.0 --bench.version=branch1",
+			expectSuccessCommentFile: "testdata/expectedcomment.start-version.md",
+		},
+		{
+			comment:                  "/prombench restart v3.0.0",
+			expectSuccessCommentFile: "testdata/expectedcomment.restart-no-flags.md",
+		},
+		{
+			comment:                  "/prombench restart v3.0.0 --bench.version=@aca1803ccf5d795eee4b0848707eab26d05965cc",
+			expectSuccessCommentFile: "testdata/expectedcomment.restart-version.md",
+		},
+	} {
+		t.Run(tcase.comment, func(t *testing.T) {
+			cmd, found, perr := ParseCommand(c, tcase.comment)
+			if perr != nil {
+				t.Fatal(perr)
+			}
+			if !found {
+				t.Fatal("expected found=true")
+			}
+
+			expected, err := os.ReadFile(tcase.expectSuccessCommentFile)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			// We add those in the deployment env.
+			cmd.Args["DOMAIN_NAME"] = "prombench.example.com"
+
+			// We add those in comment-monitor main.go flow.
+			cmd.Args["PR_NUMBER"] = "15487"
+			cmd.Args["LAST_COMMIT_SHA"] = "a854b28c2a0d920d0f313d6cb5ee79e44763df5e"
+			got, err := cmd.GenerateSuccessComment()
+			if err != nil {
+				t.Fatal(err)
+			}
+			fmt.Println(got)
+			if diff := cmp.Diff(got, string(expected)); diff != "" {
+				t.Fatal(diff)
+			}
+		})
+	}
 }

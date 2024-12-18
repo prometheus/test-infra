@@ -14,11 +14,13 @@
 package internal
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
 	"regexp"
 	"strings"
+	"text/template"
 
 	"gopkg.in/yaml.v2"
 )
@@ -98,13 +100,33 @@ type Command struct {
 	Prefix    string
 	EventType string
 	Args      map[string]string
-	Flags     map[string]string
 
 	ShouldVerifyUser       bool
 	SuccessCommentTemplate string
 	SuccessLabel           string
 
 	DebugCMDLine string
+}
+
+func (c *Command) GenerateSuccessComment() (string, error) {
+	argsCpy := make(map[string]string, len(c.Args))
+	for k, v := range c.Args {
+		argsCpy[k] = v
+	}
+	for _, e := range os.Environ() {
+		tmp := strings.Split(e, "=")
+		argsCpy[tmp[0]] = tmp[1]
+	}
+
+	var buf bytes.Buffer
+	ct := template.Must(template.New("Comment").Funcs(template.FuncMap{
+		"hasPrefix":  strings.HasPrefix,
+		"trimPrefix": strings.TrimPrefix,
+	}).Parse(c.SuccessCommentTemplate))
+	if err := ct.Execute(&buf, argsCpy); err != nil {
+		return "", fmt.Errorf("templating failed: %w", err)
+	}
+	return buf.String(), nil
 }
 
 type CommandParseError struct {
