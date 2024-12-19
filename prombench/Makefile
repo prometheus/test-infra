@@ -34,7 +34,7 @@ cluster_delete:
 BENCHMARK_DIRECTORY := $(if $(BENCHMARK_DIRECTORY),$(BENCHMARK_DIRECTORY),manifests/prombench)
 # /prombench <...> --bench.version
 BENCHMARK_VERSION := $(if $(BENCHMARK_VERSION),$(BENCHMARK_VERSION),master)
-PROMBENCH_GIT_REPOSITORY ?= git@github.com:prometheus/test-infra.git
+PROMBENCH_GIT_REPOSITORY ?= https://github.com/prometheus/test-infra.git
 PROMBENCH_DIR ?= .
 
 # maybe_pull_custom_version allows custom benchmarking as designed in
@@ -50,7 +50,7 @@ ifeq (${BENCHMARK_VERSION},master)
 	@echo ">> Using standard benchmark configuration, from the docker image"
 else
 	@echo ">> Git pulling custom benchmark configuration from the ${BENCHMARK_VERSION}"
-	@$(eval $@_TMP_DIR=$(shell mktemp -d -t "prombench"))
+	@$(eval $@_TMP_DIR=$(shell mktemp -d))
 	cd ${$@_TMP_DIR} && git clone ${PROMBENCH_GIT_REPOSITORY}
 ifeq ($(subst @,,${BENCHMARK_VERSION}),${BENCHMARK_VERSION})
 	@echo ">> --bench.version is a branch, reseting to origin/${BENCHMARK_VERSION}"
