@@ -14,7 +14,6 @@
 package internal
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -318,7 +317,6 @@ func TestGenerateSuccessComment_ProdCommentMonitorConfig(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			fmt.Println(got)
 			if diff := cmp.Diff(got, string(expected)); diff != "" {
 				t.Fatal(diff)
 			}
