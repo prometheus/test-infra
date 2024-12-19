@@ -14,7 +14,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -26,7 +25,6 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
-	"text/template"
 
 	"github.com/google/go-github/v29/github"
 	"github.com/nelkinda/health-go"
@@ -236,66 +234,46 @@ func (d *dispatcher) HandleIssue(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
+	}
 
+	if cmd.EventType != "" {
 		logger = logger.With("cmdLine", cmd.DebugCMDLine)
 		logger.Info("dispatching a new command and updating issue")
 
 		// Combine all arguments for both dispatch and the comment update.
-		allArgs := cmd.Args
-		allArgs["PR_NUMBER"] = strconv.Itoa(eventDetails.PR)
-		allArgs["LAST_COMMIT_SHA"], err = ghClient.GetLastCommitSHA()
+		cmd.Args["PR_NUMBER"] = strconv.Itoa(eventDetails.PR)
+		cmd.Args["LAST_COMMIT_SHA"], err = ghClient.GetLastCommitSHA()
 		if err != nil {
 			// TODO(bwplotka) Post comment about this failure?
 			handleErr(w, logger, "could not fetch SHA, which likely means it's an issue, not a pull request. Non-PRs are not supported.", http.StatusBadRequest, err)
 			return
 		}
 
-		logger = logger.With("evenType", cmd.EventType, "args", fmt.Sprintf("%v", allArgs))
-		if err = ghClient.Dispatch(cmd.EventType, allArgs); err != nil {
+		logger = logger.With("evenType", cmd.EventType, "args", fmt.Sprintf("%v", cmd.Args))
+		if err = ghClient.Dispatch(cmd.EventType, cmd.Args); err != nil {
 			// TODO(bwplotka) Post comment about this failure?
 			handleErr(w, logger, "could not dispatch", http.StatusInternalServerError, err)
 			return
 		}
 		logger.Info("dispatched repository GitHub payload")
+	}
 
-		// Update the issue.
-		comment, err := executeCommentTemplate(cmd.SuccessCommentTemplate, allArgs)
-		if err != nil {
-			handleErr(w, logger, "failed to execute template", http.StatusInternalServerError, err)
+	// Update the issue.
+	comment, err := cmd.GenerateSuccessComment()
+	if err != nil {
+		handleErr(w, logger, "failed to execute template", http.StatusInternalServerError, err)
+		return
+	}
+
+	if err = ghClient.PostComment(comment); err != nil {
+		handleErr(w, logger, "dispatch successful; but could not post comment to GitHub", http.StatusInternalServerError, err)
+		return
+	}
+
+	if cmd.SuccessLabel != "" {
+		if err = ghClient.PostLabel(cmd.SuccessLabel); err != nil {
+			handleErr(w, logger, "dispatch successful; but could not post label to GitHub", http.StatusInternalServerError, err)
 			return
 		}
-
-		if err = ghClient.PostComment(comment); err != nil {
-			handleErr(w, logger, "dispatch successful; but could not post comment to GitHub", http.StatusInternalServerError, err)
-			return
-		}
-
-		if cmd.SuccessLabel != "" {
-			if err = ghClient.PostLabel(cmd.SuccessLabel); err != nil {
-				handleErr(w, logger, "dispatch successful; but could not post label to GitHub", http.StatusInternalServerError, err)
-				return
-			}
-		}
 	}
-}
-
-func executeCommentTemplate(commentTemplate string, args map[string]string) (string, error) {
-	argsCpy := make(map[string]string, len(args)) // TODO(bwplotka): Looks unsafe, we might want to type the known options.
-	if len(args) > 0 {
-		for k, v := range args {
-			argsCpy[k] = v
-		}
-	}
-	for _, e := range os.Environ() {
-		tmp := strings.Split(e, "=")
-		argsCpy[tmp[0]] = tmp[1]
-	}
-
-	// Generate the comment template.
-	var buf bytes.Buffer
-	ct := template.Must(template.New("Comment").Parse(commentTemplate))
-	if err := ct.Execute(&buf, argsCpy); err != nil {
-		return "", fmt.Errorf("templating failed: %w", err)
-	}
-	return buf.String(), nil
 }
