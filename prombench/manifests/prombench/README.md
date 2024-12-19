@@ -1,3 +1,14 @@
+> NOTE(bwplotka): This is a custom benchmark scenario. 
+> Goals:
+>  * Verify the chosen avalanche settings and design is acceptable vs old fake-webserver.
+>  * Test avalanche metric sourcing.
+> 
+> Changes vs 'master':
+>  * TBD
+>  * .
+>  * .
+
+
 ## Prombench Benchmark Scenario Configuration
 
 This directory contains resources that are applied (and cleaned) on every benchmark request
