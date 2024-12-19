@@ -47,8 +47,8 @@ data:
           {{- with $version }}
           
           **Custom benchmark version:**
-          {{- if hasPrefix $version "@" }} [**`{{ trimPrefix $version "@" }}` commit**](https://github.com/prometheus/test-infra/tree/{{ trimPrefix $version "@" }}/prombench/{{ $directory }})
-          {{- else }} [**`{{ $version }}` branch**](https://github.com/prometheus/test-infra/tree/{{ $version }}/prombench/{{ $directory }}){{ end }}
+          {{- if hasPrefix $version "@" }} [**`{{ trimPrefix $version "@" }}` commit**](https://github.com/prometheus/test-infra/tree/{{ trimPrefix $version "@" }}/prombench/{{ or $directory "manifests/prombench" }})
+          {{- else }} [**`{{ $version }}` branch**](https://github.com/prometheus/test-infra/tree/{{ $version }}/prombench/{{ or $directory "manifests/prombench" }}){{ end }}
           {{- end }}
           
           After successful deployment ([check status here](https://github.com/prometheus/prometheus/actions/workflows/prombench.yml)), the benchmarking results can be viewed at:
@@ -77,12 +77,12 @@ data:
           **Compared versions:** [**`PR-{{ index . "PR_NUMBER" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-pr) and [**`{{ index . "RELEASE" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-release)
 
           {{- $version := index . "BENCHMARK_VERSION" }}
-          {{- $directory := index . "BENCHMARK_DIRECTORY" | print "manifests/prombench" }}
+          {{- $directory := index . "BENCHMARK_DIRECTORY" }}
           {{- with $version }}
           
           **Custom benchmark version:**
-          {{- if hasPrefix $version "@" }} [**`{{ trimPrefix $version "@" }}` commit**](https://github.com/prometheus/test-infra/tree/{{ trimPrefix $version "@" }}/prombench/{{ $directory }})
-          {{- else }} [**`{{ $version }}` branch**](https://github.com/prometheus/test-infra/tree/{{ $version }}/prombench/{{ $directory }}){{ end }}
+          {{- if hasPrefix $version "@" }} [**`{{ trimPrefix $version "@" }}` commit**](https://github.com/prometheus/test-infra/tree/{{ trimPrefix $version "@" }}/prombench/{{ or $directory "manifests/prombench" }})
+          {{- else }} [**`{{ $version }}` branch**](https://github.com/prometheus/test-infra/tree/{{ $version }}/prombench/{{ or $directory "manifests/prombench" }}){{ end }}
           {{- end }}
 
           After the successful deployment ([check status here](https://github.com/prometheus/prometheus/actions/workflows/prombench.yml)), the benchmarking results can be viewed at:

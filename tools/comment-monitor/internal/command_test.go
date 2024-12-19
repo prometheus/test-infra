@@ -285,6 +285,10 @@ func TestGenerateSuccessComment_ProdCommentMonitorConfig(t *testing.T) {
 			expectSuccessCommentFile: "testdata/expectedcomment.start-version.md",
 		},
 		{
+			comment:                  "/prombench v3.0.0 --bench.version=branch1 --bench.directory=lol",
+			expectSuccessCommentFile: "testdata/expectedcomment.start-version-dir.md",
+		},
+		{
 			comment:                  "/prombench restart v3.0.0",
 			expectSuccessCommentFile: "testdata/expectedcomment.restart-no-flags.md",
 		},
@@ -317,7 +321,7 @@ func TestGenerateSuccessComment_ProdCommentMonitorConfig(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(got, string(expected)); diff != "" {
+			if diff := cmp.Diff(string(expected), got); diff != "" {
 				t.Fatal(diff)
 			}
 		})
