@@ -9,14 +9,16 @@ data:
       help: |
         **Available Commands:**
         * To start benchmark: `/prombench <branch or git tag to compare with>`
-        * To restart benchmark: `/prombench restart <branch or git tag to compare with>`
+        * To restart benchmark: `/prombench <branch or git tag to compare with>`
         * To stop benchmark: `/prombench cancel`
         * To print help: `/prombench help`
         
-        **Advanced Flags for `start` and `restart` Commands:**:
-        * `--bench.directory` (default: `manifests/prombench`)
-        * `--bench.version` (default: `master`)
-        
+        **Advanced Flags for `start` and `restart` Commands:**
+        * `--bench.directory=<sub-directory of github.com/prometheus/test-infra/prombench`
+          * See the details [here](https://github.com/prometheus/test-infra/tree/master/prombench/manifests/prombench#benchmarking-from-the-different-directory), defaults to `manifests/prombench`.
+        * `--bench.version=<branch | @commit>`
+          * See the details [here](https://github.com/prometheus/test-infra/tree/master/prombench/manifests/prombench#benchmarking-from-the-custom-test-infra-commitbranch), defaults to `master`.
+    
         **Examples:**
         * `/prombench v3.0.0`
         * `/prombench v3.0.0 --bench.version=@aca1803ccf5d795eee4b0848707eab26d05965cc --bench.directory=manifests/prombench`
