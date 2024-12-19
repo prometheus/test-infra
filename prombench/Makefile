@@ -44,7 +44,7 @@ PROMBENCH_DIR ?= .
 # In such a case we pull a prombench repository for the given branch or commit version
 # and adjust PROMBENCH_DIR. As a result `make deploy` and `make clean` jobs
 # will apply /manifests/ apply custom manifests or even node pools.
-.PHONE: maybe_pull_custom_version
+.PHONY: maybe_pull_custom_version
 maybe_pull_custom_version:
 ifeq (${BENCHMARK_VERSION},master)
 	@echo ">> Using standard benchmark configuration, from the docker image"
@@ -64,14 +64,14 @@ endif
 	@echo ">> Using following files in ${PROMBENCH_DIR}/${BENCHMARK_DIRECTORY}"
 	@ls -lR ${PROMBENCH_DIR}/${BENCHMARK_DIRECTORY}
 
-.PHONE: clean_tmp_dir
+.PHONY: clean_tmp_dir
 clean_tmp_dir: # Clean after maybe_pull_custom_version
 	[ -z ${maybe_pull_custom_version_TMP_DIR} ] || rm -rf ${maybe_pull_custom_version_TMP_DIR}
 
 .PHONY: deploy
 deploy: maybe_pull_custom_version node_create resource_apply clean_tmp_dir
 
-.PHONE: clean
+.PHONY: clean
 # GCP sometimes takes longer than 30 tries when trying to delete nodes
 # if k8s resources are not already cleared
 clean: maybe_pull_custom_version resource_delete node_delete clean_tmp_dir
