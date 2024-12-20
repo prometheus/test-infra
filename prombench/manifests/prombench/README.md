@@ -1,5 +1,17 @@
 ## Prombench Benchmark Scenario Configuration
 
+> NOTE(bwplotka): This is a `bench/nhcb` custom scenario that configures all fake jobs to be scraped
+> with `convert_classic_histograms_to_nhcb: true` flag for both Prometheus. This allows 
+> verifying the efficiency of nhcb feature across changes. Don't confuse with `bench/nhcbconvert`
+> scenario that compares classic histogram to nhcb.
+> 
+> Goals:
+>   * Learn about the efficiency of nhcb feature across changes.
+> 
+> Changes:
+>   * All fake jobs have scrape_config.convert_classic_histograms_to_nhcb = true
+>   * Queries against nhcb are added e.g. `codelab_api_request_duration_seconds` on top of `codelab_api_request_duration_seconds<_bucket>`, etc
+
 This directory contains resources that are applied (and cleaned) on every benchmark request
 via `infra` CLI using [`make deploy`](../../Makefile) and cleaned using [`make clean`](../../Makefile).
 
