@@ -1,12 +1,15 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: prometheus-test
+  name: prometheus-test-pr
   namespace: prombench-{{ .PR_NUMBER }}
 data:
   prometheus.yml: |
     global:
       scrape_interval: 15s
+      # TODO(bwplotka): Prefer Proto for CT support. In standard benchmark we might want to distribute
+      # different parsing protocols across scrape jobs to detect regressions on more of them.
+      scrape_protocols: [ "PrometheusProto", "OpenMetricsText1.0.0", "OpenMetricsText0.0.1", "PrometheusText0.0.4" ]
 
     scrape_configs:
     - job_name: kubelets
@@ -721,6 +724,6 @@ data:
     remote_write:
       - url: "http://prometheus-sink:9011/sink/prw"
         headers:
-          "X-SINK-SOURCE": test-reference
+          "X-SINK-SOURCE": test-pr
         send_native_histograms: true # Currently broken documentation, should be always true but it's not.
         protobuf_message: io.prometheus.write.v2.Request #v2

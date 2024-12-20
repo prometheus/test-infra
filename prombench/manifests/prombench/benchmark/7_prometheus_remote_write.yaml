@@ -16,12 +16,16 @@ spec:
     spec:
       containers:
       - name: prom-sink
-        image: quay.io/bwplotka/sink:latest
+        image: quay.io/bwplotka/sink:v0.2.0
+        args: [
+          "--log.level=info",
+          "--log.issues=series-untyped,cumulative-without-ct"
+        ]
         resources:
           requests:
             cpu: "2"
             memory: "512Mi"
-        # Trade more memory for less CPU
+        # Trade more memory for less CPU.
         env:
         - name: GOGC
           value: "off"

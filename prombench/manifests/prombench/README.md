@@ -1,5 +1,17 @@
 ## Prombench Benchmark Scenario Configuration
 
+> NOTE(bwplotka): This is a `cross-feature/ct` custom scenario. It uses exactly the same PR_NUMBER Prometheus code for both deployments, while configuring one to scrape proto first, allowing CTs to flow.
+> 
+> Goals:
+>   * Learn the cost of appending CT to WAL and sending through PRW 2.0.
+> 
+> Changes:
+>   * `prometheus-test-{{ normalise .RELEASE }}` dpl is the same as prometheus-test-pr except the feature flag.
+>   * Separate configs, one that sets protobuf as the preferred scrape protocol to obtain CTs.
+>   * Both Prometheus-es enable `metadata-wal-records` and PRW 2.0.
+>   * `prometheus-test-pr-{{ .PR_NUMBER }}` has `created-timestamp-zero-ingestion` enabled.
+>   * Some sink updates, need to update master with those e.g. to log CT and untyped metrics.
+
 This directory contains resources that are applied (and cleaned) on every benchmark request
 via `infra` CLI using [`make deploy`](../../Makefile) and cleaned using [`make clean`](../../Makefile).
 

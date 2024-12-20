@@ -67,7 +67,10 @@ spec:
           "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-pr",
           "--storage.tsdb.path=/prometheus",
           "--config.file=/etc/prometheus/prometheus.yml",
-          "--log.level=debug"
+          "--log.level=debug",
+          # Custom benchmark.
+          "--enable-feature=metadata-wal-records",
+          "--enable-feature=created-timestamp-zero-ingestion"
         ]
         resources:
           requests:
@@ -86,7 +89,7 @@ spec:
       volumes:
       - name: config-volume
         configMap:
-          name: prometheus-test
+          name: prometheus-test-pr # proto first setting.
       - name: instance-ssd
         hostPath:
           # /mnt is where GKE keeps it's SSD.
