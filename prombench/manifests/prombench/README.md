@@ -1,5 +1,13 @@
 ## Prombench Benchmark Scenario Configuration
 
+> NOTE(bwplotka): This is a `cross-feature/metadata-wal-records` custom scenario. It uses exactly the same PR_NUMBER Prometheus code for both deployments, while configuring one (`prometheus-test-pr-{{ .PR_NUMBER }}`) to enable `metadata-wal-records` feature.
+> 
+> Goals:
+>   * Learn the cost of enabling `metadata-wal-records`.
+> 
+> Changes:
+>   * `prometheus-test-{{ normalise .RELEASE }}` dpl is the same as prometheus-test-pr except the feature flag.
+
 This directory contains resources that are applied (and cleaned) on every benchmark request
 via `infra` CLI using [`make deploy`](../../Makefile) and cleaned using [`make clean`](../../Makefile).
 
