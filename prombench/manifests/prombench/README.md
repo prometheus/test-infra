@@ -1,5 +1,15 @@
 ## Prombench Benchmark Scenario Configuration
 
+> NOTE(bwplotka): This is a `nhcbconvert` custom scenario. It uses exactly the same PR_NUMBER Prometheus code for both deployments, while configuring one to convert all classic histograms to nhcb.
+> 
+> Goals:
+>   * Learn the efficiency of nhcb when we convert all classic histograms to nhcb.
+> 
+> Changes:
+>   * `prometheus-test-{{ normalise .RELEASE }}` dpl is the same as prometheus-test-pr except the scrape_config.convert_classic_histograms_to_nhcb = true
+>   * Created `prometheus-test-pr` configmap to use for prometheus-test-pr deployment.
+>   * Added queries against nhcb `codelab_api_request_duration_seconds` on top of `codelab_api_request_duration_seconds<_bucket>`, etc
+
 This directory contains resources that are applied (and cleaned) on every benchmark request
 via `infra` CLI using [`make deploy`](../../Makefile) and cleaned using [`make clean`](../../Makefile).
 

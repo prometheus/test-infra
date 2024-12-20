@@ -86,7 +86,7 @@ spec:
       volumes:
       - name: config-volume
         configMap:
-          name: prometheus-test
+          name: prometheus-test-pr # convert_classic_histograms_to_nhcb = true for fake targets.
       - name: instance-ssd
         hostPath:
           # /mnt is where GKE keeps it's SSD.

@@ -1,0 +1,772 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-test-pr
+  namespace: prombench-{{ .PR_NUMBER }}
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+
+    scrape_configs:
+    - job_name: kubelets
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecure_skip_verify: true
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      kubernetes_sd_configs:
+      - role: node
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_node_label_cloud_google_com_gke_nodepool]
+        regex: prometheus-{{ .PR_NUMBER }}|nodes-{{ .PR_NUMBER }}
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - target_label: __address__
+        replacement: kubernetes.default.svc:443
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/${1}/proxy/metrics
+
+    - job_name: cadvisor
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecure_skip_verify: true
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      kubernetes_sd_configs:
+      - role: node
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_node_label_cloud_google_com_gke_nodepool]
+        regex: prometheus-{{ .PR_NUMBER }}|nodes-{{ .PR_NUMBER }}
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - target_label: __address__
+        replacement: kubernetes.default.svc:443
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
+
+    - job_name: node-exporters
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: node-exporter
+      - action: replace
+        source_labels: [__meta_kubernetes_service_name]
+        target_label: job
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+
+    - job_name: fake-webservers-1
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-2
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-3
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-4
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-5
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-6
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-7
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-8
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-9
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-10
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-11
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-12
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-13
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-14
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-15
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-16
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-17
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-18
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-19
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-20
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-21
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-22
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-23
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-24
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-25
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-26
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-27
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-28
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-29
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-30
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-31
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-32
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-33
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-34
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-35
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-36
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-37
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-38
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-39
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-40
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-41
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-42
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-43
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-44
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-45
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-46
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-47
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-48
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-49
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    - job_name: fake-webservers-50
+      convert_classic_histograms_to_nhcb: true
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - prombench-{{ .PR_NUMBER }}
+      relabel_configs:
+      - action: keep
+        source_labels: [__meta_kubernetes_service_label_app]
+        regex: fake-webserver
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: nodeName
+    remote_write:
+      - url: "http://prometheus-sink:9011/sink/prw"
