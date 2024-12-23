@@ -64,7 +64,7 @@ spec:
           failureThreshold: 30
         command: [ "/usr/bin/prometheus" ]
         args: [
-          "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-pr",
+          "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-release",
           "--storage.tsdb.path=/prometheus",
           "--config.file=/etc/prometheus/prometheus.yml",
           "--log.level=debug"
