@@ -1,5 +1,7 @@
 ## Prombench Benchmark Scenario Configuration
 
+> NOTE(bwplotka): This is a custom scenario that changes the scrape preference to PrometheusProto ONLY for PR Prometheus.
+
 This directory contains resources that are applied (and cleaned) on every benchmark request
 via `infra` CLI using [`make deploy`](../../Makefile) and cleaned using [`make clean`](../../Makefile).
 
