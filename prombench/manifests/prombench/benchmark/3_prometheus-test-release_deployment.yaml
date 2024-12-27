@@ -7,6 +7,9 @@ data:
   prometheus.yml: |
     global:
       scrape_interval: 15s
+      # TODO(bwplotka): Prefer Proto parsing. In standard benchmark we might want to distribute
+      # different parsing protocols across scrape jobs to detect regressions on more of them.
+      scrape_protocols: [ "PrometheusProto", "OpenMetricsText1.0.0", "OpenMetricsText0.0.1", "PrometheusText0.0.4" ]
 
     scrape_configs:
     - job_name: kubelets
