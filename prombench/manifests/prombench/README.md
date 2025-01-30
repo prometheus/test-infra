@@ -1,5 +1,13 @@
 ## Prombench Benchmark Scenario Configuration
 
+> NOTE(bwplotka): This is a `metadata-wal-records` custom scenario. Both Prometheus-es have enabled metadata-wal-records feature.
+>
+> Goals:
+> * Learn the efficiency of metadata-wal-records feature.
+> 
+> Changes:
+> * Both Prometheus-es have enabled metadata-wal-records feature.
+
 This directory contains resources that are applied (and cleaned) on every benchmark request
 via `infra` CLI using [`make deploy`](../../Makefile) and cleaned using [`make clean`](../../Makefile).
 
