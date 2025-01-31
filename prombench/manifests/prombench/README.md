@@ -7,9 +7,8 @@
 > 
 > Changes:
 >   * `prometheus-test-{{ normalise .RELEASE }}` dpl is the same as prometheus-test-pr except the feature flag.
->   * Separate configs, one that sets protobuf as the preferred scrape protocol to obtain CTs.
->   * Both Prometheus-es enable `metadata-wal-records` and PRW 2.0.
->   * `prometheus-test-pr-{{ .PR_NUMBER }}` has `created-timestamp-zero-ingestion` enabled.
+>   * Both Prometheus-es enable `metadata-wal-records`, PRW 2.0 and proto first scrape.
+>   * `prometheus-test-pr-{{ .PR_NUMBER }}` has `created-timestamp-in-wal` enabled.
 >   * Some sink updates, need to update master with those e.g. to log CT and untyped metrics.
 
 This directory contains resources that are applied (and cleaned) on every benchmark request

@@ -70,7 +70,7 @@ spec:
           "--log.level=debug",
           # Custom benchmark.
           "--enable-feature=metadata-wal-records",
-          "--enable-feature=created-timestamp-zero-ingestion"
+          "--enable-feature=created-timestamp-in-wal"
         ]
         resources:
           requests:
@@ -89,7 +89,7 @@ spec:
       volumes:
       - name: config-volume
         configMap:
-          name: prometheus-test-pr # proto first setting.
+          name: prometheus-test # proto first setting.
       - name: instance-ssd
         hostPath:
           # /mnt is where GKE keeps it's SSD.
