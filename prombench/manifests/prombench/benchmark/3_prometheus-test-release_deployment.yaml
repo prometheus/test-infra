@@ -722,11 +722,6 @@ data:
     - url: "http://prometheus-sink:9011/sink/prw" # PRW 1.0
       headers:
         "X-SINK-SOURCE": prometheus-test-{{ normalise .RELEASE }}
-    - url: "http://prometheus-sink:9011/sink/prw" # PRW 2.0
-      headers:
-        "X-SINK-SOURCE": prometheus-test-{{ normalise .RELEASE }}
-      send_native_histograms: true # Currently broken documentation, should be always true, but it's not.
-      protobuf_message: io.prometheus.write.v2.Request #v2
 ---
 apiVersion: apps/v1
 kind: Deployment
