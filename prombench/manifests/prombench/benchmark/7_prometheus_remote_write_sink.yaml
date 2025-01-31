@@ -16,7 +16,15 @@ spec:
     spec:
       containers:
       - name: prom-sink
-        image: quay.io/bwplotka/sink:latest
+        image: quay.io/bwplotka/sink:v0.2.0
+        args: [
+          "--log.level=info",
+          # This adds a verbose warning log for the requests failing certain
+          # Remote Write 2.0 MUST or SHOULD rules.
+          # See https://github.com/bwplotka/sink/blob/main/go/sink/issues.go#L18.
+          # Similar information are available with sink_received_data_issues metric.
+          "--log.issues=*"
+        ]
         resources:
           requests:
             cpu: "2"
