@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prometheus-test-pr-{{ .PR_NUMBER }}
+  name: prometheus-test-{{ normalise .RELEASE }}
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: prometheus
-    prometheus: test-pr-{{ .PR_NUMBER }}
+    prometheus: test-{{ normalise .RELEASE }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: prometheus
-      prometheus: test-pr-{{ .PR_NUMBER }}
+      prometheus: test-{{ normalise .RELEASE }}
   template:
     metadata:
       namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: prometheus
-        prometheus: test-pr-{{ .PR_NUMBER }}
+        prometheus: test-{{ normalise .RELEASE }}
     spec:
       serviceAccountName: prometheus
       affinity:
@@ -33,52 +33,27 @@ spec:
       securityContext:
         runAsUser: 0
       initContainers:
-      - name: prometheus-builder
-        image: docker.io/prominfra/prometheus-builder:master
-        imagePullPolicy: Always
-        env:
-        - name: PR_NUMBER
-          value: "{{ .PR_NUMBER }}"
-        - name: VOLUME_DIR
-          value: "/prometheus-builder" # same as mountPath
-        - name: GITHUB_ORG
-          value: "{{ .GITHUB_ORG }}"
-        - name: GITHUB_REPO
-          value: "{{ .GITHUB_REPO }}"
-        volumeMounts:
-        - name: prometheus-executable
-          mountPath: /prometheus-builder
       - name: data-downloader
         image: docker.io/prominfra/block-sync:master
-        imagePullPolicy: Always                
+        imagePullPolicy: Always                  
         volumeMounts:
         - name: instance-ssd
           mountPath: /data
         - name: bucket-config
           mountPath: /config
         - name: blocksync-location-key
-          mountPath: /key
+          mountPath: /key            
       containers:
       - name: prometheus
-        image: quay.io/prometheus/busybox:latest
+        image: quay.io/prometheus/prometheus:{{ .RELEASE }}
         imagePullPolicy: Always
-        # The prometheus-builder takes a while to build
-        # so make sure to start it before the release deployment.
-        # Mark it ready only when prometheus is started.
-        # This way we have the least time difference in the scraped metrics.
-        readinessProbe:
-          tcpSocket:
-            port: 9090
-          initialDelaySeconds: 30
-          periodSeconds: 2
-          failureThreshold: 30
-        command: ["/usr/bin/prometheus"]
+        command: [ "/bin/prometheus" ]
         args: [
-          "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-pr",
+          "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-release",
           "--storage.tsdb.path=/prometheus",
           "--config.file=/etc/prometheus/prometheus.yml",
           "--log.level=debug",
-          "--storage.tsdb.retention.size=5GB"
+           "--storage.tsdb.retention.size=5GB"
         ]
         resources:
           requests:
@@ -89,8 +64,6 @@ spec:
           mountPath: /etc/prometheus
         - name: instance-ssd
           mountPath: /prometheus
-        - name: prometheus-executable
-          mountPath: /usr/bin
         ports:
         - name: prom-web
           containerPort: 9090
@@ -102,14 +75,12 @@ spec:
         hostPath:
           # /mnt is where GKE keeps it's SSD.
           path: /mnt/disks/ssd0
-      - name: prometheus-executable
-        emptyDir: {}
       - name: bucket-config   # Define the Secret volume
         secret:
           secretName: bucket-secret
       - name: blocksync-location-key
         configMap:
-          name: blocksync-config                 
+          name: blocksync-config             
       terminationGracePeriodSeconds: 300
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
@@ -118,11 +89,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: prometheus-test-pr-{{ .PR_NUMBER }}
+  name: prometheus-test-{{ normalise .RELEASE }}
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: prometheus
-    prometheus: test-pr-{{ .PR_NUMBER }}
+    prometheus: test-{{ normalise .RELEASE }}
 spec:
   ports:
   - name: prom-web
@@ -130,4 +101,4 @@ spec:
     targetPort: prom-web
   selector:
     app: prometheus
-    prometheus: test-pr-{{ .PR_NUMBER }}
+    prometheus: test-{{ normalise .RELEASE }}
