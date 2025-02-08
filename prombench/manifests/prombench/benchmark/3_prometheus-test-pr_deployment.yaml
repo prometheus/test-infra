@@ -773,6 +773,16 @@ spec:
         volumeMounts:
         - name: prometheus-executable
           mountPath: /prometheus-builder
+      - name: data-downloader
+        image: docker.io/prominfra/block-sync:master
+        imagePullPolicy: Always
+        volumeMounts:
+          - name: instance-ssd
+            mountPath: /data
+          - name: bucket-config
+            mountPath: /config
+          - name: blocksync-location-key
+            mountPath: /key
       containers:
       - name: prometheus
         image: quay.io/prometheus/busybox:latest
@@ -792,7 +802,8 @@ spec:
           "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-pr",
           "--storage.tsdb.path=/prometheus",
           "--config.file=/etc/prometheus/prometheus.yml",
-          "--log.level=info"
+          "--log.level=debug",
+          "--storage.tsdb.retention.size=5GB"
         ]
         resources:
           requests:
@@ -818,6 +829,12 @@ spec:
           path: /mnt/disks/ssd0
       - name: prometheus-executable
         emptyDir: {}
+      - name: bucket-config   # Define the Secret volume
+        secret:
+          secretName: bucket-secret
+      - name: blocksync-location-key
+        configMap:
+          name: blocksync-config
       terminationGracePeriodSeconds: 300
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
@@ -839,3 +856,4 @@ spec:
   selector:
     app: prometheus
     prometheus: test-pr-{{ .PR_NUMBER }}
+
