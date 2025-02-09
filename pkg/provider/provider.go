@@ -102,7 +102,7 @@ func DeploymentsParse(deploymentFiles []string, deploymentVars map[string]string
 	var fileList []string
 	for _, name := range deploymentFiles {
 		if file, err := os.Stat(name); err == nil && file.IsDir() {
-			if err := filepath.Walk(name, func(path string, f os.FileInfo, err error) error {
+			if err := filepath.Walk(name, func(path string, _ os.FileInfo, _ error) error {
 				if filepath.Ext(path) == ".yaml" || filepath.Ext(path) == ".yml" {
 					fileList = append(fileList, path)
 				}

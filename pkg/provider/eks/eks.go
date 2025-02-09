@@ -289,9 +289,8 @@ func (c *EKS) ClusterDelete(*kingpin.ParseContext) error {
 
 			if resL.NextToken == nil {
 				break
-			} else {
-				reqL.NextToken = resL.NextToken
 			}
+			reqL.NextToken = resL.NextToken
 		}
 
 		reqD := &eks.DeleteClusterInput{
@@ -496,7 +495,7 @@ func (c *EKS) AllNodeGroupsDeleted(*kingpin.ParseContext) error {
 }
 
 // EKSK8sToken returns aws iam authenticator token which is used to access eks k8s cluster from outside.
-func (c *EKS) EKSK8sToken(clusterName, region string) awsToken.Token {
+func (c *EKS) EKSK8sToken(clusterName, _ string) awsToken.Token {
 	gen, err := awsToken.NewGenerator(true, false)
 	if err != nil {
 		log.Fatalf("Token abstraction error: %v", err)
