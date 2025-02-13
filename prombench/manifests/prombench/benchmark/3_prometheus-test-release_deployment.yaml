@@ -758,16 +758,16 @@ spec:
       securityContext:
         runAsUser: 0
       initContainers:
-        - name: data-downloader
-          image: docker.io/prominfra/block-sync:master
-          imagePullPolicy: Always
-          volumeMounts:
-            - name: instance-ssd
-              mountPath: /data
-            - name: bucket-config
-              mountPath: /config
-            - name: blocksync-location-key
-              mountPath: /key
+      - name: data-downloader
+        image: docker.io/prominfra/block-sync:master
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: instance-ssd
+          mountPath: /data
+        - name: bucket-config
+          mountPath: /config
+        - name: blocksync-location-key
+          mountPath: /key
       containers:
       - name: prometheus
         image: quay.io/prometheus/prometheus:{{ .RELEASE }}

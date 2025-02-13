@@ -105,7 +105,7 @@ Here’s how each option works:
 - **Option 1: Download data from object storage**
 
    To download data from object storage, create a Kubernetes secret with exact named `bucket-secret` and file name `object-config.yml`  with the necessary credentials as per your object storage. This secret enables access to the stored data.
-> Note: Make sure this secret applied before `3b_prometheus-test_deployment.yaml`
+> Note: Make sure this secret applied before ```3_prometheus-test-pr_deployment.yaml``` and ```3_prometheus-test-release_deployment.yaml```
 
 - **Option 2: Skip downloading data**
 
@@ -130,7 +130,7 @@ Regardless of the option chosen, data stored in Prometheus will only be retained
 4. **Downloading Directory configuration**
 
 PromBench can download data from a specific directory in object storage based on a configuration file. This configuration file specifies the directory name along with the minimum and maximum timestamps.
-> **Note:** Make sure the file is applied before the ```3b_prometheus-test_deployment.yaml``` .
+> **Note:** Make sure the file is applied before the ```3_prometheus-test-pr_deployment.yaml``` and ```3_prometheus-test-release_deployment.yaml``` .
 
  - **Option 1: To Download Data from a Specific Directory** 
 
