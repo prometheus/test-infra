@@ -856,4 +856,3 @@ spec:
   selector:
     app: prometheus
     prometheus: test-pr-{{ .PR_NUMBER }}
-
