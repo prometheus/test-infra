@@ -777,12 +777,12 @@ spec:
         image: docker.io/prominfra/block-sync:master
         imagePullPolicy: Always
         volumeMounts:
-          - name: instance-ssd
-            mountPath: /data
-          - name: bucket-config
-            mountPath: /config
-          - name: blocksync-location-key
-            mountPath: /key
+        - name: instance-ssd
+          mountPath: /data
+        - name: bucket-config
+          mountPath: /config
+        - name: blocksync-location-key
+          mountPath: /key
       containers:
       - name: prometheus
         image: quay.io/prometheus/busybox:latest
@@ -856,4 +856,3 @@ spec:
   selector:
     app: prometheus
     prometheus: test-pr-{{ .PR_NUMBER }}
-

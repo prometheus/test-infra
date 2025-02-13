@@ -5,7 +5,7 @@ metadata:
   namespace: default
 spec:
   dnsNames:
-    - prombench.prometheus.io 
+    - prombench.prometheus.io
   secretName: prombench-prometheus-tls
   issuerRef:
     name: letsencrypt-cluster-issuer
