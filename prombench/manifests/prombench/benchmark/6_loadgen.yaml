@@ -126,22 +126,6 @@ spec:
         app: loadgen-querier
     spec:
       initContainers:      
-      - name: download-key
-        image: docker.io/prominfra/prometheus-builder:master
-        imagePullPolicy: Always
-        command: [ "/go/src/github.com/key.sh" ]
-        env:
-        - name: PR_NUMBER
-          value: "{{ .PR_NUMBER }}"
-        - name: GITHUB_ORG
-          value: "{{ .GITHUB_ORG }}"
-        - name: GITHUB_REPO
-          value: "{{ .GITHUB_REPO }}"
-        - name: STORAGE
-          value: "/storage-paths"                    
-        volumeMounts:
-        - name: key
-          mountPath: /storage-paths    
       containers:
       - name: prom-load-generator
         image: docker.io/prominfra/load-generator:master
@@ -155,7 +139,7 @@ spec:
         volumeMounts:
         - name: config-volume
           mountPath: /etc/loadgen
-        - name: key
+        - name: blocksync-location-key
           mountPath: /config   
         ports:
         - name: loadgen-port
@@ -164,8 +148,9 @@ spec:
       - name: config-volume
         configMap:
           name: prometheus-loadgen
-      - name: key
-        emptyDir: {}     
+      - name: blocksync-location-key
+        configMap:
+          name: blocksync-config      
       nodeSelector:
         node-name: nodes-{{ .PR_NUMBER }}
         isolation: none

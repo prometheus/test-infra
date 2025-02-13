@@ -175,7 +175,7 @@ func (q *Querier) run(wg *sync.WaitGroup, timeBound *bucketState) {
 		// If timeBound is not nil, both the "absolute" and "current" blocks will run;
 		// otherwise, only the "current" block will execute. This execution pattern is used
 		// because if Downloaded block data is present, both the head block and downloaded block
-		// need to be processed.
+		// need to be processed consecutively.
 		runBlockMode := "current"
 		for _, query := range q.queries {
 			if runBlockMode == "current" {
@@ -211,20 +211,24 @@ func (q *Querier) query(expr string, timeMode string, timeBound *bucketState) {
 	qParams := req.URL.Query()
 	qParams.Set("query", expr)
 	if q.qtype == "range" {
+		//  here query is for current block i.e headblock and its range query.
 		if timeMode == "current" {
 			qParams.Set("start", fmt.Sprintf("%d", int64(time.Now().Add(-q.start).Unix())))
 			qParams.Set("end", fmt.Sprintf("%d", int64(time.Now().Add(-q.end).Unix())))
 			qParams.Set("step", q.step)
 		} else {
+			// here query is for downloaded block and its range query.
 			endTime := time.Unix(0, timeBound.bucketConfig.MaxTime*int64(time.Millisecond))
 			qParams.Set("start", fmt.Sprintf("%d", int64(endTime.Add(-q.start).Unix())))
 			qParams.Set("end", fmt.Sprintf("%d", int64(endTime.Add(-q.end).Unix())))
 			qParams.Set("step", q.step)
 		}
 	} else if timeMode == "absolute" {
+		// here query is for downloaded block and its instant query.
 		blockinstime := time.Unix(0, timeBound.bucketConfig.MaxTime*int64(time.Millisecond))
 		qParams.Set("time", fmt.Sprintf("%d", int64(blockinstime.Unix())))
 	}
+	// here query is for current block and its instant query i.e no need to specify the instant time.
 	req.URL.RawQuery = qParams.Encode()
 
 	resp, err := http.DefaultClient.Do(req)
