@@ -722,6 +722,10 @@ data:
     - url: "http://prometheus-sink:9011/sink/prw" # PRW 1.0
       headers:
         "X-SINK-SOURCE": prometheus-test-pr-{{ .PR_NUMBER }}
+    - url: "http://prometheus-sink:9011/sink/prw" # PRW 2.0
+      protobuf_message: io.prometheus.write.v2.Request
+      headers:
+        "X-SINK-SOURCE": prometheus-test-pr-{{ .PR_NUMBER }}
 ---
 apiVersion: apps/v1
 kind: Deployment
