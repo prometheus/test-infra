@@ -35,6 +35,12 @@ data:
               containerPort: 8083
             - name: metrics5
               containerPort: 8084
+            env:
+            - name: GOMAXPROCS
+              valueFrom:
+                resourceFieldRef:
+                  containerName: fake-webserver
+                  resource: requests.cpu
             resources:
               requests:
                 cpu: 200m
@@ -73,6 +79,12 @@ spec:
           containerPort: 8083
         - name: metrics5
           containerPort: 8084
+        env:
+        - name: GOMAXPROCS
+          valueFrom:
+            resourceFieldRef:
+              containerName: fake-webserver
+              resource: requests.cpu
         resources:
           requests:
             cpu: 200m
