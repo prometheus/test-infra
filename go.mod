@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	cloud.google.com/go/container v1.42.0
-	github.com/aws/aws-sdk-go v1.55.5
+	github.com/aws/aws-sdk-go v1.55.6
 	github.com/google/go-github/v29 v29.0.3
 	github.com/nelkinda/health-go v0.0.1
 	github.com/prometheus/alertmanager v0.27.0
