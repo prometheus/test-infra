@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/google/go-github/v29 v29.0.3
 	github.com/nelkinda/health-go v0.0.1
-	github.com/prometheus/alertmanager v0.27.0
+	github.com/prometheus/alertmanager v0.28.0
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/common v0.62.0
 	golang.org/x/oauth2 v0.25.0
@@ -47,13 +47,17 @@ require (
 	github.com/aws/smithy-go v1.11.1 // indirect
 	github.com/baidubce/bce-sdk-go v0.9.111 // indirect
 	github.com/clbanning/mxj v1.8.4 // indirect
+	github.com/coder/quartz v0.1.2 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/efficientgo/core v1.0.0-rc.0.0.20221201130417-ba593f67d2a4 // indirect
 	github.com/goccy/go-json v0.10.3 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
+	github.com/hashicorp/go-msgpack/v2 v2.1.1 // indirect
 	github.com/huaweicloud/huaweicloud-sdk-go-obs v3.23.3+incompatible // indirect
 	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
+	github.com/mdlayher/socket v0.4.1 // indirect
+	github.com/mdlayher/vsock v1.2.1 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/minio/minio-go/v7 v7.0.72 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -76,10 +80,9 @@ require (
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
-	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
+	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
 	github.com/alessio/shellescape v1.4.2 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
-	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -93,9 +96,9 @@ require (
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-openapi/jsonpointer v0.20.2 // indirect
-	github.com/go-openapi/jsonreference v0.20.4 // indirect
-	github.com/go-openapi/swag v0.22.9 // indirect
+	github.com/go-openapi/jsonpointer v0.21.0 // indirect
+	github.com/go-openapi/jsonreference v0.21.0 // indirect
+	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -113,12 +116,11 @@ require (
 	github.com/googleapis/gax-go/v2 v2.14.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-msgpack v0.5.5 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/hashicorp/go-sockaddr v1.0.6 // indirect
+	github.com/hashicorp/go-sockaddr v1.0.7 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
-	github.com/hashicorp/memberlist v0.5.0 // indirect
+	github.com/hashicorp/memberlist v0.5.1 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
@@ -141,7 +143,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common/sigv4 v0.1.0 // indirect
-	github.com/prometheus/exporter-toolkit v0.11.0 // indirect
+	github.com/prometheus/exporter-toolkit v0.13.2 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529 // indirect
 	github.com/shurcooL/httpfs v0.0.0-20230704072500-f1e31cf0ba5c // indirect
@@ -158,14 +160,14 @@ require (
 	go.opentelemetry.io/otel/metric v1.34.0 // indirect
 	go.opentelemetry.io/otel/trace v1.34.0 // indirect
 	golang.org/x/crypto v0.32.0 // indirect
-	golang.org/x/mod v0.17.0 // indirect
+	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sync v0.10.0
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/term v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.9.0 // indirect
-	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
+	golang.org/x/tools v0.28.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241209162323-e6fa225c2576 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250127172529-29210b9bc287 // indirect
 	google.golang.org/protobuf v1.36.4 // indirect
