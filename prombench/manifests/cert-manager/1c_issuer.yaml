@@ -5,7 +5,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: vanditsinghkv@gmail.com
+    email: prometheus-team+letsencrypt@googlegroups.com
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
