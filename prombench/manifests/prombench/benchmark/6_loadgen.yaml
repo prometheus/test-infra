@@ -136,8 +136,9 @@ spec:
         - name: DOMAIN_NAME
           value: "{{ .DOMAIN_NAME }}"
         - name: GOMAXPROCS
+          valueFrom:
             resourceFieldRef:
-              containerName: fake-webserver
+              containerName: prom-load-generator
               resource: requests.cpu
         resources:
           requests:
