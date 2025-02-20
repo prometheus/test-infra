@@ -53,7 +53,7 @@ data:
         queries:
         - expr: rate(go_memstats_frees_total[5m]) * 60
         - expr: rate(codelab_api_requests_total{method=~"GET|POST"}[5m]) - rate(codelab_api_request_duration_seconds_sum{method=~"GET|POST"}[5m])
-        - expr: rate(go_gc_duration_seconds_sum{job=~"fake-webservers-[0-9]+"}[5m]) / rate(go_gc_duration_seconds_count{job=~"fake-webservers-[0-9]+"}[5m])        
+        - expr: rate(go_gc_duration_seconds_sum{job=~"fake-webservers-[0-9]+"}[5m]) / rate(go_gc_duration_seconds_count{job=~"fake-webservers-[0-9]+"}[5m])
         - expr: sum by (instance, job) (rate(codelab_api_request_errors_total[5m])) / sum by (instance, job) (rate(go_memstats_mallocs_total[10m]))
       - name: logic_operator
         interval: 30s
@@ -66,7 +66,7 @@ data:
         type: instant
         queries:
         - expr: topk(20, sum(rate(go_gc_duration_seconds_count[5m])) by (instance, job))
-        - expr: topk(10, sum(codelab_api_request_duration_seconds_count) by (method,job))     
+        - expr: topk(10, sum(codelab_api_request_duration_seconds_count) by (method,job))
 ---
 apiVersion: apps/v1
 kind: Deployment

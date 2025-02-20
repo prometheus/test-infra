@@ -32,6 +32,6 @@ roleRef:
   name: promtail-clusterrole
   apiGroup: rbac.authorization.k8s.io
 subjects:
-  - kind: ServiceAccount
-    name: promtail
-    namespace: default
+- kind: ServiceAccount
+  name: promtail
+  namespace: default
