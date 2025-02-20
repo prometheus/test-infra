@@ -54,6 +54,7 @@ data:
 
     compactor:
       retention_enabled: true
+      delete_request_store: filesystem
     limits_config:
       retention_period: 2184h
 ---
@@ -106,9 +107,10 @@ spec:
           imagePullPolicy: IfNotPresent
           args:
             - "-config.file=/etc/loki/loki.yaml"
-          requests:
-            cpu: 100m
-            memory: 100MB
+          resources:
+            requests:
+              cpu: 100m
+              memory: 200Mi
           volumeMounts:
             - name: config
               mountPath: /etc/loki

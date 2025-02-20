@@ -141,7 +141,7 @@ data:
       relabel_configs:
       - action: keep
         source_labels: [__meta_kubernetes_service_label_app]
-        regex: prometheus|prometheus-meta|alertmanager|node-exporter|loadgen-querier
+        regex: prometheus|prometheus-meta|alertmanager|node-exporter|loadgen-querier|sink
       - action: replace
         source_labels: [__meta_kubernetes_service_label_app]
         target_label: job
@@ -209,6 +209,10 @@ spec:
         - "--web.enable-lifecycle"
         - "--web.external-url=http://{{ .DOMAIN_NAME }}/prometheus-meta"
         name: prometheus
+        resources:
+          requests:
+            cpu: 100m
+            memory: 1Gi
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus/config
