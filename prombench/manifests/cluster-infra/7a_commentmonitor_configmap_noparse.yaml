@@ -12,20 +12,20 @@ data:
         * To restart benchmark: `/prombench <branch or git tag to compare with>`
         * To stop benchmark: `/prombench cancel`
         * To print help: `/prombench help`
-        
+
         **Advanced Flags for `start` and `restart` Commands:**
         * `--bench.directory=<sub-directory of github.com/prometheus/test-infra/prombench`
           * See the details [here](https://github.com/prometheus/test-infra/tree/master/prombench/manifests/prombench#benchmarking-from-the-different-directory), defaults to `manifests/prombench`.
         * `--bench.version=<branch | @commit>`
           * See the details [here](https://github.com/prometheus/test-infra/tree/master/prombench/manifests/prombench#benchmarking-from-the-custom-test-infra-commitbranch), defaults to `master`.
-    
+
         **Examples:**
         * `/prombench v3.0.0`
         * `/prombench v3.0.0 --bench.version=@aca1803ccf5d795eee4b0848707eab26d05965cc --bench.directory=manifests/prombench`
-    
+
       verify_user: true
       commands:
-      - name: cancel 
+      - name: cancel
         event_type: prombench_stop
         comment_template: |
           Benchmark cancel is in progress.
@@ -41,16 +41,16 @@ data:
           ⏱️ Welcome (again) to Prometheus Benchmarking Tool. ⏱️
 
           **Compared versions:** [**`PR-{{ index . "PR_NUMBER" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-pr) and [**`{{ index . "RELEASE" }}`**](http://{{ index . "DOMAIN_NAME" }}/{{ index . "PR_NUMBER" }}/prometheus-release)
-          
+
           {{- $version := index . "BENCHMARK_VERSION" }}
           {{- $directory := index . "BENCHMARK_DIRECTORY" | print "manifests/prombench" }}
           {{- with $version }}
-          
+
           **Custom benchmark version:**
           {{- if hasPrefix $version "@" }} [**`{{ trimPrefix $version "@" }}` commit**](https://github.com/prometheus/test-infra/tree/{{ trimPrefix $version "@" }}/prombench/{{ or $directory "manifests/prombench" }})
           {{- else }} [**`{{ $version }}` branch**](https://github.com/prometheus/test-infra/tree/{{ $version }}/prombench/{{ or $directory "manifests/prombench" }}){{ end }}
           {{- end }}
-          
+
           After successful deployment ([check status here](https://github.com/prometheus/prometheus/actions/workflows/prombench.yml)), the benchmarking results can be viewed at:
 
           - [Prometheus Meta](http://{{ index . "DOMAIN_NAME" }}/prometheus-meta/graph?g0.expr={namespace%3D"prombench-{{ index . "PR_NUMBER" }}"}&g0.tab=1)
@@ -62,7 +62,7 @@ data:
           * To restart benchmark: `/prombench restart {{ index . "RELEASE" }}{{ if index . "BENCHMARK_VERSION" }} --bench.version={{ index . "BENCHMARK_VERSION" }}{{ end }}{{ if index . "BENCHMARK_DIRECTORY" }} --bench.directory={{ index . "BENCHMARK_DIRECTORY" }}{{ end }}`
           * To stop benchmark: `/prombench cancel`
           * To print help: `/prombench help`
-    
+
       - name: "" # start is a default (empty command).
         event_type: prombench_start
         arg_regex: (master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)
@@ -79,7 +79,7 @@ data:
           {{- $version := index . "BENCHMARK_VERSION" }}
           {{- $directory := index . "BENCHMARK_DIRECTORY" }}
           {{- with $version }}
-          
+
           **Custom benchmark version:**
           {{- if hasPrefix $version "@" }} [**`{{ trimPrefix $version "@" }}` commit**](https://github.com/prometheus/test-infra/tree/{{ trimPrefix $version "@" }}/prombench/{{ or $directory "manifests/prombench" }})
           {{- else }} [**`{{ $version }}` branch**](https://github.com/prometheus/test-infra/tree/{{ $version }}/prombench/{{ or $directory "manifests/prombench" }}){{ end }}
@@ -96,4 +96,3 @@ data:
           * To restart benchmark: `/prombench restart {{ index . "RELEASE" }}{{ if index . "BENCHMARK_VERSION" }} --bench.version={{ index . "BENCHMARK_VERSION" }}{{ end }}{{ if index . "BENCHMARK_DIRECTORY" }} --bench.directory={{ index . "BENCHMARK_DIRECTORY" }}{{ end }}`
           * To stop benchmark: `/prombench cancel`
           * To print help: `/prombench help`
-          

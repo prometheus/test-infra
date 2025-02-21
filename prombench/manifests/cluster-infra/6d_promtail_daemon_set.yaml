@@ -97,10 +97,10 @@ spec:
               mountPath: /var/lib/docker/containers
               readOnly: true
           env:
-          - name: HOSTNAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
           ports:
             - containerPort: 3101
               name: http-metrics

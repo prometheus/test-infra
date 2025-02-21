@@ -19,7 +19,7 @@ build:
         - name: tools/load-generator
           path: ./tools/load-generator
         - name: tools/block-sync
-          path: ./tools/block-sync  
+          path: ./tools/block-sync
     flags: -a -tags netgo
 crossbuild:
     platforms:
