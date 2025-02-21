@@ -117,7 +117,7 @@ jobs:
           registry: docker.io
           organization: "$DOCKER_ORG"
           login_variable: DOCKER_LOGIN
-          password_variable: DOCKER_PASSWORD    
+          password_variable: DOCKER_PASSWORD
 workflows:
   version: 2
   test-infra:

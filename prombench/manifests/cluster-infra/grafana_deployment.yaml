@@ -9,8 +9,8 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-        app: grafana
-        component: core
+      app: grafana
+      component: core
   template:
     metadata:
       labels:
@@ -25,20 +25,20 @@ spec:
         name: grafana-core
         imagePullPolicy: IfNotPresent
         env:
-          - name: GF_PATHS_PROVISIONING
-            value: "/opt/grafana-provision"
-          - name: GF_SERVER_ROOT_URL
-            value: "http://{{ .DOMAIN_NAME }}/grafana"
-          - name: GF_SERVER_SERVE_FROM_SUB_PATH
-            value: "true"
-          - name: GF_AUTH_ANONYMOUS_ENABLED
-            value: "true"
-          - name: GF_AUTH_ANONYMOUS_ORG_NAME
-            value: "Main Org."
-          - name: GF_SECURITY_ADMIN_PASSWORD
-            value: "{{ .GRAFANA_ADMIN_PASSWORD }}"
-          - name: GF_USERS_VIEWERS_CAN_EDIT
-            value: "true"
+        - name: GF_PATHS_PROVISIONING
+          value: "/opt/grafana-provision"
+        - name: GF_SERVER_ROOT_URL
+          value: "http://{{ .DOMAIN_NAME }}/grafana"
+        - name: GF_SERVER_SERVE_FROM_SUB_PATH
+          value: "true"
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "true"
+        - name: GF_AUTH_ANONYMOUS_ORG_NAME
+          value: "Main Org."
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          value: "{{ .GRAFANA_ADMIN_PASSWORD }}"
+        - name: GF_USERS_VIEWERS_CAN_EDIT
+          value: "true"
         readinessProbe:
           httpGet:
             path: /login
@@ -82,9 +82,9 @@ metadata:
 spec:
   type: NodePort
   ports:
-    - name: grafana-web
-      port: 80
-      targetPort: grafana-web
+  - name: grafana-web
+    port: 80
+    targetPort: grafana-web
   selector:
     app: grafana
     component: core
