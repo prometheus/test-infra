@@ -27,7 +27,6 @@ data:
         - expr: sum by(instance) (rate(node_cpu_seconds_total{mode!="idle"}[5m]))
         - expr: sum by(instance) (rate(node_cpu_seconds_total[5m]))
         - expr: sum by(instance) (rate(codelab_api_requests_total[5m]))
-        - expr: sum by(instance) (rate(codelab_api_requests_total{method=~"GET|POST"}[5m]))
       - name: aggr_range
         interval: 30s
         type: range
@@ -36,7 +35,6 @@ data:
         step: 15s
         queries:
         - expr: sum by(image) (container_memory_rss)
-        - expr: sum by(instance) (rate(node_cpu_seconds_total{mode!="idle"}[5m]))
         - expr: sum by(instance) (rate(node_cpu_seconds_total[5m]))
         - expr: sum by(instance) (rate(codelab_api_requests_total[5m]))
         - expr: sum by(instance) (rate(codelab_api_requests_total{method=~"GET|POST"}[5m]))
@@ -60,13 +58,11 @@ data:
         type: instant
         queries:
         - expr: codelab_api_request_duration_seconds_sum{status="200"} or codelab_api_request_duration_seconds_sum{status="500"}
-        - expr: codelab_api_request_duration_seconds_count{method="POST"} unless codelab_api_request_duration_seconds_count{status="500"}
       - name: topk
         interval: 10s
         type: instant
         queries:
         - expr: topk(20, sum(rate(go_gc_duration_seconds_count[5m])) by (instance, job))
-        - expr: topk(10, sum(codelab_api_request_duration_seconds_count) by (method,job))
 ---
 apiVersion: apps/v1
 kind: Deployment
