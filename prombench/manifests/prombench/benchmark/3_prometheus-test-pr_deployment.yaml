@@ -7,6 +7,7 @@ data:
   prometheus.yml: |
     global:
       scrape_interval: 15s
+      scrape_protocols: [ "PrometheusProto", "OpenMetricsText1.0.0", "OpenMetricsText0.0.1", "PrometheusText0.0.4" ]
 
     scrape_configs:
     - job_name: kubelets
