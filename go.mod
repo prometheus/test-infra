@@ -1,6 +1,7 @@
 module github.com/prometheus/test-infra
 
 go 1.23
+toolchain go1.24.1
 
 require (
 	cloud.google.com/go/container v1.42.2
@@ -160,7 +161,7 @@ require (
 	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.34.0 // indirect
-	golang.org/x/sync v0.10.0
+	golang.org/x/sync v0.12.0
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/term v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
