@@ -12,7 +12,7 @@ require (
 	github.com/prometheus/common v0.62.0
 	golang.org/x/oauth2 v0.26.0
 	google.golang.org/api v0.220.0
-	google.golang.org/grpc v1.70.0
+	google.golang.org/grpc v1.71.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.31.2
