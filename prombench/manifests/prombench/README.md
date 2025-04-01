@@ -1,5 +1,7 @@
 ## Prombench Benchmark Scenario Configuration
 
+> This branch causes PR Prometheus to be always pinned to 3.3.0-rc.0
+
 This directory contains resources that are applied (and cleaned) on every benchmark request
 via `infra` CLI using [`make deploy`](../../Makefile) and cleaned using [`make clean`](../../Makefile).
 
