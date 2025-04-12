@@ -1,0 +1,38 @@
+prefixes:
+- prefix: /prombench
+  help: |
+    **Available Commands:**
+    * To start benchmark: `/prombench <branch or git tag to compare with>`
+    * To restart benchmark: `/prombench restart <branch or git tag to compare with>`
+    * To stop benchmark: `/prombench cancel`
+    * To print help: `/prombench help`
+
+    **Advanced Flags for `start` and `restart` Commands:**:
+    * `--bench.directory` (default: `manifests/prombench`)
+    * `--bench.version` (default: `master`)
+
+    **Examples:**
+    * `/prombench v3.0.0`
+    * `/prombench v3.0.0 --bench.version=@aca1803ccf5d795eee4b0848707eab26d05965cc --bench.directory=manifests/prombench`
+
+  verify_user: true
+  commands:
+  - name: cancel
+    event_type: prombench_stop
+
+  - name: restart
+    event_type: prombench_restart
+    arg_regex: (master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)
+    arg_name: RELEASE
+    flag_args:
+      bench.directory: BENCHMARK_DIRECTORY
+      bench.version: BENCHMARK_VERSION
+
+  - name: "" # start is a default (empty command).
+    event_type: prombench_start
+    arg_regex: (master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)
+    arg_name: RELEASE
+    flag_args:
+      bench.directory: BENCHMARK_DIRECTORY
+      bench.version: BENCHMARK_VERSION
+    label: prombench

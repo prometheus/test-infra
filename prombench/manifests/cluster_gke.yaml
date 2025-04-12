@@ -2,9 +2,9 @@ projectid: {{ .GKE_PROJECT_ID }}
 zone: {{ .ZONE }}
 cluster:
   name: {{ .CLUSTER_NAME }}
-  
+
   initialclusterversion: 1.25
-  
+
   nodepools:
   # This node-pool will be used for running monitoring components
   - name: main-node

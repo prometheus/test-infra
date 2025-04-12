@@ -3,18 +3,18 @@ projectid: {{ .GKE_PROJECT_ID }}
 cluster:
   name: {{ .CLUSTER_NAME }}
   nodepools:
-  # These node-pools will be deployed on triggering benchmark
-  - name: prometheus-{{ .PR_NUMBER }}
+  # These node-pools will be deployed on triggered benchmark.
+  - name: prometheus-{{ .PR_NUMBER }} # Each for single Prometheus.
     initialnodecount: 2
     config:
       machinetype: n1-highmem-8
       imagetype: COS_CONTAINERD
       disksizegb: 100
-      localssdcount: 1  #SSD is used to give fast-lookup to Prometheus servers being benchmarked
+      localssdcount: 1  #SSD is used to give fast-lookup to Prometheus servers being benchmarked.
       labels:
         isolation: prometheus
         node-name: prometheus-{{ .PR_NUMBER }}
-  - name: nodes-{{ .PR_NUMBER }}
+  - name: nodes-{{ .PR_NUMBER }} # For fake-webservers, loadgen and sink.
     initialnodecount: 1
     config:
       machinetype: n1-highcpu-16

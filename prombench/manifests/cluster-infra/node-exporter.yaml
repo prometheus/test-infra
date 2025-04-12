@@ -40,7 +40,7 @@ spec:
           name: scrape
         volumeMounts:
         - name: proc
-          readOnly:  true
+          readOnly: true
           mountPath: /host/proc
         - name: sys
           readOnly: true
