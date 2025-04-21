@@ -829,7 +829,7 @@ spec:
           path: /mnt/disks/ssd0
       - name: prometheus-executable
         emptyDir: {}
-      - name: bucket-config   # Define the Secret volume
+      - name: bucket-config
         secret:
           secretName: bucket-secret
       - name: blocksync-location-key
