@@ -580,6 +580,11 @@ func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 	return nil
 }
 
+// The CreateNamespace function is used to create the PR namespace and copy the
+// blocksync-config and bucket-secret from the default namespace to the prombench-${PR_NUMBER} namespace.
+// Block-sync uses these resources to download data from object storage.
+// For more information, refer to this PR: https://github.com/prometheus/test-infra/pull/840
+
 func (c *GKE) CreateNamespace(*kingpin.ParseContext) error {
 	sourceNS := "default"
 	targetNS := "prombench-" + c.DeploymentVars["PR_NUMBER"]
