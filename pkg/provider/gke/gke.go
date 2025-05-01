@@ -22,10 +22,6 @@ import (
 	"regexp"
 	"strings"
 
-	corev1 "k8s.io/api/core/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	gke "cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
 	"google.golang.org/api/option"
@@ -586,59 +582,9 @@ func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 // For more information, refer to this PR: https://github.com/prometheus/test-infra/pull/840
 
 func (c *GKE) CreateNamespace(*kingpin.ParseContext) error {
-	sourceNS := "default"
-	targetNS := "prombench-" + c.DeploymentVars["PR_NUMBER"]
-	configMapName := "blocksync-config"
-	secretName := "bucket-secret"
-
-	// check if namespace exists
-	_, err := c.k8sProvider.Clt.CoreV1().Namespaces().Get(context.TODO(), targetNS, metav1.GetOptions{})
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			ns := &corev1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: targetNS,
-				},
-			}
-			_, err = c.k8sProvider.Clt.CoreV1().Namespaces().Create(context.TODO(), ns, metav1.CreateOptions{})
-			if err != nil {
-				return fmt.Errorf("error creating namespace: %w", err)
-			}
-		} else {
-			return fmt.Errorf("error checking namespace: %w", err)
-		}
+	if err := c.k8sProvider.CreateNamespace(c.DeploymentVars["PR_NUMBER"]); err != nil {
+		return err
 	}
-
-	// copy ConfigMap
-	_, err = c.k8sProvider.Clt.CoreV1().ConfigMaps(targetNS).Get(context.TODO(), configMapName, metav1.GetOptions{})
-	if k8serrors.IsNotFound(err) {
-		cm, err := c.k8sProvider.Clt.CoreV1().ConfigMaps(sourceNS).Get(context.TODO(), configMapName, metav1.GetOptions{})
-		if err != nil {
-			return fmt.Errorf("error getting configmap: %w", err)
-		}
-		cm.ResourceVersion = ""
-		cm.Namespace = targetNS
-		_, err = c.k8sProvider.Clt.CoreV1().ConfigMaps(targetNS).Create(context.TODO(), cm, metav1.CreateOptions{})
-		if err != nil {
-			return fmt.Errorf("error creating configmap: %w", err)
-		}
-	}
-
-	// copy Secret
-	_, err = c.k8sProvider.Clt.CoreV1().Secrets(targetNS).Get(context.TODO(), secretName, metav1.GetOptions{})
-	if k8serrors.IsNotFound(err) {
-		secret, err := c.k8sProvider.Clt.CoreV1().Secrets(sourceNS).Get(context.TODO(), secretName, metav1.GetOptions{})
-		if err != nil {
-			return fmt.Errorf("error getting secret: %w", err)
-		}
-		secret.ResourceVersion = ""
-		secret.Namespace = targetNS
-		_, err = c.k8sProvider.Clt.CoreV1().Secrets(targetNS).Create(context.TODO(), secret, metav1.CreateOptions{})
-		if err != nil {
-			return fmt.Errorf("error creating secret in target NS: %w", err)
-		}
-	}
-
 	return nil
 }
 
