@@ -266,7 +266,7 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-      - prombench.prometheus.io
+    - prombench.prometheus.io
     secretName: prombench-prometheus-tls
   rules:
   - http:
