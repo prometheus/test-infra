@@ -21,10 +21,11 @@ require (
 	k8s.io/client-go v0.31.2
 	k8s.io/cloud-provider-gcp v0.0.0-20241115222652-d74b2e1d6653
 	sigs.k8s.io/aws-iam-authenticator v0.6.27
-	sigs.k8s.io/kind v0.26.0
+	sigs.k8s.io/kind v0.27.0
 )
 
 require (
+	al.essio.dev/pkg/shellescape v1.5.1 // indirect
 	cloud.google.com/go v0.118.0 // indirect
 	cloud.google.com/go/iam v1.3.1 // indirect
 	cloud.google.com/go/storage v1.43.0 // indirect
@@ -81,7 +82,6 @@ require (
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
-	github.com/alessio/shellescape v1.4.2 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
