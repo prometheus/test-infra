@@ -84,7 +84,7 @@ func applyTemplateVars(content []byte, deploymentVars map[string]string) ([]byte
 	t = t.Funcs(template.FuncMap{
 		// k8s objects can't have dots(.) se we add a custom function to allow normalising the variable values.
 		"normalise": func(t string) string {
-			return strings.Replace(t, ".", "-", -1)
+			return strings.ReplaceAll(t, ".", "-")
 		},
 		"split": func(rangeVars, separator string) []string {
 			return strings.Split(rangeVars, separator)
