@@ -79,6 +79,19 @@ func (c *KIND) SetupDeploymentResources(*kingpin.ParseContext) error {
 		customDeploymentVars,
 		c.DeploymentResource.FlagDeploymentVars,
 	)
+	fmt.Println(c.DeploymentVars, "Justin")
+	return nil
+}
+
+// The CreateNamespace function is used to create the PR namespace and copy the
+// blocksync-config and bucket-secret from the default namespace to the prombench-${PR_NUMBER} namespace.
+// Block-sync uses these resources to download data from object storage.
+// For more information, refer to this PR: https://github.com/prometheus/test-infra/pull/840
+
+func (c *KIND) CreateNamespace(*kingpin.ParseContext) error {
+	if err := c.k8sProvider.CreateNamespace(c.DeploymentVars["PR_NUMBER"]); err != nil {
+		return err
+	}
 	return nil
 }
 
