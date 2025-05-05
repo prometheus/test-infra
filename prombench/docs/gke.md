@@ -96,8 +96,72 @@ Run Prombench tests in [Google Kubernetes Engine (GKE)](https://cloud.google.com
     ```bash
     make node_create
     ```
+3. **Setting Up Benchmarking Data**    
+ When setting up a benchmarking environment, it’s often useful to have pre-generated data available.This data can help speed up testing and make benchmarks more realistic by simulating actual workloads.
 
-3. **Deploy the Kubernetes Objects**:
+In this setup, you have two choices:
+
+Here’s how each option works:
+- **Option 1: Download data from object storage**
+
+   To download data from object storage, create a Kubernetes secret with exact named `bucket-secret` and file name `object-config.yml`  with the necessary credentials as per your object storage. This secret enables access to the stored data.
+> Note: When running on GKE with Workload Identity or similar integrated authorization, no credentials or secret may be needed — but a blank bucket-secret may still be created for consistency across environments.
+> Note: Make sure this secret applied before ```3_prometheus-test-pr_deployment.yaml``` and ```3_prometheus-test-release_deployment.yaml```
+
+- **Option 2: Skip downloading data**
+
+If you don’t Want to Download data create an empty secret like this -
+
+```yaml
+# Empty Secret to Skip Downloading Data
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bucket-secret
+  namespace: prombench-{{ .PR_NUMBER }} 
+type: Opaque
+stringData:
+  object-config.yml: 
+```  
+ 
+Regardless of the option chosen, data stored in Prometheus will only be retained based on the configured retention settings (```--storage.tsdb.retention.size```). 
+
+> **⚠️ Warning:** The benchmark will change its basis when the retention size limit is reached and older downloaded blocks are deleted. Ensure that you have sufficient retention settings configured to avoid data loss that could affect benchmarking results. 
+
+4. **Downloading Directory configuration**
+
+PromBench can download data from a specific directory in object storage based on a configuration file. This configuration file specifies the directory name along with the minimum and maximum timestamps.
+> **Note:** Make sure the file is applied before the ```3_prometheus-test-pr_deployment.yaml``` and ```3_prometheus-test-release_deployment.yaml``` .
+
+ - **Option 1: To Download Data from a Specific Directory** 
+
+ Create a ConfigMap with the following structure:
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blocksync-config
+  namespace: prombench-{{ .PR_NUMBER }}
+data:
+  bucket-config.yml: |
+    path: your-directory-name
+    minTime: block-starting-time
+    maxTime: block-ending-time
+```
+Replace the values of ```directory```,```minTime```, and ```maxTime``` with your desired configuration. Here ```minTime``` , ```maxTime``` are the starting and ending time of TSDB block and in Unix timestamp format. 
+- **Option 2: To Skip Data Download**
+
+If you do not want to download data, create an empty ConfigMap with the same name:
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blocksync-config
+  namespace: prombench-{{ .PR_NUMBER }}
+data:
+```
+
+5. **Deploy the Kubernetes Objects**:
 
     ```bash
     make resource_apply
@@ -130,3 +194,4 @@ Run Prombench tests in [Google Kubernetes Engine (GKE)](https://cloud.google.com
     ```bash
     make cluster_delete
     ```
+
