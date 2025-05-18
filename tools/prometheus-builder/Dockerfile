@@ -1,4 +1,4 @@
-FROM quay.io/bwplotka/prom-golang-builder:1.23.6-base
+FROM quay.io/prometheus/golang-builder:1.24-base
 
 RUN mkdir -p /go/src/github.com
 

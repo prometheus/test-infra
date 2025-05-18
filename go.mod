@@ -1,6 +1,6 @@
 module github.com/prometheus/test-infra
 
-go 1.23
+go 1.23.0
 
 require (
 	cloud.google.com/go/container v1.42.2
