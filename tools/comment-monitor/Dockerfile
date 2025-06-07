@@ -2,6 +2,6 @@ FROM quay.io/prometheus/busybox:latest
 
 LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com>"
 
-COPY ./commentMonitor /bin/commentMonitor
+COPY ./comment-monitor /bin/comment-monitor
 
-ENTRYPOINT ["/bin/commentMonitor"]
+ENTRYPOINT ["/bin/comment-monitor"]

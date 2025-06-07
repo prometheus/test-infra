@@ -72,8 +72,8 @@ jobs:
           password_variable: DOCKER_PASSWORD
       - prometheus/publish_images:
           container_image_name: comment-monitor
-          dockerfile_path: "tools/commentMonitor/Dockerfile"
-          dockerbuild_context: "tools/commentMonitor/"
+          dockerfile_path: "tools/comment-monitor/Dockerfile"
+          dockerbuild_context: "tools/comment-monitor/"
           registry: docker.io
           organization: "$DOCKER_ORG"
           login_variable: DOCKER_LOGIN
@@ -106,6 +106,14 @@ jobs:
           container_image_name: prometheus-builder
           dockerfile_path: "tools/prometheus-builder/Dockerfile"
           dockerbuild_context: "tools/prometheus-builder/"
+          registry: docker.io
+          organization: "$DOCKER_ORG"
+          login_variable: DOCKER_LOGIN
+          password_variable: DOCKER_PASSWORD
+      - prometheus/publish_images:
+          container_image_name: block-sync
+          dockerfile_path: "tools/block-sync/Dockerfile"
+          dockerbuild_context: "tools/block-sync/"
           registry: docker.io
           organization: "$DOCKER_ORG"
           login_variable: DOCKER_LOGIN

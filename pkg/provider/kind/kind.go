@@ -200,7 +200,7 @@ func (c *KIND) ResourceDelete(*kingpin.ParseContext) error {
 }
 
 // GetDeploymentVars shows deployment variables.
-func (c *KIND) GetDeploymentVars(parseContext *kingpin.ParseContext) error {
+func (c *KIND) GetDeploymentVars(_ *kingpin.ParseContext) error {
 	fmt.Print("-------------------\n   DeploymentVars   \n------------------- \n")
 	for key, value := range c.DeploymentVars {
 		fmt.Println(key, ": ", value)

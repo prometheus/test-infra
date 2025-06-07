@@ -13,6 +13,6 @@ jobs:
     name: Verify Dashboard Generation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Verify dashboard generation
-        run: make --always-make generate-dashboards-cm && git diff --exit-code
+    - uses: actions/checkout@v4
+    - name: Verify dashboard generation
+      run: make --always-make generate-dashboards-cm && git diff --exit-code

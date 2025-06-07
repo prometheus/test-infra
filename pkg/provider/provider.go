@@ -84,7 +84,7 @@ func applyTemplateVars(content []byte, deploymentVars map[string]string) ([]byte
 	t = t.Funcs(template.FuncMap{
 		// k8s objects can't have dots(.) se we add a custom function to allow normalising the variable values.
 		"normalise": func(t string) string {
-			return strings.Replace(t, ".", "-", -1)
+			return strings.ReplaceAll(t, ".", "-")
 		},
 		"split": func(rangeVars, separator string) []string {
 			return strings.Split(rangeVars, separator)
@@ -102,7 +102,7 @@ func DeploymentsParse(deploymentFiles []string, deploymentVars map[string]string
 	var fileList []string
 	for _, name := range deploymentFiles {
 		if file, err := os.Stat(name); err == nil && file.IsDir() {
-			if err := filepath.Walk(name, func(path string, f os.FileInfo, err error) error {
+			if err := filepath.Walk(name, func(path string, _ os.FileInfo, _ error) error {
 				if filepath.Ext(path) == ".yaml" || filepath.Ext(path) == ".yml" {
 					fileList = append(fileList, path)
 				}

@@ -1,3 +1,5 @@
+# yamllint disable-file
+# This file is not valid YAML because of the range template.
 cluster:
   name: {{ .CLUSTER_NAME }}
   version: 1.14

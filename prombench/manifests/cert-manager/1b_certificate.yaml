@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: prometheus-meta
+  namespace: default
+spec:
+  dnsNames:
+    - prombench.prometheus.io
+  secretName: prombench-prometheus-tls
+  issuerRef:
+    name: letsencrypt-cluster-issuer
+    kind: ClusterIssuer

@@ -1,3 +1,5 @@
+# yamllint disable-file
+# This file is not valid YAML because of the range template.
 cluster:
   name: {{ .CLUSTER_NAME }}
 nodegroups:
@@ -9,7 +11,7 @@ nodegroups:
       - {{ $subnetId }}
       {{ end }}
     instancetypes:
-      - r5d.2xlarge #This machine has SSD. SSD is used to give fast-lookup to Prometheus servers being benchmarked 
+      - r5d.2xlarge # This machine has SSD. SSD is used to give fast-lookup to Prometheus servers being benchmarked.
     scalingconfig:
       desiredsize: 2
       maxsize: 2
