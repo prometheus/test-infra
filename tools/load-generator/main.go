@@ -178,9 +178,10 @@ func (q *Querier) run(wg *sync.WaitGroup, timeBound *bucketState) {
 		// need to be processed consecutively.
 		runBlockMode := "current"
 		for _, query := range q.queries {
-			if runBlockMode == "current" {
+			switch runBlockMode {
+			case "current":
 				q.query(query.Expr, "current", nil)
-			} else if runBlockMode == "absolute" {
+			case "absolute":
 				q.query(query.Expr, "absolute", timeBound)
 			}
 			if runBlockMode == "current" && timeBound != nil {
