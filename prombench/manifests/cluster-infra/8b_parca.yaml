@@ -1,15 +1,31 @@
+# Parca deployment with GCS storage backend
+# 
+# IMPORTANT: This deployment requires a Kubernetes secret named 'parca-gcs-service-account'
+# containing a GCS service account key JSON file. The secret must have the following structure:
+#
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: parca-gcs-service-account
+# type: Opaque
+# data:
+#   key.json: <base64-encoded-gcs-service-account-key>
+#
+# The GCS service account needs permissions to read/write to the bucket specified in the config.
+#
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: parca
 data:
-  # TODO(bwplotka): Add config reloader, otherwise pod has to manually deleted.
+  # TODO(bwplotka): Add config reloader, otherwise pod has to be manually deleted.
   parca.yaml: |-
     "object_storage":
       "bucket":
         "config":
-          "directory": "/var/lib/parca"
-        "type": "FILESYSTEM"
+          "bucket": "prometheus-parca-profiles"
+          "service_account": ""
+        "type": "GCS"
     scrape_configs:
       - job_name: prometheus
         scrape_interval: 30s
@@ -86,11 +102,15 @@ spec:
         - "--debuginfod-http-request-timeout=5m"
         name: parca
         terminationMessagePolicy: FallbackToLogsOnError
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/gcs-service-account/key.json
         volumeMounts:
         - mountPath: /etc/parca
           name: config
-        - mountPath: /var/lib/parca
-          name: storage
+        - mountPath: /var/secrets/gcs-service-account
+          name: gcs-service-account
+          readOnly: true
         ports:
         - name: parca-web
           containerPort: 7070
@@ -98,9 +118,9 @@ spec:
       - name: config
         configMap:
           name: parca
-      # TODO(bwplotka): Make it persistent at some point.
-      - name: storage
-        emptyDir: {}
+      - name: gcs-service-account
+        secret:
+          secretName: parca-gcs-service-account
       terminationGracePeriodSeconds: 120
       nodeSelector:
         node-name: main-node
