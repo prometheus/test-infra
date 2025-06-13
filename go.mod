@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.55.7
 	github.com/google/go-github/v29 v29.0.3
 	github.com/nelkinda/health-go v0.0.1
-	github.com/prometheus/alertmanager v0.28.0
+	github.com/prometheus/alertmanager v0.28.1
 	github.com/prometheus/client_golang v1.22.0
 	github.com/prometheus/common v0.64.0
 	golang.org/x/oauth2 v0.30.0
@@ -66,6 +66,7 @@ require (
 	github.com/nelkinda/http-go v0.0.1 // indirect
 	github.com/oracle/oci-go-sdk/v65 v65.41.1 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
+	github.com/prometheus/sigv4 v0.1.0 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/sony/gobreaker v0.5.0 // indirect
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.40 // indirect
@@ -141,7 +142,6 @@ require (
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
-	github.com/prometheus/common/sigv4 v0.1.0 // indirect
 	github.com/prometheus/exporter-toolkit v0.13.2 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529 // indirect
