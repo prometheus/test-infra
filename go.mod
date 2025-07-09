@@ -16,7 +16,7 @@ require (
 	github.com/thanos-io/objstore v0.0.0-20240913165201-fd105025a2e5
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/sync v0.15.0
-	google.golang.org/api v0.237.0
+	google.golang.org/api v0.239.0
 	google.golang.org/grpc v1.73.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.4.0
