@@ -9,7 +9,7 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-github/v29 v29.0.3
 	github.com/nelkinda/health-go v0.0.1
-	github.com/oklog/run v1.1.0
+	github.com/oklog/run v1.2.0
 	github.com/prometheus/alertmanager v0.28.1
 	github.com/prometheus/client_golang v1.22.0
 	github.com/prometheus/common v0.64.0
