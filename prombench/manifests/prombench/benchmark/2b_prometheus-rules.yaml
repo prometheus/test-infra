@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-rules
+  namespace: prombench-{{ .PR_NUMBER }}
+data:
+  rules.yml: |
+    groups:
+      - name: recording_rules
+        interval: 15s
+        rules:
+          - record: instance:codelab_api_requests:rate5m
+            expr: sum by(instance) (rate(codelab_api_requests_total{method=~"GET|POST"}[5m]))
+
+          - record: instance:node_cpu_usage:rate5m
+            expr: sum by(instance) (rate(node_cpu_seconds_total{mode!="idle"}[5m]))
+
+          - record: instance:codelab_api_request_duration:quantile_99
+            expr: histogram_quantile(0.99, sum by(instance, le) (rate(codelab_api_request_duration_seconds_bucket{method="POST"}[5m])))
+
+          - record: instance:codelab_api_request_duration_seconds_count:filtered
+            expr: codelab_api_request_duration_seconds_count{method="POST"} unless codelab_api_request_duration_seconds_count{status="500"}
+
+          - record: instance:codelab_api_request_duration_seconds_count:top10
+            expr: topk(10, sum(codelab_api_request_duration_seconds_count) by (method, job))
