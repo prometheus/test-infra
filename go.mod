@@ -9,14 +9,14 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-github/v29 v29.0.3
 	github.com/nelkinda/health-go v0.0.1
-	github.com/oklog/run v1.1.0
+	github.com/oklog/run v1.2.0
 	github.com/prometheus/alertmanager v0.28.1
 	github.com/prometheus/client_golang v1.22.0
-	github.com/prometheus/common v0.64.0
+	github.com/prometheus/common v0.65.0
 	github.com/thanos-io/objstore v0.0.0-20240913165201-fd105025a2e5
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/sync v0.15.0
-	google.golang.org/api v0.237.0
+	google.golang.org/api v0.239.0
 	google.golang.org/grpc v1.73.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.4.0
