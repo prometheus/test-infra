@@ -777,7 +777,7 @@ spec:
           "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-release",
           "--storage.tsdb.path=/prometheus",
           "--config.file=/etc/prometheus/prometheus.yml",
-          "--log.level=debug",
+          "--log.level=info",
           "--storage.tsdb.retention.size=5GB"
         ]
         resources:
