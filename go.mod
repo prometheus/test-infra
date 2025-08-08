@@ -4,7 +4,7 @@ go 1.23.0
 
 require (
 	cloud.google.com/go/container v1.44.0
-	github.com/aws/aws-sdk-go v1.55.7
+	github.com/aws/aws-sdk-go v1.55.8
 	github.com/go-kit/log v0.2.1
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-github/v29 v29.0.3
