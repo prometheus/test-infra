@@ -7,6 +7,10 @@ data:
   prometheus.yml: |
     global:
       scrape_interval: 15s
+      evaluation_interval: 15s
+
+    rule_files:
+      - "/etc/prometheus/rules/rules.yml"
 
     scrape_configs:
     - job_name: kubelets
@@ -809,6 +813,8 @@ spec:
           mountPath: /prometheus
         - name: prometheus-executable
           mountPath: /usr/bin
+        - name: prometheus-rules
+          mountPath: /etc/prometheus/rules
         ports:
         - name: prom-web
           containerPort: 9090
@@ -822,6 +828,9 @@ spec:
           path: /mnt/disks/ssd0
       - name: prometheus-executable
         emptyDir: {}
+      - name: prometheus-rules
+        configMap:
+          name: prometheus-rules
       terminationGracePeriodSeconds: 300
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
