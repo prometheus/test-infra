@@ -139,6 +139,63 @@ func (c *K8s) DeploymentsParse(*kingpin.ParseContext) error {
 	return nil
 }
 
+// Creating Namespace and copying blocksync-config and bucket-secret into pr namespace. which is used by both GKE and Kind.
+func (c *K8s) CreateNamespace(pull_request string) error {
+	sourceNS := "default"
+	targetNS := "prombench-" + pull_request
+	configMapName := "blocksync-config"
+	secretName := "bucket-secret"
+
+	// check if namespace exists
+	_, err := c.clt.CoreV1().Namespaces().Get(context.TODO(), targetNS, apiMetaV1.GetOptions{})
+	if err != nil && !apiErrors.IsNotFound(err) {
+		return fmt.Errorf("error checking namespace: %w", err)
+	}
+	if apiErrors.IsNotFound(err) {
+		ns := &apiCoreV1.Namespace{
+			ObjectMeta: apiMetaV1.ObjectMeta{
+				Name: targetNS,
+			},
+		}
+		_, err = c.clt.CoreV1().Namespaces().Create(context.TODO(), ns, apiMetaV1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("error creating namespace: %w", err)
+		}
+	}
+
+	// copy ConfigMap
+	_, err = c.clt.CoreV1().ConfigMaps(targetNS).Get(context.TODO(), configMapName, apiMetaV1.GetOptions{})
+	if apiErrors.IsNotFound(err) {
+		cm, err := c.clt.CoreV1().ConfigMaps(sourceNS).Get(context.TODO(), configMapName, apiMetaV1.GetOptions{})
+		if err != nil {
+			return fmt.Errorf("error getting configmap: %w", err)
+		}
+		cm.ResourceVersion = ""
+		cm.Namespace = targetNS
+		_, err = c.clt.CoreV1().ConfigMaps(targetNS).Create(context.TODO(), cm, apiMetaV1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("error creating configmap: %w", err)
+		}
+	}
+
+	// copy Secret
+	_, err = c.clt.CoreV1().Secrets(targetNS).Get(context.TODO(), secretName, apiMetaV1.GetOptions{})
+	if apiErrors.IsNotFound(err) {
+		secret, err := c.clt.CoreV1().Secrets(sourceNS).Get(context.TODO(), secretName, apiMetaV1.GetOptions{})
+		if err != nil {
+			return fmt.Errorf("error getting secret: %w", err)
+		}
+		secret.ResourceVersion = ""
+		secret.Namespace = targetNS
+		_, err = c.clt.CoreV1().Secrets(targetNS).Create(context.TODO(), secret, apiMetaV1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("error creating secret in target NS: %w", err)
+		}
+	}
+
+	return nil
+}
+
 // ResourceApply applies k8s objects.
 // The input is a slice of structs containing the filename and the slice of k8s objects present in the file.
 func (c *K8s) ResourceApply(deployments []Resource) error {

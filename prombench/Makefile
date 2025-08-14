@@ -30,6 +30,12 @@ cluster_delete:
 		-v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
 		-f manifests/cluster_${PROVIDER}.yaml
 
+# block_sync_setup allows the creation of the prombench-${PR_NUMBER} namespace using the infra CMD.
+# It also copies the blocksync-configmap and bucket-secret from the default namespace to the prombench-${PR_NUMBER} namespace.
+# This is necessary because block-sync requires these two resources to download data from the object storage.
+block_sync_setup:
+	${INFRA_CMD} ${PROVIDER} copy -v PR_NUMBER:${PR_NUMBER}
+
 # /prombench <...> --bench.directory
 BENCHMARK_DIRECTORY := $(if $(BENCHMARK_DIRECTORY),$(BENCHMARK_DIRECTORY),manifests/prombench)
 # /prombench <...> --bench.version
@@ -69,7 +75,7 @@ clean_tmp_dir: # Clean after maybe_pull_custom_version
 	[ -z ${maybe_pull_custom_version_TMP_DIR} ] || rm -rf ${maybe_pull_custom_version_TMP_DIR}
 
 .PHONY: deploy
-deploy: maybe_pull_custom_version node_create resource_apply clean_tmp_dir
+deploy: maybe_pull_custom_version node_create block_sync_setup resource_apply clean_tmp_dir
 
 .PHONY: clean
 # GCP sometimes takes longer than 30 tries when trying to delete nodes
