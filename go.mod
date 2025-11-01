@@ -1,6 +1,6 @@
 module github.com/prometheus/test-infra
 
-go 1.23.0
+go 1.24.0
 
 require (
 	cloud.google.com/go/container v1.44.0
@@ -14,7 +14,7 @@ require (
 	github.com/prometheus/client_golang v1.22.0
 	github.com/prometheus/common v0.65.0
 	github.com/thanos-io/objstore v0.0.0-20240913165201-fd105025a2e5
-	golang.org/x/oauth2 v0.30.0
+	golang.org/x/oauth2 v0.32.0
 	golang.org/x/sync v0.16.0
 	google.golang.org/api v0.244.0
 	google.golang.org/grpc v1.74.2
