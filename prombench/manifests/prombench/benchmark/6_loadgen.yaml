@@ -125,6 +125,7 @@ spec:
       labels:
         app: loadgen-querier
     spec:
+      initContainers:      
       containers:
       - name: prom-load-generator
         image: docker.io/prominfra/load-generator:master
@@ -147,6 +148,8 @@ spec:
         volumeMounts:
         - name: config-volume
           mountPath: /etc/loadgen
+        - name: blocksync-location-key
+          mountPath: /config   
         ports:
         - name: loadgen-port
           containerPort: 8080
@@ -154,6 +157,9 @@ spec:
       - name: config-volume
         configMap:
           name: prometheus-loadgen
+      - name: blocksync-location-key
+        configMap:
+          name: blocksync-config      
       nodeSelector:
         node-name: nodes-{{ .PR_NUMBER }}
         isolation: none
