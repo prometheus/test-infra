@@ -1,3 +1,5 @@
+> NOTE: This custom benchmark scenario turns off querying load and remote writing to isolate scrape + compactions
+
 ## Prombench Benchmark Scenario Configuration
 
 This directory contains resources that are applied (and cleaned) on every benchmark request

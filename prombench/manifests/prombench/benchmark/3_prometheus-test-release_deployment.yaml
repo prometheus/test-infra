@@ -718,14 +718,7 @@ data:
       - action: replace
         source_labels: [__meta_kubernetes_pod_node_name]
         target_label: nodeName
-    remote_write:
-    - url: "http://prometheus-sink:9011/sink/prw" # PRW 1.0
-      headers:
-        "X-SINK-SOURCE": prometheus-test-{{ normalise .RELEASE }}
-    - url: "http://prometheus-sink:9011/sink/prw" # PRW 2.0
-      protobuf_message: io.prometheus.write.v2.Request
-      headers:
-        "X-SINK-SOURCE": prometheus-test-{{ normalise .RELEASE }}
+
 ---
 apiVersion: apps/v1
 kind: Deployment
