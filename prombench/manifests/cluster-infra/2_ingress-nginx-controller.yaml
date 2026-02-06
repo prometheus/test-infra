@@ -558,7 +558,7 @@ spec:
           readOnly: true
       dnsPolicy: ClusterFirst
       nodeSelector:
-        node-name: main-node
+        cloud.google.com/gke-nodepool: main-node
       serviceAccountName: ingress-nginx
       terminationGracePeriodSeconds: 300
       volumes:
