@@ -24,6 +24,13 @@ data:
           insecure_skip_verify: true
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
 
+        profiling_config:
+          pprof_config:
+            fgprof:
+              enabled: true
+              path: /debug/pprof/fgprof
+              delta: true
+
         relabel_configs:
           - action: keep
             source_labels: [__meta_kubernetes_service_label_app]
