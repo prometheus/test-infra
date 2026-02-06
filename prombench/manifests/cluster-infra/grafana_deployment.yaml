@@ -70,7 +70,7 @@ spec:
         configMap:
           name: grafana-dashboards
       nodeSelector:
-        node-name: main-node
+        cloud.google.com/gke-nodepool: main-node
 ---
 apiVersion: v1
 kind: Service
