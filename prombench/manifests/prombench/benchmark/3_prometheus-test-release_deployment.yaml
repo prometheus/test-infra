@@ -772,6 +772,10 @@ spec:
           "--config.file=/etc/prometheus/prometheus.yml",
           "--log.level=info"
         ]
+        env:
+          # https://github.com/prometheus/prometheus/issues/18022#issuecomment-3861816291
+          - name: GODEBUG
+            value: "gctrace=1,gcpacertrace=1"
         resources:
           requests:
             cpu: 2
