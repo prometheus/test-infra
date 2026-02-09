@@ -22,7 +22,7 @@ fi
 
 # Fetch from quay if requested.
 if [[ "${USE_REGISTRY}" == "true" ]]; then
-    echo ">> USE_PRE_BUILD is enabled."
+    echo ">> USE_REGISTRY is enabled."
     echo ">> Attempting to download binary from quay.io/prometheus/prometheus:${REFERENCE}"
 
     IMAGE="quay.io/prometheus/prometheus:${REFERENCE}"
