@@ -5,6 +5,8 @@ via `infra` CLI using [`make deploy`](../../Makefile) and cleaned using [`make c
 
 It assumes running cluster was created via `infra` CLI using `make cluster_create` and `make cluster_delete`.
 
+> NOTE: This is a special benchmark that runs the same Prometheus-es to check env stability.
+> 
 ### Customizations
 
 #### Benchmarking from the custom test-infra commit/branch 
