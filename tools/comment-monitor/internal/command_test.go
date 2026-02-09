@@ -265,6 +265,19 @@ func TestParseCommand_ProdCommentMonitorConfig(t *testing.T) {
 		// Not matching cases.
 		{comment: ""},
 		{comment: "How to start prombench? I think it was something like:\n\n /prombench main\n\nYolo"},
+		// Extended reference building from source cases
+		{
+			comment: "/prombench d40aff95265ae8af512d58dd7b76c77abfb9611f\nSome text after",
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "d40aff95265ae8af512d58dd7b76c77abfb9611f"}),
+		},
+		{
+			comment: "/prombench some-branch/yolo --bench.use-registry=true\nSome text after",
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "some-branch/yolo", "BENCHMARK_USE_REGISTRY": "true"}),
+		},
+		{
+			comment: "/prombench restart some-branch/yolo --bench.directory=manifests/prombench --bench.use-registry=true\nSome text after",
+			expect:  testCommand(eventTypeRestart, map[string]string{"RELEASE": "some-branch/yolo", "BENCHMARK_DIRECTORY": "manifests/prombench", "BENCHMARK_USE_REGISTRY": "true"}),
+		},
 	})
 }
 

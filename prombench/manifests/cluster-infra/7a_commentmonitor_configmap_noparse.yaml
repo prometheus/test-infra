@@ -18,9 +18,12 @@ data:
           * See the details [here](https://github.com/prometheus/test-infra/tree/master/prombench/manifests/prombench#benchmarking-from-the-different-directory), defaults to `manifests/prombench`.
         * `--bench.version=<branch | @commit>`
           * See the details [here](https://github.com/prometheus/test-infra/tree/master/prombench/manifests/prombench#benchmarking-from-the-custom-test-infra-commitbranch), defaults to `master`.
+        * `--bench.use-registry=<true | anything else>`
+          * If `true`, benchmark will use the Prometheus from the quay.io/prometheus/prometheus for the "release" version. Any other value will cause benchmark to rebuild the prometheus from the provided (start or restart argument) reference, same as the PR Prometheus. By default it builds from source.
 
         **Examples:**
         * `/prombench v3.0.0`
+        * `/prombench v3.0.0 --bench.use-registry=true`
         * `/prombench v3.0.0 --bench.version=@aca1803ccf5d795eee4b0848707eab26d05965cc --bench.directory=manifests/prombench`
 
       verify_user: true
@@ -32,11 +35,12 @@ data:
 
       - name: restart
         event_type: prombench_restart
-        arg_regex: (master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)
+        arg_regex: (\S+)
         arg_name: RELEASE
         flag_args:
           bench.directory: BENCHMARK_DIRECTORY
           bench.version: BENCHMARK_VERSION
+          bench.use-registry: BENCHMARK_USE_REGISTRY
         comment_template: |
           ⏱️ Welcome (again) to Prometheus Benchmarking Tool. ⏱️
 
@@ -65,11 +69,12 @@ data:
 
       - name: "" # start is a default (empty command).
         event_type: prombench_start
-        arg_regex: (master|main|v[0-9]+\.[0-9]+\.[0-9]+\S*)
+        arg_regex: (\S+)
         arg_name: RELEASE
         flag_args:
           bench.directory: BENCHMARK_DIRECTORY
           bench.version: BENCHMARK_VERSION
+          bench.use-registry: BENCHMARK_USE_REGISTRY
         label: prombench
         comment_template: |
           ⏱️ Welcome to Prometheus Benchmarking Tool. ⏱️
