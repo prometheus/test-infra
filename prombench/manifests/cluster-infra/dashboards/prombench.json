@@ -143,7 +143,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "sum(rate(go_memstats_alloc_bytes_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\"}[10m])) - sum(rate(go_memstats_alloc_bytes_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\"}[10m]))",
+                    "expr": "sum(rate(go_memstats_alloc_bytes_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\"}[$__rate_interval])) - sum(rate(go_memstats_alloc_bytes_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\"}[$__rate_interval]))",
                     "hide": false,
                     "intervalFactor": 2,
                     "legendFormat": "PR vs Ref - Allocated Bytes/s ",
@@ -158,7 +158,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "rate(go_memstats_alloc_bytes_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\"}[10m])",
+                    "expr": "rate(go_memstats_alloc_bytes_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\"}[$__rate_interval])",
                     "hide": false,
                     "intervalFactor": 2,
                     "legendFormat": "{{prometheus}} - Allocated Bytes/s ",
@@ -231,7 +231,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "(sum(rate(go_memstats_alloc_bytes_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\"}[10m])) - sum(rate(go_memstats_alloc_bytes_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\"}[10m]))) / sum(rate(go_memstats_alloc_bytes_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\"}[10m]))",
+                    "expr": "(sum(rate(go_memstats_alloc_bytes_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\"}[$__rate_interval])) - sum(rate(go_memstats_alloc_bytes_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\"}[$__rate_interval]))) / sum(rate(go_memstats_alloc_bytes_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\"}[$__rate_interval]))",
                     "hide": false,
                     "intervalFactor": 2,
                     "legendFormat": "PR vs Ref - Allocated Bytes/s ",
@@ -337,7 +337,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "sum(avg_over_time(go_memstats_alloc_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\"}[10m])) - sum(avg_over_time(go_memstats_alloc_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\", prometheus!~\"test-pr.*\"}[10m]))",
+                    "expr": "sum(avg_over_time(go_memstats_alloc_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\"}[$__rate_interval])) - sum(avg_over_time(go_memstats_alloc_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\", prometheus!~\"test-pr.*\"}[$__rate_interval]))",
                     "intervalFactor": 2,
                     "legendFormat": "PR vs Ref - Allocated (heap)",
                     "metric": "go_memstats_alloc_bytes",
@@ -351,7 +351,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "sum(avg_over_time(process_resident_memory_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\"}[10m])) - sum(avg_over_time(process_resident_memory_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\", prometheus!~\"test-pr.*\"}[10m]))",
+                    "expr": "sum(avg_over_time(process_resident_memory_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\"}[$__rate_interval])) - sum(avg_over_time(process_resident_memory_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\", prometheus!~\"test-pr.*\"}[$__rate_interval]))",
                     "hide": false,
                     "intervalFactor": 2,
                     "legendFormat": "PR vs Ref - RSS",
@@ -366,7 +366,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "avg_over_time(process_resident_memory_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\"}[10m])",
+                    "expr": "avg_over_time(process_resident_memory_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\"}[$__rate_interval])",
                     "hide": false,
                     "intervalFactor": 2,
                     "legendFormat": "{{prometheus}}- RSS",
@@ -439,7 +439,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "(sum(avg_over_time(go_memstats_alloc_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\"}[10m])) - sum(avg_over_time(go_memstats_alloc_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\", prometheus!~\"test-pr.*\"}[10m])))/  sum(avg_over_time(go_memstats_alloc_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\", prometheus!~\"test-pr.*\"}[10m]))",
+                    "expr": "(sum(avg_over_time(go_memstats_alloc_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\"}[$__rate_interval])) - sum(avg_over_time(go_memstats_alloc_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\", prometheus!~\"test-pr.*\"}[$__rate_interval])))/  sum(avg_over_time(go_memstats_alloc_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\", prometheus!~\"test-pr.*\"}[$__rate_interval]))",
                     "intervalFactor": 2,
                     "legendFormat": "PR vs Ref - Allocated (heap)",
                     "metric": "go_memstats_alloc_bytes",
@@ -453,7 +453,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "(sum(avg_over_time(process_resident_memory_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\"}[10m])) - sum(avg_over_time(process_resident_memory_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\", prometheus!~\"test-pr.*\"}[10m]))) / sum(avg_over_time(process_resident_memory_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\", prometheus!~\"test-pr.*\"}[10m]))",
+                    "expr": "(sum(avg_over_time(process_resident_memory_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\"}[$__rate_interval])) - sum(avg_over_time(process_resident_memory_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\", prometheus!~\"test-pr.*\"}[$__rate_interval]))) / sum(avg_over_time(process_resident_memory_bytes{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\", prometheus!~\"test-pr.*\"}[$__rate_interval]))",
                     "hide": false,
                     "intervalFactor": 2,
                     "legendFormat": "PR vs Ref - RSS",
@@ -569,7 +569,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "sum(rate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\"}[10m])) - sum(rate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\"}[10m]))",
+                    "expr": "sum(rate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\"}[$__rate_interval])) - sum(rate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\"}[$__rate_interval]))",
                     "intervalFactor": 2,
                     "legendFormat": "PR vs Ref - rate",
                     "metric": "prometheus_local_storage_ingested_samples_total",
@@ -583,7 +583,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "rate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m])",
+                    "expr": "rate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                     "hide": false,
                     "intervalFactor": 2,
                     "legendFormat": "{{prometheus}} - rate",
@@ -656,7 +656,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "(sum(rate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\"}[10m])) - sum(rate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\"}[10m]))) / sum(rate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\"}[10m]))",
+                    "expr": "(sum(rate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\"}[$__rate_interval])) - sum(rate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\"}[$__rate_interval]))) / sum(rate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\"}[$__rate_interval]))",
                     "intervalFactor": 2,
                     "legendFormat": "PR vs Ref - rate",
                     "metric": "prometheus_local_storage_ingested_samples_total",
@@ -771,7 +771,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\",handler=\"/api/v1/query\"}[10m]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\",handler=\"/api/v1/query\"}[10m]))  - sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query\"}[10m]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query\"}[10m]))",
+                    "expr": "sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\",handler=\"/api/v1/query\"}[$__rate_interval]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\",handler=\"/api/v1/query\"}[$__rate_interval]))  - sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query\"}[$__rate_interval]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query\"}[$__rate_interval]))",
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
@@ -787,7 +787,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\",handler=\"/api/v1/query\"}[10m]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\",handler=\"/api/v1/query\"}[10m])",
+                    "expr": "rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\",handler=\"/api/v1/query\"}[$__rate_interval]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\",handler=\"/api/v1/query\"}[$__rate_interval])",
                     "hide": false,
                     "instant": false,
                     "legendFormat": "{{prometheus}} - {{handler}}",
@@ -858,7 +858,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "(sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\",handler=\"/api/v1/query\"}[10m]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\",handler=\"/api/v1/query\"}[10m]))  - sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query\"}[10m]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query\"}[10m]))) / sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query\"}[10m]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query\"}[10m]))",
+                    "expr": "(sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\",handler=\"/api/v1/query\"}[$__rate_interval]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\",handler=\"/api/v1/query\"}[$__rate_interval]))  - sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query\"}[$__rate_interval]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query\"}[$__rate_interval]))) / sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query\"}[$__rate_interval]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query\"}[$__rate_interval]))",
                     "intervalFactor": 2,
                     "legendFormat": "PR vs Ref - {{handler}}",
                     "metric": "prometheus_local_storage_ingested_samples_total",
@@ -960,7 +960,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\",handler=\"/api/v1/query_range\"}[10m]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\",handler=\"/api/v1/query_range\"}[10m]))  - sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query_range\"}[10m]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query_range\"}[10m]))",
+                    "expr": "sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\",handler=\"/api/v1/query_range\"}[$__rate_interval]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\",handler=\"/api/v1/query_range\"}[$__rate_interval]))  - sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query_range\"}[$__rate_interval]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query_range\"}[$__rate_interval]))",
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
@@ -976,7 +976,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\",handler=\"/api/v1/query_range\"}[10m]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\",handler=\"/api/v1/query_range\"}[10m])",
+                    "expr": "rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\",handler=\"/api/v1/query_range\"}[$__rate_interval]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\",handler=\"/api/v1/query_range\"}[$__rate_interval])",
                     "hide": false,
                     "instant": false,
                     "legendFormat": "{{prometheus}} - {{handler}}",
@@ -1047,7 +1047,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "(sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\",handler=\"/api/v1/query_range\"}[10m]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\",handler=\"/api/v1/query_range\"}[10m]))  - sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query_range\"}[10m]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query_range\"}[10m]))) / sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query_range\"}[10m]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query_range\"}[10m]))",
+                    "expr": "(sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\",handler=\"/api/v1/query_range\"}[$__rate_interval]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-pr.*\",handler=\"/api/v1/query_range\"}[$__rate_interval]))  - sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query_range\"}[$__rate_interval]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query_range\"}[$__rate_interval]))) / sum by(handler) (rate(prometheus_http_request_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query_range\"}[$__rate_interval]) / rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\", prometheus!~\"test-pr.*\",handler=\"/api/v1/query_range\"}[$__rate_interval]))",
                     "intervalFactor": 2,
                     "legendFormat": "PR vs Ref - {{handler}}",
                     "metric": "prometheus_local_storage_ingested_samples_total",
@@ -1543,7 +1543,7 @@
                                 "type": "prometheus",
                                 "uid": "P86B77AEF8F12A5FA"
                             },
-                            "expr": "rate(prometheus_tsdb_reloads_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m])",
+                            "expr": "rate(prometheus_tsdb_reloads_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                             "format": "time_series",
                             "interval": "",
                             "intervalFactor": 2,
@@ -1742,7 +1742,7 @@
                                 "type": "prometheus",
                                 "uid": "P86B77AEF8F12A5FA"
                             },
-                            "expr": "rate(prometheus_tsdb_wal_corruptions_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m])",
+                            "expr": "rate(prometheus_tsdb_wal_corruptions_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                             "format": "time_series",
                             "interval": "",
                             "intervalFactor": 2,
@@ -1756,7 +1756,7 @@
                                 "type": "prometheus",
                                 "uid": "P86B77AEF8F12A5FA"
                             },
-                            "expr": "rate(prometheus_tsdb_reloads_failures_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m])",
+                            "expr": "rate(prometheus_tsdb_reloads_failures_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                             "format": "time_series",
                             "interval": "",
                             "intervalFactor": 2,
@@ -1770,7 +1770,7 @@
                                 "type": "prometheus",
                                 "uid": "P86B77AEF8F12A5FA"
                             },
-                            "expr": "rate(prometheus_tsdb_head_series_not_found{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m])",
+                            "expr": "rate(prometheus_tsdb_head_series_not_found{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                             "format": "time_series",
                             "interval": "",
                             "intervalFactor": 2,
@@ -1784,7 +1784,7 @@
                                 "type": "prometheus",
                                 "uid": "P86B77AEF8F12A5FA"
                             },
-                            "expr": "rate(prometheus_tsdb_compactions_failed_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m])",
+                            "expr": "rate(prometheus_tsdb_compactions_failed_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                             "format": "time_series",
                             "interval": "",
                             "intervalFactor": 2,
@@ -1798,7 +1798,7 @@
                                 "type": "prometheus",
                                 "uid": "P86B77AEF8F12A5FA"
                             },
-                            "expr": "rate(prometheus_tsdb_retention_cutoffs_failures_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m])",
+                            "expr": "rate(prometheus_tsdb_retention_cutoffs_failures_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                             "format": "time_series",
                             "interval": "",
                             "intervalFactor": 2,
@@ -1898,7 +1898,7 @@
                                 "type": "prometheus",
                                 "uid": "P86B77AEF8F12A5FA"
                             },
-                            "expr": "rate(prometheus_tsdb_compactions_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m])",
+                            "expr": "rate(prometheus_tsdb_compactions_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                             "format": "time_series",
                             "interval": "",
                             "intervalFactor": 2,
@@ -1995,7 +1995,7 @@
                                 "uid": "P86B77AEF8F12A5FA"
                             },
                             "editorMode": "code",
-                            "expr": "rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m])",
+                            "expr": "rate(prometheus_http_request_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                             "format": "time_series",
                             "interval": "61s",
                             "intervalFactor": 2,
@@ -2128,7 +2128,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "rate(go_memstats_alloc_bytes_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[5m])",
+                    "expr": "rate(go_memstats_alloc_bytes_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                     "hide": false,
                     "intervalFactor": 2,
                     "legendFormat": "{{prometheus}} - Allocated Bytes/s",
@@ -2230,7 +2230,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "rate(go_gc_heap_allocs_objects_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m])",
+                    "expr": "rate(go_gc_heap_allocs_objects_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                     "hide": false,
                     "intervalFactor": 2,
                     "legendFormat": "{{prometheus}}",
@@ -2562,7 +2562,7 @@
                         "type": "prometheus",
                         "uid": "P86B77AEF8F12A5FA"
                     },
-                    "expr": "irate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[1m])",
+                    "expr": "irate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                     "intervalFactor": 2,
                     "legendFormat": "{{prometheus}} - Irate",
                     "metric": "prometheus_local_storage_ingested_samples_total",
@@ -2574,7 +2574,7 @@
                         "type": "prometheus",
                         "uid": "P86B77AEF8F12A5FA"
                     },
-                    "expr": "rate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[5m])",
+                    "expr": "rate(process_cpu_seconds_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                     "intervalFactor": 2,
                     "legendFormat": "{{prometheus}} - 5m rate",
                     "metric": "prometheus_local_storage_ingested_samples_total",
@@ -2773,7 +2773,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "rate(go_gc_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\"}[10m]) / rate(go_gc_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\"}[10m]) ",
+                    "expr": "rate(go_gc_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\"}[$__rate_interval]) / rate(go_gc_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\"}[$__rate_interval]) ",
                     "intervalFactor": 2,
                     "legendFormat": "{{prometheus}} - 10m rate",
                     "metric": "prometheus_local_storage_ingested_samples_total",
@@ -2873,7 +2873,7 @@
                         "uid": "P86B77AEF8F12A5FA"
                     },
                     "editorMode": "code",
-                    "expr": "rate(go_gc_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\"}[10m]) *60",
+                    "expr": "rate(go_gc_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"test-.*\"}[$__rate_interval]) *60",
                     "intervalFactor": 2,
                     "legendFormat": "{{prometheus}} - 10m rate",
                     "metric": "prometheus_local_storage_ingested_samples_total",
@@ -2973,7 +2973,7 @@
                         "type": "prometheus",
                         "uid": "P86B77AEF8F12A5FA"
                     },
-                    "expr": "rate(prometheus_tsdb_compaction_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m])",
+                    "expr": "rate(prometheus_tsdb_compaction_duration_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval]) / rate(prometheus_tsdb_compaction_duration_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
@@ -3333,7 +3333,7 @@
                                 "type": "prometheus",
                                 "uid": "P86B77AEF8F12A5FA"
                             },
-                            "expr": "irate(node_disk_io_time_seconds_total{job=\"node-exporter\",namespace=\"prombench-${prNumber}\",node=~\"(test+).*\",device!~'^(md\\\\\\\\d+$|dm-)'}[5m])",
+                            "expr": "rate(node_disk_io_time_seconds_total{job=\"node-exporter\",namespace=\"prombench-${prNumber}\",node=~\"(test+).*\",device!~'^(md\\\\\\\\d+$|dm-)'}[$__rate_interval])",
                             "format": "time_series",
                             "intervalFactor": 1,
                             "legendFormat": "{{node}} - {{device}}",
@@ -3429,7 +3429,7 @@
                                 "type": "prometheus",
                                 "uid": "P86B77AEF8F12A5FA"
                             },
-                            "expr": "irate(node_context_switches_total{job=\"node-exporter\",namespace=\"prombench-${prNumber}\",node=~\"(test+).*\"}[5m])",
+                            "expr": "rate(node_context_switches_total{job=\"node-exporter\",namespace=\"prombench-${prNumber}\",node=~\"(test+).*\"}[$__rate_interval])",
                             "format": "time_series",
                             "intervalFactor": 1,
                             "legendFormat": "{{node}} - Context Switches",
@@ -3440,7 +3440,7 @@
                                 "type": "prometheus",
                                 "uid": "P86B77AEF8F12A5FA"
                             },
-                            "expr": "irate(node_intr_total{job=\"node-exporter\",namespace=\"prombench-${prNumber}\",node=~\"(test+).*\"}[5m])",
+                            "expr": "rate(node_intr_total{job=\"node-exporter\",namespace=\"prombench-${prNumber}\",node=~\"(test+).*\"}[$__rate_interval])",
                             "format": "time_series",
                             "intervalFactor": 1,
                             "legendFormat": "{{node}} - Interrupts",
@@ -4940,7 +4940,7 @@
                                 "type": "prometheus",
                                 "uid": "P86B77AEF8F12A5FA"
                             },
-                            "expr": "rate(prometheus_tsdb_retention_cutoffs_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m])",
+                            "expr": "rate(prometheus_tsdb_retention_cutoffs_total{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "{{prometheus}} - Retention Cutoffs",
@@ -5148,7 +5148,7 @@
                                 "type": "prometheus",
                                 "uid": "P86B77AEF8F12A5FA"
                             },
-                            "expr": "rate(prometheus_tsdb_compaction_chunk_range_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_range_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m]) or rate(prometheus_tsdb_compaction_chunk_range_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_range_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m])",
+                            "expr": "rate(prometheus_tsdb_compaction_chunk_range_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval]) / rate(prometheus_tsdb_compaction_chunk_range_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval]) or rate(prometheus_tsdb_compaction_chunk_range_seconds_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval]) / rate(prometheus_tsdb_compaction_chunk_range_seconds_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "{{prometheus}} - Chunk Time Range",
@@ -5447,7 +5447,7 @@
                                 "type": "prometheus",
                                 "uid": "P86B77AEF8F12A5FA"
                             },
-                            "expr": "rate(prometheus_tsdb_compaction_chunk_samples_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_samples_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m])",
+                            "expr": "rate(prometheus_tsdb_compaction_chunk_samples_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval]) / rate(prometheus_tsdb_compaction_chunk_samples_count{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "{{prometheus}} - Chunk Samples",
@@ -5643,7 +5643,7 @@
                                 "type": "prometheus",
                                 "uid": "P86B77AEF8F12A5FA"
                             },
-                            "expr": "rate(prometheus_tsdb_compaction_chunk_size_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_samples_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m]) or rate(prometheus_tsdb_compaction_chunk_size_bytes_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m]) / rate(prometheus_tsdb_compaction_chunk_samples_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[10m])",
+                            "expr": "rate(prometheus_tsdb_compaction_chunk_size_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval]) / rate(prometheus_tsdb_compaction_chunk_samples_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval]) or rate(prometheus_tsdb_compaction_chunk_size_bytes_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval]) / rate(prometheus_tsdb_compaction_chunk_samples_sum{job=\"prometheus\",namespace=\"prombench-${prNumber}\",prometheus=~\"(test+).*\"}[$__rate_interval])",
                             "format": "time_series",
                             "intervalFactor": 2,
                             "legendFormat": "{{prometheus}} - Bytes/Sample",

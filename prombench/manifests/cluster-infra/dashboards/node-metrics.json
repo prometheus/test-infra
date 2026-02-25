@@ -155,7 +155,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(irate(node_cpu_seconds_total{mode=\"system\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"system\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+              "expr": "sum(rate(node_cpu_seconds_total{mode=\"system\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])) or sum(rate(node_cpu{mode=\"system\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval]))",
               "interval": "",
               "intervalFactor": 2,
               "legendFormat": "{{mode}}",
@@ -165,7 +165,7 @@
               "target": ""
             },
             {
-              "expr": "sum(irate(node_cpu_seconds_total{mode=\"user\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"user\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+              "expr": "sum(rate(node_cpu_seconds_total{mode=\"user\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])) or sum(rate(node_cpu{mode=\"user\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval]))",
               "interval": "",
               "intervalFactor": 2,
               "legendFormat": "user",
@@ -173,7 +173,7 @@
               "step": 1200
             },
             {
-              "expr": "sum(irate(node_cpu_seconds_total{mode=\"nice\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"nice\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+              "expr": "sum(rate(node_cpu_seconds_total{mode=\"nice\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])) or sum(rate(node_cpu{mode=\"nice\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval]))",
               "interval": "",
               "intervalFactor": 2,
               "legendFormat": "nice",
@@ -181,7 +181,7 @@
               "step": 1200
             },
             {
-              "expr": "sum(irate(node_cpu_seconds_total{mode=\"iowait\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"iowait\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+              "expr": "sum(rate(node_cpu_seconds_total{mode=\"iowait\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])) or sum(rate(node_cpu{mode=\"iowait\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval]))",
               "interval": "",
               "intervalFactor": 2,
               "legendFormat": "iowait",
@@ -189,14 +189,14 @@
               "step": 1200
             },
             {
-              "expr": "sum(irate(node_cpu_seconds_total{mode=\"steal\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"steal\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+              "expr": "sum(rate(node_cpu_seconds_total{mode=\"steal\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])) or sum(rate(node_cpu{mode=\"steal\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval]))",
               "intervalFactor": 2,
               "legendFormat": "steal",
               "refId": "H",
               "step": 1200
             },
             {
-              "expr": "sum(irate(node_cpu_seconds_total{mode=\"idle\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"idle\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+              "expr": "sum(rate(node_cpu_seconds_total{mode=\"idle\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])) or sum(rate(node_cpu{mode=\"idle\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval]))",
               "interval": "",
               "intervalFactor": 2,
               "legendFormat": "idle",
@@ -204,7 +204,7 @@
               "step": 1200
             },
             {
-              "expr": "sum(irate(node_cpu_seconds_total{mode=\"irq\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"irq\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+              "expr": "sum(rate(node_cpu_seconds_total{mode=\"irq\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])) or sum(rate(node_cpu{mode=\"irq\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval]))",
               "interval": "",
               "intervalFactor": 2,
               "legendFormat": "irq",
@@ -212,7 +212,7 @@
               "step": 1200
             },
             {
-              "expr": "sum(irate(node_cpu_seconds_total{mode=\"softirq\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"softirq\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+              "expr": "sum(rate(node_cpu_seconds_total{mode=\"softirq\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])) or sum(rate(node_cpu{mode=\"softirq\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval]))",
               "interval": "",
               "intervalFactor": 2,
               "legendFormat": "softirq",
@@ -220,7 +220,7 @@
               "step": 1200
             },
             {
-              "expr": "sum(irate(node_cpu_seconds_total{mode=\"guest\",namespace=\"$namespace\",node=\"$node\"}[5m])) or sum(irate(node_cpu{mode=\"guest\",namespace=\"$namespace\",node=\"$node\"}[5m]))",
+              "expr": "sum(rate(node_cpu_seconds_total{mode=\"guest\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])) or sum(rate(node_cpu{mode=\"guest\",namespace=\"$namespace\",node=\"$node\"}[$__rate_interval]))",
               "interval": "",
               "intervalFactor": 2,
               "legendFormat": "guest",
@@ -682,7 +682,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "irate(node_disk_io_time_seconds_total{namespace=\"$namespace\",node=\"$node\"}[5m])/10 or irate(node_disk_io_time_ms{namespace=\"$namespace\",node=\"$node\"}[5m])/10",
+              "expr": "rate(node_disk_io_time_seconds_total{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])/10 or rate(node_disk_io_time_ms{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])/10",
               "interval": "",
               "intervalFactor": 2,
               "legendFormat": "{{device}}",
@@ -773,7 +773,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "irate(node_disk_reads_completed_total{namespace=\"$namespace\",node=\"$node\"}[5m]) or irate(node_disk_reads_completed{namespace=\"$namespace\",node=\"$node\"}[5m])",
+              "expr": "rate(node_disk_reads_completed_total{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval]) or rate(node_disk_reads_completed{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])",
               "interval": "",
               "intervalFactor": 4,
               "legendFormat": "{{device}}_read",
@@ -783,7 +783,7 @@
               "target": ""
             },
             {
-              "expr": "irate(node_disk_writes_completed_total{namespace=\"$namespace\",node=\"$node\"}[5m]) or irate(node_disk_writes_completed{namespace=\"$namespace\",node=\"$node\"}[5m])",
+              "expr": "rate(node_disk_writes_completed_total{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval]) or rate(node_disk_writes_completed{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])",
               "intervalFactor": 2,
               "legendFormat": "{{device}}_write",
               "metric": "",
@@ -873,7 +873,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "irate(node_disk_read_bytes_total{namespace=\"$namespace\",node=\"$node\"}[5m]) * 512 or irate(node_disk_sectors_read{namespace=\"$namespace\",node=\"$node\"}[5m]) * 512",
+              "expr": "rate(node_disk_read_bytes_total{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval]) * 512 or rate(node_disk_sectors_read{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval]) * 512",
               "interval": "",
               "intervalFactor": 4,
               "legendFormat": "{{device}}_read",
@@ -881,7 +881,7 @@
               "step": 2400
             },
             {
-              "expr": "irate(node_disk_written_bytes_total{namespace=\"$namespace\",node=\"$node\"}[5m]) * 512 or irate(node_disk_sectors_written{namespace=\"$namespace\",node=\"$node\"}[5m]) * 512",
+              "expr": "rate(node_disk_written_bytes_total{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval]) * 512 or rate(node_disk_sectors_written{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval]) * 512",
               "interval": "",
               "intervalFactor": 4,
               "legendFormat": "{{device}}_write",
@@ -968,7 +968,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "irate(node_context_switches_total{namespace=\"$namespace\",node=\"$node\"}[5m]) or irate(node_context_switches{namespace=\"$namespace\",node=\"$node\"}[5m])",
+              "expr": "rate(node_context_switches_total{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval]) or rate(node_context_switches{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])",
               "interval": "",
               "intervalFactor": 2,
               "legendFormat": "context switches",
@@ -1059,7 +1059,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "irate(node_network_receive_bytes_total{namespace=\"$namespace\",node=\"$node\"}[5m])*8 or irate(node_network_receive_bytes{namespace=\"$namespace\",node=\"$node\"}[5m])*8",
+              "expr": "rate(node_network_receive_bytes_total{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])*8 or rate(node_network_receive_bytes{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])*8",
               "interval": "",
               "intervalFactor": 2,
               "legendFormat": "{{device}}_in",
@@ -1069,7 +1069,7 @@
               "target": ""
             },
             {
-              "expr": "irate(node_network_transmit_bytes_total{namespace=\"$namespace\",node=\"$node\"}[5m])*8 or irate(node_network_transmit_bytes{namespace=\"$namespace\",node=\"$node\"}[5m])*8",
+              "expr": "rate(node_network_transmit_bytes_total{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])*8 or rate(node_network_transmit_bytes{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])*8",
               "interval": "",
               "intervalFactor": 2,
               "legendFormat": "{{device}}_out",
@@ -1248,7 +1248,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "irate(node_netstat_Udp_InDatagrams{namespace=\"$namespace\",node=\"$node\"}[5m])",
+              "expr": "rate(node_netstat_Udp_InDatagrams{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])",
               "intervalFactor": 2,
               "legendFormat": "Udp_InDatagrams",
               "refId": "A",
@@ -1256,14 +1256,14 @@
               "target": ""
             },
             {
-              "expr": "irate(node_netstat_Udp_InErrors{namespace=\"$namespace\",node=\"$node\"}[5m])",
+              "expr": "rate(node_netstat_Udp_InErrors{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])",
               "intervalFactor": 2,
               "legendFormat": "Udp_InErrors",
               "refId": "B",
               "step": 1200
             },
             {
-              "expr": "irate(node_netstat_Udp_OutDatagrams{namespace=\"$namespace\",node=\"$node\"}[5m])",
+              "expr": "rate(node_netstat_Udp_OutDatagrams{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])",
               "interval": "",
               "intervalFactor": 2,
               "legendFormat": "Udp_OutDatagrams",
@@ -1271,7 +1271,7 @@
               "step": 1200
             },
             {
-              "expr": "irate(node_netstat_Udp_NoPorts{namespace=\"$namespace\",node=\"$node\"}[5m])",
+              "expr": "rate(node_netstat_Udp_NoPorts{namespace=\"$namespace\",node=\"$node\"}[$__rate_interval])",
               "intervalFactor": 2,
               "legendFormat": "Udp_NoPorts",
               "refId": "D",
