@@ -15,6 +15,7 @@ package k8s
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -31,6 +32,7 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	apiMetaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -336,39 +338,33 @@ func (c *K8s) configMapApply(resource runtime.Object) error {
 
 	switch v := resource.GetObjectKind().GroupVersionKind().Version; v {
 	case "v1":
-
 		client := c.clt.CoreV1().ConfigMaps(req.Namespace)
 
-		list, err := client.List(c.ctx, apiMetaV1.ListOptions{})
+		// Set API version and kind for server-side apply.
+		req.APIVersion = "v1"
+		req.Kind = "ConfigMap"
+
+		// Marshal the ConfigMap to JSON for server-side apply.
+		data, err := json.Marshal(req)
 		if err != nil {
-			return fmt.Errorf("error listing resource : %v, name: %v: %w", kind, req.Name, err)
+			return fmt.Errorf("error marshaling ConfigMap: %w", err)
 		}
 
-		var exists bool
-		for _, l := range list.Items {
-			if l.Name == req.Name {
-				exists = true
-				break
-			}
+		// Use server-side apply via Patch method.
+		// This avoids storing last-applied-configuration in annotations.
+		force := true
+		_, err = client.Patch(c.ctx, req.Name, types.ApplyPatchType, data, apiMetaV1.PatchOptions{
+			FieldManager: "test-infra",
+			Force:        &force,
+		})
+		if err != nil {
+			return fmt.Errorf("resource apply failed - kind: %v, name: %v: %w", kind, req.Name, err)
 		}
-
-		if exists {
-			if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				_, err := client.Update(c.ctx, req, apiMetaV1.UpdateOptions{})
-				return err
-			}); err != nil {
-				return fmt.Errorf("resource update failed - kind: %v, name: %v: %w", kind, req.Name, err)
-			}
-			log.Printf("resource updated - kind: %v, name: %v", kind, req.Name)
-			return nil
-		} else if _, err := client.Create(c.ctx, req, apiMetaV1.CreateOptions{}); err != nil {
-			return fmt.Errorf("resource creation failed - kind: %v, name: %v: %w", kind, req.Name, err)
-		}
-		log.Printf("resource created - kind: %v, name: %v", kind, req.Name)
+		log.Printf("resource applied - kind: %v, name: %v", kind, req.Name)
+		return nil
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
-	return nil
 }
 
 func (c *K8s) daemonSetApply(resource runtime.Object) error {
