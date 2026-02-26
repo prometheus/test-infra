@@ -766,7 +766,7 @@ spec:
         image: docker.io/prominfra/prometheus-builder:master
         imagePullPolicy: Always
         env:
-        - name: PR_NUMBER
+        - name: REFERENCE
           value: "{{ .PR_NUMBER }}"
         - name: VOLUME_DIR
           value: "/prometheus-builder" # same as mountPath
