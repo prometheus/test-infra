@@ -777,6 +777,20 @@ spec:
         volumeMounts:
         - name: prometheus-executable
           mountPath: /prometheus-builder
+      - name: sync-with-release-prometheus
+        image: quay.io/prometheus/busybox:latest
+        imagePullPolicy: Always
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "OK" | nc -l -p 9099 && touch /tmp/peer-ready &
+          until [ "$(nc -w1 prometheus-test-{{ normalise .RELEASE }} 9099 2>/dev/null)" = "OK" ]; do
+            sleep 1
+          done
+          until [ -f /tmp/peer-ready ]; do
+            sleep 1
+          done
       containers:
       - name: prometheus
         image: quay.io/prometheus/busybox:latest
@@ -840,6 +854,9 @@ spec:
   - name: prom-web
     port: 80
     targetPort: prom-web
+  - name: sync
+    port: 9099
+    targetPort: 9099
   selector:
     app: prometheus
     prometheus: test-pr-{{ .PR_NUMBER }}
