@@ -769,7 +769,7 @@ spec:
         - /bin/sh
         - -c
         - |
-          until wget -qO- http://prometheus-test-pr-{{ .PR_NUMBER }}/-/ready; do
+          until wget -qO- http://prometheus-test-pr-{{ .PR_NUMBER }}/{{ .PR_NUMBER }}/prometheus-pr/-/ready; do
             sleep 1
           done
       containers:
