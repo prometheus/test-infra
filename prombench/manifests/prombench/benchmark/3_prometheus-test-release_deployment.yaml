@@ -761,6 +761,17 @@ spec:
                 - prometheus
       securityContext:
         runAsUser: 0
+      initContainers:
+      - name: wait-for-pr-prometheus
+        image: quay.io/prometheus/busybox:latest
+        imagePullPolicy: Always
+        command:
+        - /bin/sh
+        - -c
+        - |
+          until wget -qO- http://prometheus-test-pr-{{ .PR_NUMBER }}/-/ready; do
+            sleep 1
+          done
       containers:
       - name: prometheus
         image: quay.io/prometheus/prometheus:{{ .RELEASE }}
