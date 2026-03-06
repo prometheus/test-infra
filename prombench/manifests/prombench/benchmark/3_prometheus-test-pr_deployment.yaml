@@ -816,6 +816,8 @@ spec:
           requests:
             cpu: 2
             memory: 20Gi
+          limits:
+            cpu: 4
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus
