@@ -18,6 +18,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -144,6 +147,35 @@ func (c *K8s) DeploymentsParse(*kingpin.ParseContext) error {
 // ResourceApply applies k8s objects.
 // The input is a slice of structs containing the filename and the slice of k8s objects present in the file.
 func (c *K8s) ResourceApply(deployments []Resource) error {
+	// Group deployments by wave number extracted from filename prefix.
+	waves := make(map[int][]Resource)
+	for _, deployment := range deployments {
+		wave, err := extractWave(deployment.FileName)
+		if err != nil {
+			return fmt.Errorf("extracting wave from %q: %w", deployment.FileName, err)
+		}
+		waves[wave] = append(waves[wave], deployment)
+	}
+
+	// Sort wave numbers.
+	waveNums := make([]int, 0, len(waves))
+	for w := range waves {
+		waveNums = append(waveNums, w)
+	}
+	sort.Ints(waveNums)
+
+	// Apply and wait wave by wave.
+	for _, wave := range waveNums {
+		if err := c.applyWave(wave, waves[wave]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// applyWave applies all resources in a wave, then waits for any deployments
+// or stateful sets in that wave to become ready.
+func (c *K8s) applyWave(wave int, deployments []Resource) error {
 	type pendingResource struct {
 		fileName string
 		obj      runtime.Object
@@ -205,6 +237,7 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 			}
 		}
 	}
+
 	var checkers []provider.Checker
 	for _, p := range pendingDeployments {
 		p := p
@@ -223,11 +256,29 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 		})
 	}
 	if len(checkers) > 0 {
+		log.Printf("Waiting for wave %d readiness (%d resources)...", wave, len(checkers))
 		if err := provider.RetryUntilAllTrue(provider.GlobalRetryCount, checkers); err != nil {
-			return fmt.Errorf("error waiting for resources: %w", err)
+			return fmt.Errorf("error waiting for wave %d resources: %w", wave, err)
 		}
 	}
 	return nil
+}
+
+// extractWave returns the wave number from a filename by splitting on "_"
+// and parsing the first part as an integer.
+// For example, "path/to/4_fake-webserver.yaml" returns 4.
+// If no valid integer prefix is found, it returns 0.
+func extractWave(fileName string) (int, error) {
+	base := filepath.Base(fileName)
+	parts := strings.SplitN(base, "_", 2)
+	if len(parts) < 2 {
+		return 0, fmt.Errorf("filename %q has no underscore separator", fileName)
+	}
+	n, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return 0, fmt.Errorf("filename %q has non-numeric wave prefix %q: %w", fileName, parts[0], err)
+	}
+	return n, nil
 }
 
 // ResourceDelete deletes k8s objects.
