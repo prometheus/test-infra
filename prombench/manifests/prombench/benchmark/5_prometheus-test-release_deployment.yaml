@@ -773,7 +773,7 @@ spec:
         - /bin/sh
         - -c
         - |
-          echo "OK" | nc -l -p 9099 && touch /tmp/peer-ready &
+          while true; do echo "OK" | nc -l -p 9099 && touch /tmp/peer-ready; done &
           until [ "$(nc -w1 prometheus-test-pr-{{ .PR_NUMBER }} 9099 2>/dev/null)" = "OK" ]; do
             sleep 1
           done
