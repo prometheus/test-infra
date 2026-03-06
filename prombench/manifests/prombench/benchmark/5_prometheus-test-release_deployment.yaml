@@ -762,6 +762,10 @@ spec:
       securityContext:
         runAsUser: 0
       initContainers:
+      # Listen on port 9099 and attempt to connect to the PR init container
+      # on the same port. When both sides have connected, the init containers
+      # unblock and Prometheus starts. This synchronizes the two instances for
+      # more reliable comparisons.
       - name: sync-with-pr-prometheus
         image: quay.io/prometheus/busybox:latest
         imagePullPolicy: Always

@@ -777,6 +777,10 @@ spec:
         volumeMounts:
         - name: prometheus-executable
           mountPath: /prometheus-builder
+      # Listen on port 9099 and attempt to connect to the release init
+      # container on the same port. When both sides have connected, the init
+      # containers unblock and Prometheus starts. This synchronizes the two
+      # instances for more reliable comparisons.
       - name: sync-with-release-prometheus
         image: quay.io/prometheus/busybox:latest
         imagePullPolicy: Always
