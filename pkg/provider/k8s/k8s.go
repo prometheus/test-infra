@@ -144,6 +144,13 @@ func (c *K8s) DeploymentsParse(*kingpin.ParseContext) error {
 // ResourceApply applies k8s objects.
 // The input is a slice of structs containing the filename and the slice of k8s objects present in the file.
 func (c *K8s) ResourceApply(deployments []Resource) error {
+	type pendingResource struct {
+		fileName string
+		obj      runtime.Object
+	}
+	var pendingDeployments []pendingResource
+	var pendingStatefulSets []pendingResource
+
 	var err error
 	for _, deployment := range deployments {
 		for _, resource := range deployment.Objects {
@@ -157,7 +164,10 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 			case "daemonset":
 				err = c.daemonSetApply(resource)
 			case "deployment":
-				err = c.deploymentApply(resource)
+				err = c.deploymentCreate(resource)
+				if err == nil {
+					pendingDeployments = append(pendingDeployments, pendingResource{deployment.FileName, resource})
+				}
 			case "ingress":
 				err = c.ingressApply(resource)
 			case "namespace":
@@ -177,7 +187,10 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 			case "customresourcedefinition":
 				err = c.customResourceApply(resource)
 			case "statefulset":
-				err = c.statefulSetApply(resource)
+				err = c.statefulSetCreate(resource)
+				if err == nil {
+					pendingStatefulSets = append(pendingStatefulSets, pendingResource{deployment.FileName, resource})
+				}
 			case "job":
 				err = c.jobApply(resource)
 			case "validatingwebhookconfiguration":
@@ -190,6 +203,16 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 			if err != nil {
 				return fmt.Errorf("error applying '%v' err: %w", deployment.FileName, err)
 			}
+		}
+	}
+	for _, p := range pendingDeployments {
+		if err := c.deploymentWait(p.obj); err != nil {
+			return fmt.Errorf("error applying '%v' err: %w", p.fileName, err)
+		}
+	}
+	for _, p := range pendingStatefulSets {
+		if err := c.statefulSetWait(p.obj); err != nil {
+			return fmt.Errorf("error applying '%v' err: %w", p.fileName, err)
 		}
 	}
 	return nil
@@ -409,7 +432,7 @@ func (c *K8s) daemonSetApply(resource runtime.Object) error {
 	return c.daemonsetReady(resource)
 }
 
-func (c *K8s) deploymentApply(resource runtime.Object) error {
+func (c *K8s) deploymentCreate(resource runtime.Object) error {
 	req := resource.(*appsV1.Deployment)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	if len(req.Namespace) == 0 {
@@ -449,13 +472,25 @@ func (c *K8s) deploymentApply(resource runtime.Object) error {
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
+	return nil
+}
+
+func (c *K8s) deploymentWait(resource runtime.Object) error {
+	req := resource.(*appsV1.Deployment)
 	return provider.RetryUntilTrue(
 		fmt.Sprintf("applying deployment:%v", req.Name),
 		provider.GlobalRetryCount,
 		func() (bool, error) { return c.deploymentReady(resource) })
 }
 
-func (c *K8s) statefulSetApply(resource runtime.Object) error {
+func (c *K8s) deploymentApply(resource runtime.Object) error {
+	if err := c.deploymentCreate(resource); err != nil {
+		return err
+	}
+	return c.deploymentWait(resource)
+}
+
+func (c *K8s) statefulSetCreate(resource runtime.Object) error {
 	req := resource.(*appsV1.StatefulSet)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	if len(req.Namespace) == 0 {
@@ -494,11 +529,22 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
+	return nil
+}
 
+func (c *K8s) statefulSetWait(resource runtime.Object) error {
+	req := resource.(*appsV1.StatefulSet)
 	return provider.RetryUntilTrue(
 		fmt.Sprintf("applying statefulSet:%v", req.Name),
 		provider.GlobalRetryCount,
 		func() (bool, error) { return c.statefulSetReady(resource) })
+}
+
+func (c *K8s) statefulSetApply(resource runtime.Object) error {
+	if err := c.statefulSetCreate(resource); err != nil {
+		return err
+	}
+	return c.statefulSetWait(resource)
 }
 
 func (c *K8s) jobApply(resource runtime.Object) error {
