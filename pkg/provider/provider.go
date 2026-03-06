@@ -61,6 +61,56 @@ type Resource struct {
 	Content  []byte
 }
 
+// Checker is a named readiness check.
+type Checker struct {
+	Name  string
+	Check func() (bool, error)
+}
+
+// RetryUntilAllTrue polls all checkers until they all return true or an error occurs.
+// It prints a combined readiness status at each iteration.
+func RetryUntilAllTrue(retryCount int, checkers []Checker) error {
+	const retryInterval = 15 * time.Second
+	ready := make([]bool, len(checkers))
+	for i := 1; i <= retryCount; i++ {
+		allReady := true
+		for j, c := range checkers {
+			if ready[j] {
+				continue
+			}
+			ok, err := c.Check()
+			if err != nil {
+				return err
+			}
+			ready[j] = ok
+			if !ok {
+				allReady = false
+			}
+		}
+		log.Printf("Readiness status:")
+		for j, c := range checkers {
+			mark := " "
+			name := c.Name
+			if ready[j] {
+				mark = "\033[32m✔\033[0m"
+				name = "\033[32m" + name + "\033[0m"
+			}
+			log.Printf("  [%s] %s", mark, name)
+		}
+		if allReady {
+			return nil
+		}
+		time.Sleep(retryInterval)
+	}
+	var notReady []string
+	for j, c := range checkers {
+		if !ready[j] {
+			notReady = append(notReady, c.Name)
+		}
+	}
+	return fmt.Errorf("resources not ready after %d retries: %s", retryCount, strings.Join(notReady, ", "))
+}
+
 // RetryUntilTrue returns when there is an error or the requested operation returns true.
 func RetryUntilTrue(name string, retryCount int, fn func() (bool, error)) error {
 	for i := 1; i <= retryCount; i++ {

@@ -205,14 +205,26 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 			}
 		}
 	}
+	var checkers []provider.Checker
 	for _, p := range pendingDeployments {
-		if err := c.deploymentWait(p.obj); err != nil {
-			return fmt.Errorf("error applying '%v' err: %w", p.fileName, err)
-		}
+		p := p
+		req := p.obj.(*appsV1.Deployment)
+		checkers = append(checkers, provider.Checker{
+			Name:  req.Name,
+			Check: func() (bool, error) { return c.deploymentReady(p.obj) },
+		})
 	}
 	for _, p := range pendingStatefulSets {
-		if err := c.statefulSetWait(p.obj); err != nil {
-			return fmt.Errorf("error applying '%v' err: %w", p.fileName, err)
+		p := p
+		req := p.obj.(*appsV1.StatefulSet)
+		checkers = append(checkers, provider.Checker{
+			Name:  req.Name,
+			Check: func() (bool, error) { return c.statefulSetReady(p.obj) },
+		})
+	}
+	if len(checkers) > 0 {
+		if err := provider.RetryUntilAllTrue(provider.GlobalRetryCount, checkers); err != nil {
+			return fmt.Errorf("error waiting for resources: %w", err)
 		}
 	}
 	return nil
@@ -475,21 +487,6 @@ func (c *K8s) deploymentCreate(resource runtime.Object) error {
 	return nil
 }
 
-func (c *K8s) deploymentWait(resource runtime.Object) error {
-	req := resource.(*appsV1.Deployment)
-	return provider.RetryUntilTrue(
-		fmt.Sprintf("applying deployment:%v", req.Name),
-		provider.GlobalRetryCount,
-		func() (bool, error) { return c.deploymentReady(resource) })
-}
-
-func (c *K8s) deploymentApply(resource runtime.Object) error {
-	if err := c.deploymentCreate(resource); err != nil {
-		return err
-	}
-	return c.deploymentWait(resource)
-}
-
 func (c *K8s) statefulSetCreate(resource runtime.Object) error {
 	req := resource.(*appsV1.StatefulSet)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
@@ -530,21 +527,6 @@ func (c *K8s) statefulSetCreate(resource runtime.Object) error {
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
 	return nil
-}
-
-func (c *K8s) statefulSetWait(resource runtime.Object) error {
-	req := resource.(*appsV1.StatefulSet)
-	return provider.RetryUntilTrue(
-		fmt.Sprintf("applying statefulSet:%v", req.Name),
-		provider.GlobalRetryCount,
-		func() (bool, error) { return c.statefulSetReady(resource) })
-}
-
-func (c *K8s) statefulSetApply(resource runtime.Object) error {
-	if err := c.statefulSetCreate(resource); err != nil {
-		return err
-	}
-	return c.statefulSetWait(resource)
 }
 
 func (c *K8s) jobApply(resource runtime.Object) error {
