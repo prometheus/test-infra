@@ -856,6 +856,7 @@ metadata:
     app: prometheus
     prometheus: test-pr-{{ .PR_NUMBER }}
 spec:
+  publishNotReadyAddresses: true
   ports:
   - name: prom-web
     port: 80

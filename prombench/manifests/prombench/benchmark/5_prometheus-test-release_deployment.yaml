@@ -827,6 +827,7 @@ metadata:
     app: prometheus
     prometheus: test-{{ normalise .RELEASE }}
 spec:
+  publishNotReadyAddresses: true
   ports:
   - name: prom-web
     port: 80
