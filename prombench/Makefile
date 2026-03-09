@@ -1,6 +1,11 @@
 INFRA_CMD  ?= ../infra/infra
 PROVIDER   ?= gke
 
+# Files used in resource_delete for cleanup. These must match actual filenames
+# in the benchmark directory.
+override CLEANUP_NAMESPACE_FILE            := 1_namespace.yaml
+override CLEANUP_CLUSTER_ROLE_BINDING_FILE := 3_cluster-role-binding.yaml
+
 cluster_create:
 	${INFRA_CMD} ${PROVIDER} cluster create -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v GKE_PROJECT_ID:${GKE_PROJECT_ID} \
@@ -97,8 +102,8 @@ resource_delete:
 	$(INFRA_CMD) ${PROVIDER} resource delete -a ${AUTH_FILE} \
 		-v ZONE:${ZONE} -v GKE_PROJECT_ID:${GKE_PROJECT_ID} \
 		-v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
-		-f ${PROMBENCH_DIR}/${BENCHMARK_DIRECTORY}/benchmark/1c_cluster-role-binding.yaml \
-		-f ${PROMBENCH_DIR}/${BENCHMARK_DIRECTORY}/benchmark/1a_namespace.yaml
+		-f ${PROMBENCH_DIR}/${BENCHMARK_DIRECTORY}/benchmark/${CLEANUP_CLUSTER_ROLE_BINDING_FILE} \
+		-f ${PROMBENCH_DIR}/${BENCHMARK_DIRECTORY}/benchmark/${CLEANUP_NAMESPACE_FILE}
 
 node_delete:
 	$(INFRA_CMD) ${PROVIDER} nodes delete -a ${AUTH_FILE} \
@@ -123,3 +128,12 @@ all_nodes_deleted:
 		-v EKS_SUBNET_IDS:${EKS_SUBNET_IDS} -v SEPARATOR:${SEPARATOR} \
 		-v CLUSTER_NAME:${CLUSTER_NAME} -v PR_NUMBER:${PR_NUMBER} \
 		-f ${PROMBENCH_DIR}/${BENCHMARK_DIRECTORY}/nodes_${PROVIDER}.yaml
+
+.PHONY: check_config
+check_config:
+	@echo ">> Checking cleanup file references"
+	@test -f ${BENCHMARK_DIRECTORY}/benchmark/${CLEANUP_NAMESPACE_FILE} || \
+		(echo "ERROR: ${BENCHMARK_DIRECTORY}/benchmark/${CLEANUP_NAMESPACE_FILE} does not exist" && exit 1)
+	@test -f ${BENCHMARK_DIRECTORY}/benchmark/${CLEANUP_CLUSTER_ROLE_BINDING_FILE} || \
+		(echo "ERROR: ${BENCHMARK_DIRECTORY}/benchmark/${CLEANUP_CLUSTER_ROLE_BINDING_FILE} does not exist" && exit 1)
+	@echo ">> All cleanup file references are valid"

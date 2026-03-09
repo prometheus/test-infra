@@ -23,7 +23,7 @@ Here are an example steps:
 1. Create a new branch on https://github.com/prometheus/test-infra e.g. `benchmark/scenario1`.
 2. Modify this directory to your liking e.g. changing query load, metric load of advanced Prometheus configuration. It's also possible to make Prometheus deployments and versions exactly the same, but vary in a single configuration flag, for feature benchmarking.
 
-   > WARN: When customizing this directory, don't change `1a_namespace.yaml` or `1c_cluster-role-binding.yaml` filenames as they are used for cleanup routine. Or, if you change it, know what you're doing in relation to [`make clean` job](../../Makefile).
+   > WARN: When customizing this directory, don't change `1_namespace.yaml` or `3_cluster-role-binding.yaml` filenames as they are used for cleanup routine. Or, if you change it, know what you're doing in relation to [`make clean` job](../../Makefile).
 
 3. Push changes to the new branch.
 4. From the Prometheus PR comment, call prombench as `/prombench <release> --bench.version=benchmark/scenario1` or `/prombench <release> --bench.version=@<relevant commit SHA from the benchmark/scenario1>` to use configuration files from this custom branch.

@@ -18,6 +18,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -143,7 +146,41 @@ func (c *K8s) DeploymentsParse(*kingpin.ParseContext) error {
 
 // ResourceApply applies k8s objects.
 // The input is a slice of structs containing the filename and the slice of k8s objects present in the file.
-func (c *K8s) ResourceApply(deployments []Resource) error {
+// If wait is true, each wave blocks until all deployments and stateful sets in it are ready.
+func (c *K8s) ResourceApply(deployments []Resource, wait bool) error {
+	// Group deployments by wave number extracted from filename prefix.
+	waves := make(map[int][]Resource)
+	for _, deployment := range deployments {
+		wave := extractWave(deployment.FileName)
+		waves[wave] = append(waves[wave], deployment)
+	}
+
+	// Sort wave numbers.
+	waveNums := make([]int, 0, len(waves))
+	for w := range waves {
+		waveNums = append(waveNums, w)
+	}
+	sort.Ints(waveNums)
+
+	// Apply and optionally wait wave by wave.
+	for _, wave := range waveNums {
+		if err := c.applyWave(wave, waves[wave], wait); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// applyWave applies all resources in a wave and, if wait is true, waits for
+// any deployments or stateful sets in that wave to become ready.
+func (c *K8s) applyWave(wave int, deployments []Resource, wait bool) error {
+	type pendingResource struct {
+		fileName string
+		obj      runtime.Object
+	}
+	var pendingDeployments []pendingResource
+	var pendingStatefulSets []pendingResource
+
 	var err error
 	for _, deployment := range deployments {
 		for _, resource := range deployment.Objects {
@@ -157,7 +194,10 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 			case "daemonset":
 				err = c.daemonSetApply(resource)
 			case "deployment":
-				err = c.deploymentApply(resource)
+				err = c.deploymentCreate(resource)
+				if err == nil {
+					pendingDeployments = append(pendingDeployments, pendingResource{deployment.FileName, resource})
+				}
 			case "ingress":
 				err = c.ingressApply(resource)
 			case "namespace":
@@ -177,7 +217,10 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 			case "customresourcedefinition":
 				err = c.customResourceApply(resource)
 			case "statefulset":
-				err = c.statefulSetApply(resource)
+				err = c.statefulSetCreate(resource)
+				if err == nil {
+					pendingStatefulSets = append(pendingStatefulSets, pendingResource{deployment.FileName, resource})
+				}
 			case "job":
 				err = c.jobApply(resource)
 			case "validatingwebhookconfiguration":
@@ -192,7 +235,48 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 			}
 		}
 	}
+
+	var checkers []provider.Checker
+	for _, p := range pendingDeployments {
+		p := p
+		req := p.obj.(*appsV1.Deployment)
+		checkers = append(checkers, provider.Checker{
+			Name:  req.Name,
+			Check: func() (bool, error) { return c.deploymentReady(p.obj) },
+		})
+	}
+	for _, p := range pendingStatefulSets {
+		p := p
+		req := p.obj.(*appsV1.StatefulSet)
+		checkers = append(checkers, provider.Checker{
+			Name:  req.Name,
+			Check: func() (bool, error) { return c.statefulSetReady(p.obj) },
+		})
+	}
+	if wait && len(checkers) > 0 {
+		log.Printf("Waiting for wave %d readiness (%d resources)...", wave, len(checkers))
+		if err := provider.RetryUntilAllTrue(provider.GlobalRetryCount, checkers); err != nil {
+			return fmt.Errorf("error waiting for wave %d resources: %w", wave, err)
+		}
+	}
 	return nil
+}
+
+// extractWave returns the wave number from a filename by splitting on "_"
+// and parsing the first part as an integer.
+// For example, "path/to/4_fake-webserver.yaml" returns 4.
+// If no valid integer prefix is found, it returns 0.
+func extractWave(fileName string) int {
+	base := filepath.Base(fileName)
+	parts := strings.SplitN(base, "_", 2)
+	if len(parts) < 2 {
+		return 0
+	}
+	n, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return 0
+	}
+	return n
 }
 
 // ResourceDelete deletes k8s objects.
@@ -409,7 +493,7 @@ func (c *K8s) daemonSetApply(resource runtime.Object) error {
 	return c.daemonsetReady(resource)
 }
 
-func (c *K8s) deploymentApply(resource runtime.Object) error {
+func (c *K8s) deploymentCreate(resource runtime.Object) error {
 	req := resource.(*appsV1.Deployment)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	if len(req.Namespace) == 0 {
@@ -449,13 +533,10 @@ func (c *K8s) deploymentApply(resource runtime.Object) error {
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
-	return provider.RetryUntilTrue(
-		fmt.Sprintf("applying deployment:%v", req.Name),
-		provider.GlobalRetryCount,
-		func() (bool, error) { return c.deploymentReady(resource) })
+	return nil
 }
 
-func (c *K8s) statefulSetApply(resource runtime.Object) error {
+func (c *K8s) statefulSetCreate(resource runtime.Object) error {
 	req := resource.(*appsV1.StatefulSet)
 	kind := resource.GetObjectKind().GroupVersionKind().Kind
 	if len(req.Namespace) == 0 {
@@ -494,11 +575,7 @@ func (c *K8s) statefulSetApply(resource runtime.Object) error {
 	default:
 		return fmt.Errorf("unknown object version: %v kind:'%v', name:'%v'", v, kind, req.Name)
 	}
-
-	return provider.RetryUntilTrue(
-		fmt.Sprintf("applying statefulSet:%v", req.Name),
-		provider.GlobalRetryCount,
-		func() (bool, error) { return c.statefulSetReady(resource) })
+	return nil
 }
 
 func (c *K8s) jobApply(resource runtime.Object) error {

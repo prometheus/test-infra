@@ -24,6 +24,7 @@ jobs:
             # don't limit this to the number of allocated cores, the job is
             # likely to get OOMed and killed.
             GOOPTS: "-p 2"
+      - run: make -C prombench check_config
   publish_infra:
     executor: golang
     steps:
