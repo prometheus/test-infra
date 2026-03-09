@@ -17,31 +17,21 @@ import "testing"
 
 func TestExtractWave(t *testing.T) {
 	tests := []struct {
-		fileName  string
-		want      int
-		wantError bool
+		fileName string
+		want     int
 	}{
-		{"4_fake-webserver.yaml", 4, false},
-		{"path/to/5_prometheus-test-pr_deployment.yaml", 5, false},
-		{"10_loadgen.yaml", 10, false},
-		{"1_namespace.yaml", 1, false},
-		{"no_number.yaml", 0, true},
-		{"", 0, true},
-		{"nodash", 0, true},
+		{"4_fake-webserver.yaml", 4},
+		{"path/to/5_prometheus-test-pr_deployment.yaml", 5},
+		{"10_loadgen.yaml", 10},
+		{"1_namespace.yaml", 1},
+		{"no_number.yaml", 0},
+		{"", 0},
+		{"nodash", 0},
+		{"/etc/scaler/webserver.yaml", 0},
 	}
 	for _, tt := range tests {
 		t.Run(tt.fileName, func(t *testing.T) {
-			got, err := extractWave(tt.fileName)
-			if tt.wantError {
-				if err == nil {
-					t.Errorf("extractWave(%q) expected error, got nil", tt.fileName)
-				}
-				return
-			}
-			if err != nil {
-				t.Errorf("extractWave(%q) unexpected error: %v", tt.fileName, err)
-				return
-			}
+			got := extractWave(tt.fileName)
 			if got != tt.want {
 				t.Errorf("extractWave(%q) = %d, want %d", tt.fileName, got, tt.want)
 			}
