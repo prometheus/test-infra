@@ -185,7 +185,7 @@ func (c *KIND) NewK8sProvider(*kingpin.ParseContext) error {
 
 // ResourceApply calls k8s.ResourceApply to apply the k8s objects in the manifest files.
 func (c *KIND) ResourceApply(*kingpin.ParseContext) error {
-	if err := c.k8sProvider.ResourceApply(c.k8sResources); err != nil {
+	if err := c.k8sProvider.ResourceApply(c.k8sResources, true); err != nil {
 		return err
 	}
 	return nil

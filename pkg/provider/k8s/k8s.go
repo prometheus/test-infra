@@ -146,14 +146,12 @@ func (c *K8s) DeploymentsParse(*kingpin.ParseContext) error {
 
 // ResourceApply applies k8s objects.
 // The input is a slice of structs containing the filename and the slice of k8s objects present in the file.
-func (c *K8s) ResourceApply(deployments []Resource) error {
+// If wait is true, each wave blocks until all deployments and stateful sets in it are ready.
+func (c *K8s) ResourceApply(deployments []Resource, wait bool) error {
 	// Group deployments by wave number extracted from filename prefix.
 	waves := make(map[int][]Resource)
 	for _, deployment := range deployments {
-		wave, err := extractWave(deployment.FileName)
-		if err != nil {
-			return fmt.Errorf("extracting wave from %q: %w", deployment.FileName, err)
-		}
+		wave := extractWave(deployment.FileName)
 		waves[wave] = append(waves[wave], deployment)
 	}
 
@@ -164,18 +162,18 @@ func (c *K8s) ResourceApply(deployments []Resource) error {
 	}
 	sort.Ints(waveNums)
 
-	// Apply and wait wave by wave.
+	// Apply and optionally wait wave by wave.
 	for _, wave := range waveNums {
-		if err := c.applyWave(wave, waves[wave]); err != nil {
+		if err := c.applyWave(wave, waves[wave], wait); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// applyWave applies all resources in a wave, then waits for any deployments
-// or stateful sets in that wave to become ready.
-func (c *K8s) applyWave(wave int, deployments []Resource) error {
+// applyWave applies all resources in a wave and, if wait is true, waits for
+// any deployments or stateful sets in that wave to become ready.
+func (c *K8s) applyWave(wave int, deployments []Resource, wait bool) error {
 	type pendingResource struct {
 		fileName string
 		obj      runtime.Object
@@ -255,7 +253,7 @@ func (c *K8s) applyWave(wave int, deployments []Resource) error {
 			Check: func() (bool, error) { return c.statefulSetReady(p.obj) },
 		})
 	}
-	if len(checkers) > 0 {
+	if wait && len(checkers) > 0 {
 		log.Printf("Waiting for wave %d readiness (%d resources)...", wave, len(checkers))
 		if err := provider.RetryUntilAllTrue(provider.GlobalRetryCount, checkers); err != nil {
 			return fmt.Errorf("error waiting for wave %d resources: %w", wave, err)
@@ -268,17 +266,17 @@ func (c *K8s) applyWave(wave int, deployments []Resource) error {
 // and parsing the first part as an integer.
 // For example, "path/to/4_fake-webserver.yaml" returns 4.
 // If no valid integer prefix is found, it returns 0.
-func extractWave(fileName string) (int, error) {
+func extractWave(fileName string) int {
 	base := filepath.Base(fileName)
 	parts := strings.SplitN(base, "_", 2)
 	if len(parts) < 2 {
-		return 0, fmt.Errorf("filename %q has no underscore separator", fileName)
+		return 0
 	}
 	n, err := strconv.Atoi(parts[0])
 	if err != nil {
-		return 0, fmt.Errorf("filename %q has non-numeric wave prefix %q: %w", fileName, parts[0], err)
+		return 0
 	}
-	return n, nil
+	return n
 }
 
 // ResourceDelete deletes k8s objects.
