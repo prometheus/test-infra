@@ -114,7 +114,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	// https://github.com/kubernetes/kubernetes/pull/80303
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", saFile.Name())
 
-	opts := option.WithCredentialsJSON([]byte(c.Auth))
+	opts := option.WithAuthCredentialsJSON(option.ServiceAccount, []byte(c.Auth))
 
 	cl, err := gke.NewClusterManagerClient(context.Background(), opts)
 	if err != nil {
