@@ -27,6 +27,8 @@ prefixes:
     flag_args:
       bench.directory: BENCHMARK_DIRECTORY
       bench.version: BENCHMARK_VERSION
+      pr.extra-flags: PR_EXTRA_FLAGS
+      main.extra-flags: MAIN_EXTRA_FLAGS
 
   - name: "" # start is a default (empty command).
     event_type: prombench_start
@@ -35,4 +37,6 @@ prefixes:
     flag_args:
       bench.directory: BENCHMARK_DIRECTORY
       bench.version: BENCHMARK_VERSION
+      pr.extra-flags: PR_EXTRA_FLAGS
+      main.extra-flags: MAIN_EXTRA_FLAGS
     label: prombench

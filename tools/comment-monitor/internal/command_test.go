@@ -146,6 +146,22 @@ func TestParseCommand(t *testing.T) {
 			comment: "/prombench v3.0.0 --bench.version=yolo --bench.directory=dir1",
 			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0", "BENCHMARK_VERSION": "yolo", "BENCHMARK_DIRECTORY": "dir1"}),
 		},
+		{
+			comment: "/prombench v3.0.0 --pr.extra-flags=--enable-feature=foo",
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0", "PR_EXTRA_FLAGS": "--enable-feature=foo"}),
+		},
+		{
+			comment: "/prombench v3.0.0 --main.extra-flags=--enable-feature=bar",
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0", "MAIN_EXTRA_FLAGS": "--enable-feature=bar"}),
+		},
+		{
+			comment: "/prombench restart v3.0.0 --pr.extra-flags=--enable-feature=foo --main.extra-flags=--enable-feature=bar",
+			expect:  testCommand(eventTypeRestart, map[string]string{"RELEASE": "v3.0.0", "PR_EXTRA_FLAGS": "--enable-feature=foo", "MAIN_EXTRA_FLAGS": "--enable-feature=bar"}),
+		},
+		{
+			comment: "/prombench v3.0.0 --pr.extra-flags='--enable-feature=foo --enable-feature=bar'",
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0", "PR_EXTRA_FLAGS": "--enable-feature=foo --enable-feature=bar"}),
+		},
 		// Text at the end is generally accepted, after \n.
 		{
 			comment: "/prombench v3.0.0\n",
@@ -261,6 +277,22 @@ func TestParseCommand_ProdCommentMonitorConfig(t *testing.T) {
 		{
 			comment: "/prombench v3.0.0 --bench.version=mybranch --bench.directory=manifests/prombench",
 			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0", "BENCHMARK_VERSION": "mybranch", "BENCHMARK_DIRECTORY": "manifests/prombench"}),
+		},
+		{
+			comment: "/prombench v3.0.0 --pr.extra-flags=--enable-feature=foo",
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0", "PR_EXTRA_FLAGS": "--enable-feature=foo"}),
+		},
+		{
+			comment: "/prombench v3.0.0 --main.extra-flags=--enable-feature=bar",
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0", "MAIN_EXTRA_FLAGS": "--enable-feature=bar"}),
+		},
+		{
+			comment: "/prombench restart v3.0.0 --pr.extra-flags=--enable-feature=foo --main.extra-flags=--enable-feature=bar",
+			expect:  testCommand(eventTypeRestart, map[string]string{"RELEASE": "v3.0.0", "PR_EXTRA_FLAGS": "--enable-feature=foo", "MAIN_EXTRA_FLAGS": "--enable-feature=bar"}),
+		},
+		{
+			comment: "/prombench v3.0.0 --pr.extra-flags='--enable-feature=foo --enable-feature=bar'",
+			expect:  testCommand(eventTypeStart, map[string]string{"RELEASE": "v3.0.0", "PR_EXTRA_FLAGS": "--enable-feature=foo --enable-feature=bar"}),
 		},
 		// Not matching cases.
 		{comment: ""},

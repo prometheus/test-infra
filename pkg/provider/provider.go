@@ -127,17 +127,37 @@ func RetryUntilTrue(name string, retryCount int, fn func() (bool, error)) error 
 	return fmt.Errorf("Request for '%v' hasn't completed after retrying %d times", name, retryCount)
 }
 
+// prometheusArgs builds a YAML flow-sequence injection string starting with
+// baseArg, followed by any space-separated flags from extraFlags. The returned
+// value is intended to be placed inside a double-quoted YAML string: the
+// embedded "," separators will break into additional flow-sequence items after
+// template rendering, e.g. "--log.level=info","--flag1","--flag2".
+func prometheusArgs(baseArg, extraFlags string) string {
+	parts := []string{baseArg}
+	for _, f := range strings.Fields(extraFlags) {
+		parts = append(parts, strings.ReplaceAll(f, `"`, `\"`))
+	}
+	return strings.Join(parts, `","`)
+}
+
 // applyTemplateVars applies golang templates to deployment files.
 func applyTemplateVars(content []byte, deploymentVars map[string]string) ([]byte, error) {
 	fileContentParsed := bytes.NewBufferString("")
 	t := template.New("resource").Option("missingkey=error")
 	t = t.Funcs(template.FuncMap{
-		// k8s objects can't have dots(.) se we add a custom function to allow normalising the variable values.
+		// k8s objects can't have dots(.) so we add a custom function to allow normalising the variable values.
 		"normalise": func(t string) string {
 			return strings.ReplaceAll(t, ".", "-")
 		},
-		"split": func(rangeVars, separator string) []string {
-			return strings.Split(rangeVars, separator)
+		// prArgs returns a YAML flow-sequence injection string for the PR prometheus
+		// instance, including --log.level=info and any PR_EXTRA_FLAGS.
+		"prArgs": func(vars map[string]string) string {
+			return prometheusArgs("--log.level=info", vars["PR_EXTRA_FLAGS"])
+		},
+		// mainArgs returns a YAML flow-sequence injection string for the main/release
+		// prometheus instance, including --log.level=info and any MAIN_EXTRA_FLAGS.
+		"mainArgs": func(vars map[string]string) string {
+			return prometheusArgs("--log.level=info", vars["MAIN_EXTRA_FLAGS"])
 		},
 	})
 	if err := template.Must(t.Parse(string(content))).Execute(fileContentParsed, deploymentVars); err != nil {
