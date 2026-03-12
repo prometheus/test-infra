@@ -18,6 +18,8 @@ data:
           * See the details [here](https://github.com/prometheus/test-infra/tree/master/prombench/manifests/prombench#benchmarking-from-the-different-directory), defaults to `manifests/prombench`.
         * `--bench.version=<branch | @commit>`
           * See the details [here](https://github.com/prometheus/test-infra/tree/master/prombench/manifests/prombench#benchmarking-from-the-custom-test-infra-commitbranch), defaults to `master`.
+        * `--pr.extra-flags=<space-separated Prometheus flags>` - extra flags passed to the PR Prometheus instance.
+        * `--main.extra-flags=<space-separated Prometheus flags>` - extra flags passed to the main/release Prometheus instance.
 
         **Examples:**
         * `/prombench v3.0.0`
@@ -37,6 +39,8 @@ data:
         flag_args:
           bench.directory: BENCHMARK_DIRECTORY
           bench.version: BENCHMARK_VERSION
+          pr.extra-flags: PR_EXTRA_FLAGS
+          main.extra-flags: MAIN_EXTRA_FLAGS
         comment_template: |
           ⏱️ Welcome (again) to Prometheus Benchmarking Tool. ⏱️
 
@@ -59,7 +63,7 @@ data:
           - [Parca profiles (e.g. in-use memory)](http://{{ index . "DOMAIN_NAME" }}/profiles?expression_a=memory%3Ainuse_space%3Abytes%3Aspace%3Abytes%7Bpr_number%3D%22{{ index . "PR_NUMBER" }}%22%7D&time_selection_a=relative:minute|15)
 
           **Available Commands:**
-          * To restart benchmark: `/prombench restart {{ index . "RELEASE" }}{{ if index . "BENCHMARK_VERSION" }} --bench.version={{ index . "BENCHMARK_VERSION" }}{{ end }}{{ if index . "BENCHMARK_DIRECTORY" }} --bench.directory={{ index . "BENCHMARK_DIRECTORY" }}{{ end }}`
+          * To restart benchmark: `/prombench restart {{ index . "RELEASE" }}{{ if index . "BENCHMARK_VERSION" }} --bench.version={{ index . "BENCHMARK_VERSION" }}{{ end }}{{ if index . "BENCHMARK_DIRECTORY" }} --bench.directory={{ index . "BENCHMARK_DIRECTORY" }}{{ end }}{{ if index . "PR_EXTRA_FLAGS" }} --pr.extra-flags={{ index . "PR_EXTRA_FLAGS" }}{{ end }}{{ if index . "MAIN_EXTRA_FLAGS" }} --main.extra-flags={{ index . "MAIN_EXTRA_FLAGS" }}{{ end }}`
           * To stop benchmark: `/prombench cancel`
           * To print help: `/prombench help`
 
@@ -70,6 +74,8 @@ data:
         flag_args:
           bench.directory: BENCHMARK_DIRECTORY
           bench.version: BENCHMARK_VERSION
+          pr.extra-flags: PR_EXTRA_FLAGS
+          main.extra-flags: MAIN_EXTRA_FLAGS
         label: prombench
         comment_template: |
           ⏱️ Welcome to Prometheus Benchmarking Tool. ⏱️
@@ -93,6 +99,6 @@ data:
           - [Parca profiles (e.g. in-use memory)](http://{{ index . "DOMAIN_NAME" }}/profiles?expression_a=memory%3Ainuse_space%3Abytes%3Aspace%3Abytes%7Bpr_number%3D%22{{ index . "PR_NUMBER" }}%22%7D&time_selection_a=relative:minute|15)
 
           **Available Commands:**
-          * To restart benchmark: `/prombench restart {{ index . "RELEASE" }}{{ if index . "BENCHMARK_VERSION" }} --bench.version={{ index . "BENCHMARK_VERSION" }}{{ end }}{{ if index . "BENCHMARK_DIRECTORY" }} --bench.directory={{ index . "BENCHMARK_DIRECTORY" }}{{ end }}`
+          * To restart benchmark: `/prombench restart {{ index . "RELEASE" }}{{ if index . "BENCHMARK_VERSION" }} --bench.version={{ index . "BENCHMARK_VERSION" }}{{ end }}{{ if index . "BENCHMARK_DIRECTORY" }} --bench.directory={{ index . "BENCHMARK_DIRECTORY" }}{{ end }}{{ if index . "PR_EXTRA_FLAGS" }} --pr.extra-flags={{ index . "PR_EXTRA_FLAGS" }}{{ end }}{{ if index . "MAIN_EXTRA_FLAGS" }} --main.extra-flags={{ index . "MAIN_EXTRA_FLAGS" }}{{ end }}`
           * To stop benchmark: `/prombench cancel`
           * To print help: `/prombench help`

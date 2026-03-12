@@ -95,6 +95,8 @@ resource_apply:
 		-v CLUSTER_NAME:${CLUSTER_NAME} \
 		-v PR_NUMBER:${PR_NUMBER} -v RELEASE:${RELEASE} -v DOMAIN_NAME:${DOMAIN_NAME} \
 		-v GITHUB_ORG:${GITHUB_ORG} -v GITHUB_REPO:${GITHUB_REPO} \
+		$(if $(PR_EXTRA_FLAGS),-v "PR_EXTRA_FLAGS:$(PR_EXTRA_FLAGS)") \
+		$(if $(MAIN_EXTRA_FLAGS),-v "MAIN_EXTRA_FLAGS:$(MAIN_EXTRA_FLAGS)") \
 		-f ${PROMBENCH_DIR}/${BENCHMARK_DIRECTORY}/benchmark
 
 # Required because namespace and cluster-role are not part of the created nodes

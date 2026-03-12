@@ -11,6 +11,7 @@ require (
 	github.com/go-kit/log v0.2.1
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-github/v29 v29.0.3
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/nelkinda/health-go v0.0.1
 	github.com/oklog/run v1.2.0
 	github.com/prometheus/alertmanager v0.31.1

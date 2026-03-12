@@ -22,6 +22,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/google/shlex"
 	"gopkg.in/yaml.v2"
 )
 
@@ -167,7 +168,13 @@ func ParseCommand(cfg *Config, comment string) (_ *Command, ok bool, err *Comman
 		i = len(comment)
 	}
 	cmdLine := comment[:i]
-	rest := strings.Split(strings.TrimSpace(cmdLine[len(prefix.Prefix):]), " ")
+	rest, tErr := shlex.Split(strings.TrimSpace(cmdLine[len(prefix.Prefix):]))
+	if tErr != nil {
+		return nil, false, &CommandParseError{
+			error: fmt.Errorf("tokenizing command line failed for %v: %w", cmdLine, tErr),
+			help:  fmt.Sprintf("Incorrect `%v` syntax; %v.\n\n%s", prefix.Prefix, tErr.Error(), prefix.Help),
+		}
+	}
 	if len(rest) == 0 || rest[0] == "" {
 		return nil, false, &CommandParseError{
 			error: fmt.Errorf("no matching command found for comment line: %v", cmdLine),
@@ -261,21 +268,20 @@ func ParseCommand(cfg *Config, comment string) (_ *Command, ok bool, err *Comman
 }
 
 func parseFlags(rest []string, cfg *CommandConfig, cmd *Command) error {
-	// TODO(bwplotka: Naive flag parsing, make it support quoting, spaces etc later.
 	for _, flag := range rest {
 		if !strings.HasPrefix(flag, "--") {
 			return fmt.Errorf("expected flag (starting with --), got %v", flag)
 		}
-		parts := strings.Split(flag, "=")
-		if len(parts) != 2 {
+		eqIdx := strings.Index(flag, "=")
+		if eqIdx == -1 {
 			return fmt.Errorf("expected flag format '--<flag>=<value>', got %v", flag)
 		}
 
-		argName, ok := cfg.FlagArgs[strings.TrimPrefix(parts[0], "--")]
+		argName, ok := cfg.FlagArgs[strings.TrimPrefix(flag[:eqIdx], "--")]
 		if !ok {
 			return fmt.Errorf("flag %v is not supported", flag)
 		}
-		cmd.Args[argName] = parts[1]
+		cmd.Args[argName] = flag[eqIdx+1:]
 	}
 	return nil
 }
