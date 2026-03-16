@@ -817,7 +817,8 @@ spec:
           "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-pr",
           "--storage.tsdb.path=/prometheus",
           "--config.file=/etc/prometheus/prometheus.yml",
-          "--log.level=info"
+          "--log.level=info",
+          "--enable-feature=st-storage"
         ]
         resources:
           requests:
