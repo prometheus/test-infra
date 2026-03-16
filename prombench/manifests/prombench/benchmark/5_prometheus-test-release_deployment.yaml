@@ -762,10 +762,10 @@ spec:
       securityContext:
         runAsUser: 0
       initContainers:
-      # Listen on port 9099 and attempt to connect to the PR init container
-      # on the same port. When both sides have connected, the init containers
-      # unblock and Prometheus starts. This synchronizes the two instances for
-      # more reliable comparisons.
+      # Check if the PR Prometheus is already up via /-/ready (rolling restart
+      # case). If so, skip sync and start immediately. Otherwise listen on
+      # port 9090 and wait until both peers have connected, so both Prometheus
+      # instances start at the same time for reliable comparisons.
       - name: sync-with-pr-prometheus
         image: quay.io/prometheus/busybox:latest
         imagePullPolicy: Always
@@ -773,8 +773,11 @@ spec:
         - /bin/sh
         - -c
         - |
-          while true; do echo "OK" | nc -l -p 9099 && touch /tmp/peer-ready; done &
-          until [ "$(nc -w1 prometheus-test-pr-{{ .PR_NUMBER }} 9099 2>/dev/null)" = "OK" ]; do
+          if wget -q -T 5 -O /dev/null http://prometheus-test-pr-{{ .PR_NUMBER }}/-/ready 2>/dev/null; then
+            exit 0
+          fi
+          while true; do echo "OK" | nc -l -p 9090 >/dev/null 2>&1 && touch /tmp/peer-ready; done &
+          until nc -w1 prometheus-test-pr-{{ .PR_NUMBER }} 80 2>/dev/null | grep -q '^OK$'; do
             sleep 1
           done
           until [ -f /tmp/peer-ready ]; do
@@ -832,9 +835,6 @@ spec:
   - name: prom-web
     port: 80
     targetPort: prom-web
-  - name: sync
-    port: 9099
-    targetPort: 9099
   selector:
     app: prometheus
     prometheus: test-{{ normalise .RELEASE }}
