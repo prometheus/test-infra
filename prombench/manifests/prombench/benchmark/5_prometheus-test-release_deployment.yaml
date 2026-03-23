@@ -722,9 +722,11 @@ data:
     - url: "http://prometheus-sink:9011/sink/prw" # PRW 1.0
       headers:
         "X-SINK-SOURCE": prometheus-test-{{ normalise .RELEASE }}
+      name: "first"
     - url: "http://prometheus-sink:9011/sink/prw" # PRW 1.0
       headers:
         "X-SINK-SOURCE": prometheus-test-{{ normalise .RELEASE }}
+      name: "second"
 ---
 apiVersion: apps/v1
 kind: Deployment
