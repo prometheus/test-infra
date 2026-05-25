@@ -5,6 +5,9 @@ on:
     - master
     paths:
     - 'prombench/manifests/cluster-infra/grafana_dashboard_dashboards_noparse.yaml'
+permissions:
+  contents: read
+
 jobs:
   apply_grafana_dashboard:
     name: Apply Dashboard
