@@ -11,4 +11,7 @@ updates:
       go.opentelemetry.io:
         patterns:
           - "go.opentelemetry.io/*"
+      aws-sdk-v2:
+        patterns:
+          - "github.com/aws/aws-sdk-go-v2*"
     open-pull-requests-limit: 20
