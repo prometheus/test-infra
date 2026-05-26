@@ -3,8 +3,8 @@ name: Publish
 on:
   workflow_call:
   push:
-    branches:
-      - master
+    branches: [main, master, 'release-*']
+    tags: ['v*']
 
 permissions:
   contents: read

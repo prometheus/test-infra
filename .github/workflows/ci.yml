@@ -4,6 +4,9 @@ on:
   pull_request:
   workflow_call:
   push:
+    branches: [main, master, 'release-*']
+    tags: ['v*']
+
 
 permissions:
   contents: read
