@@ -8,6 +8,9 @@ on:
     paths:
     - 'prombench/manifests/cluster-infra/grafana_dashboard_dashboards_noparse.yaml'
     - 'prombench/manifests/cluster-infra/dashboards/**'
+permissions:
+  contents: read
+
 jobs:
   verify_dashboard_generation:
     name: Verify Dashboard Generation
