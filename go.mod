@@ -29,7 +29,7 @@ require (
 	k8s.io/client-go v0.35.2
 	k8s.io/cloud-provider-gcp v0.0.0-20241115222652-d74b2e1d6653
 	sigs.k8s.io/aws-iam-authenticator v0.7.11
-	sigs.k8s.io/kind v0.31.0
+	sigs.k8s.io/kind v0.32.0
 )
 
 require (
