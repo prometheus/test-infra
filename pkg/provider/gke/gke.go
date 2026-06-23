@@ -114,7 +114,7 @@ func (c *GKE) NewGKEClient(*kingpin.ParseContext) error {
 	// https://github.com/kubernetes/kubernetes/pull/80303
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", saFile.Name())
 
-	opts := option.WithCredentialsJSON([]byte(c.Auth))
+	opts := option.WithAuthCredentialsJSON(option.ServiceAccount, []byte(c.Auth))
 
 	cl, err := gke.NewClusterManagerClient(context.Background(), opts)
 	if err != nil {
@@ -578,7 +578,7 @@ func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 
 // ResourceApply calls k8s.ResourceApply to apply the k8s objects in the manifest files.
 func (c *GKE) ResourceApply(*kingpin.ParseContext) error {
-	if err := c.k8sProvider.ResourceApply(c.k8sResources); err != nil {
+	if err := c.k8sProvider.ResourceApply(c.k8sResources, true); err != nil {
 		log.Fatal("error while applying a resource err:", err)
 	}
 	return nil

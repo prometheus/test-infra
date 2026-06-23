@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: prometheus-test-pr-{{ .PR_NUMBER }}
+  name: prometheus-test-{{ normalise .RELEASE }}
   namespace: prombench-{{ .PR_NUMBER }}
 data:
   prometheus.yml: |
@@ -721,32 +721,32 @@ data:
     remote_write:
     - url: "http://prometheus-sink:9011/sink/prw" # PRW 1.0
       headers:
-        "X-SINK-SOURCE": prometheus-test-pr-{{ .PR_NUMBER }}
+        "X-SINK-SOURCE": prometheus-test-{{ normalise .RELEASE }}
     - url: "http://prometheus-sink:9011/sink/prw" # PRW 2.0
       protobuf_message: io.prometheus.write.v2.Request
       headers:
-        "X-SINK-SOURCE": prometheus-test-pr-{{ .PR_NUMBER }}
+        "X-SINK-SOURCE": prometheus-test-{{ normalise .RELEASE }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prometheus-test-pr-{{ .PR_NUMBER }}
+  name: prometheus-test-{{ normalise .RELEASE }}
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: prometheus
-    prometheus: test-pr-{{ .PR_NUMBER }}
+    prometheus: test-{{ normalise .RELEASE }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: prometheus
-      prometheus: test-pr-{{ .PR_NUMBER }}
+      prometheus: test-{{ normalise .RELEASE }}
   template:
     metadata:
       namespace: prombench-{{ .PR_NUMBER }}
       labels:
         app: prometheus
-        prometheus: test-pr-{{ .PR_NUMBER }}
+        prometheus: test-{{ normalise .RELEASE }}
     spec:
       serviceAccountName: prometheus
       affinity:
@@ -762,38 +762,34 @@ spec:
       securityContext:
         runAsUser: 0
       initContainers:
-      - name: prometheus-builder
-        image: docker.io/prominfra/prometheus-builder:master
-        imagePullPolicy: Always
-        env:
-        - name: PR_NUMBER
-          value: "{{ .PR_NUMBER }}"
-        - name: VOLUME_DIR
-          value: "/prometheus-builder" # same as mountPath
-        - name: GITHUB_ORG
-          value: "{{ .GITHUB_ORG }}"
-        - name: GITHUB_REPO
-          value: "{{ .GITHUB_REPO }}"
-        volumeMounts:
-        - name: prometheus-executable
-          mountPath: /prometheus-builder
-      containers:
-      - name: prometheus
+      # Check if the PR Prometheus is already up via /-/ready (rolling restart
+      # case). If so, skip sync and start immediately. Otherwise listen on
+      # port 9090 and wait until both peers have connected, so both Prometheus
+      # instances start at the same time for reliable comparisons.
+      - name: sync-with-pr-prometheus
         image: quay.io/prometheus/busybox:latest
         imagePullPolicy: Always
-        # The prometheus-builder takes a while to build
-        # so make sure to start it before the release deployment.
-        # Mark it ready only when prometheus is started.
-        # This way we have the least time difference in the scraped metrics.
-        readinessProbe:
-          tcpSocket:
-            port: 9090
-          initialDelaySeconds: 30
-          periodSeconds: 2
-          failureThreshold: 30
-        command: ["/usr/bin/prometheus"]
+        command:
+        - /bin/sh
+        - -c
+        - |
+          if wget -q -T 5 -O /dev/null http://prometheus-test-pr-{{ .PR_NUMBER }}/-/ready 2>/dev/null; then
+            exit 0
+          fi
+          while true; do echo "OK" | nc -l -p 9090 >/dev/null 2>&1 && touch /tmp/peer-ready; done &
+          until nc -w1 prometheus-test-pr-{{ .PR_NUMBER }} 80 2>/dev/null | grep -q '^OK$'; do
+            sleep 1
+          done
+          until [ -f /tmp/peer-ready ]; do
+            sleep 1
+          done
+      containers:
+      - name: prometheus
+        image: quay.io/prometheus/prometheus:{{ .RELEASE }}
+        imagePullPolicy: Always
+        command: [ "/bin/prometheus" ]
         args: [
-          "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-pr",
+          "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-release",
           "--storage.tsdb.path=/prometheus",
           "--config.file=/etc/prometheus/prometheus.yml",
           "--log.level=info"
@@ -802,26 +798,24 @@ spec:
           requests:
             cpu: 2
             memory: 20Gi
+          limits:
+            cpu: 4
         volumeMounts:
         - name: config-volume
           mountPath: /etc/prometheus
         - name: instance-ssd
           mountPath: /prometheus
-        - name: prometheus-executable
-          mountPath: /usr/bin
         ports:
         - name: prom-web
           containerPort: 9090
       volumes:
       - name: config-volume
         configMap:
-          name: prometheus-test-pr-{{ .PR_NUMBER }}
+          name: prometheus-test-{{ normalise .RELEASE }}
       - name: instance-ssd
         hostPath:
           # /mnt is where GKE keeps it's SSD.
           path: /mnt/disks/ssd0
-      - name: prometheus-executable
-        emptyDir: {}
       terminationGracePeriodSeconds: 300
       nodeSelector:
         node-name: prometheus-{{ .PR_NUMBER }}
@@ -830,16 +824,17 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: prometheus-test-pr-{{ .PR_NUMBER }}
+  name: prometheus-test-{{ normalise .RELEASE }}
   namespace: prombench-{{ .PR_NUMBER }}
   labels:
     app: prometheus
-    prometheus: test-pr-{{ .PR_NUMBER }}
+    prometheus: test-{{ normalise .RELEASE }}
 spec:
+  publishNotReadyAddresses: true
   ports:
   - name: prom-web
     port: 80
     targetPort: prom-web
   selector:
     app: prometheus
-    prometheus: test-pr-{{ .PR_NUMBER }}
+    prometheus: test-{{ normalise .RELEASE }}

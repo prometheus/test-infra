@@ -1,0 +1,103 @@
+---
+name: Publish
+on:
+  workflow_call:
+  push:
+    branches: [main, master, 'release-*']
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: Run CI
+    uses: ./.github/workflows/ci.yml
+
+  publish_infra:
+    name: Publish infra
+    runs-on: ubuntu-latest
+    needs: ci
+    env:
+      DOCKER_ORG: ${{ vars.DOCKER_ORG || 'prominfra' }}
+      DOCKER_REGISTRY: docker.io
+      DOCKER_IMAGE_TAG: master
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
+        with:
+          go-version: 1.26.x
+      - uses: prometheus/promci-setup@5af30ba8c199a91d6c04ebdc3c48e630e355f62d # v0.1.0
+      - name: Build infra binary
+        run: make build
+        env:
+          PROMU_BINARIES: infra
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.docker_hub_password }}" | docker login -u "${{ secrets.docker_hub_login }}" --password-stdin "${DOCKER_REGISTRY}"
+      - name: Build image
+        run: >-
+          docker build
+          -t "${DOCKER_REGISTRY}/${DOCKER_ORG}/infra:${DOCKER_IMAGE_TAG}"
+          -f "infra/Dockerfile"
+          "infra/"
+      - name: Publish image
+        run: docker push "${DOCKER_REGISTRY}/${DOCKER_ORG}/infra:${DOCKER_IMAGE_TAG}"
+
+  publish_others:
+    name: Publish ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    needs: publish_infra
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: prombench
+            dockerfile: prombench/Dockerfile
+            context: prombench/
+          - image: amgithubnotifier
+            dockerfile: tools/amGithubNotifier/Dockerfile
+            context: tools/amGithubNotifier/
+          - image: comment-monitor
+            dockerfile: tools/comment-monitor/Dockerfile
+            context: tools/comment-monitor/
+          - image: fake-webserver
+            dockerfile: tools/fake-webserver/Dockerfile
+            context: tools/fake-webserver/
+          - image: scaler
+            dockerfile: tools/scaler/Dockerfile
+            context: tools/scaler/
+          - image: load-generator
+            dockerfile: tools/load-generator/Dockerfile
+            context: tools/load-generator/
+          - image: prometheus-builder
+            dockerfile: tools/prometheus-builder/Dockerfile
+            context: tools/prometheus-builder/
+          - image: block-sync
+            dockerfile: tools/block-sync/Dockerfile
+            context: tools/block-sync/
+    env:
+      DOCKER_ORG: ${{ vars.DOCKER_ORG || 'prominfra' }}
+      DOCKER_REGISTRY: docker.io
+      DOCKER_IMAGE_TAG: master
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
+        with:
+          go-version: 1.26.x
+      - uses: prometheus/promci-setup@5af30ba8c199a91d6c04ebdc3c48e630e355f62d # v0.1.0
+      - name: Build binaries
+        run: make build
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.docker_hub_password }}" | docker login -u "${{ secrets.docker_hub_login }}" --password-stdin "${DOCKER_REGISTRY}"
+      - name: Build image
+        run: >-
+          docker build
+          -t "${DOCKER_REGISTRY}/${DOCKER_ORG}/${{ matrix.image }}:${DOCKER_IMAGE_TAG}"
+          -f "${{ matrix.dockerfile }}"
+          "${{ matrix.context }}"
+      - name: Publish image
+        run: docker push "${DOCKER_REGISTRY}/${DOCKER_ORG}/${{ matrix.image }}:${DOCKER_IMAGE_TAG}"

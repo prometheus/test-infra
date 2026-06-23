@@ -74,14 +74,14 @@ func (s *scale) scale(*kingpin.ParseContext) error {
 
 	for {
 		log.Printf("Scaling Deployment to %d", s.max)
-		if err := s.k8sClient.ResourceApply(maxResourceObjects); err != nil {
+		if err := s.k8sClient.ResourceApply(maxResourceObjects, false); err != nil {
 			fmt.Fprintln(os.Stderr, fmt.Errorf("Error scaling deployment: %w", err))
 		}
 
 		time.Sleep(s.interval)
 
 		log.Printf("Scaling Deployment to %d", s.min)
-		if err := s.k8sClient.ResourceApply(minResourceObjects); err != nil {
+		if err := s.k8sClient.ResourceApply(minResourceObjects, false); err != nil {
 			fmt.Fprintln(os.Stderr, fmt.Errorf("Error scaling deployment: %w", err))
 		}
 

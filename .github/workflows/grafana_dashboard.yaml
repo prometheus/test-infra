@@ -5,6 +5,11 @@ on:
     - master
     paths:
     - 'prombench/manifests/cluster-infra/grafana_dashboard_dashboards_noparse.yaml'
+# Posts a success/failure comment on the PR associated with the commit.
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   apply_grafana_dashboard:
     name: Apply Dashboard

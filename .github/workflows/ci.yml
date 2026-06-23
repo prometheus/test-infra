@@ -2,7 +2,14 @@
 name: CI
 on:
   pull_request:
+  workflow_call:
   push:
+    branches: [main, master, 'release-*']
+    tags: ['v*']
+
+
+permissions:
+  contents: read
 
 jobs:
   yamllint:
@@ -11,7 +18,24 @@ jobs:
     container:
       # Whenever the Go version is updated here, .promu.yml
       # should also be updated.
-      image: quay.io/prometheus/golang-builder:1.24-base
+      image: quay.io/prometheus/golang-builder:1.26-base
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - run: make yamllint
+
+  test_go:
+    name: Go build and tests
+    runs-on: ubuntu-latest
+    container:
+      # Whenever the Go version is updated here, .promu.yml
+      # should also be updated.
+      image: quay.io/prometheus/golang-builder:1.26-base
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: prometheus/promci-setup@5af30ba8c199a91d6c04ebdc3c48e630e355f62d # v0.1.0
+      - run: make all
+      - run: make -C prombench check_config
