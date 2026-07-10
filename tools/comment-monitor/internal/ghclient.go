@@ -18,8 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/google/go-github/v29/github"
-	"golang.org/x/oauth2"
+	"github.com/google/go-github/v89/github"
 )
 
 type EventDetails struct {
@@ -36,7 +35,7 @@ func NewEventDetails(e *github.IssueCommentEvent) EventDetails {
 		Repo:              *e.GetRepo().Name,
 		PR:                *e.GetIssue().Number,
 		Author:            *e.Sender.Login,
-		AuthorAssociation: *e.GetComment().AuthorAssociation,
+		AuthorAssociation: e.Comment.GetAuthorAssociation(),
 	}
 }
 
@@ -48,10 +47,12 @@ type GithubClient struct {
 }
 
 func NewGithubClient(ctx context.Context, token string, issueDetails EventDetails) (*GithubClient, error) {
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
-	tc := oauth2.NewClient(ctx, ts)
+	ghClient, err := github.NewClient(github.WithAuthToken(token))
+	if err != nil {
+		return nil, err
+	}
 	return &GithubClient{
-		clt: github.NewClient(tc),
+		clt: ghClient,
 		ctx: ctx,
 
 		EventDetails: issueDetails,
@@ -88,7 +89,7 @@ func (c *GithubClient) Dispatch(eventType string, args map[string]string) error 
 }
 
 func (c *GithubClient) PostComment(commentBody string) error {
-	issueComment := &github.IssueComment{Body: github.String(commentBody)}
+	issueComment := &github.IssueComment{Body: github.Ptr(commentBody)}
 	_, _, err := c.clt.Issues.CreateComment(c.ctx, c.Owner, c.Repo, c.PR, issueComment)
 	return err
 }

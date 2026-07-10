@@ -26,7 +26,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/google/go-github/v29/github"
+	"github.com/google/go-github/v89/github"
 	"github.com/nelkinda/health-go"
 	"github.com/oklog/run"
 	"golang.org/x/sync/singleflight"
