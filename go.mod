@@ -18,7 +18,7 @@ require (
 	github.com/prometheus/common v0.69.0
 	github.com/thanos-io/objstore v0.0.0-20240913165201-fd105025a2e5
 	golang.org/x/oauth2 v0.36.0
-	golang.org/x/sync v0.20.0
+	golang.org/x/sync v0.21.0
 	google.golang.org/api v0.283.0
 	google.golang.org/grpc v1.81.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
