@@ -22,10 +22,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/google/go-github/v29/github"
+	"github.com/google/go-github/v89/github"
 	"github.com/prometheus/alertmanager/notify/webhook"
 	"github.com/prometheus/alertmanager/template"
-	"golang.org/x/oauth2"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -128,8 +127,12 @@ func (hl ghWebhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func newGhWebhookReceiver(cfg ghWebhookReceiverConfig) (*ghWebhookReceiver, error) {
 	if cfg.dryRun {
+		ghClient, err := github.NewClient()
+		if err != nil {
+			return nil, err
+		}
 		return &ghWebhookReceiver{
-			ghClient: github.NewClient(nil),
+			ghClient: ghClient,
 			cfg:      cfg,
 		}, nil
 	}
@@ -139,14 +142,13 @@ func newGhWebhookReceiver(cfg ghWebhookReceiverConfig) (*ghWebhookReceiver, erro
 	if err != nil {
 		return nil, err
 	}
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: string(oauth2token)},
-	)
-	ctx := context.Background()
-	tc := oauth2.NewClient(ctx, ts)
 
+	ghClient, err := github.NewClient(github.WithAuthToken(string(oauth2token)))
+	if err != nil {
+		return nil, err
+	}
 	return &ghWebhookReceiver{
-		ghClient: github.NewClient(tc),
+		ghClient: ghClient,
 		cfg:      cfg,
 	}, nil
 }
