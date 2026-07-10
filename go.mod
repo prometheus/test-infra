@@ -10,14 +10,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/eks v1.84.3
 	github.com/go-kit/log v0.2.1
 	github.com/google/go-cmp v0.7.0
-	github.com/google/go-github/v29 v29.0.3
+	github.com/google/go-github/v89 v89.0.0
 	github.com/nelkinda/health-go v0.0.1
 	github.com/oklog/run v1.2.0
 	github.com/prometheus/alertmanager v0.33.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/common v0.69.0
 	github.com/thanos-io/objstore v0.0.0-20240913165201-fd105025a2e5
-	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sync v0.21.0
 	google.golang.org/api v0.288.0
 	google.golang.org/grpc v1.82.0
@@ -108,7 +107,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/gnostic-models v0.7.1 // indirect
-	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.17 // indirect
@@ -186,6 +185,7 @@ require (
 	golang.org/x/crypto v0.53.0 // indirect
 	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/net v0.56.0 // indirect
+	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/term v0.44.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
