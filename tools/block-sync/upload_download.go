@@ -45,7 +45,7 @@ func newStore(tsdbPath, objectConfig, objectPath string, logger *slog.Logger) (*
 		os.Exit(0)
 	}
 
-	bucket, err := client.NewBucket(log.NewNopLogger(), configBytes, "block-sync")
+	bucket, err := client.NewBucket(log.NewNopLogger(), configBytes, "block-sync", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create bucket existence:%w", err)
 	}
