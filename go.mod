@@ -3,7 +3,7 @@ module github.com/prometheus/test-infra
 go 1.26.0
 
 require (
-	cloud.google.com/go/container v1.52.0
+	cloud.google.com/go/container v1.53.0
 	github.com/aws/aws-sdk-go-v2 v1.41.10
 	github.com/aws/aws-sdk-go-v2/config v1.32.21
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.20
@@ -188,7 +188,7 @@ require (
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.45.0 // indirect
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260414002931-afd174a4e478 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260630182238-925bb5da69e7 // indirect
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect
