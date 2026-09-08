@@ -32,6 +32,7 @@ spec:
         - "--remote-batch-size=2000"
         - "--remote-requests-count=-1"
         - "--remote-write-interval=15s"
+        - "--no-remote-out-of-order"
         env:
         - name: GOMAXPROCS
           valueFrom:
@@ -78,6 +79,7 @@ spec:
         - "--remote-batch-size=2000"
         - "--remote-requests-count=-1"
         - "--remote-write-interval=15s"
+        - "--no-remote-out-of-order"
         env:
         - name: GOMAXPROCS
           valueFrom:
