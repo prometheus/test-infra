@@ -34,7 +34,7 @@ spec:
                 operator: In
                 values:
                 - test-{{ normalise .RELEASE }}
-            topologyKey: node-name
+            topologyKey: kubernetes.io/hostname
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
@@ -110,7 +110,7 @@ spec:
                 operator: In
                 values:
                 - test-pr-{{ .PR_NUMBER }}
-            topologyKey: node-name
+            topologyKey: kubernetes.io/hostname
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
