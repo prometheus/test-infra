@@ -726,6 +726,13 @@ data:
       protobuf_message: io.prometheus.write.v2.Request
       headers:
         "X-SINK-SOURCE": prometheus-test-pr-{{ .PR_NUMBER }}
+
+    # Exercised by the avalanche load in 9_write_loadgen.yaml.
+    receive_relabel_configs:
+    - source_labels: [source]
+      regex: avalanche
+      target_label: canonical_source
+      replacement: avalanche-loadgen
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -817,6 +824,8 @@ spec:
           "--web.external-url=http://{{ .DOMAIN_NAME }}/{{ .PR_NUMBER }}/prometheus-pr",
           "--storage.tsdb.path=/prometheus",
           "--config.file=/etc/prometheus/prometheus.yml",
+          "--web.enable-remote-write-receiver",
+          "--enable-feature=receive-relabel-configs",
           "--log.level=info"
         ]
         resources:
