@@ -288,8 +288,11 @@ func (c *GKE) clusterDeleted(req *containerpb.DeleteClusterRequest) (bool, error
 // clusterRunning checks whether a cluster is in a running state.
 func (c *GKE) clusterRunning(zone, projectID, clusterID string) (bool, error) {
 	req := &containerpb.GetClusterRequest{
+		//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 		ProjectId: projectID,
-		Zone:      zone,
+		//nolint:staticcheck // SA1019 - Ignore "Do not use.".
+		Zone: zone,
+		//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 		ClusterId: clusterID,
 	}
 	cluster, err := c.clientGKE.GetCluster(c.ctx, req)
@@ -397,8 +400,10 @@ func (c *GKE) NodePoolDelete(*kingpin.ParseContext) error {
 				//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 				ProjectId: reqC.ProjectId,
 				//nolint:staticcheck // SA1019 - Ignore "Do not use.".
-				Zone:       reqC.Zone,
-				ClusterId:  reqC.Cluster.Name,
+				Zone: reqC.Zone,
+				//nolint:staticcheck // SA1019 - Ignore "Do not use.".
+				ClusterId: reqC.Cluster.Name,
+				//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 				NodePoolId: node.Name,
 			}
 			//nolint:staticcheck // SA1019 - Ignore "Do not use.".
@@ -444,9 +449,13 @@ func (c *GKE) nodePoolDeleted(req *containerpb.DeleteNodePoolRequest) (bool, err
 // nodePoolRunning checks whether a nodepool has been created and is running.
 func (c *GKE) nodePoolRunning(zone, projectID, clusterID, poolName string) (bool, error) {
 	req := &containerpb.GetNodePoolRequest{
-		ProjectId:  projectID,
-		Zone:       zone,
-		ClusterId:  clusterID,
+		//nolint:staticcheck // SA1019 - Ignore "Do not use.".
+		ProjectId: projectID,
+		//nolint:staticcheck // SA1019 - Ignore "Do not use.".
+		Zone: zone,
+		//nolint:staticcheck // SA1019 - Ignore "Do not use.".
+		ClusterId: clusterID,
+		//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 		NodePoolId: poolName,
 	}
 	rep, err := c.clientGKE.GetNodePool(c.ctx, req)
@@ -526,8 +535,11 @@ func (c *GKE) AllNodepoolsDeleted(*kingpin.ParseContext) error {
 func (c *GKE) NewK8sProvider(*kingpin.ParseContext) error {
 	// Get the authentication certificate for the cluster using the GKE client.
 	req := &containerpb.GetClusterRequest{
+		//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 		ProjectId: c.DeploymentVars["GKE_PROJECT_ID"],
-		Zone:      c.DeploymentVars["ZONE"],
+		//nolint:staticcheck // SA1019 - Ignore "Do not use.".
+		Zone: c.DeploymentVars["ZONE"],
+		//nolint:staticcheck // SA1019 - Ignore "Do not use.".
 		ClusterId: c.DeploymentVars["CLUSTER_NAME"],
 	}
 	rep, err := c.clientGKE.GetCluster(c.ctx, req)
