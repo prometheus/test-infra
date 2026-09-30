@@ -12,7 +12,7 @@ issues:
 linters:
   enable:
     - errorlint
-    - gomodguard
+    - gomodguard_v2
     - misspell
     - revive
     - whitespace
@@ -28,7 +28,7 @@ linters:
       - std-error-handling
     warn-unused: true
   settings:
-    gomodguard:
+    gomodguard_v2:
       blocked:
         modules:
           - github.com/pkg/errors:
