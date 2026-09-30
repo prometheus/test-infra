@@ -30,11 +30,10 @@ linters:
   settings:
     gomodguard_v2:
       blocked:
-        modules:
-          - github.com/pkg/errors:
-              recommendations:
-                - errors
-                - fmt
+        - module: github.com/pkg/errors
+          recommendations:
+            - errors
+            - fmt
     revive:
       rules:
         # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md
