@@ -22,10 +22,10 @@ require (
 	google.golang.org/grpc v1.83.2
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.37.0
-	k8s.io/apiextensions-apiserver v0.37.0
-	k8s.io/apimachinery v0.37.0
-	k8s.io/client-go v0.37.0
+	k8s.io/api v0.37.1
+	k8s.io/apiextensions-apiserver v0.37.1
+	k8s.io/apimachinery v0.37.1
+	k8s.io/client-go v0.37.1
 	k8s.io/cloud-provider-gcp v0.0.0-20251223200032-5efae2d228b6
 	sigs.k8s.io/aws-iam-authenticator v0.7.20
 	sigs.k8s.io/kind v0.32.0
