@@ -26,11 +26,11 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/alecthomas/kingpin/v2"
 	"github.com/google/go-github/v89/github"
 	"github.com/nelkinda/health-go"
 	"github.com/oklog/run"
 	"golang.org/x/sync/singleflight"
-	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/prometheus/test-infra/tools/comment-monitor/internal"
 )

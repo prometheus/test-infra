@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/alecthomas/kingpin.v2"
+	"github.com/alecthomas/kingpin/v2"
 	appsV1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
