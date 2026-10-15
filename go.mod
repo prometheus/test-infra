@@ -3,7 +3,7 @@ module github.com/prometheus/test-infra
 go 1.26.0
 
 require (
-	cloud.google.com/go/container v1.54.0
+	cloud.google.com/go/container v1.55.0
 	github.com/aws/aws-sdk-go-v2 v1.47.1
 	github.com/aws/aws-sdk-go-v2/config v1.33.6
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.6
