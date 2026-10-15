@@ -1,0 +1,95 @@
+# Pushes remote-write load into both Prometheus instances; 8_loadgen.yaml
+# only covers query load. Same load configured on both instances.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: write-loadgen-pr
+  namespace: prombench-{{ .PR_NUMBER }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: write-loadgen-pr
+  template:
+    metadata:
+      namespace: prombench-{{ .PR_NUMBER }}
+      labels:
+        app: write-loadgen-pr
+    spec:
+      containers:
+      - name: avalanche
+        image: quay.io/prometheuscommunity/avalanche:v0.7.0
+        imagePullPolicy: Always
+        args:
+        - "--gauge-metric-count=50"
+        - "--label-count=8"
+        - "--series-count=200"
+        - "--value-interval=15"
+        - "--series-interval=0"
+        - "--metric-interval=0"
+        - "--const-label=source=avalanche"
+        - "--remote-url=http://prometheus-test-pr-{{ .PR_NUMBER }}/api/v1/write"
+        - "--remote-batch-size=2000"
+        - "--remote-requests-count=-1"
+        - "--remote-write-interval=15s"
+        - "--no-remote-out-of-order"
+        env:
+        - name: GOMAXPROCS
+          valueFrom:
+            resourceFieldRef:
+              containerName: avalanche
+              resource: requests.cpu
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+      nodeSelector:
+        node-name: nodes-{{ .PR_NUMBER }}
+        isolation: none
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: write-loadgen-release
+  namespace: prombench-{{ .PR_NUMBER }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: write-loadgen-release
+  template:
+    metadata:
+      namespace: prombench-{{ .PR_NUMBER }}
+      labels:
+        app: write-loadgen-release
+    spec:
+      containers:
+      - name: avalanche
+        image: quay.io/prometheuscommunity/avalanche:v0.7.0
+        imagePullPolicy: Always
+        args:
+        - "--gauge-metric-count=50"
+        - "--label-count=8"
+        - "--series-count=200"
+        - "--value-interval=15"
+        - "--series-interval=0"
+        - "--metric-interval=0"
+        - "--const-label=source=avalanche"
+        - "--remote-url=http://prometheus-test-{{ normalise .RELEASE }}/api/v1/write"
+        - "--remote-batch-size=2000"
+        - "--remote-requests-count=-1"
+        - "--remote-write-interval=15s"
+        - "--no-remote-out-of-order"
+        env:
+        - name: GOMAXPROCS
+          valueFrom:
+            resourceFieldRef:
+              containerName: avalanche
+              resource: requests.cpu
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+      nodeSelector:
+        node-name: nodes-{{ .PR_NUMBER }}
+        isolation: none
