@@ -22,10 +22,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/alecthomas/kingpin/v2"
 	"github.com/google/go-github/v89/github"
 	"github.com/prometheus/alertmanager/notify/webhook"
 	"github.com/prometheus/alertmanager/template"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 type ghWebhookReceiverConfig struct {

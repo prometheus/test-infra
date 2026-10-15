@@ -1,7 +1,9 @@
 .idea/
 /tools/amGithubNotifier/amGithubNotifier
+/tools/block-sync/block-sync
 /tools/comment-monitor/comment-monitor
 /tools/fake-webserver/fake-webserver
+/tools/load-generator/load-generator
 /tools/scaler/scaler
 /infra/infra
 *-flags.txt

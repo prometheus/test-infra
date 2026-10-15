@@ -37,15 +37,16 @@ alertmanager github webhook receiver
   annotation, org and repo labels are optional but will take precedence over cli args
   if provided.
 
+
 Flags:
-  --help         Show context-sensitive help (also try --help-long and
+  --[no-]help    Show context-sensitive help (also try --help-long and
                  --help-man).
   --authfile="/etc/github/oauth"
                  path to github oauth token file
   --org=ORG      name of the org
   --repo=REPO    name of the repo
   --port="8080"  port number to run the server in
-  --dryrun       dry run for github api
+  --[no-]dryrun  dry run for github api
 
 ```
 ### Building Docker Image
