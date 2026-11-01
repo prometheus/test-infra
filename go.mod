@@ -14,9 +14,9 @@ require (
 	github.com/google/go-github/v89 v89.0.0
 	github.com/nelkinda/health-go v0.0.1
 	github.com/oklog/run v1.2.0
-	github.com/prometheus/alertmanager v0.34.1
+	github.com/prometheus/alertmanager v0.34.2
 	github.com/prometheus/client_golang v1.25.0
-	github.com/prometheus/common v0.72.1
+	github.com/prometheus/common v0.73.0
 	github.com/thanos-io/objstore v0.0.0-20260615134008-fb6fd3a5170a
 	golang.org/x/sync v0.24.0
 	google.golang.org/api v0.301.0
@@ -117,6 +117,7 @@ require (
 	github.com/hashicorp/go-msgpack/v2 v2.1.5 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.7 // indirect
+	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/memberlist v0.6.0 // indirect
@@ -144,6 +145,7 @@ require (
 	github.com/nelkinda/http-go v0.0.1 // indirect
 	github.com/oklog/ulid/v2 v2.1.2 // indirect
 	github.com/oracle/oci-go-sdk/v65 v65.41.1 // indirect
+	github.com/pandatix/go-abnf v0.5.1 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.26 // indirect
