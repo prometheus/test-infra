@@ -10,8 +10,8 @@ cloud.google.com/go/auth/oauth2adapt v0.3.1 h1:BKLDdbWS7pafd820dsyFDF6fPEzIGqr7n
 cloud.google.com/go/auth/oauth2adapt v0.3.1/go.mod h1:B1nM4FJDxoDqAt3PXFG4IflUoQ5kvWAOOM3R+5wAszg=
 cloud.google.com/go/compute/metadata v0.10.0 h1:pyKMUQSwchgkIBBJGdILqQbs/BNJXqwSA7Ej6LAvvtY=
 cloud.google.com/go/compute/metadata v0.10.0/go.mod h1:rGFHRrIif570kSibjFTMbt6/4/tzgJWFGI/HVol4GIk=
-cloud.google.com/go/container v1.55.0 h1:iC4riO/ENjxqqEogMdyTKi7bCueYVHNWz+WRf2XaJFQ=
-cloud.google.com/go/container v1.55.0/go.mod h1:UFzNkquBS6HTh0CeLhvceFNMshjySjP+w6Z4k/EafWg=
+cloud.google.com/go/container v1.56.1 h1:qhXiBO+eV5nX8Bkdwnp7173QtupzrZGi8YpBdi5K2BI=
+cloud.google.com/go/container v1.56.1/go.mod h1:TRic4llPJD8368zGAEUrasA0C0gc0J869W6W1XAeXkU=
 cloud.google.com/go/iam v1.14.0 h1:YRIB1/4xxwJ+NfI6RQr1WaOoHHeV0MizJEj940nBXJA=
 cloud.google.com/go/iam v1.14.0/go.mod h1:JTPZfbHdGXJrOYREtkRoFzCDGaBdbA7ILLKO/DDuav0=
 cloud.google.com/go/logging v1.20.0 h1:l7yzCB8/JSY5PHT9RsaqdT1jaBGbM6KlSJDX210HlXM=
