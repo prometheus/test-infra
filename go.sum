@@ -672,8 +672,8 @@ k8s.io/kube-openapi v0.0.0-20260721132016-d427ff9ee9ad h1:oXImqH8mQNk7PmvzKhmN3d
 k8s.io/kube-openapi v0.0.0-20260721132016-d427ff9ee9ad/go.mod h1:0/mqHCVhlumdJ3BhCfnjSZQE037nAhNodh1/hK0T8/I=
 k8s.io/utils v0.0.0-20260626114624-be93311217bd h1:Ea7fgQ5we8Y9T0OX5o0dAHzQOBRI07D/dEYRaB9ZZEs=
 k8s.io/utils v0.0.0-20260626114624-be93311217bd/go.mod h1:xDxuJ0whA3d0I4mf/C4ppKHxXynQ+fxnkmQH0vTHnuk=
-sigs.k8s.io/aws-iam-authenticator v0.7.20 h1:OATnxV9n4Ja/SSyB7xdxiafKCWcjeOBVtfVoLLC+/JU=
-sigs.k8s.io/aws-iam-authenticator v0.7.20/go.mod h1:RjmaMeAALfQFPtAdUOZER4gsZPJUL1+Ry0pENjEZ+dM=
+sigs.k8s.io/aws-iam-authenticator v0.7.24 h1:C15/T2qwbqP4xwbLqv8FMBg5zGBpT9gN/xFkrNn1kRo=
+sigs.k8s.io/aws-iam-authenticator v0.7.24/go.mod h1:OAyb9pCr7RM7BWANgc70HGq8QH51rc8ESd+huy8g2yg=
 sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 h1:IpInykpT6ceI+QxKBbEflcR5EXP7sU1kvOlxwZh5txg=
 sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730/go.mod h1:mdzfpAEoE6DHQEN0uh9ZbOCuHbLK5wOm7dK4ctXE9Tg=
 sigs.k8s.io/kind v0.33.0 h1:AjvDv3vOygb/VKLVQW87lfktIBzkxR8Ump9DjxC8+Lk=
