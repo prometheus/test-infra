@@ -48,6 +48,9 @@ func main() {
 		PlaceHolder("service-account.json").
 		Short('a').
 		StringVar(&g.Auth)
+	k8sGKE.Command("copy", "Creating prombench-${PR_NUMBER} namespace and copy block-sync config , bucket-secret from default to prombench-${PR_NUMBER} namespace.").
+		Action(g.NewK8sProvider).
+		Action(g.CreateNamespace)
 
 	k8sGKE.Command("info", "gke info -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(g.GetDeploymentVars)
@@ -87,6 +90,10 @@ func main() {
 	k := kind.New(dr)
 	k8sKIND := app.Command("kind", `Kubernetes In Docker (KIND) provider - https://kind.sigs.k8s.io/docs/user/quick-start/`).
 		Action(k.SetupDeploymentResources)
+
+	k8sKIND.Command("copy", "Creating prombench-${PR_NUMBER} namespace and copy block-sync config , bucket-secret from default to prombench-${PR_NUMBER} namespace.").
+		Action(k.NewK8sProvider).
+		Action(k.CreateNamespace)
 
 	k8sKIND.Command("info", "kind info -v hashStable:COMMIT1 -v hashTesting:COMMIT2").
 		Action(k.GetDeploymentVars)
